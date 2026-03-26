@@ -156,6 +156,20 @@
       "paper_config": null,
       "backtest_config": null,
       "notes": "XGBoost binary classifier (win/loss) trained on EXP-600 champion config trade features. Time-series CV only. max_depth=3, min_child_weight=5. Backtest comparison: EXP-600 with vs without ML filter."
+    },
+    "EXP-307": {
+      "id": "EXP-307",
+      "name": "Sector ETF Diversification",
+      "created_by": "charles",
+      "created_date": "2026-03-26",
+      "status": "paper_trading",
+      "ticker": "SPY,XLI,XLF",
+      "account_id": null,
+      "live_since": null,
+      "paper_config": "configs/paper_exp307.yaml",
+      "backtest_config": null,
+      "description": "Multi-ticker regime-adaptive credit spreads on SPY + XLI (industrials) + XLF (financials). MA crossover regime detection independently per ticker. +33 additional trades/yr vs SPY-only, improving Sharpe through sector diversification. DTE=15, OTM=2%, width=$12 (SPY)/$3 (ETFs), SL=1.25x, PT=55%, risk=8.5%. Max 2 positions per ticker, 6 total.",
+      "notes": "Sector ETF diversification extending EXP-400 champion. No ML filter. Combo regime for SPY, MA crossover for XLI/XLF."
     }
   }
 }
