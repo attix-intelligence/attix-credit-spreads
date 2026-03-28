@@ -2,12 +2,12 @@
 # Credit Spread Scanner — Cron Runner
 # Called by crontab at scheduled market hours (ET, weekdays only).
 #
-# IMPORTANT: scan-cron.sh handles ONLY EXP-700 (ML-filtered, one-shot scanner).
+# All active experiments are managed exclusively by their LaunchAgent schedulers:
+#   EXP-400/401/503/600 — persistent com.pilotai.exp*.plist (main.py scheduler)
+#   EXP-700/800         — calendar com.pilotai.exp*.plist (StartCalendarInterval)
 #
-# EXP-400, EXP-401, EXP-503, EXP-600 are managed exclusively by their
-# LaunchAgent persistent schedulers (~/Library/LaunchAgents/com.pilotai.exp*.plist).
-# Running scan-cron for those experiments while LaunchAgents are active causes
-# double-execution: orphan positions, split-brain DBs, and risk-gate lockout.
+# scan-cron.sh is now a no-op kept for legacy compatibility.
+# DO NOT add scanner calls here — it causes double-execution with LaunchAgents.
 # See: research/double-execution-investigation.md (2026-03-27)
 
 set -euo pipefail
@@ -27,16 +27,5 @@ fi
 
 cd "$PROJECT_DIR"
 
-# EXP-700: ML-filtered champion (custom scanner)
-_run_ml_scan() {
-  local LOG_FILE="${LOG_DIR}/scan-cron-exp700.log"
-  if [ -f "$LOG_FILE" ] && [ "$(stat -f%z "$LOG_FILE" 2>/dev/null || echo 0)" -gt "$MAX_LOG_SIZE" ]; then
-    mv "$LOG_FILE" "${LOG_FILE}.1"
-  fi
-  echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] Starting exp700 ML scan (ET: $(TZ=America/New_York date '+%H:%M %Z'))" >> "$LOG_FILE"
-  /usr/bin/python3 scripts/exp700_ml_scanner.py --config configs/paper_exp700.yaml --env-file .env.exp700 >> "$LOG_FILE" 2>&1
-  local RC=$?
-  [ $RC -eq 0 ] && echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] exp700 ML scan completed successfully" >> "$LOG_FILE" || echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] exp700 ML scan failed with exit code $RC" >> "$LOG_FILE"
-  echo "---" >> "$LOG_FILE"
-}
-_run_ml_scan
+echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] scan-cron.sh: all experiments managed by LaunchAgents — nothing to do"
+exit 0
