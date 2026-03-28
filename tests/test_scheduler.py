@@ -9,7 +9,9 @@ from shared.scheduler import (
     MARKET_SCAN_TIMES,
     SCAN_TIMES,
     SLOT_DAILY_REPORT,
+    SLOT_MACRO_WEEKLY,
     SLOT_PRE_MARKET,
+    SLOT_RETRAIN,
     SLOT_SCAN,
     ScanScheduler,
     _is_weekday,
@@ -80,9 +82,8 @@ class TestNextScanTime:
         assert nxt.weekday() == 0  # Monday
 
     def test_friday_before_macro_weekly_returns_macro_slot(self):
-        """Friday 4:30 PM → next slot is macro_weekly at 17:00 (not Monday)."""
-        from shared.scheduler import SLOT_MACRO_WEEKLY
-        now = ET.localize(datetime(2026, 2, 20, 16, 30))  # Friday 4:30 PM
+        """Friday 4:45 PM → next slot is macro_weekly at 17:00 (not Monday)."""
+        now = ET.localize(datetime(2026, 2, 20, 16, 45))  # Friday 4:45 PM
         nxt, slot_type = _next_scan_time(now)
         assert nxt.hour == 17
         assert nxt.minute == 0
@@ -97,8 +98,8 @@ class TestNextScanTime:
         assert nxt.hour == 9
         assert nxt.minute == 0
 
-    def test_all_17_scan_times_defined(self):
-        assert len(SCAN_TIMES) == 17
+    def test_all_18_scan_times_defined(self):
+        assert len(SCAN_TIMES) == 18
 
     def test_market_scan_times_has_14_entries(self):
         """MARKET_SCAN_TIMES (backtester compat) should have 14 scan-only slots."""
@@ -111,13 +112,26 @@ class TestNextScanTime:
             assert a < b, f"SCAN_TIMES not sorted: {SCAN_TIMES[i]} >= {SCAN_TIMES[i+1]}"
 
     def test_slot_types_correct(self):
-        """First=pre_market, second-to-last=daily_report, last=macro_weekly; middle are scans."""
-        from shared.scheduler import SLOT_MACRO_WEEKLY
+        """First=pre_market, then scans, then daily_report, retrain, macro_weekly."""
         assert SCAN_TIMES[0][2] == SLOT_PRE_MARKET
-        assert SCAN_TIMES[-2][2] == SLOT_DAILY_REPORT
+        assert SCAN_TIMES[-3][2] == SLOT_DAILY_REPORT
+        assert SCAN_TIMES[-2][2] == SLOT_RETRAIN
         assert SCAN_TIMES[-1][2] == SLOT_MACRO_WEEKLY
-        for h, m, s in SCAN_TIMES[1:-2]:
+        for h, m, s in SCAN_TIMES[1:-3]:
             assert s == SLOT_SCAN
+
+    def test_retrain_slot_at_1630(self):
+        """SLOT_RETRAIN fires at 16:30 ET."""
+        retrain_entries = [(h, m, s) for h, m, s in SCAN_TIMES if s == SLOT_RETRAIN]
+        assert len(retrain_entries) == 1
+        h, m, _ = retrain_entries[0]
+        assert (h, m) == (16, 30)
+
+    def test_retrain_slot_after_daily_report(self):
+        """SLOT_RETRAIN (16:30) must come after SLOT_DAILY_REPORT (16:15)."""
+        dr_min = next(h * 60 + m for h, m, s in SCAN_TIMES if s == SLOT_DAILY_REPORT)
+        rt_min = next(h * 60 + m for h, m, s in SCAN_TIMES if s == SLOT_RETRAIN)
+        assert dr_min < rt_min
 
 
 class TestScanScheduler:

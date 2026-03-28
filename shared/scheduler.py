@@ -9,6 +9,7 @@ Schedule (all times ET, Mon-Fri):
   9:15, 9:45      — open
   10:00 .. 15:30  — intraday every 30 min
   16:15           — post-market daily report
+  16:30           — model retrain check
 """
 
 import logging
@@ -39,9 +40,10 @@ ET = pytz.timezone("America/New_York")
 SLOT_SCAN = "scan"
 SLOT_PRE_MARKET = "pre_market"
 SLOT_DAILY_REPORT = "daily_report"
-SLOT_MACRO_WEEKLY = "macro_weekly"   # Friday 17:00 ET only
+SLOT_RETRAIN = "retrain_check"      # 16:30 ET daily — ModelRetrainer check
+SLOT_MACRO_WEEKLY = "macro_weekly"  # Friday 17:00 ET only
 
-# (hour, minute, slot_type) in ET — 17 slots per day; macro_weekly fires Fridays only
+# (hour, minute, slot_type) in ET — 18 slots per day; macro_weekly fires Fridays only
 SCAN_TIMES = [
     (9, 0, SLOT_PRE_MARKET),
     (9, 15, SLOT_SCAN), (9, 45, SLOT_SCAN),
@@ -52,6 +54,7 @@ SCAN_TIMES = [
     (14, 0, SLOT_SCAN), (14, 30, SLOT_SCAN),
     (15, 0, SLOT_SCAN), (15, 30, SLOT_SCAN),
     (16, 15, SLOT_DAILY_REPORT),
+    (16, 30, SLOT_RETRAIN),
     (17, 0, SLOT_MACRO_WEEKLY),   # weekly macro snapshot — skipped on Mon–Thu
 ]
 
