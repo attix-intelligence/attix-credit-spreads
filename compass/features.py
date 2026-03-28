@@ -131,6 +131,9 @@ class FeatureEngine:
             if seasonal_features is not None:
                 features.update(seasonal_features)
 
+            # 5b. Credit stress features (HYG/LQD ratio) — always returns dict, never None
+            features.update(self._compute_credit_stress_features())
+
             # 6. Regime features (if available)
             if regime_data:
                 features.update(self._extract_regime_features(regime_data))
@@ -201,6 +204,21 @@ class FeatureEngine:
             features['dist_from_sma20_pct'] = float((current_price - sma_20) / sma_20 * 100)
             features['dist_from_sma50_pct'] = float((current_price - sma_50) / sma_50 * 100)
             features['dist_from_sma200_pct'] = float((current_price - sma_200) / sma_200 * 100)
+
+            # Opening gap: (today's open - yesterday's close) / yesterday's close
+            # Captures overnight sentiment and gap-fill dynamics
+            if 'Open' in stock.columns and len(stock) >= 2:
+                try:
+                    prev_close = float(stock['Close'].iloc[-2])
+                    today_open = float(stock['Open'].iloc[-1])
+                    if prev_close > 0:
+                        features['opening_gap_pct'] = (today_open - prev_close) / prev_close * 100
+                    else:
+                        features['opening_gap_pct'] = float('nan')
+                except Exception:
+                    features['opening_gap_pct'] = float('nan')
+            else:
+                features['opening_gap_pct'] = float('nan')
 
             return features
 
@@ -307,6 +325,45 @@ class FeatureEngine:
             else:
                 return None  # SPY data required for market features
 
+            # VIX term structure — variance risk premium proxy.
+            # Prefer ^VIX3M (9-month VIX); fall back to VIX / spy_realized_vol ratio.
+            # Contango (>1): normal term structure, VRP positive → good for premium sellers.
+            # Backwardation (<1): inverted, near-term fear spike → reduce exposure.
+            try:
+                vix3m = self._download('^VIX3M', period='1mo')
+                vix_level = features.get('vix_level', 0)
+                if vix3m is not None and not vix3m.empty and vix_level > 0:
+                    features['vix_contango_ratio'] = float(vix3m['Close'].iloc[-1]) / vix_level
+                elif features.get('spy_realized_vol', 0) > 0:
+                    # Proxy: implied vol (VIX) / realized vol — high = rich premium environment
+                    features['vix_contango_ratio'] = vix_level / features['spy_realized_vol']
+                else:
+                    features['vix_contango_ratio'] = float('nan')
+            except Exception:
+                features['vix_contango_ratio'] = float('nan')
+
+            # SPY / TLT 20-day rolling correlation — risk-on/risk-off regime indicator.
+            # Negative correlation: classic risk-off flight-to-quality (normal regime).
+            # Positive correlation: 2022-style inflation regime; both assets sell off.
+            try:
+                tlt = self._download('TLT', period='3mo')
+                if tlt is not None and not tlt.empty and spy is not None and not spy.empty:
+                    spy_rets = spy['Close'].pct_change().dropna()
+                    tlt_rets = tlt['Close'].pct_change().dropna()
+                    # Align on shared dates
+                    aligned = pd.concat(
+                        [spy_rets.rename('spy'), tlt_rets.rename('tlt')], axis=1
+                    ).dropna()
+                    if len(aligned) >= 20:
+                        corr = aligned['spy'].tail(20).corr(aligned['tlt'].tail(20))
+                        features['spy_tlt_corr_20d'] = float(corr) if not np.isnan(corr) else float('nan')
+                    else:
+                        features['spy_tlt_corr_20d'] = float('nan')
+                else:
+                    features['spy_tlt_corr_20d'] = float('nan')
+            except Exception:
+                features['spy_tlt_corr_20d'] = float('nan')
+
             return features
 
         except Exception as e:
@@ -405,9 +462,10 @@ class FeatureEngine:
                 'quarter': (now.month - 1) // 3 + 1,
             }
 
-            # OPEX week (3rd Friday of month)
-            # Simplified: assume days 15-21
-            features['is_opex_week'] = 1.0 if 15 <= now.day <= 21 else 0.0
+            # Days to next monthly OPEX (3rd Friday of the month).
+            # More granular than the old is_opex_week boolean — allows the model
+            # to learn non-linear proximity effects (e.g. gamma ramp in final 5 days).
+            features['days_to_opex'] = self._days_to_next_opex(now)
 
             # Monday effect (higher volatility)
             features['is_monday'] = 1.0 if now.weekday() == 0 else 0.0
@@ -420,6 +478,78 @@ class FeatureEngine:
         except Exception as e:
             logger.error(f"Error computing seasonal features: {e}", exc_info=True)
             return None
+
+    @staticmethod
+    def _days_to_next_opex(now: datetime) -> int:
+        """Return integer days until the next monthly OPEX (3rd Friday).
+
+        Iterates at most two calendar months forward, so it always finds a
+        future OPEX even if the current month's has already passed.
+        """
+        import calendar as _cal
+        today = now.date()
+        for delta_months in range(3):
+            m = today.month + delta_months
+            y = today.year + (m - 1) // 12
+            m = ((m - 1) % 12) + 1
+            # All Fridays (weekday index 4) in the month
+            monthly = _cal.monthcalendar(y, m)
+            fridays = [week[_cal.FRIDAY] for week in monthly if week[_cal.FRIDAY] != 0]
+            if len(fridays) < 3:
+                continue
+            from datetime import date as _date
+            opex_day = _date(y, m, fridays[2])
+            if opex_day > today:
+                return (opex_day - today).days
+        return 0
+
+    def _compute_credit_stress_features(self) -> Dict:
+        """Compute HYG/LQD ratio — high-yield vs investment-grade credit stress.
+
+        A falling HYG/LQD ratio signals credit market stress (widening HY spreads
+        relative to IG), which tends to precede equity volatility spikes.  For credit
+        spread sellers, rising credit stress = reduce short-premium exposure.
+
+        Returns an empty dict (not None) on any data failure so build_features()
+        can always call update() on the result without crashing.
+        """
+        features: Dict = {}
+        try:
+            hyg = self._download('HYG', period='3mo')
+            lqd = self._download('LQD', period='3mo')
+
+            if hyg is None or hyg.empty or lqd is None or lqd.empty:
+                features['hyg_lqd_ratio'] = float('nan')
+                features['hyg_lqd_ratio_5d_chg'] = float('nan')
+                return features
+
+            # Align on common trading dates
+            ratio = (
+                hyg['Close'].rename('hyg')
+                .to_frame()
+                .join(lqd['Close'].rename('lqd'), how='inner')
+            )
+            ratio['ratio'] = ratio['hyg'] / ratio['lqd']
+
+            if len(ratio) < 1:
+                features['hyg_lqd_ratio'] = float('nan')
+                features['hyg_lqd_ratio_5d_chg'] = float('nan')
+                return features
+
+            features['hyg_lqd_ratio'] = float(ratio['ratio'].iloc[-1])
+
+            if len(ratio) >= 6:
+                chg = (ratio['ratio'].iloc[-1] / ratio['ratio'].iloc[-6] - 1) * 100
+                features['hyg_lqd_ratio_5d_chg'] = float(chg)
+            else:
+                features['hyg_lqd_ratio_5d_chg'] = float('nan')
+
+        except Exception as exc:
+            logger.warning("Failed to compute credit stress features: %s", exc)
+            features['hyg_lqd_ratio'] = float('nan')
+            features['hyg_lqd_ratio_5d_chg'] = float('nan')
+
+        return features
 
     def _extract_regime_features(self, regime_data: Dict) -> Dict:
         """
@@ -558,6 +688,12 @@ class FeatureEngine:
             'put_call_ratio',
             'spy_return_5d', 'spy_return_20d', 'spy_realized_vol',
 
+            # Tier 1 alpha: market structure
+            'vix_contango_ratio',    # VIX term structure (VIX3M/VIX or VIX/RV proxy)
+            'spy_tlt_corr_20d',      # SPY/TLT 20d rolling correlation
+            'hyg_lqd_ratio',         # HY/IG credit ratio — credit stress indicator
+            'hyg_lqd_ratio_5d_chg',  # 5-day change in credit ratio
+
             # Trade structure (new Phase 3)
             'credit_to_width_ratio',
 
@@ -566,7 +702,10 @@ class FeatureEngine:
             'event_risk_score',
 
             # Seasonal
-            'day_of_week', 'is_opex_week', 'is_monday', 'is_month_end',
+            'day_of_week', 'days_to_opex', 'is_monday', 'is_month_end',
+
+            # Tier 1 alpha: price action
+            'opening_gap_pct',       # (open - prev_close) / prev_close
 
             # Regime
             'regime_id', 'regime_confidence', 'regime_duration_days',
