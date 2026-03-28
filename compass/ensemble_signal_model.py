@@ -350,6 +350,9 @@ class EnsembleSignalModel:
                 'n_wf_folds': n_wf_folds,
                 'per_model': per_model_stats,
                 'ensemble_weights': dict(self.ensemble_weights),
+                # Backward-compat aliases for online_retrain.py (GAP-1, GAP-2):
+                'test_auc': float(roc_auc_score(y_test, ensemble_proba)),
+                'timestamp': datetime.now(timezone.utc).isoformat(),
             }
 
             self.training_stats = stats
