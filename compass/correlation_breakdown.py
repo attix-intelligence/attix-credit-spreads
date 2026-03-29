@@ -171,8 +171,8 @@ class CorrelationBreakdownAnalyzer:
             results[regime] = RegimeCorrelation(
                 regime=regime,
                 matrix=matrix,
-                mean_corr=float(np.nanmean(corr)),
-                max_corr=float(np.nanmax(corr)),
+                mean_corr=float(np.nanmean(off_diag)),
+                max_corr=float(np.nanmax(off_diag)),
                 n_obs=len(subset),
                 assets=self.assets,
             )
