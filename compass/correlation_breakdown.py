@@ -165,11 +165,12 @@ class CorrelationBreakdownAnalyzer:
             subset = self.returns.loc[mask]
             if len(subset) < 3:
                 continue
-            corr = subset.corr().values
-            np.fill_diagonal(corr, np.nan)
+            matrix = subset.corr().values.copy()
+            off_diag = matrix.copy()
+            np.fill_diagonal(off_diag, np.nan)
             results[regime] = RegimeCorrelation(
                 regime=regime,
-                matrix=subset.corr().values,
+                matrix=matrix,
                 mean_corr=float(np.nanmean(corr)),
                 max_corr=float(np.nanmax(corr)),
                 n_obs=len(subset),
