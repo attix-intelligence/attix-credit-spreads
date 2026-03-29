@@ -283,8 +283,8 @@ class RealtimePnLEstimator:
         # Alerts
         stop_level = -pos.entry_credit * pos.stop_loss_mult * mult
         target_level = pos.entry_credit * pos.profit_target_pct * mult
-        near_stop = unrealized <= stop_level * 0.8  # within 80% of stop
-        near_target = unrealized >= target_level * 0.8
+        near_stop = bool(unrealized <= stop_level * 0.8)  # within 80% of stop
+        near_target = bool(unrealized >= target_level * 0.8)
 
         # Projected P&L at expiry (assume price stays, IV decays to 0)
         ev_at_expiry = spread_value(current_price, pos.short_strike, pos.long_strike,
