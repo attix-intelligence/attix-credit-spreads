@@ -11,9 +11,10 @@ from shared.live_snapshot import build_live_snapshot
 
 def _make_price_df(ticker="SPY", days=60, base_price=550.0):
     """Create a realistic price DataFrame for testing."""
-    dates = pd.bdate_range(end=datetime.now(), periods=days)
+    dates = pd.bdate_range(end="2026-03-28", periods=days)
+    n = len(dates)
     np.random.seed(42)
-    returns = np.random.normal(0.0005, 0.01, days)
+    returns = np.random.normal(0.0005, 0.01, n)
     prices = base_price * np.cumprod(1 + returns)
 
     df = pd.DataFrame({
@@ -21,16 +22,17 @@ def _make_price_df(ticker="SPY", days=60, base_price=550.0):
         "High": prices * 1.005,
         "Low": prices * 0.995,
         "Close": prices,
-        "Volume": np.random.randint(1_000_000, 10_000_000, days),
+        "Volume": np.random.randint(1_000_000, 10_000_000, n),
     }, index=dates)
     return df
 
 
 def _make_vix_df(days=60, base_vix=18.0):
     """Create a VIX DataFrame for testing."""
-    dates = pd.bdate_range(end=datetime.now(), periods=days)
+    dates = pd.bdate_range(end="2026-03-28", periods=days)
+    n = len(dates)
     np.random.seed(99)
-    vix_vals = base_vix + np.random.normal(0, 2, days).cumsum()
+    vix_vals = base_vix + np.random.normal(0, 2, n).cumsum()
     vix_vals = np.clip(vix_vals, 10, 80)
 
     return pd.DataFrame({
@@ -38,7 +40,7 @@ def _make_vix_df(days=60, base_vix=18.0):
         "High": vix_vals * 1.02,
         "Low": vix_vals * 0.98,
         "Close": vix_vals,
-        "Volume": np.zeros(days),
+        "Volume": np.zeros(n),
     }, index=dates)
 
 

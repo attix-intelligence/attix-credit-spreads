@@ -17,6 +17,7 @@ os.environ.setdefault("MACRO_API_KEYS", "test-key-123")
 from fastapi.testclient import TestClient
 
 import api.macro_api as _api_module
+import compass.macro_db as _canonical_db_module
 import shared.macro_state_db as _db_module
 from api.macro_api import MACRO_CACHE_DB, app
 from compass.macro_db import init_db, save_snapshot
@@ -41,15 +42,17 @@ def isolated_db(tmp_path, monkeypatch):
     db = str(tmp_path / "macro_state.db")
     init_db(db)
 
+    monkeypatch.setattr(_canonical_db_module, "MACRO_DB_PATH", Path(db))
     monkeypatch.setattr(_db_module, "MACRO_DB_PATH", Path(db))
     monkeypatch.setattr(_api_module, "MACRO_DB_PATH", Path(db))
 
     # Patch the functions used by endpoints to use tmp db
-    orig_get_db = _db_module.get_db
+    orig_get_db = _canonical_db_module.get_db
 
     def patched_get_db(path=None):
         return orig_get_db(db)
 
+    monkeypatch.setattr(_canonical_db_module, "get_db", patched_get_db)
     monkeypatch.setattr(_db_module, "get_db", patched_get_db)
     monkeypatch.setattr(_api_module, "get_db", patched_get_db)
 
@@ -305,14 +308,16 @@ def e2e_client(tmp_path, monkeypatch):
     save_snapshot(snap1, db_path=db)
     save_snapshot(snap2, db_path=db)
 
+    monkeypatch.setattr(_canonical_db_module, "MACRO_DB_PATH", Path(db))
     monkeypatch.setattr(_db_module, "MACRO_DB_PATH", Path(db))
     monkeypatch.setattr(_api_module, "MACRO_DB_PATH", Path(db))
 
-    orig_get_db = _db_module.get_db
+    orig_get_db = _canonical_db_module.get_db
 
     def patched_get_db(path=None):
         return orig_get_db(db)
 
+    monkeypatch.setattr(_canonical_db_module, "get_db", patched_get_db)
     monkeypatch.setattr(_db_module, "get_db", patched_get_db)
     monkeypatch.setattr(_api_module, "get_db", patched_get_db)
 

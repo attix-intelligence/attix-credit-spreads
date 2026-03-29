@@ -208,11 +208,14 @@ class TestFeaturePipelineTransform:
         assert result["vix_zscore"].min() >= -4.0
         assert result["vix_zscore"].max() <= 4.0
 
-    def test_has_contracts_log(self, pipeline, raw_df):
+    def test_contracts_log_pruned_by_default(self, pipeline, raw_df):
+        """contracts_log is pruned by the default pipeline (harmful feature)."""
         result = pipeline.transform(raw_df)
-        assert "contracts_log" in result.columns
-        # Log of 1-9 should be in [0, ~2.3]
-        assert result["contracts_log"].max() < 5.0
+        assert "contracts_log" not in result.columns
+        # Present in full (unpruned) pipeline
+        full = FeaturePipeline(pruned=False).transform(raw_df)
+        assert "contracts_log" in full.columns
+        assert full["contracts_log"].max() < 5.0
 
     def test_no_contracts_raw(self, pipeline, raw_df):
         """Raw contracts should not be in output features."""
@@ -244,11 +247,17 @@ class TestFeaturePipelineTransform:
         assert np.isfinite(result.values).all()
 
     def test_one_hot_encoded_categoricals(self, pipeline, raw_df):
+        """Pruned pipeline keeps only signal-carrying dummies."""
         result = pipeline.transform(raw_df)
-        regime_cols = [c for c in result.columns if c.startswith("regime_")]
+        # Pruned: only strategy_type_CS and spread_type_bull_put survive
         strategy_cols = [c for c in result.columns if c.startswith("strategy_type_")]
-        assert len(regime_cols) >= 2
-        assert len(strategy_cols) >= 1
+        spread_cols = [c for c in result.columns if c.startswith("spread_type_")]
+        assert "strategy_type_CS" in result.columns
+        assert "spread_type_bull_put" in result.columns
+        # Full pipeline has all dummies
+        full = FeaturePipeline(pruned=False).transform(raw_df)
+        assert len([c for c in full.columns if c.startswith("regime_")]) >= 2
+        assert len([c for c in full.columns if c.startswith("strategy_type_")]) >= 2
 
     def test_safe_features_pass_through(self, pipeline, raw_df):
         """Features like rsi_14, dist_from_ma* should be in output unchanged."""

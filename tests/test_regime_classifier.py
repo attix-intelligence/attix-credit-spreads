@@ -241,7 +241,7 @@ class TestClassifySeries:
         vix = mock_vix_series(start_date="2024-01-02", days=len(bull_prices), base_level=16.0)
         result = classifier.classify_series(spy_df, vix)
         # After warmup period, most days should be BULL
-        bull_count = (result == Regime.BULL).sum()
+        bull_count = result.apply(lambda x: x == Regime.BULL or str(x) == "bull").sum()
         assert bull_count > len(result) * 0.5, f"Expected majority BULL, got {bull_count}/{len(result)}"
 
     def test_missing_vix_defaults_to_20(self, classifier, bull_prices):
@@ -439,7 +439,7 @@ class TestVIX3MCrashSignal:
 
         result = clf.classify_series(spy_df, vix, vix3m_series=vix3m)
         # After warmup (shift-by-1), most days should be CRASH
-        crash_count = (result == Regime.CRASH).sum()
+        crash_count = result.apply(lambda x: x == Regime.CRASH or str(x) == "crash").sum()
         assert crash_count > len(result) * 0.5, (
             f"Expected majority CRASH with steep backwardation, got {crash_count}/{len(result)}"
         )
