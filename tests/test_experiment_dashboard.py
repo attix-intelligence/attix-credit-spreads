@@ -16,7 +16,9 @@ from compass.experiment_dashboard import (
     DashboardResult,
     ExperimentDashboard,
     ExperimentStatus,
+    ModelHealth,
     PortfolioOverview,
+    RecentTrade,
     TrafficLight,
 )
 
@@ -97,6 +99,31 @@ def _make_corr_matrix(n: int = 3) -> pd.DataFrame:
     data = np.eye(n) * 0.7 + 0.3  # moderate correlation
     np.fill_diagonal(data, 1.0)
     return pd.DataFrame(data, index=ids, columns=ids)
+
+
+def _make_recent_trades(n: int = 3) -> dict:
+    return {
+        f"EXP-{i+1}": [
+            {"date": "2024-03-01", "pnl": 50.0, "ticker": "SPY", "type": "bull_put"},
+            {"date": "2024-03-05", "pnl": -30.0, "ticker": "SPY", "type": "bear_call"},
+            {"date": "2024-03-10", "pnl": 75.0, "ticker": "SPY", "spread_type": "bull_put"},
+        ]
+        for i in range(n)
+    }
+
+
+def _make_model_snapshots_full(n: int = 3) -> dict:
+    return {
+        f"EXP-{i+1}": {
+            "rolling_auc": 0.65 - i * 0.05,
+            "rolling_accuracy": 0.70 - i * 0.05,
+            "days_since_retrain": 10 + i * 10,
+            "should_retrain": i > 1,
+            "drift_fraction": 0.1 * i,
+            "n_alerts": i,
+        }
+        for i in range(n)
+    }
 
 
 # ── Constructor ─────────────────────────────────────────────────────────────
@@ -305,6 +332,104 @@ class TestPortfolioOverview:
         assert result.portfolio.overall_status == RED
 
 
+# ── Recent trades ───────────────────────────────────────────────────────────
+class TestRecentTrades:
+    def test_recent_trades_populated(self):
+        result = ExperimentDashboard().build(
+            _make_experiments(),
+            backtest_results=_make_backtest_results(),
+            recent_trades=_make_recent_trades(),
+        )
+        assert len(result.experiments[0].recent_trades) == 3
+
+    def test_recent_trade_fields(self):
+        result = ExperimentDashboard().build(
+            _make_experiments(1),
+            recent_trades=_make_recent_trades(1),
+        )
+        t = result.experiments[0].recent_trades[0]
+        assert isinstance(t, RecentTrade)
+        assert t.date == "2024-03-01"
+        assert t.pnl == 50.0
+        assert t.ticker == "SPY"
+
+    def test_no_recent_trades_empty_list(self):
+        result = ExperimentDashboard().build(_make_experiments())
+        assert result.experiments[0].recent_trades == []
+
+    def test_spread_type_from_type_key(self):
+        """'type' key should be used as fallback for 'spread_type'."""
+        result = ExperimentDashboard().build(
+            _make_experiments(1),
+            recent_trades=_make_recent_trades(1),
+        )
+        # First trade uses 'type' key, third uses 'spread_type'
+        assert result.experiments[0].recent_trades[0].spread_type == "bull_put"
+        assert result.experiments[0].recent_trades[2].spread_type == "bull_put"
+
+
+# ── Model health ────────────────────────────────────────────────────────────
+class TestModelHealth:
+    def test_model_health_present(self):
+        result = ExperimentDashboard().build(
+            _make_experiments(),
+            model_snapshots=_make_model_snapshots_full(),
+        )
+        for e in result.experiments:
+            assert e.model_health is not None
+
+    def test_health_green_when_good(self):
+        result = ExperimentDashboard().build(
+            _make_experiments(1),
+            model_snapshots=_make_model_snapshots_full(1),
+        )
+        # EXP-1: auc=0.65, drift=0.0, alerts=0, retrain=False
+        mh = result.experiments[0].model_health
+        assert mh.health_status == GREEN
+
+    def test_health_yellow_when_drift(self):
+        snapshots = {"EXP-1": {
+            "rolling_auc": 0.60, "rolling_accuracy": 0.65,
+            "drift_fraction": 0.3, "n_alerts": 1,
+            "should_retrain": False, "days_since_retrain": 15,
+        }}
+        result = ExperimentDashboard().build(
+            _make_experiments(1), model_snapshots=snapshots,
+        )
+        assert result.experiments[0].model_health.health_status == YELLOW
+
+    def test_health_red_when_retrain_needed(self):
+        snapshots = {"EXP-1": {
+            "rolling_auc": 0.50, "rolling_accuracy": 0.55,
+            "drift_fraction": 0.6, "n_alerts": 5,
+            "should_retrain": True, "days_since_retrain": 60,
+        }}
+        result = ExperimentDashboard().build(
+            _make_experiments(1), model_snapshots=snapshots,
+        )
+        assert result.experiments[0].model_health.health_status == RED
+
+    def test_model_health_fields(self):
+        result = ExperimentDashboard().build(
+            _make_experiments(1),
+            model_snapshots=_make_model_snapshots_full(1),
+        )
+        mh = result.experiments[0].model_health
+        assert isinstance(mh, ModelHealth)
+        assert mh.rolling_auc == 0.65
+        assert mh.rolling_accuracy == 0.70
+        assert mh.drift_fraction == 0.0
+        assert mh.n_alerts == 0
+        assert mh.should_retrain is False
+
+    def test_model_health_without_snapshots(self):
+        """Without model snapshots, health should still be constructed (defaults)."""
+        result = ExperimentDashboard().build(_make_experiments(1))
+        mh = result.experiments[0].model_health
+        assert mh is not None
+        assert mh.rolling_auc == 0.0
+
+
 # ── HTML report ─────────────────────────────────────────────────────────────
 class TestHTMLReport:
     def test_report_created(self):
@@ -329,7 +454,8 @@ class TestHTMLReport:
             result = d.build(
                 _make_experiments(),
                 backtest_results=_make_backtest_results(),
-                model_snapshots=_make_model_snapshots(),
+                model_snapshots=_make_model_snapshots_full(),
+                recent_trades=_make_recent_trades(),
             )
             path = d.generate_report(result, output_path=Path(tmp) / "r.html")
             html = path.read_text()
@@ -339,6 +465,8 @@ class TestHTMLReport:
             assert "Traffic Light" in html
             assert "Blended Sharpe" in html
             assert "Diversification" in html
+            assert "Model Health" in html
+            assert "Recent Trades" in html
 
     def test_report_valid_html(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -376,6 +504,8 @@ class TestDataclasses:
         e = ExperimentStatus(experiment_id="X", name="Test", ticker="SPY", status=GREEN)
         assert e.sharpe == 0.0
         assert e.lights == []
+        assert e.recent_trades == []
+        assert e.model_health is None
 
     def test_portfolio_overview_defaults(self):
         p = PortfolioOverview()
@@ -386,3 +516,14 @@ class TestDataclasses:
         r = DashboardResult()
         assert r.experiments == []
         assert r.portfolio is None
+
+    def test_recent_trade_dataclass(self):
+        t = RecentTrade(date="2024-01-01", pnl=50.0, ticker="SPY", spread_type="bull_put")
+        assert t.pnl == 50.0
+        assert t.spread_type == "bull_put"
+
+    def test_model_health_dataclass(self):
+        m = ModelHealth(rolling_auc=0.65, rolling_accuracy=0.70, drift_fraction=0.1,
+                        n_alerts=1, should_retrain=False, health_status=YELLOW)
+        assert m.health_status == YELLOW
+        assert m.n_alerts == 1

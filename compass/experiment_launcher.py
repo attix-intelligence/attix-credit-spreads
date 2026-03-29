@@ -1,35 +1,37 @@
 """
-compass/experiment_launcher.py — Config validation and experiment launcher.
-
-Validates experiment configuration, runs pre-flight checks, supports dry-run
-simulation, and produces HTML launch reports.
+compass/experiment_launcher.py — Experiment launcher with config validation,
+pre-flight checks, dry-run trade simulation, and rollback.
 
 Provides:
-  1. Schema validation — verify all required fields, types, and value ranges
-  2. Pre-flight checklist — training data, model files, features, risk gates,
-     hedge params
-  3. Dry-run mode — simulate full pipeline without placing trades
-  4. Launch report — HTML with pre-flight status, config summary, risk params,
-     estimated performance
+  1. ExperimentLauncher class for starting/stopping experiments safely
+  2. Config validation — YAML experiment config against required schema
+  3. Pre-flight checks — data availability, model existence, feature
+     compatibility, risk gate config
+  4. Dry-run mode — simulates 10 trades without placing orders
+  5. Rollback capability — reverts to previous config on failure
+  6. HTML launch report with pre-flight checklist results
 
 Usage:
     from compass.experiment_launcher import ExperimentLauncher
 
-    launcher = ExperimentLauncher(config)
+    launcher = ExperimentLauncher(config, experiment_id="EXP-400")
     report = launcher.preflight()
     if report.all_passed:
-        launcher.dry_run()
-    html = launcher.generate_html(report)
+        launcher.start()
+    # on failure:
+    launcher.rollback()
 """
 
 from __future__ import annotations
 
+import copy
+import json
 import logging
 import os
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import numpy as np
 
@@ -39,8 +41,6 @@ ROOT = Path(__file__).resolve().parent.parent
 
 # ── Schema definition ─────────────────────────────────────────────────────────
 
-# Required config keys with (type, min, max) constraints.
-# None for min/max means no bound check.
 STRATEGY_SCHEMA: Dict[str, Dict[str, Any]] = {
     "min_dte": {"type": int, "min": 0, "max": 365},
     "max_dte": {"type": int, "min": 1, "max": 365},
@@ -62,6 +62,12 @@ BACKTEST_SCHEMA: Dict[str, Dict[str, Any]] = {
 }
 
 TOP_LEVEL_REQUIRED = ("strategy", "risk", "backtest")
+
+# Features that must be available in the feature pipeline for ML models.
+REQUIRED_FEATURES = frozenset({
+    "iv_rank", "vix_level", "rsi_14", "spy_return_5d",
+    "dte", "delta", "spread_width", "net_credit",
+})
 
 
 # ── Data classes ──────────────────────────────────────────────────────────────
@@ -85,6 +91,20 @@ class CheckResult:
 
 
 @dataclass
+class SimulatedTrade:
+    """One simulated trade from the dry-run."""
+    trade_id: int
+    direction: str  # "bull_put" or "bear_call"
+    contracts: int
+    credit: float
+    max_loss: float
+    risk_pct: float
+    pnl: float
+    outcome: str  # "win" or "loss"
+    risk_gate_passed: bool
+
+
+@dataclass
 class DryRunStep:
     """One step in a dry-run simulation."""
     stage: str
@@ -97,6 +117,7 @@ class DryRunStep:
 class DryRunResult:
     """Complete dry-run output."""
     steps: List[DryRunStep]
+    simulated_trades: List[SimulatedTrade]
     would_trade: bool
     estimated_contracts: int
     estimated_risk_dollars: float
@@ -171,9 +192,7 @@ def validate_config(config: Dict[str, Any]) -> List[ValidationError]:
     if isinstance(strategy, dict):
         section_errors = _validate_section("strategy", strategy, STRATEGY_SCHEMA)
         errors.extend(section_errors)
-        # Cross-field checks only if no type errors in the involved fields
         errored_fields = {e.field for e in section_errors}
-        # Cross-field: min_dte < max_dte
         if (
             "min_dte" in strategy and "max_dte" in strategy
             and "min_dte" not in errored_fields and "max_dte" not in errored_fields
@@ -183,7 +202,6 @@ def validate_config(config: Dict[str, Any]) -> List[ValidationError]:
                     section="strategy", field="min_dte/max_dte",
                     message=f"min_dte ({strategy['min_dte']}) must be < max_dte ({strategy['max_dte']})",
                 ))
-        # Cross-field: min_delta < max_delta
         if (
             "min_delta" in strategy and "max_delta" in strategy
             and "min_delta" not in errored_fields and "max_delta" not in errored_fields
@@ -226,7 +244,6 @@ def _validate_section(
         value = section[field_name]
         expected_type = constraints["type"]
 
-        # Type check
         if not isinstance(value, expected_type):
             errors.append(ValidationError(
                 section=section_name, field=field_name,
@@ -234,7 +251,6 @@ def _validate_section(
             ))
             continue
 
-        # Range checks
         min_val = constraints.get("min")
         max_val = constraints.get("max")
         if min_val is not None and value < min_val:
@@ -311,6 +327,48 @@ def _check_feature_pipeline(config: Dict[str, Any], base_dir: Path) -> CheckResu
     )
 
 
+def _check_feature_compatibility(config: Dict[str, Any], base_dir: Path) -> CheckResult:
+    """Check that training data contains required features for the ML model.
+
+    Reads the header of the first training data CSV found and verifies that
+    all REQUIRED_FEATURES are present as columns.
+    """
+    data_dir = base_dir / "compass"
+    candidates = sorted(data_dir.glob("training_data*.csv"))
+    if not candidates:
+        return CheckResult(
+            name="feature_compatibility",
+            passed=False,
+            message="Cannot check features — no training data CSV found",
+        )
+
+    try:
+        with open(candidates[0]) as f:
+            header_line = f.readline().strip()
+        columns = frozenset(c.strip() for c in header_line.split(","))
+    except Exception as e:
+        return CheckResult(
+            name="feature_compatibility",
+            passed=False,
+            message=f"Failed to read training data header: {e}",
+        )
+
+    missing = REQUIRED_FEATURES - columns
+    if missing:
+        return CheckResult(
+            name="feature_compatibility",
+            passed=False,
+            message=f"Missing {len(missing)} required feature(s): {', '.join(sorted(missing))}",
+        )
+
+    return CheckResult(
+        name="feature_compatibility",
+        passed=True,
+        message=f"All {len(REQUIRED_FEATURES)} required features present",
+        details=", ".join(sorted(REQUIRED_FEATURES)),
+    )
+
+
 def _check_risk_gates(config: Dict[str, Any], base_dir: Path) -> CheckResult:
     """Check that risk gate configuration is valid."""
     risk = config.get("risk", {})
@@ -321,7 +379,6 @@ def _check_risk_gates(config: Dict[str, Any], base_dir: Path) -> CheckResult:
             message="No risk configuration found",
         )
 
-    # Check critical risk params exist
     critical = ["max_risk_per_trade", "max_positions"]
     missing = [k for k in critical if k not in risk]
     if missing:
@@ -364,13 +421,84 @@ def _check_hedge_params(config: Dict[str, Any], base_dir: Path) -> CheckResult:
     )
 
 
-DEFAULT_CHECKS = [
+DEFAULT_CHECKS: List[Callable] = [
     _check_training_data,
     _check_model_files,
     _check_feature_pipeline,
+    _check_feature_compatibility,
     _check_risk_gates,
     _check_hedge_params,
 ]
+
+
+# ── Trade simulation ──────────────────────────────────────────────────────────
+
+def _simulate_trades(
+    config: Dict[str, Any],
+    n_trades: int = 10,
+    seed: int = 42,
+) -> List[SimulatedTrade]:
+    """Simulate n_trades to test the pipeline end-to-end without orders.
+
+    Uses config parameters to generate realistic synthetic trades:
+      - Contracts sized from risk budget
+      - Credits drawn from spread_width distribution
+      - Outcomes based on ~65% base win rate (typical credit spread)
+      - Risk gate applied per trade
+    """
+    rng = np.random.RandomState(seed)
+    strategy = config.get("strategy", {})
+    risk = config.get("risk", {})
+    backtest = config.get("backtest", {})
+
+    capital = backtest.get("starting_capital", 100_000)
+    max_risk_pct = risk.get("max_risk_per_trade", 5.0) / 100.0
+    spread_width = strategy.get("spread_width", 5.0)
+    max_positions = risk.get("max_positions", 6)
+    masterplan_risk_limit = 0.05  # 5% MASTERPLAN hard cap
+
+    trades: List[SimulatedTrade] = []
+    for i in range(n_trades):
+        direction = "bull_put" if rng.random() > 0.4 else "bear_call"
+
+        # Credit: typically 20-35% of spread width
+        credit_frac = rng.uniform(0.20, 0.35)
+        credit = round(spread_width * credit_frac, 2)
+        max_loss = round((spread_width - credit) * 100, 2)
+
+        # Contracts from risk budget
+        risk_budget = capital * min(max_risk_pct, masterplan_risk_limit)
+        contracts = max(1, int(risk_budget / max(max_loss, 1)))
+
+        risk_pct = (max_loss * contracts) / capital if capital > 0 else 0.0
+
+        # Risk gate: block if exceeds per-trade or position limit
+        risk_gate_passed = (
+            risk_pct <= masterplan_risk_limit
+            and i < max_positions  # simplistic position count check
+        )
+
+        # Outcome: ~65% win rate with random P&L
+        is_win = rng.random() < 0.65
+        if is_win:
+            pnl = round(credit * 100 * contracts, 2)
+        else:
+            loss_frac = rng.uniform(0.3, 1.0)
+            pnl = round(-max_loss * contracts * loss_frac, 2)
+
+        trades.append(SimulatedTrade(
+            trade_id=i + 1,
+            direction=direction,
+            contracts=contracts,
+            credit=credit,
+            max_loss=max_loss,
+            risk_pct=round(risk_pct * 100, 2),
+            pnl=pnl,
+            outcome="win" if is_win else "loss",
+            risk_gate_passed=risk_gate_passed,
+        ))
+
+    return trades
 
 
 # ── Dry-run simulation ────────────────────────────────────────────────────────
@@ -378,6 +506,7 @@ DEFAULT_CHECKS = [
 def simulate_dry_run(
     config: Dict[str, Any],
     base_dir: Path,
+    n_trades: int = 10,
 ) -> DryRunResult:
     """Simulate the full pipeline without placing trades.
 
@@ -387,14 +516,16 @@ def simulate_dry_run(
       3. Run model (check model files)
       4. Check sizing (compute hypothetical position size)
       5. Apply risk gates (evaluate against limits)
-      6. Report what WOULD happen
+      6. Simulate trades (generate n_trades synthetic trades)
+      7. Summary
 
     Args:
         config: Experiment config dict.
         base_dir: Project root directory.
+        n_trades: Number of trades to simulate (default 10).
 
     Returns:
-        DryRunResult with all simulation steps.
+        DryRunResult with pipeline steps and simulated trades.
     """
     steps: List[DryRunStep] = []
 
@@ -450,7 +581,7 @@ def simulate_dry_run(
     max_risk_pct = risk.get("max_risk_per_trade", 5.0)
     spread_width = strategy.get("spread_width", 5)
     risk_budget = capital * (max_risk_pct / 100.0)
-    max_loss_per_contract = spread_width * 100 * 0.7  # assume ~70% of width as max loss
+    max_loss_per_contract = spread_width * 100 * 0.7
     estimated_contracts = max(1, int(risk_budget / max(max_loss_per_contract, 1)))
 
     steps.append(DryRunStep(
@@ -469,7 +600,7 @@ def simulate_dry_run(
     # 5. Apply risk gates
     max_positions = risk.get("max_positions", 6)
     max_portfolio_risk_pct = risk.get("max_portfolio_risk_pct", 40)
-    single_trade_exposure = (max_risk_pct / 100.0)
+    single_trade_exposure = max_risk_pct / 100.0
 
     risk_gate_status = "pass"
     risk_gate_messages = []
@@ -501,7 +632,25 @@ def simulate_dry_run(
         },
     ))
 
-    # 6. Summary
+    # 6. Simulate trades
+    simulated = _simulate_trades(config, n_trades=n_trades)
+    n_wins = sum(1 for t in simulated if t.outcome == "win")
+    n_blocked = sum(1 for t in simulated if not t.risk_gate_passed)
+    total_pnl = sum(t.pnl for t in simulated)
+    steps.append(DryRunStep(
+        stage="simulate_trades",
+        status="ok",
+        message=f"Simulated {len(simulated)} trades: {n_wins}W/{len(simulated)-n_wins}L, "
+                f"P&L=${total_pnl:,.0f}, {n_blocked} blocked by risk gate",
+        details={
+            "n_trades": len(simulated),
+            "n_wins": n_wins,
+            "n_blocked": n_blocked,
+            "total_pnl": total_pnl,
+        },
+    ))
+
+    # 7. Summary
     would_trade = risk_gate_status == "pass" and all(
         s.status in ("ok", "warn") for s in steps
     )
@@ -513,6 +662,7 @@ def simulate_dry_run(
 
     return DryRunResult(
         steps=steps,
+        simulated_trades=simulated,
         would_trade=would_trade,
         estimated_contracts=estimated_contracts,
         estimated_risk_dollars=risk_budget,
@@ -522,6 +672,8 @@ def simulate_dry_run(
             "n_ok": sum(1 for s in steps if s.status == "ok"),
             "n_warn": sum(1 for s in steps if s.status == "warn"),
             "n_fail": sum(1 for s in steps if s.status == "fail"),
+            "simulated_pnl": total_pnl,
+            "simulated_win_rate": n_wins / max(len(simulated), 1),
         },
     )
 
@@ -529,7 +681,10 @@ def simulate_dry_run(
 # ── Launcher class ────────────────────────────────────────────────────────────
 
 class ExperimentLauncher:
-    """Validates config, runs pre-flight checks, and supports dry-run.
+    """Validates config, runs pre-flight checks, manages experiment lifecycle.
+
+    Supports starting/stopping experiments safely, dry-run with simulated
+    trades, and automatic rollback to a previous config on failure.
 
     Args:
         config: Experiment config dict (typically from YAML).
@@ -554,6 +709,35 @@ class ExperimentLauncher:
         self.checks = checks if checks is not None else DEFAULT_CHECKS
         self.backtest_metrics = backtest_metrics or {}
 
+        # Lifecycle state
+        self._state: str = "idle"  # idle -> preflight -> running -> stopped
+        self._previous_config: Optional[Dict[str, Any]] = None
+        self._start_time: Optional[str] = None
+        self._stop_time: Optional[str] = None
+        self._stop_reason: Optional[str] = None
+        self._last_report: Optional[PreflightReport] = None
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # Properties
+    # ─────────────────────────────────────────────────────────────────────────
+
+    @property
+    def state(self) -> str:
+        """Current lifecycle state: idle, preflight, running, stopped."""
+        return self._state
+
+    @property
+    def is_running(self) -> bool:
+        return self._state == "running"
+
+    @property
+    def previous_config(self) -> Optional[Dict[str, Any]]:
+        return self._previous_config
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # Validation & checks
+    # ─────────────────────────────────────────────────────────────────────────
+
     def validate(self) -> List[ValidationError]:
         """Validate config against schema."""
         return validate_config(self.config)
@@ -574,9 +758,9 @@ class ExperimentLauncher:
                 ))
         return results
 
-    def dry_run(self) -> DryRunResult:
-        """Run dry-run simulation."""
-        return simulate_dry_run(self.config, self.base_dir)
+    def dry_run(self, n_trades: int = 10) -> DryRunResult:
+        """Run dry-run simulation with n_trades simulated trades."""
+        return simulate_dry_run(self.config, self.base_dir, n_trades=n_trades)
 
     def preflight(self, include_dry_run: bool = True) -> PreflightReport:
         """Run complete pre-flight: validate + checks + optional dry run.
@@ -587,11 +771,11 @@ class ExperimentLauncher:
         Returns:
             PreflightReport with all results.
         """
+        self._state = "preflight"
         validation_errors = self.validate()
         checks = self.run_checks()
         dry_run_result = self.dry_run() if include_dry_run else None
 
-        # Build config summary
         strategy = self.config.get("strategy", {})
         risk = self.config.get("risk", {})
         backtest = self.config.get("backtest", {})
@@ -615,7 +799,7 @@ class ExperimentLauncher:
             },
         }
 
-        return PreflightReport(
+        report = PreflightReport(
             experiment_id=self.experiment_id,
             timestamp=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             validation_errors=validation_errors,
@@ -624,6 +808,142 @@ class ExperimentLauncher:
             config_summary=config_summary,
             estimated_performance=self.backtest_metrics,
         )
+        self._last_report = report
+        return report
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # Lifecycle: start / stop / rollback
+    # ─────────────────────────────────────────────────────────────────────────
+
+    def start(self, force: bool = False) -> PreflightReport:
+        """Start the experiment after running pre-flight checks.
+
+        Saves current config as the rollback snapshot before transitioning
+        to the running state.
+
+        Args:
+            force: If True, start even if pre-flight has warnings (but not
+                   errors). Default False — all checks must pass.
+
+        Returns:
+            PreflightReport from the pre-flight run.
+
+        Raises:
+            RuntimeError: If already running or pre-flight fails.
+        """
+        if self._state == "running":
+            raise RuntimeError(
+                f"Experiment {self.experiment_id} is already running"
+            )
+
+        report = self.preflight()
+
+        has_errors = report.n_errors > 0
+        has_failed_checks = report.n_checks_passed < report.n_checks_total
+
+        if has_errors:
+            self._state = "idle"
+            raise RuntimeError(
+                f"Cannot start: {report.n_errors} validation error(s)"
+            )
+
+        if has_failed_checks and not force:
+            self._state = "idle"
+            raise RuntimeError(
+                f"Cannot start: {report.n_checks_total - report.n_checks_passed} "
+                f"pre-flight check(s) failed. Use force=True to override."
+            )
+
+        # Save rollback snapshot
+        self._previous_config = copy.deepcopy(self.config)
+        self._start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self._state = "running"
+
+        logger.info(
+            "Experiment %s started at %s", self.experiment_id, self._start_time
+        )
+        return report
+
+    def stop(self, reason: str = "manual") -> None:
+        """Stop the experiment gracefully.
+
+        Args:
+            reason: Why the experiment was stopped (logged and stored).
+
+        Raises:
+            RuntimeError: If experiment is not running.
+        """
+        if self._state != "running":
+            raise RuntimeError(
+                f"Experiment {self.experiment_id} is not running (state={self._state})"
+            )
+
+        self._stop_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self._stop_reason = reason
+        self._state = "stopped"
+
+        logger.info(
+            "Experiment %s stopped at %s: %s",
+            self.experiment_id, self._stop_time, reason,
+        )
+
+    def rollback(self) -> Dict[str, Any]:
+        """Revert to the previous config snapshot.
+
+        Restores the config that was active before ``start()`` was called.
+        Also transitions the experiment to stopped state if it was running.
+
+        Returns:
+            The restored config dict.
+
+        Raises:
+            RuntimeError: If no previous config is available.
+        """
+        if self._previous_config is None:
+            raise RuntimeError("No previous config to rollback to")
+
+        old = self.config
+        self.config = copy.deepcopy(self._previous_config)
+
+        if self._state == "running":
+            self._stop_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self._stop_reason = "rollback"
+            self._state = "stopped"
+
+        logger.info(
+            "Experiment %s rolled back to previous config", self.experiment_id
+        )
+        return self.config
+
+    def update_config(self, new_config: Dict[str, Any]) -> List[ValidationError]:
+        """Update the experiment config after validation.
+
+        Saves the current config as the rollback snapshot, validates the
+        new config, and applies it only if validation passes.
+
+        Args:
+            new_config: New config dict to apply.
+
+        Returns:
+            List of validation errors (empty = config applied).
+
+        Raises:
+            RuntimeError: If experiment is currently running.
+        """
+        if self._state == "running":
+            raise RuntimeError(
+                "Cannot update config while experiment is running. Stop first."
+            )
+
+        errors = validate_config(new_config)
+        hard_errors = [e for e in errors if e.severity == "error"]
+        if hard_errors:
+            return errors
+
+        self._previous_config = copy.deepcopy(self.config)
+        self.config = new_config
+        logger.info("Config updated for %s", self.experiment_id)
+        return errors
 
     # ─────────────────────────────────────────────────────────────────────────
     # HTML report
@@ -636,16 +956,18 @@ class ExperimentLauncher:
           - Pre-flight status (pass/fail badge)
           - Validation errors table
           - Pre-flight checks checklist
-          - Dry-run pipeline trace
+          - Dry-run pipeline trace with simulated trades
           - Config summary
           - Risk parameters
           - Estimated performance (from last backtest)
         """
         now = report.timestamp
         status_badge = (
-            '<span style="background:#16a34a;color:#fff;padding:4px 12px;border-radius:4px;font-weight:700">READY</span>'
+            '<span style="background:#16a34a;color:#fff;padding:4px 12px;'
+            'border-radius:4px;font-weight:700">READY</span>'
             if report.all_passed else
-            '<span style="background:#dc2626;color:#fff;padding:4px 12px;border-radius:4px;font-weight:700">NOT READY</span>'
+            '<span style="background:#dc2626;color:#fff;padding:4px 12px;'
+            'border-radius:4px;font-weight:700">NOT READY</span>'
         )
 
         # ── Validation errors ────────────────────────────────────────────
@@ -657,7 +979,6 @@ class ExperimentLauncher:
                 f"<td>{ve.section}</td><td>{ve.field}</td>"
                 f"<td>{ve.message}</td></tr>\n"
             )
-        val_section = ""
         if val_rows:
             val_section = f"""
 <div class="section">
@@ -668,12 +989,14 @@ class ExperimentLauncher:
 </table>
 </div>"""
         else:
-            val_section = '<div class="section"><h2>Validation</h2><p class="good">All config fields valid.</p></div>'
+            val_section = (
+                '<div class="section"><h2>Validation</h2>'
+                '<p class="good">All config fields valid.</p></div>'
+            )
 
         # ── Pre-flight checks ────────────────────────────────────────────
         check_rows = ""
         for ck in report.checks:
-            icon = "pass-icon" if ck.passed else "fail-icon"
             status = "PASS" if ck.passed else "FAIL"
             cls = "good" if ck.passed else "bad"
             details = f" — {ck.details}" if ck.details else ""
@@ -688,7 +1011,8 @@ class ExperimentLauncher:
             dr = report.dry_run
             dr_rows = ""
             for step in dr.steps:
-                cls = {"ok": "good", "warn": "warn", "fail": "bad", "skip": "neutral"}.get(step.status, "")
+                cls = {"ok": "good", "warn": "warn", "fail": "bad",
+                       "skip": "neutral"}.get(step.status, "")
                 dr_rows += (
                     f"<tr><td>{step.stage}</td>"
                     f"<td class='{cls}'>{step.status.upper()}</td>"
@@ -699,6 +1023,24 @@ class ExperimentLauncher:
                 '<span class="good">YES</span>' if dr.would_trade
                 else '<span class="bad">NO</span>'
             )
+
+            # Simulated trades table
+            trade_rows = ""
+            for t in dr.simulated_trades:
+                pnl_cls = "good" if t.pnl > 0 else "bad"
+                gate_cls = "good" if t.risk_gate_passed else "bad"
+                trade_rows += (
+                    f"<tr><td>{t.trade_id}</td><td>{t.direction}</td>"
+                    f"<td>{t.contracts}</td><td>${t.credit:.2f}</td>"
+                    f"<td>${t.max_loss:.2f}</td><td>{t.risk_pct:.1f}%</td>"
+                    f"<td class='{pnl_cls}'>${t.pnl:,.2f}</td>"
+                    f"<td>{t.outcome}</td>"
+                    f"<td class='{gate_cls}'>{'PASS' if t.risk_gate_passed else 'BLOCK'}</td></tr>\n"
+                )
+
+            sim_pnl = dr.summary.get("simulated_pnl", 0)
+            sim_wr = dr.summary.get("simulated_win_rate", 0)
+
             dry_run_html = f"""
 <div class="section">
 <h2>Dry Run</h2>
@@ -712,6 +1054,11 @@ class ExperimentLauncher:
 <thead><tr><th>Stage</th><th>Status</th><th>Message</th></tr></thead>
 <tbody>{dr_rows}</tbody>
 </table>
+<h3>Simulated Trades ({len(dr.simulated_trades)} trades, WR={sim_wr:.0%}, P&amp;L=${sim_pnl:,.0f})</h3>
+<table>
+<thead><tr><th>#</th><th>Dir</th><th>Qty</th><th>Credit</th><th>Max Loss</th><th>Risk%</th><th>P&amp;L</th><th>Result</th><th>Gate</th></tr></thead>
+<tbody>{trade_rows}</tbody>
+</table>
 </div>"""
 
         # ── Config summary ───────────────────────────────────────────────
@@ -720,9 +1067,13 @@ class ExperimentLauncher:
         for section_name, section_data in cs.items():
             if isinstance(section_data, dict):
                 for k, v in section_data.items():
-                    config_rows += f"<tr><td>{section_name}.{k}</td><td>{v}</td></tr>\n"
+                    config_rows += (
+                        f"<tr><td>{section_name}.{k}</td><td>{v}</td></tr>\n"
+                    )
             else:
-                config_rows += f"<tr><td>{section_name}</td><td>{section_data}</td></tr>\n"
+                config_rows += (
+                    f"<tr><td>{section_name}</td><td>{section_data}</td></tr>\n"
+                )
 
         # ── Estimated performance ────────────────────────────────────────
         perf_html = ""
@@ -753,6 +1104,7 @@ class ExperimentLauncher:
          margin: 0; padding: 2em 3em; background: #f8fafc; color: #1e293b; }}
   h1 {{ color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.4em; }}
   h2 {{ color: #334155; margin-top: 2em; }}
+  h3 {{ color: #475569; margin-top: 1.5em; font-size: 1em; }}
   .meta {{ color: #64748b; font-size: 0.9em; margin-bottom: 1.5em; }}
   .kpi-row {{ display: flex; gap: 1.2em; flex-wrap: wrap; margin: 1.5em 0; }}
   .kpi {{ background: #fff; border: 1px solid #e2e8f0; border-radius: 8px;
@@ -812,15 +1164,7 @@ class ExperimentLauncher:
         output_path: str = "reports/launch_report.html",
         include_dry_run: bool = True,
     ) -> PreflightReport:
-        """Run preflight and write HTML report to disk.
-
-        Args:
-            output_path: Path to write the HTML file.
-            include_dry_run: Whether to include dry-run in the report.
-
-        Returns:
-            PreflightReport.
-        """
+        """Run preflight and write HTML report to disk."""
         report = self.preflight(include_dry_run=include_dry_run)
         html = self.generate_html(report)
 

@@ -49,6 +49,26 @@ class TrafficLight:
 
 
 @dataclass
+class RecentTrade:
+    """Summary of a recent trade."""
+    date: str
+    pnl: float
+    ticker: str = ""
+    spread_type: str = ""
+
+
+@dataclass
+class ModelHealth:
+    """Model health snapshot for an experiment."""
+    rolling_auc: float = 0.0
+    rolling_accuracy: float = 0.0
+    drift_fraction: float = 0.0
+    n_alerts: int = 0
+    should_retrain: bool = False
+    health_status: str = GREEN    # GREEN / YELLOW / RED
+
+
+@dataclass
 class ExperimentStatus:
     """Per-experiment status card."""
     experiment_id: str
@@ -67,6 +87,8 @@ class ExperimentStatus:
     capacity_estimate: float = 0.0
     signal_half_life: float = 0.0
     execution_quality: float = 0.0
+    recent_trades: List[RecentTrade] = field(default_factory=list)
+    model_health: Optional[ModelHealth] = None
     lights: List[TrafficLight] = field(default_factory=list)
 
 
@@ -115,6 +137,7 @@ class ExperimentDashboard:
         signal_decay: Optional[Dict[str, Dict[str, Any]]] = None,
         execution_stats: Optional[Dict[str, Dict[str, Any]]] = None,
         correlation_matrix: Optional[pd.DataFrame] = None,
+        recent_trades: Optional[Dict[str, List[Dict[str, Any]]]] = None,
     ) -> DashboardResult:
         """Build unified dashboard from all data sources.
 
@@ -127,13 +150,16 @@ class ExperimentDashboard:
         stress_results : dict, optional
             experiment_id → {hedged_dd, unhedged_dd, hedge_status, ...}
         model_snapshots : dict, optional
-            experiment_id → {rolling_auc, days_since_retrain, should_retrain, ...}
+            experiment_id → {rolling_auc, days_since_retrain, should_retrain,
+                             rolling_accuracy, drift_fraction, n_alerts, ...}
         signal_decay : dict, optional
             experiment_id → {half_life_hours, optimal_period, snr, ...}
         execution_stats : dict, optional
             experiment_id → {fill_rate, avg_slippage, execution_score, ...}
         correlation_matrix : pd.DataFrame, optional
             Experiment-by-experiment return correlation matrix.
+        recent_trades : dict, optional
+            experiment_id → list of {date, pnl, ticker?, spread_type?}
         """
         if not experiments:
             return DashboardResult(generated_at=self._now())
@@ -143,6 +169,7 @@ class ExperimentDashboard:
         model_snapshots = model_snapshots or {}
         signal_decay = signal_decay or {}
         execution_stats = execution_stats or {}
+        recent_trades = recent_trades or {}
 
         exp_statuses: List[ExperimentStatus] = []
         for exp in experiments:
@@ -154,6 +181,7 @@ class ExperimentDashboard:
                 model_snapshots.get(eid, {}),
                 signal_decay.get(eid, {}),
                 execution_stats.get(eid, {}),
+                recent_trades.get(eid, []),
             )
             exp_statuses.append(status)
 
@@ -189,6 +217,7 @@ class ExperimentDashboard:
         model: Dict[str, Any],
         decay: Dict[str, Any],
         exec_stats: Dict[str, Any],
+        trades_raw: Optional[List[Dict[str, Any]]] = None,
     ) -> ExperimentStatus:
         sharpe = float(bt.get("sharpe", 0.0))
         max_dd = float(bt.get("max_dd_pct", 0.0))
@@ -202,6 +231,19 @@ class ExperimentDashboard:
         capacity = float(bt.get("capacity_estimate", 0.0))
         half_life = float(decay.get("half_life_hours", 0.0))
         exec_score = float(exec_stats.get("execution_score", 0.0))
+
+        # Recent trades
+        recent: List[RecentTrade] = []
+        for t in (trades_raw or []):
+            recent.append(RecentTrade(
+                date=str(t.get("date", "")),
+                pnl=float(t.get("pnl", 0.0)),
+                ticker=str(t.get("ticker", "")),
+                spread_type=str(t.get("spread_type", t.get("type", ""))),
+            ))
+
+        # Model health
+        mh = self._build_model_health(model)
 
         lights = self._evaluate_lights(
             sharpe=sharpe, max_dd=max_dd, win_rate=win_rate,
@@ -227,7 +269,34 @@ class ExperimentDashboard:
             capacity_estimate=capacity,
             signal_half_life=half_life,
             execution_quality=exec_score,
+            recent_trades=recent,
+            model_health=mh,
             lights=lights,
+        )
+
+    @staticmethod
+    def _build_model_health(model: Dict[str, Any]) -> ModelHealth:
+        """Derive model health status from snapshot data."""
+        auc = float(model.get("rolling_auc", 0.0))
+        acc = float(model.get("rolling_accuracy", 0.0))
+        drift = float(model.get("drift_fraction", 0.0))
+        alerts = int(model.get("n_alerts", 0))
+        retrain = bool(model.get("should_retrain", False))
+
+        if retrain or alerts >= 3 or drift > 0.5:
+            health = RED
+        elif alerts >= 1 or drift > 0.2 or auc < 0.55:
+            health = YELLOW
+        else:
+            health = GREEN
+
+        return ModelHealth(
+            rolling_auc=auc,
+            rolling_accuracy=acc,
+            drift_fraction=drift,
+            n_alerts=alerts,
+            should_retrain=retrain,
+            health_status=health,
         )
 
     def _evaluate_lights(
@@ -385,6 +454,8 @@ class ExperimentDashboard:
         exp_cards = self._html_experiment_cards(r.experiments)
         detail_table = self._html_detail_table(r.experiments)
         lights_summary = self._html_lights_summary(r.experiments)
+        model_health_table = self._html_model_health(r.experiments)
+        recent_trades_section = self._html_recent_trades(r.experiments)
 
         return f"""<!DOCTYPE html>
 <html lang="en">
@@ -417,6 +488,8 @@ tr:hover{{background:#1e293b}}
 .exp-card .metrics{{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;font-size:.8rem}}
 .exp-card .metrics .k{{color:#94a3b8}}.exp-card .metrics .v{{font-weight:600}}
 .exp-grid{{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-bottom:28px}}
+.trade-line{{font-size:.75rem;color:#94a3b8;margin-top:2px}}
+.trade-line .pnl-pos{{color:#4ade80}}.trade-line .pnl-neg{{color:#f87171}}
 </style>
 </head>
 <body>
@@ -431,6 +504,8 @@ tr:hover{{background:#1e293b}}
 </div>
 
 {detail_table}
+{model_health_table}
+{recent_trades_section}
 {lights_summary}
 
 </body>
@@ -461,6 +536,23 @@ tr:hover{{background:#1e293b}}
         for e in exps:
             hedge_display = e.hedge_status or "unknown"
             retrain = f"{e.days_since_retrain}d" if e.days_since_retrain >= 0 else "N/A"
+
+            # Model health badge
+            mh = e.model_health
+            if mh:
+                health_badge = f'<span class="{mh.health_status}">{mh.health_status}</span>'
+            else:
+                health_badge = "N/A"
+
+            # Recent trades mini-list (last 3)
+            trade_lines = ""
+            for t in e.recent_trades[:3]:
+                cls = "pnl-pos" if t.pnl >= 0 else "pnl-neg"
+                trade_lines += (
+                    f'<div class="trade-line">{t.date} '
+                    f'<span class="{cls}">${t.pnl:+,.0f}</span> {t.spread_type}</div>'
+                )
+
             cards += f"""<div class="exp-card {e.status}">
 <h3><span class="dot {e.status}"></span>{e.experiment_id} — {e.name}</h3>
 <div class="metrics">
@@ -474,7 +566,9 @@ tr:hover{{background:#1e293b}}
 <span class="k">Retrain</span><span class="v">{retrain}</span>
 <span class="k">Hedge</span><span class="v">{hedge_display}</span>
 <span class="k">Capacity</span><span class="v">${e.capacity_estimate:,.0f}</span>
+<span class="k">Model Health</span><span class="v">{health_badge}</span>
 </div>
+{trade_lines}
 </div>"""
         return cards
 
@@ -499,6 +593,59 @@ tr:hover{{background:#1e293b}}
 <h2>Experiment Detail</h2>
 <table>
 <thead><tr><th>ID</th><th>Name</th><th>Ticker</th><th>Sharpe</th><th>Max DD</th><th>Win Rate</th><th>PF</th><th>AUC</th><th>Half-Life</th><th>Exec Q</th><th>Status</th></tr></thead>
+<tbody>{rows}</tbody>
+</table>
+</div>"""
+
+    # ── Model health table ─────────────────────────────────────────────────
+    @staticmethod
+    def _html_model_health(exps: List[ExperimentStatus]) -> str:
+        has_health = any(e.model_health is not None for e in exps)
+        if not has_health:
+            return ""
+        rows = ""
+        for e in exps:
+            mh = e.model_health
+            if not mh:
+                continue
+            rows += (
+                f'<tr><td>{e.experiment_id}</td>'
+                f"<td>{mh.rolling_auc:.3f}</td>"
+                f"<td>{mh.rolling_accuracy:.1%}</td>"
+                f"<td>{mh.drift_fraction:.1%}</td>"
+                f"<td>{mh.n_alerts}</td>"
+                f'<td>{"Yes" if mh.should_retrain else "No"}</td>'
+                f'<td class="{mh.health_status}"><span class="dot {mh.health_status}"></span>{mh.health_status}</td></tr>'
+            )
+        return f"""<div class="sec">
+<h2>Model Health</h2>
+<table>
+<thead><tr><th>Experiment</th><th>AUC</th><th>Accuracy</th><th>Drift</th><th>Alerts</th><th>Retrain?</th><th>Status</th></tr></thead>
+<tbody>{rows}</tbody>
+</table>
+</div>"""
+
+    # ── Recent trades section ───────────────────────────────────────────────
+    @staticmethod
+    def _html_recent_trades(exps: List[ExperimentStatus]) -> str:
+        has_trades = any(len(e.recent_trades) > 0 for e in exps)
+        if not has_trades:
+            return ""
+        rows = ""
+        for e in exps:
+            for t in e.recent_trades[:5]:
+                cls = "GREEN" if t.pnl >= 0 else "RED"
+                rows += (
+                    f"<tr><td>{e.experiment_id}</td>"
+                    f"<td>{t.date}</td>"
+                    f"<td>{t.ticker}</td>"
+                    f"<td>{t.spread_type}</td>"
+                    f'<td class="{cls}">${t.pnl:+,.2f}</td></tr>'
+                )
+        return f"""<div class="sec">
+<h2>Recent Trades</h2>
+<table>
+<thead><tr><th>Experiment</th><th>Date</th><th>Ticker</th><th>Type</th><th>P&L</th></tr></thead>
 <tbody>{rows}</tbody>
 </table>
 </div>"""
