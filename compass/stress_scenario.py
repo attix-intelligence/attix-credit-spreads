@@ -466,7 +466,7 @@ svg{{display:block;margin:0 auto}}
         wc = r.worst_case
         return f"""<div class="grid">
 <div class="card"><div class="lbl">Worst Scenario</div><div class="val neg">{wc.scenario.name if wc else 'N/A'}</div></div>
-<div class="card"><div class="lbl">Worst DD</div><div class="val neg">{wc.adjusted_drawdown:.1% if wc else 'N/A'}</div></div>
+<div class="card"><div class="lbl">Worst DD</div><div class="val neg">{f'{wc.adjusted_drawdown:.1%}' if wc else 'N/A'}</div></div>
 <div class="card"><div class="lbl">Recovery (med)</div><div class="val">{wc.recovery.median_days if wc and wc.recovery else 0}d</div></div>
 <div class="card"><div class="lbl">PW Loss</div><div class="val">${r.total_pw_loss:,.0f}</div></div>
 <div class="card"><div class="lbl">Exp Shortfall</div><div class="val">{r.expected_shortfall:.1%}</div></div>
@@ -530,7 +530,7 @@ svg{{display:block;margin:0 auto}}
 <tr><td>VIX Multiplier</td><td>{wc.vix_multiplier:.1f}x</td></tr>
 <tr><td>Recovery (median)</td><td>{wc.recovery.median_days if wc.recovery else 0}d</td></tr>
 <tr><td>Recovery P10/P90</td><td>{wc.recovery.p10_days if wc.recovery else 0}d / {wc.recovery.p90_days if wc.recovery else 0}d</td></tr>
-<tr><td>Recovery Prob (2yr)</td><td>{wc.recovery.recovery_probability:.0% if wc.recovery else 'N/A'}</td></tr>
+<tr><td>Recovery Prob (2yr)</td><td>{f'{wc.recovery.recovery_probability:.0%}' if wc.recovery else 'N/A'}</td></tr>
 </tbody>
 </table>
 </div>"""
