@@ -226,11 +226,9 @@ class PnLPredictor:
         if self._model is None:
             return Prediction(0, 0, 0, self.confidence_level, False, 0, 0, features)
 
-        cols = [c for c in self.features if c in features]
-        if not cols:
-            return Prediction(0, 0, 0, self.confidence_level, False, 0, 0, features)
-
-        X = np.array([[features.get(c, 0.0) for c in cols]])
+        # Use the exact feature columns the model was trained on
+        trained_cols = list(self._model.feature_names_in_) if hasattr(self._model, "feature_names_in_") else self.features
+        X = np.array([[features.get(c, 0.0) for c in trained_cols]])
         pred = float(self._model.predict(X)[0])
 
         # Confidence interval from residual distribution
