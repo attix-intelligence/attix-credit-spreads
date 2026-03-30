@@ -38,12 +38,15 @@ def _equity_stable(n: int = 200, seed: int = 42) -> pd.Series:
 
 
 def _equity_drawdown(n: int = 200, seed: int = 77) -> pd.Series:
-    """Equity with a 10% drawdown mid-series then recovery."""
+    """Equity with a ~10% drawdown mid-series then recovery."""
     rng = np.random.default_rng(seed)
     r = np.empty(n)
-    r[:80] = rng.normal(0.0005, 0.003, 80)
-    r[80:130] = rng.normal(-0.003, 0.005, 50)  # drawdown phase
-    r[130:] = rng.normal(0.001, 0.003, n - 130)  # recovery
+    a = int(n * 0.4)       # growth phase
+    b = int(n * 0.25)      # drawdown phase
+    c = n - a - b          # recovery phase
+    r[:a] = rng.normal(0.0005, 0.003, a)
+    r[a:a + b] = rng.normal(-0.003, 0.005, b)
+    r[a + b:] = rng.normal(0.001, 0.003, c)
     return pd.Series(100000 * np.cumprod(1 + r), index=_dates(n))
 
 
