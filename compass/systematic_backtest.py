@@ -133,9 +133,12 @@ def compute_max_drawdown(equity: pd.Series) -> float:
 
 
 def compute_sharpe(returns: pd.Series, periods_per_year: float = 252.0) -> float:
-    if returns.empty or returns.std() == 0:
+    if returns.empty:
         return 0.0
-    return float(returns.mean() / returns.std() * math.sqrt(periods_per_year))
+    std = returns.std()
+    if std < 1e-12:
+        return 0.0
+    return float(returns.mean() / std * math.sqrt(periods_per_year))
 
 
 def compute_sortino(returns: pd.Series, periods_per_year: float = 252.0) -> float:
