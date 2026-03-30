@@ -343,6 +343,16 @@ class DataPipeline:
                 task = self._compute_feature(feature)
                 tasks.append(task)
 
+        # Mark features not reached by topo-sort (unresolvable deps) as failed
+        executed = {t.task_name for t in tasks}
+        for f in self.features:
+            if f.name not in executed:
+                tasks.append(TaskResult(
+                    task_name=f.name, status=TaskStatus.FAILED,
+                    error=f"Unresolvable dependencies: {f.depends_on}",
+                    timestamp=self._now(),
+                ))
+
         versions = list(self._versions.values())
         n_ok = sum(1 for t in tasks if t.status == TaskStatus.SUCCESS)
         n_fail = sum(1 for t in tasks if t.status == TaskStatus.FAILED)
