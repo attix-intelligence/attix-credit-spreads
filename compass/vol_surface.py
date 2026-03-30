@@ -362,11 +362,20 @@ def detect_surface_dynamics(
 
     # Sticky-strike: IV change uncorrelated with strike
     strikes = common_k.values.astype(float)
-    corr_strike = abs(float(np.corrcoef(strikes, iv_change)[0, 1]))
+    if np.std(iv_change) < 1e-12:
+        # No IV change → sticky-strike by definition
+        return SurfaceDynamics("sticky_strike", 1.0, 0.0, 0.8)
+
+    corr_mat = np.corrcoef(strikes, iv_change)
+    corr_strike = abs(float(corr_mat[0, 1])) if not np.isnan(corr_mat[0, 1]) else 0.0
 
     # Sticky-delta: IV change correlated with moneyness shift
     moneyness_shift = np.log(strikes / forward_t1) - np.log(strikes / forward_t0)
-    corr_delta = abs(float(np.corrcoef(moneyness_shift, iv_change)[0, 1]))
+    if np.std(moneyness_shift) < 1e-12:
+        corr_delta = 0.0
+    else:
+        cd = np.corrcoef(moneyness_shift, iv_change)
+        corr_delta = abs(float(cd[0, 1])) if not np.isnan(cd[0, 1]) else 0.0
 
     if corr_strike < 0.3 and corr_delta < 0.3:
         regime = "sticky_strike"

@@ -1,301 +1,361 @@
-"""Tests for compass.vol_surface — 38 tests."""
+"""Tests for compass/vol_surface.py — volatility surface modeler."""
+
+from __future__ import annotations
+
+import tempfile
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import pytest
-from datetime import datetime
-from pathlib import Path
 
 from compass.vol_surface import (
-    VolSurfaceEngine,
-    SABRParams,
-    SkewMetrics,
-    ArbitrageViolation,
+    ArbitrageCheck,
+    SVIParams,
+    SkewKurtosis,
+    SurfaceDynamics,
+    SurfaceResult,
     TermStructurePoint,
-    SurfaceGreeks,
-    VolSurfaceSummary,
-    sabr_vol,
+    VolForecast,
+    VolSurfaceModeler,
+    calibrate_svi,
+    check_butterfly,
+    check_calendar,
+    detect_surface_dynamics,
+    extract_skew_kurtosis,
+    forecast_iv,
+    interpolate_surface,
+    svi_implied_vol,
+    svi_total_variance,
 )
 
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
+# ── Helpers ───────────────────────────────────────────────────────────────
 
-def _option_chain(n_strikes: int = 11, n_expiries: int = 4, forward: float = 100.0,
-                   seed: int = 42) -> pd.DataFrame:
-    """Synthetic option chain with realistic skew."""
-    rng = np.random.default_rng(seed)
-    strikes = np.linspace(forward * 0.85, forward * 1.15, n_strikes)
-    expiries = [30, 60, 90, 180][:n_expiries]
+
+def _make_chain(
+    forward: float = 450.0,
+    n_strikes: int = 15,
+    expiries: tuple = (30, 60, 90, 180),
+    seed: int = 42,
+) -> pd.DataFrame:
+    """Generate synthetic option chain with vol smile."""
+    rng = np.random.RandomState(seed)
     rows = []
     for exp in expiries:
+        atm_vol = 0.20 + 0.02 * (exp / 365)
+        strikes = np.linspace(forward * 0.85, forward * 1.15, n_strikes)
         for k in strikes:
-            # Simple skew: higher IV for lower strikes
-            moneyness = k / forward
-            base_iv = 0.20 + 0.05 * np.sqrt(exp / 365)
-            skew = 0.15 * (1 - moneyness) ** 2
-            iv = base_iv + skew + rng.normal(0, 0.005)
-            rows.append({"strike": k, "expiry_days": exp, "iv": max(iv, 0.05)})
+            log_m = np.log(k / forward)
+            skew = -0.15 * log_m
+            smile = 0.05 * log_m ** 2
+            iv = max(0.05, atm_vol + skew + smile + rng.normal(0, 0.002))
+            rows.append({"strike": k, "expiry_days": exp, "iv": iv})
     return pd.DataFrame(rows)
 
 
-def _surface_df() -> pd.DataFrame:
-    chain = _option_chain()
-    return VolSurfaceEngine.build_surface(chain)
+def _make_surface(forward: float = 450.0) -> pd.DataFrame:
+    chain = _make_chain(forward)
+    return VolSurfaceModeler.build_surface(chain)
 
 
-# ===========================================================================
-# SABR formula
-# ===========================================================================
-
-class TestSABRVol:
-    def test_atm(self):
-        v = sabr_vol(100, 100, 0.25, 0.3, 0.5, -0.3, 0.4)
-        assert v > 0
-
-    def test_positive(self):
-        for k in [80, 90, 100, 110, 120]:
-            v = sabr_vol(k, 100, 0.25, 0.3, 0.5, -0.3, 0.4)
-            assert v > 0
-
-    def test_zero_expiry(self):
-        assert sabr_vol(100, 100, 0, 0.3, 0.5, -0.3, 0.4) == 0.0
-
-    def test_skew(self):
-        """Lower strikes should have higher vol with negative rho."""
-        v_low = sabr_vol(90, 100, 0.25, 0.3, 0.5, -0.5, 0.4)
-        v_high = sabr_vol(110, 100, 0.25, 0.3, 0.5, -0.5, 0.4)
-        assert v_low > v_high
+@pytest.fixture
+def chain():
+    return _make_chain()
 
 
-# ===========================================================================
-# Surface construction
-# ===========================================================================
-
-class TestSurface:
-    def test_build(self):
-        chain = _option_chain()
-        surface = VolSurfaceEngine.build_surface(chain)
-        assert not surface.empty
-        assert surface.shape[0] == 11
-        assert surface.shape[1] == 4
-
-    def test_empty_chain(self):
-        assert VolSurfaceEngine.build_surface(pd.DataFrame()).empty
-
-    def test_missing_columns(self):
-        df = pd.DataFrame({"foo": [1]})
-        assert VolSurfaceEngine.build_surface(df).empty
+@pytest.fixture
+def surface():
+    return _make_surface()
 
 
-# ===========================================================================
-# SABR calibration
-# ===========================================================================
-
-class TestSABRCalib:
-    def test_calibrate(self):
-        eng = VolSurfaceEngine(beta=0.5)
-        chain = _option_chain()
-        col = chain[chain["expiry_days"] == 30]
-        params = eng.calibrate_sabr(
-            col["strike"].values, col["iv"].values, 100.0, 30 / 365)
-        assert isinstance(params, SABRParams)
-        assert params.alpha > 0
-        assert -1 < params.rho < 1
-        assert params.nu > 0
-
-    def test_short_data(self):
-        eng = VolSurfaceEngine()
-        params = eng.calibrate_sabr(np.array([100.0]), np.array([0.2]), 100.0, 0.25)
-        assert params.alpha > 0  # returns defaults
-
-    def test_sabr_smile(self):
-        eng = VolSurfaceEngine()
-        params = SABRParams(alpha=0.3, beta=0.5, rho=-0.3, nu=0.4,
-                             forward=100, expiry=0.25)
-        strikes = np.linspace(85, 115, 10)
-        vols = eng.sabr_smile(params, strikes)
-        assert len(vols) == 10
-        assert all(v > 0 for v in vols)
+@pytest.fixture
+def modeler():
+    return VolSurfaceModeler()
 
 
-# ===========================================================================
-# Skew analytics
-# ===========================================================================
-
-class TestSkew:
-    def test_basic(self):
-        strikes = np.linspace(85, 115, 11)
-        # Asymmetric skew: OTM puts more expensive than OTM calls
-        vols = 0.20 + 0.15 * np.maximum(1 - strikes / 100, 0)
-        sm = VolSurfaceEngine.compute_skew(strikes, vols, 100.0, 30)
-        assert isinstance(sm, SkewMetrics)
-        assert sm.atm_vol > 0
-        assert sm.skew_25d > 0  # puts more expensive
-
-    def test_butterfly_positive(self):
-        strikes = np.linspace(85, 115, 11)
-        vols = 0.20 + 0.05 * ((strikes - 100) / 15) ** 2  # smile
-        sm = VolSurfaceEngine.compute_skew(strikes, vols, 100.0, 30)
-        assert sm.butterfly_25d > 0
-
-    def test_too_few_strikes(self):
-        sm = VolSurfaceEngine.compute_skew(np.array([100.0]), np.array([0.2]), 100, 30)
-        assert sm.atm_vol == 0.0
+# ── SVI model tests ──────────────────────────────────────────────────────
 
 
-# ===========================================================================
-# Arbitrage detection
-# ===========================================================================
+class TestSVI:
+    def test_total_variance_positive(self):
+        w = svi_total_variance(0.0, 0.04, 0.1, -0.3, 0.0, 0.1)
+        assert w > 0
 
-class TestArbitrage:
-    def test_clean_surface(self):
-        surface = _surface_df()
-        violations = VolSurfaceEngine.detect_arbitrage(surface)
-        # Synthetic surface may have some minor violations
-        assert isinstance(violations, list)
+    def test_total_variance_increases_wings(self):
+        w_atm = svi_total_variance(0.0, 0.04, 0.1, -0.3, 0.0, 0.1)
+        w_otm = svi_total_variance(0.2, 0.04, 0.1, -0.3, 0.0, 0.1)
+        assert w_otm > w_atm
 
-    def test_calendar_violation(self):
-        # Construct a surface where short-dated vol >> long-dated (total var violation)
-        data = pd.DataFrame({
-            30: [0.50, 0.45, 0.40],
-            90: [0.15, 0.14, 0.13],  # much lower — total var decreases
-        }, index=[90, 100, 110])
-        violations = VolSurfaceEngine.detect_arbitrage(data)
-        cal = [v for v in violations if v.violation_type == "calendar"]
-        assert len(cal) > 0
-
-    def test_empty(self):
-        assert VolSurfaceEngine.detect_arbitrage(pd.DataFrame()) == []
-
-
-# ===========================================================================
-# Term structure
-# ===========================================================================
-
-class TestTermStructure:
-    def test_basic(self):
-        surface = _surface_df()
-        ts, is_c = VolSurfaceEngine.term_structure(surface, 100.0)
-        assert len(ts) > 0
-        assert all(isinstance(p, TermStructurePoint) for p in ts)
-
-    def test_contango(self):
-        # Longer expiry → higher vol
-        data = pd.DataFrame({30: [0.18], 90: [0.22], 180: [0.25]}, index=[100])
-        ts, is_c = VolSurfaceEngine.term_structure(data, 100.0)
-        assert is_c
-
-    def test_backwardation(self):
-        data = pd.DataFrame({30: [0.30], 90: [0.22], 180: [0.18]}, index=[100])
-        ts, is_c = VolSurfaceEngine.term_structure(data, 100.0)
-        assert not is_c
-
-
-# ===========================================================================
-# Interpolation
-# ===========================================================================
-
-class TestInterpolation:
-    def test_on_grid(self):
-        surface = _surface_df()
-        k = surface.index[5]
-        exp = surface.columns[1]
-        iv = VolSurfaceEngine.interpolate(surface, float(k), float(exp))
-        assert iv == pytest.approx(float(surface.loc[k, exp]), abs=0.001)
-
-    def test_off_grid(self):
-        surface = _surface_df()
-        iv = VolSurfaceEngine.interpolate(surface, 97.5, 45)
+    def test_implied_vol_positive(self):
+        iv = svi_implied_vol(0.0, 0.25, 0.04, 0.1, -0.3, 0.0, 0.1)
         assert iv > 0
 
-    def test_empty(self):
-        assert VolSurfaceEngine.interpolate(pd.DataFrame(), 100, 30) == 0.0
+    def test_implied_vol_zero_expiry(self):
+        assert svi_implied_vol(0.0, 0.0, 0.04, 0.1, -0.3, 0.0, 0.1) == 0.0
+
+    def test_calibrate_svi_returns_params(self):
+        log_k = np.linspace(-0.2, 0.2, 10)
+        vols = np.array([0.25 + 0.1 * k ** 2 for k in log_k])
+        params = calibrate_svi(log_k, vols, 0.25)
+        assert isinstance(params, SVIParams)
+        assert params.b > 0
+
+    def test_calibrate_svi_fits_smile(self):
+        log_k = np.linspace(-0.15, 0.15, 11)
+        true_vols = np.array([0.22 + 0.08 * k ** 2 - 0.1 * k for k in log_k])
+        params = calibrate_svi(log_k, true_vols, 0.25)
+        fitted = np.array([svi_implied_vol(k, 0.25, params.a, params.b, params.rho, params.m, params.sigma) for k in log_k])
+        rmse = np.sqrt(np.mean((fitted - true_vols) ** 2))
+        assert rmse < 0.05
+
+    def test_calibrate_svi_short_data(self):
+        params = calibrate_svi(np.array([0.0]), np.array([0.2]), 0.25)
+        assert isinstance(params, SVIParams)
 
 
-# ===========================================================================
-# Greeks
-# ===========================================================================
-
-class TestGreeks:
-    def test_bs_greeks_call(self):
-        g = VolSurfaceEngine.bs_greeks(100, 100, 0.25, 0.20, 0.045, True)
-        assert isinstance(g, SurfaceGreeks)
-        assert 0 < g.delta < 1
-        assert g.gamma > 0
-        assert g.vega > 0
-
-    def test_bs_greeks_put(self):
-        g = VolSurfaceEngine.bs_greeks(100, 100, 0.25, 0.20, 0.045, False)
-        assert -1 < g.delta < 0
-
-    def test_greeks_from_surface(self):
-        eng = VolSurfaceEngine()
-        surface = _surface_df()
-        g = eng.greeks_from_surface(surface, 100.0, 95.0, 60)
-        assert g.iv > 0
-        assert g.delta != 0
+# ── Surface build tests ──────────────────────────────────────────────────
 
 
-# ===========================================================================
-# Full analysis
-# ===========================================================================
+class TestSurfaceBuild:
+    def test_build_surface(self, chain):
+        surface = VolSurfaceModeler.build_surface(chain)
+        assert not surface.empty
+        assert surface.shape[0] > 0
+        assert surface.shape[1] == 4
 
-class TestAnalyze:
-    def test_full(self):
-        eng = VolSurfaceEngine()
-        chain = _option_chain()
-        summary = eng.analyze(chain, forward=100.0)
-        assert isinstance(summary, VolSurfaceSummary)
-        assert summary.sabr_params is not None
-        assert len(summary.skew_metrics) > 0
-        assert len(summary.term_structure) > 0
+    def test_build_empty_chain(self):
+        assert VolSurfaceModeler.build_surface(pd.DataFrame()).empty
 
-    def test_empty_chain(self):
-        eng = VolSurfaceEngine()
-        summary = eng.analyze(pd.DataFrame(), forward=100.0)
-        assert summary.sabr_params is None
+    def test_build_missing_columns(self):
+        df = pd.DataFrame({"a": [1], "b": [2]})
+        assert VolSurfaceModeler.build_surface(df).empty
+
+    def test_strikes_sorted(self, chain):
+        surface = VolSurfaceModeler.build_surface(chain)
+        strikes = surface.index.values
+        assert list(strikes) == sorted(strikes)
 
 
-# ===========================================================================
-# HTML report
-# ===========================================================================
+# ── Interpolation tests ──────────────────────────────────────────────────
 
-class TestReport:
-    def test_creates_file(self, tmp_path):
-        eng = VolSurfaceEngine()
-        chain = _option_chain()
-        summary = eng.analyze(chain, forward=100.0)
-        out = tmp_path / "vol.html"
-        result = eng.generate_report(summary, output_path=str(out))
-        assert Path(result).exists()
-        html = out.read_text()
-        assert "Implied Volatility Surface" in html
 
-    def test_contains_charts(self, tmp_path):
-        eng = VolSurfaceEngine()
-        chain = _option_chain()
-        summary = eng.analyze(chain, forward=100.0)
-        out = tmp_path / "vol.html"
-        eng.generate_report(summary, output_path=str(out))
-        html = out.read_text()
-        assert "<svg" in html
+class TestInterpolation:
+    def test_on_grid_point(self, surface):
+        k = surface.index[5]
+        exp = surface.columns[1]
+        expected = surface.loc[k, exp]
+        result = interpolate_surface(surface, float(k), float(exp))
+        assert abs(result - expected) < 0.01
 
-    def test_contains_sabr(self, tmp_path):
-        eng = VolSurfaceEngine()
-        chain = _option_chain()
-        summary = eng.analyze(chain, forward=100.0)
-        out = tmp_path / "vol.html"
-        eng.generate_report(summary, output_path=str(out))
-        html = out.read_text()
-        assert "SABR" in html
+    def test_between_points(self, surface):
+        k1, k2 = surface.index[3], surface.index[4]
+        mid_k = (k1 + k2) / 2
+        exp = surface.columns[0]
+        result = interpolate_surface(surface, float(mid_k), float(exp))
+        v1 = surface.loc[k1, exp]
+        v2 = surface.loc[k2, exp]
+        assert min(v1, v2) - 0.01 <= result <= max(v1, v2) + 0.01
 
-    def test_contains_skew_table(self, tmp_path):
-        eng = VolSurfaceEngine()
-        chain = _option_chain()
-        summary = eng.analyze(chain, forward=100.0)
-        out = tmp_path / "vol.html"
-        eng.generate_report(summary, output_path=str(out))
-        html = out.read_text()
-        assert "Skew Analytics" in html
+    def test_empty_surface(self):
+        assert interpolate_surface(pd.DataFrame(), 100.0, 30.0) == 0.0
+
+    def test_clamped_to_boundary(self, surface):
+        result = interpolate_surface(surface, 1.0, float(surface.columns[0]))
+        assert result > 0
+
+
+# ── Arbitrage check tests ────────────────────────────────────────────────
+
+
+class TestArbitrage:
+    def test_butterfly_clean_surface(self, surface):
+        violations = check_butterfly(surface)
+        assert isinstance(violations, list)
+
+    def test_calendar_clean_surface(self, surface):
+        violations = check_calendar(surface)
+        assert isinstance(violations, list)
+
+    def test_butterfly_violation_detected(self):
+        surface = pd.DataFrame(
+            {30: [0.20, 0.30, 0.20]},
+            index=[90, 100, 110],
+        )
+        violations = check_butterfly(surface)
+        assert len(violations) == 1
+        assert violations[0].violation_type == "butterfly"
+
+    def test_calendar_violation_detected(self):
+        surface = pd.DataFrame(
+            {30: [0.30], 90: [0.10]},
+            index=[100],
+        )
+        violations = check_calendar(surface)
+        assert len(violations) >= 1
+        assert violations[0].violation_type == "calendar"
+
+
+# ── Skew/kurtosis tests ─────────────────────────────────────────────────
+
+
+class TestSkewKurtosis:
+    def test_extract(self):
+        strikes = np.linspace(400, 500, 11)
+        vols = np.array([0.28, 0.26, 0.24, 0.23, 0.22, 0.21, 0.205, 0.21, 0.215, 0.22, 0.23])
+        sk = extract_skew_kurtosis(strikes, vols, 450.0, 30)
+        assert isinstance(sk, SkewKurtosis)
+        assert sk.atm_vol > 0
+
+    def test_positive_skew_for_put_smile(self):
+        strikes = np.linspace(400, 500, 11)
+        vols = 0.20 + 0.15 * np.exp(-0.01 * (strikes - 400))
+        sk = extract_skew_kurtosis(strikes, vols, 450.0, 30)
+        assert sk.skew_25d > 0
+
+    def test_butterfly_positive(self):
+        strikes = np.linspace(400, 500, 11)
+        log_m = np.log(strikes / 450.0)
+        vols = 0.20 + 0.3 * log_m ** 2
+        sk = extract_skew_kurtosis(strikes, vols, 450.0, 30)
+        assert sk.butterfly_25d > 0
+
+    def test_short_data(self):
+        sk = extract_skew_kurtosis(np.array([100]), np.array([0.2]), 100.0, 30)
+        assert sk.atm_vol == 0.0
+
+    def test_kurtosis_above_three(self):
+        strikes = np.linspace(400, 500, 11)
+        log_m = np.log(strikes / 450.0)
+        vols = 0.20 + 0.3 * log_m ** 2
+        sk = extract_skew_kurtosis(strikes, vols, 450.0, 30)
+        assert sk.implied_kurtosis > 3.0
+
+
+# ── Surface dynamics tests ───────────────────────────────────────────────
+
+
+class TestDynamics:
+    def test_detect_regime(self, surface):
+        surface2 = surface.copy()
+        surface2.index = surface2.index + 5
+        dynamics = detect_surface_dynamics(surface, surface2, 450.0, 455.0)
+        assert isinstance(dynamics, SurfaceDynamics)
+        assert dynamics.regime in ("sticky_strike", "sticky_delta", "mixed")
+
+    def test_no_common_expiries(self):
+        s0 = pd.DataFrame({30: [0.2, 0.21]}, index=[100, 110])
+        s1 = pd.DataFrame({60: [0.2, 0.21]}, index=[100, 110])
+        d = detect_surface_dynamics(s0, s1, 100.0, 100.0)
+        assert d.regime == "mixed"
+
+    def test_scores_bounded(self, surface):
+        dynamics = detect_surface_dynamics(surface, surface, 450.0, 450.0)
+        assert 0 <= dynamics.sticky_strike_score <= 1.0
+        assert 0 <= dynamics.sticky_delta_score <= 1.0
+
+
+# ── Forecast tests ───────────────────────────────────────────────────────
+
+
+class TestForecast:
+    def test_forecast_returns_result(self):
+        ts = [TermStructurePoint(30, 0.20, 0.003), TermStructurePoint(90, 0.22, 0.012)]
+        sk = [SkewKurtosis(30, 0.20, 0.03, 0.01, -0.5, 4.0, -0.1)]
+        fc = forecast_iv(ts, sk)
+        assert isinstance(fc, VolForecast)
+        assert fc.current_atm_vol == 0.20
+
+    def test_contango_positive_slope(self):
+        ts = [TermStructurePoint(30, 0.18, 0.003), TermStructurePoint(90, 0.22, 0.012)]
+        fc = forecast_iv(ts, [])
+        assert fc.term_structure_slope > 0
+
+    def test_empty_ts(self):
+        fc = forecast_iv([], [])
+        assert fc.current_atm_vol == 0.0
+
+
+# ── Full analysis tests ──────────────────────────────────────────────────
+
+
+class TestFullAnalysis:
+    def test_analyze_returns_result(self, modeler, chain):
+        result = modeler.analyze(chain, forward=450.0)
+        assert isinstance(result, SurfaceResult)
+        assert result.n_strikes > 0
+        assert result.n_expiries > 0
+
+    def test_svi_calibrated(self, modeler, chain):
+        result = modeler.analyze(chain, forward=450.0)
+        assert len(result.svi_params_by_expiry) > 0
+
+    def test_skew_kurtosis_computed(self, modeler, chain):
+        result = modeler.analyze(chain, forward=450.0)
+        assert len(result.skew_kurtosis) > 0
+
+    def test_term_structure(self, modeler, chain):
+        result = modeler.analyze(chain, forward=450.0)
+        assert len(result.term_structure) > 0
+
+    def test_forecast_present(self, modeler, chain):
+        result = modeler.analyze(chain, forward=450.0)
+        assert result.forecast is not None
+        assert result.forecast.current_atm_vol > 0
+
+    def test_dynamics_without_t0(self, modeler, chain):
+        result = modeler.analyze(chain, forward=450.0)
+        assert result.dynamics is None
+
+    def test_dynamics_with_t0(self, modeler, chain, surface):
+        result = modeler.analyze(chain, forward=450.0, surface_t0=surface, forward_t0=448.0)
+        assert result.dynamics is not None
+
+    def test_empty_chain(self, modeler):
+        result = modeler.analyze(pd.DataFrame(), forward=450.0)
+        assert result.n_strikes == 0
+
+
+# ── HTML report tests ────────────────────────────────────────────────────
+
+
+class TestHTMLReport:
+    def test_generates_file(self, modeler, chain):
+        result = modeler.analyze(chain, forward=450.0)
+        with tempfile.TemporaryDirectory() as tmpdir:
+            out = Path(tmpdir) / "vol.html"
+            path = VolSurfaceModeler.generate_report(result, out)
+            assert path.exists()
+            content = path.read_text()
+            assert "Volatility Surface" in content
+
+    def test_contains_svg(self, modeler, chain):
+        result = modeler.analyze(chain, forward=450.0)
+        with tempfile.TemporaryDirectory() as tmpdir:
+            out = Path(tmpdir) / "report.html"
+            VolSurfaceModeler.generate_report(result, out)
+            content = out.read_text()
+            assert "<svg" in content
+
+    def test_contains_svi_table(self, modeler, chain):
+        result = modeler.analyze(chain, forward=450.0)
+        with tempfile.TemporaryDirectory() as tmpdir:
+            out = Path(tmpdir) / "report.html"
+            VolSurfaceModeler.generate_report(result, out)
+            content = out.read_text()
+            assert "SVI" in content
+
+    def test_contains_skew(self, modeler, chain):
+        result = modeler.analyze(chain, forward=450.0)
+        with tempfile.TemporaryDirectory() as tmpdir:
+            out = Path(tmpdir) / "report.html"
+            VolSurfaceModeler.generate_report(result, out)
+            content = out.read_text()
+            assert "Skew" in content
+
+    def test_default_path(self, modeler, chain):
+        result = modeler.analyze(chain, forward=450.0)
+        path = VolSurfaceModeler.generate_report(result)
+        assert path.exists()
+        assert "vol_surface.html" in str(path)
+        path.unlink(missing_ok=True)
