@@ -46,6 +46,13 @@ class OptMethod(str, Enum):
     HRP = "hrp"
     MIN_CVAR = "min_cvar"
     MAX_DIVERSIFICATION = "max_diversification"
+    EQUAL_WEIGHT = "equal_weight"
+
+
+class RebalanceFreq(str, Enum):
+    DAILY = "daily"
+    WEEKLY = "weekly"
+    MONTHLY = "monthly"
 
 
 @dataclass
@@ -88,11 +95,36 @@ class RiskContribution:
 
 
 @dataclass
+class RebalanceEvent:
+    """Recorded rebalance."""
+    date: datetime
+    trigger: str               # "calendar" | "threshold" | "initial"
+    old_weights: Dict[str, float]
+    new_weights: Dict[str, float]
+    turnover: float
+    cost: float
+
+
+@dataclass
+class WalkForwardFold:
+    """One walk-forward fold result."""
+    fold: int
+    train_end: datetime
+    test_start: datetime
+    test_end: datetime
+    in_sample_sharpe: float
+    out_of_sample_sharpe: float
+    weights: Dict[str, float]
+
+
+@dataclass
 class ConstructionResult:
     """Full construction output."""
     portfolio: PortfolioWeights
     risk_contributions: List[RiskContribution] = field(default_factory=list)
     efficient_frontier: Optional[pd.DataFrame] = None
+    rebalance_history: List[RebalanceEvent] = field(default_factory=list)
+    walk_forward_folds: List[WalkForwardFold] = field(default_factory=list)
 
 
 # ---------------------------------------------------------------------------
@@ -509,7 +541,181 @@ class PortfolioConstructor:
             return self.min_cvar(returns, constraints)
         if method == OptMethod.MAX_DIVERSIFICATION:
             return self.max_diversification(returns, constraints)
+        if method == OptMethod.EQUAL_WEIGHT:
+            return self.equal_weight(returns)
         return self.risk_parity(returns)
+
+    # ------------------------------------------------------------------
+    # Equal weight
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def equal_weight(returns: pd.DataFrame) -> PortfolioWeights:
+        """Equal-weight portfolio."""
+        assets = returns.columns.tolist()
+        n = len(assets)
+        if n == 0:
+            return PortfolioWeights(weights={}, method="equal_weight")
+        w = np.ones(n) / n
+        mu = returns.mean().values * TRADING_DAYS
+        cov = returns.cov().values * TRADING_DAYS
+        ret = float(w @ mu)
+        vol = float(np.sqrt(w @ cov @ w))
+        return PortfolioWeights(
+            weights={a: 1.0 / n for a in assets}, method="equal_weight",
+            expected_return=ret, expected_vol=vol,
+        )
+
+    # ------------------------------------------------------------------
+    # Rebalancing engine
+    # ------------------------------------------------------------------
+
+    def rebalance_backtest(
+        self,
+        returns: pd.DataFrame,
+        method: OptMethod = OptMethod.RISK_PARITY,
+        freq: RebalanceFreq = RebalanceFreq.MONTHLY,
+        drift_threshold: float = 0.05,
+        lookback: int = 252,
+        cost_per_unit: float = 0.001,
+        constraints: Optional[Constraints] = None,
+    ) -> Tuple[pd.Series, List[RebalanceEvent]]:
+        """Run a rebalancing backtest with calendar + threshold triggers.
+
+        Returns (portfolio_returns, rebalance_events).
+        """
+        assets = returns.columns.tolist()
+        n = len(assets)
+        if n == 0:
+            return pd.Series(dtype=float), []
+
+        freq_days = {"daily": 1, "weekly": 5, "monthly": 21}
+        cal_days = freq_days.get(freq.value, 21)
+
+        current_w = {a: 1.0 / n for a in assets}
+        events: List[RebalanceEvent] = []
+        port_rets: List[float] = []
+        last_rebal = 0
+
+        for i in range(len(returns)):
+            dt = returns.index[i]
+            day_ret = returns.iloc[i]
+
+            # Drift current weights by daily return
+            new_vals = {a: current_w[a] * (1 + day_ret.get(a, 0)) for a in assets}
+            total_val = sum(new_vals.values())
+            if total_val > 0:
+                drifted_w = {a: v / total_val for a, v in new_vals.items()}
+            else:
+                drifted_w = current_w
+
+            # Check rebalance triggers
+            days_since = i - last_rebal
+            max_drift = max(abs(drifted_w[a] - current_w.get(a, 0)) for a in assets) if assets else 0
+            should_rebal = False
+            trigger = ""
+
+            if i == 0:
+                should_rebal = True
+                trigger = "initial"
+            elif days_since >= cal_days:
+                should_rebal = True
+                trigger = "calendar"
+            elif max_drift >= drift_threshold:
+                should_rebal = True
+                trigger = "threshold"
+
+            if should_rebal and i >= min(lookback, 60):
+                hist = returns.iloc[max(0, i - lookback):i]
+                if len(hist) >= 10:
+                    try:
+                        pw = self.construct(hist, method, constraints)
+                        target_w = pw.weights
+                    except Exception:
+                        target_w = {a: 1.0 / n for a in assets}
+                else:
+                    target_w = {a: 1.0 / n for a in assets}
+
+                turnover = sum(abs(target_w.get(a, 0) - drifted_w.get(a, 0)) for a in assets)
+                cost = turnover * cost_per_unit
+
+                events.append(RebalanceEvent(
+                    date=dt, trigger=trigger,
+                    old_weights=dict(drifted_w),
+                    new_weights=dict(target_w),
+                    turnover=turnover, cost=cost,
+                ))
+                current_w = target_w
+                last_rebal = i
+            else:
+                current_w = drifted_w
+                cost = 0.0
+
+            # Portfolio return
+            port_r = sum(current_w.get(a, 0) * day_ret.get(a, 0) for a in assets) - cost
+            port_rets.append(port_r)
+
+        return pd.Series(port_rets, index=returns.index), events
+
+    # ------------------------------------------------------------------
+    # Walk-forward portfolio construction
+    # ------------------------------------------------------------------
+
+    def walk_forward_construct(
+        self,
+        returns: pd.DataFrame,
+        method: OptMethod = OptMethod.RISK_PARITY,
+        n_folds: int = 5,
+        constraints: Optional[Constraints] = None,
+    ) -> Tuple[PortfolioWeights, List[WalkForwardFold]]:
+        """Out-of-sample walk-forward portfolio construction."""
+        n = len(returns)
+        if n < n_folds * 20:
+            pw = self.construct(returns, method, constraints)
+            return pw, []
+
+        fold_size = n // n_folds
+        folds: List[WalkForwardFold] = []
+        last_weights: Dict[str, float] = {}
+
+        for i in range(n_folds - 1):
+            train = returns.iloc[:fold_size * (i + 1)]
+            test = returns.iloc[fold_size * (i + 1):fold_size * (i + 2)]
+            if len(test) < 5:
+                continue
+
+            pw = self.construct(train, method, constraints)
+            last_weights = pw.weights
+            w = np.array([pw.weights.get(a, 0) for a in returns.columns])
+
+            # IS Sharpe
+            is_port = train @ w
+            is_mu = float(is_port.mean())
+            is_std = float(is_port.std())
+            is_sharpe = is_mu / is_std * np.sqrt(TRADING_DAYS) if is_std > 1e-12 else 0.0
+
+            # OOS Sharpe
+            oos_port = test @ w
+            oos_mu = float(oos_port.mean())
+            oos_std = float(oos_port.std())
+            oos_sharpe = oos_mu / oos_std * np.sqrt(TRADING_DAYS) if oos_std > 1e-12 else 0.0
+
+            folds.append(WalkForwardFold(
+                fold=i + 1,
+                train_end=train.index[-1],
+                test_start=test.index[0],
+                test_end=test.index[-1],
+                in_sample_sharpe=is_sharpe,
+                out_of_sample_sharpe=oos_sharpe,
+                weights=dict(pw.weights),
+            ))
+
+        # Final weights from last fold
+        if not last_weights:
+            last_weights = self.construct(returns, method, constraints).weights
+
+        final = PortfolioWeights(weights=last_weights, method=method.value)
+        return final, folds
 
     # ------------------------------------------------------------------
     # Constraint enforcement
@@ -657,8 +863,12 @@ class PortfolioConstructor:
         constraints: Optional[Constraints] = None,
         views: Optional[List[BLView]] = None,
         compute_frontier: bool = False,
+        run_rebalance: bool = False,
+        run_walk_forward: bool = False,
+        rebalance_freq: RebalanceFreq = RebalanceFreq.MONTHLY,
+        cost_per_unit: float = 0.001,
     ) -> ConstructionResult:
-        """Run construction + risk decomposition + optional frontier."""
+        """Run construction + risk decomposition + optional frontier/rebal/WF."""
         portfolio = self.construct(returns, method, constraints, views)
         rc = self.risk_contributions(returns, portfolio.weights)
 
@@ -666,10 +876,22 @@ class PortfolioConstructor:
         if compute_frontier:
             ef = self.efficient_frontier(returns)
 
+        rebal_events: List[RebalanceEvent] = []
+        if run_rebalance:
+            _, rebal_events = self.rebalance_backtest(
+                returns, method, rebalance_freq, cost_per_unit=cost_per_unit,
+                constraints=constraints)
+
+        wf_folds: List[WalkForwardFold] = []
+        if run_walk_forward:
+            _, wf_folds = self.walk_forward_construct(returns, method, constraints=constraints)
+
         return ConstructionResult(
             portfolio=portfolio,
             risk_contributions=rc,
             efficient_frontier=ef,
+            rebalance_history=rebal_events,
+            walk_forward_folds=wf_folds,
         )
 
     # ------------------------------------------------------------------
@@ -839,8 +1061,41 @@ tr:nth-child(even) {{ background: #f9f9f9; }}
 {''.join(rc_rows)}</table>
 
 {regime_html}
+{self._rebalance_html(result.rebalance_history)}
+{self._wf_html(result.walk_forward_folds)}
 </body></html>"""
 
         path.write_text(html, encoding="utf-8")
         logger.info("Portfolio construction report -> %s", path)
         return str(path)
+
+    @staticmethod
+    def _rebalance_html(events: List[RebalanceEvent]) -> str:
+        if not events:
+            return ""
+        total_cost = sum(e.cost for e in events)
+        rows = [
+            f"<tr><td>{e.date.strftime('%Y-%m-%d') if hasattr(e.date, 'strftime') else e.date}</td>"
+            f"<td>{e.trigger}</td><td>{e.turnover:.2%}</td><td>{e.cost:.4f}</td></tr>"
+            for e in events[-20:]
+        ]
+        return f"""
+<h2>Rebalancing Timeline ({len(events)} events, total cost: {total_cost:.4f})</h2>
+<table><tr><th>Date</th><th>Trigger</th><th>Turnover</th><th>Cost</th></tr>
+{''.join(rows)}</table>"""
+
+    @staticmethod
+    def _wf_html(folds: List[WalkForwardFold]) -> str:
+        if not folds:
+            return ""
+        avg_is = float(np.mean([f.in_sample_sharpe for f in folds]))
+        avg_oos = float(np.mean([f.out_of_sample_sharpe for f in folds]))
+        rows = [
+            f"<tr><td>{f.fold}</td><td>{f.in_sample_sharpe:.2f}</td>"
+            f"<td>{f.out_of_sample_sharpe:.2f}</td></tr>"
+            for f in folds
+        ]
+        return f"""
+<h2>Walk-Forward (IS avg: {avg_is:.2f}, OOS avg: {avg_oos:.2f})</h2>
+<table><tr><th>Fold</th><th>IS Sharpe</th><th>OOS Sharpe</th></tr>
+{''.join(rows)}</table>"""

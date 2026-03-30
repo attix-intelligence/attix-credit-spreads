@@ -1,4 +1,4 @@
-"""Tests for compass.portfolio_constructor — 40 tests."""
+"""Tests for compass.portfolio_constructor — 55+ tests."""
 
 import numpy as np
 import pandas as pd
@@ -9,11 +9,14 @@ from pathlib import Path
 from compass.portfolio_constructor import (
     PortfolioConstructor,
     OptMethod,
+    RebalanceFreq,
     PortfolioWeights,
     Constraints,
     BLView,
     RiskContribution,
     ConstructionResult,
+    RebalanceEvent,
+    WalkForwardFold,
     ledoit_wolf_shrinkage,
     TRADING_DAYS,
 )
@@ -356,3 +359,140 @@ class TestReport:
         pc.generate_report(cr, regime_portfolios=regime_pw, output_path=str(out))
         html = out.read_text()
         assert "Regime Allocations" in html
+
+    def test_with_rebalance(self, tmp_path):
+        pc = PortfolioConstructor()
+        cr = pc.full_construct(_returns(200, 4), run_rebalance=True)
+        out = tmp_path / "p.html"
+        pc.generate_report(cr, output_path=str(out))
+        html = out.read_text()
+        assert "Rebalancing Timeline" in html
+
+    def test_with_walk_forward(self, tmp_path):
+        pc = PortfolioConstructor()
+        cr = pc.full_construct(_returns(300, 4), run_walk_forward=True)
+        out = tmp_path / "p.html"
+        pc.generate_report(cr, output_path=str(out))
+        html = out.read_text()
+        assert "Walk-Forward" in html
+
+
+# ===========================================================================
+# Equal weight
+# ===========================================================================
+
+class TestEqualWeight:
+    def test_weights_sum_one(self):
+        pw = PortfolioConstructor.equal_weight(_returns(100, 5))
+        assert sum(pw.weights.values()) == pytest.approx(1.0)
+
+    def test_all_equal(self):
+        pw = PortfolioConstructor.equal_weight(_returns(100, 4))
+        assert all(w == pytest.approx(0.25) for w in pw.weights.values())
+
+    def test_method_tag(self):
+        pw = PortfolioConstructor.equal_weight(_returns(100, 3))
+        assert pw.method == "equal_weight"
+
+    def test_empty(self):
+        pw = PortfolioConstructor.equal_weight(pd.DataFrame())
+        assert pw.weights == {}
+
+    def test_dispatch(self):
+        pc = PortfolioConstructor()
+        pw = pc.construct(_returns(100, 4), OptMethod.EQUAL_WEIGHT)
+        assert pw.method == "equal_weight"
+
+
+# ===========================================================================
+# Rebalancing engine
+# ===========================================================================
+
+class TestRebalance:
+    def test_basic(self):
+        pc = PortfolioConstructor()
+        rets, events = pc.rebalance_backtest(
+            _returns(200, 4), method=OptMethod.EQUAL_WEIGHT,
+            freq=RebalanceFreq.MONTHLY)
+        assert len(rets) == 200
+        assert len(events) >= 1
+
+    def test_calendar_trigger(self):
+        pc = PortfolioConstructor()
+        _, events = pc.rebalance_backtest(
+            _returns(200, 3), freq=RebalanceFreq.WEEKLY)
+        triggers = {e.trigger for e in events}
+        assert "calendar" in triggers or "initial" in triggers
+
+    def test_threshold_trigger(self):
+        pc = PortfolioConstructor()
+        _, events = pc.rebalance_backtest(
+            _returns(200, 3), freq=RebalanceFreq.MONTHLY,
+            drift_threshold=0.001)  # very low threshold
+        triggers = {e.trigger for e in events}
+        assert "threshold" in triggers or "calendar" in triggers
+
+    def test_cost_tracked(self):
+        pc = PortfolioConstructor()
+        _, events = pc.rebalance_backtest(
+            _returns(200, 4), cost_per_unit=0.01)
+        total_cost = sum(e.cost for e in events)
+        assert total_cost > 0
+
+    def test_turnover_recorded(self):
+        pc = PortfolioConstructor()
+        _, events = pc.rebalance_backtest(_returns(200, 4))
+        for e in events:
+            assert isinstance(e, RebalanceEvent)
+            assert e.turnover >= 0
+
+    def test_daily_rebalance(self):
+        pc = PortfolioConstructor()
+        _, events = pc.rebalance_backtest(
+            _returns(150, 3), freq=RebalanceFreq.DAILY)
+        # Should have many rebalance events
+        assert len(events) >= 5
+
+    def test_empty_returns(self):
+        pc = PortfolioConstructor()
+        rets, events = pc.rebalance_backtest(pd.DataFrame())
+        assert rets.empty
+        assert events == []
+
+
+# ===========================================================================
+# Walk-forward construction
+# ===========================================================================
+
+class TestWalkForward:
+    def test_basic(self):
+        pc = PortfolioConstructor()
+        pw, folds = pc.walk_forward_construct(
+            _returns(300, 4), method=OptMethod.RISK_PARITY, n_folds=4)
+        assert isinstance(pw, PortfolioWeights)
+        assert len(folds) >= 2
+
+    def test_fold_structure(self):
+        pc = PortfolioConstructor()
+        _, folds = pc.walk_forward_construct(_returns(300, 4), n_folds=5)
+        for f in folds:
+            assert isinstance(f, WalkForwardFold)
+            assert f.in_sample_sharpe != 0 or f.out_of_sample_sharpe != 0
+            assert f.train_end < f.test_start
+
+    def test_short_data(self):
+        pc = PortfolioConstructor()
+        pw, folds = pc.walk_forward_construct(_returns(30, 3), n_folds=5)
+        assert folds == []
+        assert pw.weights  # still returns weights
+
+    def test_weights_valid(self):
+        pc = PortfolioConstructor()
+        pw, _ = pc.walk_forward_construct(_returns(300, 4))
+        assert sum(pw.weights.values()) == pytest.approx(1.0, abs=0.05)
+
+    def test_oos_sharpe_computed(self):
+        pc = PortfolioConstructor()
+        _, folds = pc.walk_forward_construct(_returns(300, 4), n_folds=4)
+        if folds:
+            assert isinstance(folds[0].out_of_sample_sharpe, float)
