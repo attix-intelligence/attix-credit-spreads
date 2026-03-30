@@ -239,8 +239,10 @@ class PortfolioStressEngine:
         # Margin analysis
         margin = None
         if current_margin > 0:
-            stress_val = self.starting_capital * (1 + adj_dd)
+            stress_val = max(0, self.starting_capital * (1 + adj_dd))
             req = stress_val * self.maint_margin
+            # Even when portfolio value drops below zero, margin required is at least the loss
+            req = max(req, abs(adj_dd) * self.starting_capital * self.maint_margin)
             excess = current_margin - req
             util = req / current_margin if current_margin > 0 else 1.0
             margin = MarginAnalysis(
@@ -337,8 +339,8 @@ svg{{display:block;margin:0 auto}}
         margin_calls = sum(1 for o in r.outcomes if o.margin and o.margin.margin_call_triggered)
         return f"""<div class="grid">
 <div class="card"><div class="lbl">Worst Case</div><div class="val neg">{wc.scenario.name if wc else 'N/A'}</div></div>
-<div class="card"><div class="lbl">Worst DD</div><div class="val neg">{wc.adjusted_dd:.1% if wc else 'N/A'}</div></div>
-<div class="card"><div class="lbl">Recovery</div><div class="val">{wc.recovery_days if wc else 0}d</div></div>
+<div class="card"><div class="lbl">Worst DD</div><div class="val neg">{f'{wc.adjusted_dd:.1%}' if wc else 'N/A'}</div></div>
+<div class="card"><div class="lbl">Recovery</div><div class="val">{f'{wc.recovery_days}d' if wc else 'N/A'}</div></div>
 <div class="card"><div class="lbl">PW Loss</div><div class="val">${r.total_pw_loss:,.0f}</div></div>
 <div class="card"><div class="lbl">Margin Calls</div><div class="val {'neg' if margin_calls else ''}">{margin_calls}</div></div>
 </div>"""
