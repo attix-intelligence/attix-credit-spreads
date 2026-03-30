@@ -1,320 +1,566 @@
-"""Tests for compass/backtest_reality.py — backtest reality checker."""
+"""Tests for compass/backtest_reality.py -- backtest reality checker."""
+
 from __future__ import annotations
+
 import numpy as np
+import pandas as pd
 import pytest
+
 from compass.backtest_reality import (
-    BacktestConfig, BacktestRealityChecker, BiasFlag, CapacityCheck,
-    ComplexityMetrics, CredibilityScore, DegradationResult,
-    SensitivityPoint,
+    BacktestRealityChecker,
+    BacktestRealityResult,
+    CheckResult,
+    _CHECK_WEIGHTS,
+    _grade_from_score,
 )
 
-# ── Helpers ──────────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
 
-def _good_returns(n=500, seed=42):
-    return np.random.RandomState(seed).normal(0.001, 0.01, n)
 
-def _make_config(**overrides):
-    defaults = dict(
-        daily_returns=_good_returns(),
-        is_fraction=0.7,
-        commission_per_trade=0.65,
-        assumed_slippage_bps=5.0,
-        realistic_slippage_bps=5.0,
-        assumed_fill_rate=0.90,
-        realistic_fill_rate=0.85,
-        avg_trade_contracts=5.0,
-        avg_daily_volume=5000.0,
-        max_participation=0.02,
-        n_free_params=10,
-        n_rules=5,
-        lookback_days=60,
-        n_assets_traded=1,
-        n_assets_universe=1,
-        uses_close_price_for_signal=False,
-        signal_generated_before_trade=True,
+def _make_trades(
+    n: int = 100,
+    *,
+    seed: int = 42,
+    add_look_ahead: bool = False,
+    add_ticker: bool = False,
+    big_quantity: bool = False,
+) -> pd.DataFrame:
+    """Build a synthetic trades DataFrame."""
+    rng = np.random.RandomState(seed)
+    dates = pd.bdate_range("2024-01-02", periods=n, freq="B")
+    entry_prices = 100 + rng.normal(0, 2, n)
+    exit_prices = entry_prices + rng.normal(0.2, 1, n)
+    qty = rng.randint(1, 20, n).astype(float)
+    if big_quantity:
+        qty = qty * 10_000  # huge sizes
+    pnl = (exit_prices - entry_prices) * qty
+
+    df = pd.DataFrame(
+        {
+            "date": dates,
+            "entry_date": dates,
+            "exit_date": dates + pd.Timedelta(days=1),
+            "pnl": pnl,
+            "entry_price": entry_prices,
+            "exit_price": exit_prices,
+            "quantity": qty,
+        }
     )
-    defaults.update(overrides)
-    return BacktestConfig(**defaults)
+    if add_look_ahead:
+        # Make first 3 trades have exit before entry
+        df.loc[:2, "exit_date"] = df.loc[:2, "entry_date"] - pd.Timedelta(days=2)
 
-def _make_checker(**overrides):
-    return BacktestRealityChecker(_make_config(**overrides))
+    if add_ticker:
+        tickers = rng.choice(["AAPL", "MSFT", "GOOG"], n)
+        df["ticker"] = tickers
 
-# ── Dataclass tests ──────────────────────────────────────────────────────
+    return df
 
-class TestDataclasses:
-    def test_bias_flag(self):
-        f = BiasFlag("test", "cost", "warning", False, 5, "detail")
-        assert f.score_penalty == pytest.approx(5)
-    def test_sensitivity_point(self):
-        s = SensitivityPoint("p", 1.0, 1.1, 2.0, 1.8, -0.1)
-        assert s.change_pct == pytest.approx(-0.1)
-    def test_degradation(self):
-        d = DegradationResult(2.0, 1.5, 0.75, 0.3, 0.2, -0.1, -0.15, True)
-        assert d.degradation_ratio == pytest.approx(0.75)
-    def test_capacity(self):
-        c = CapacityCheck(5, 5000, 0.001, 0.02, True, 0.1)
-        assert c.passed
-    def test_complexity(self):
-        c = ComplexityMetrics(10, 500, 0.02, 5, 490, 30)
-        assert c.params_per_point == pytest.approx(0.02)
-    def test_credibility(self):
-        c = CredibilityScore(85, "A", 0, 1, 10, ["issue"])
-        assert c.grade == "A"
-    def test_config_defaults(self):
-        c = BacktestConfig(daily_returns=np.array([0.01]))
-        assert c.is_fraction == 0.7
 
-# ── Look-ahead bias ─────────────────────────────────────────────────────
+def _make_returns(n: int = 500, seed: int = 42, gap: bool = False) -> pd.Series:
+    """Build a synthetic daily returns Series."""
+    rng = np.random.RandomState(seed)
+    dates = pd.bdate_range("2024-01-02", periods=n, freq="B")
+    if gap:
+        # Insert a 40-day gap
+        dates = dates[:100].append(dates[100:] + pd.Timedelta(days=40))
+    vals = rng.normal(0.0005, 0.01, n)
+    return pd.Series(vals, index=dates)
 
-class TestLookAhead:
-    def test_close_price_flag(self):
-        ch = _make_checker(uses_close_price_for_signal=True); ch.check()
-        flag = [f for f in ch.flags if f.name == "close_price_signal"][0]
-        assert not flag.passed
-        assert flag.severity == "critical"
 
-    def test_no_close_price_passes(self):
-        ch = _make_checker(uses_close_price_for_signal=False); ch.check()
-        flag = [f for f in ch.flags if f.name == "close_price_signal"][0]
-        assert flag.passed
+def _make_checker(**kwargs) -> BacktestRealityChecker:
+    """Convenience factory with sensible defaults."""
+    defaults = dict(
+        trades=_make_trades(),
+        returns=_make_returns(),
+        n_params_tested=3,
+        adv=100_000.0,
+        assumed_spread_bps=5.0,
+        assumed_commission=1.0,
+    )
+    defaults.update(kwargs)
+    return BacktestRealityChecker(**defaults)
 
-    def test_signal_timing_flag(self):
-        ch = _make_checker(signal_generated_before_trade=False); ch.check()
-        flag = [f for f in ch.flags if f.name == "signal_timing"][0]
-        assert not flag.passed
 
-    def test_signal_timing_ok(self):
-        ch = _make_checker(signal_generated_before_trade=True); ch.check()
-        flag = [f for f in ch.flags if f.name == "signal_timing"][0]
-        assert flag.passed
+# ===========================================================================
+# Dataclass tests
+# ===========================================================================
 
-    def test_lookback_warning(self):
-        ch = _make_checker(lookback_days=400, daily_returns=_good_returns(500)); ch.check()
-        flag = [f for f in ch.flags if f.name == "lookback_ratio"][0]
-        assert not flag.passed
 
-# ── Survivorship bias ────────────────────────────────────────────────────
+class TestCheckResult:
+    def test_fields(self):
+        cr = CheckResult("test", True, 85.0, "ok")
+        assert cr.name == "test"
+        assert cr.passed is True
+        assert cr.score == pytest.approx(85.0)
+        assert cr.detail == "ok"
 
-class TestSurvivorship:
-    def test_narrow_selection_warned(self):
-        ch = _make_checker(n_assets_traded=1, n_assets_universe=500); ch.check()
-        flag = [f for f in ch.flags if f.name == "survivorship_selection"][0]
-        assert not flag.passed
+    def test_failing_result(self):
+        cr = CheckResult("bad", False, 10.0, "nope")
+        assert not cr.passed
+        assert cr.score < 50
 
-    def test_broad_selection_ok(self):
-        ch = _make_checker(n_assets_traded=100, n_assets_universe=500); ch.check()
-        flag = [f for f in ch.flags if f.name == "survivorship_selection"][0]
-        assert flag.passed
 
-# ── Transaction costs ────────────────────────────────────────────────────
-
-class TestCosts:
-    def test_low_slippage_critical(self):
-        ch = _make_checker(assumed_slippage_bps=1.0, realistic_slippage_bps=5.0); ch.check()
-        flag = [f for f in ch.flags if f.name == "slippage_underestimate"][0]
-        assert not flag.passed
-        assert flag.severity == "critical"
-
-    def test_realistic_slippage_ok(self):
-        ch = _make_checker(assumed_slippage_bps=5.0, realistic_slippage_bps=5.0); ch.check()
-        flag = [f for f in ch.flags if f.name == "slippage_realistic"][0]
-        assert flag.passed
-
-    def test_zero_commission_warned(self):
-        ch = _make_checker(commission_per_trade=0); ch.check()
-        flag = [f for f in ch.flags if f.name == "zero_commission"][0]
-        assert not flag.passed
-
-    def test_nonzero_commission_ok(self):
-        ch = _make_checker(commission_per_trade=0.65); ch.check()
-        flag = [f for f in ch.flags if f.name == "commission_present"][0]
-        assert flag.passed
-
-# ── Fill realism ─────────────────────────────────────────────────────────
-
-class TestFills:
-    def test_perfect_fill_warned(self):
-        ch = _make_checker(assumed_fill_rate=1.0); ch.check()
-        flag = [f for f in ch.flags if f.name == "perfect_fills"][0]
-        assert not flag.passed
-
-    def test_realistic_fill_ok(self):
-        ch = _make_checker(assumed_fill_rate=0.85); ch.check()
-        flag = [f for f in ch.flags if f.name == "fill_rate_ok"][0]
-        assert flag.passed
-
-# ── Capacity ─────────────────────────────────────────────────────────────
-
-class TestCapacity:
-    def test_over_capacity_flagged(self):
-        ch = _make_checker(avg_trade_contracts=200, avg_daily_volume=5000,
-                           max_participation=0.02); ch.check()
-        assert not ch.capacity.passed
-        cap_flags = [f for f in ch.flags if f.name == "capacity_exceeded"]
-        assert len(cap_flags) == 1
-
-    def test_within_capacity_ok(self):
-        ch = _make_checker(avg_trade_contracts=5, avg_daily_volume=5000); ch.check()
-        assert ch.capacity.passed
-
-    def test_participation_rate(self):
-        ch = _make_checker(avg_trade_contracts=50, avg_daily_volume=5000); ch.check()
-        assert ch.capacity.participation_rate == pytest.approx(0.01)
-
-# ── Degradation ──────────────────────────────────────────────────────────
-
-class TestDegradation:
-    def test_degradation_computed(self):
-        ch = _make_checker(); ch.check()
-        assert ch.degradation is not None
-
-    def test_ratio_range(self):
-        ch = _make_checker(); ch.check()
-        # With normal data, ratio should be positive
-        assert ch.degradation.degradation_ratio != 0
-
-    def test_severe_overfit(self):
-        rng = np.random.RandomState(42)
-        # IS: great returns, OOS: flat
-        is_ret = rng.normal(0.005, 0.005, 350)
-        oos_ret = rng.normal(0.0, 0.01, 150)
-        combined = np.concatenate([is_ret, oos_ret])
-        ch = _make_checker(daily_returns=combined); ch.check()
-        assert ch.degradation.degradation_ratio < 1.0
-
-    def test_short_data_ok(self):
-        ch = _make_checker(daily_returns=np.array([0.01] * 15)); ch.check()
-        assert ch.degradation is not None
-
-# ── Complexity ───────────────────────────────────────────────────────────
-
-class TestComplexity:
-    def test_high_params_flagged(self):
-        ch = _make_checker(n_free_params=100, daily_returns=_good_returns(500)); ch.check()
-        flag = [f for f in ch.flags if f.name == "params_data_ratio"][0]
-        assert not flag.passed
-
-    def test_low_params_ok(self):
-        ch = _make_checker(n_free_params=5); ch.check()
-        flag = [f for f in ch.flags if f.name == "params_data_ratio"][0]
-        assert flag.passed
-
-    def test_degrees_of_freedom(self):
-        ch = _make_checker(n_free_params=10); ch.check()
-        assert ch.complexity.degrees_of_freedom == len(ch.returns) - 10
-
-# ── Sensitivity ──────────────────────────────────────────────────────────
-
-class TestSensitivity:
-    def test_default_sensitivity(self):
-        ch = _make_checker(); ch.check()
-        assert len(ch.sensitivity) == 4  # return ±10%, vol ±10%
-
-    def test_sensitivity_fields(self):
-        ch = _make_checker(); ch.check()
-        for s in ch.sensitivity:
-            assert isinstance(s.base_sharpe, float)
-            assert isinstance(s.perturbed_sharpe, float)
-
-    def test_custom_sensitivity(self):
-        def my_fn(param, val):
-            return _good_returns() * val
-        config = _make_config(
-            param_values={"alpha": 1.0},
-            param_sensitivity_fn=my_fn,
+class TestBacktestRealityResult:
+    def test_fields(self):
+        r = BacktestRealityResult(
+            checks=[CheckResult("a", True, 100, "ok")],
+            credibility_score=90.0,
+            grade="A",
+            recommendations=[],
         )
-        ch = BacktestRealityChecker(config); ch.check()
-        params = {s.param for s in ch.sensitivity}
-        assert "alpha" in params
+        assert r.grade == "A"
+        assert r.credibility_score == pytest.approx(90.0)
 
-# ── Overfit indicators ───────────────────────────────────────────────────
+    def test_with_recommendations(self):
+        r = BacktestRealityResult(
+            checks=[], credibility_score=30.0, grade="F", recommendations=["fix it"]
+        )
+        assert len(r.recommendations) == 1
 
-class TestOverfitIndicators:
-    def test_short_data_flagged(self):
-        ch = _make_checker(daily_returns=np.array([0.01] * 30)); ch.check()
-        flag = [f for f in ch.flags if f.name == "insufficient_data"][0]
-        assert not flag.passed
 
-    def test_suspicious_sharpe(self):
-        # Very high Sharpe
-        rets = np.random.RandomState(42).normal(0.01, 0.005, 500)
-        ch = _make_checker(daily_returns=rets); ch.check()
-        flag = [f for f in ch.flags if f.name == "suspicious_sharpe"]
-        assert len(flag) > 0
+# ===========================================================================
+# Look-ahead bias
+# ===========================================================================
 
-# ── Credibility score ────────────────────────────────────────────────────
 
-class TestCredibility:
-    def test_good_config_high_score(self):
-        ch = _make_checker(); ch.check()
-        assert ch.credibility.score >= 60
+class TestLookAheadBias:
+    def test_no_look_ahead_passes(self):
+        ch = _make_checker()
+        cr = ch.check_look_ahead_bias()
+        assert cr.passed
+        assert cr.score == pytest.approx(100.0)
 
-    def test_bad_config_low_score(self):
+    def test_look_ahead_detected(self):
+        trades = _make_trades(add_look_ahead=True)
+        ch = _make_checker(trades=trades)
+        cr = ch.check_look_ahead_bias()
+        assert not cr.passed
+        assert cr.score == pytest.approx(0.0)
+        assert "exit_date before entry_date" in cr.detail
+
+    def test_no_entry_exit_columns(self):
+        trades = _make_trades().drop(columns=["entry_date", "exit_date"])
+        ch = _make_checker(trades=trades)
+        cr = ch.check_look_ahead_bias()
+        assert cr.passed  # no columns to check
+
+
+# ===========================================================================
+# Survivorship bias
+# ===========================================================================
+
+
+class TestSurvivorshipBias:
+    def test_single_ticker_warns(self):
+        ch = _make_checker()
+        cr = ch.check_survivorship_bias()
+        assert not cr.passed  # single ticker assumed
+        assert "single ticker" in cr.detail
+
+    def test_multi_ticker_ok(self):
+        trades = _make_trades(add_ticker=True)
+        ch = _make_checker(trades=trades)
+        cr = ch.check_survivorship_bias()
+        # multi-ticker should not flag single-ticker warning
+        assert "single ticker" not in cr.detail
+
+    def test_data_gap_warns(self):
+        returns = _make_returns(gap=True)
+        ch = _make_checker(returns=returns)
+        cr = ch.check_survivorship_bias()
+        assert "gap" in cr.detail.lower()
+
+    def test_no_gap_ok(self):
+        returns = _make_returns(gap=False)
+        ch = _make_checker(returns=returns)
+        cr = ch.check_survivorship_bias()
+        assert "gap" not in cr.detail.lower() or cr.passed
+
+
+# ===========================================================================
+# Transaction cost realism
+# ===========================================================================
+
+
+class TestTransactionCostRealism:
+    def test_realistic_costs_pass(self):
+        ch = _make_checker(assumed_spread_bps=5.0, assumed_commission=1.0)
+        cr = ch.check_transaction_cost_realism()
+        assert cr.passed
+        assert cr.score >= 70
+
+    def test_low_spread_fails(self):
+        ch = _make_checker(assumed_spread_bps=0.5)
+        cr = ch.check_transaction_cost_realism()
+        assert not cr.passed
+        assert "spread" in cr.detail.lower()
+
+    def test_low_commission_fails(self):
+        ch = _make_checker(assumed_commission=0.1)
+        cr = ch.check_transaction_cost_realism()
+        assert "commission" in cr.detail.lower()
+
+
+# ===========================================================================
+# Fill realism
+# ===========================================================================
+
+
+class TestFillRealism:
+    def test_normal_size_passes(self):
+        ch = _make_checker(adv=100_000.0)
+        cr = ch.check_fill_realism()
+        assert cr.passed
+        assert cr.score == pytest.approx(100.0)
+
+    def test_big_size_fails(self):
+        trades = _make_trades(big_quantity=True)
+        ch = _make_checker(trades=trades, adv=1_000.0)
+        cr = ch.check_fill_realism()
+        assert not cr.passed
+        assert "exceed 10% ADV" in cr.detail
+
+    def test_zero_adv(self):
+        ch = _make_checker(adv=0.0)
+        cr = ch.check_fill_realism()
+        assert not cr.passed
+
+
+# ===========================================================================
+# Capacity check
+# ===========================================================================
+
+
+class TestCapacityCheck:
+    def test_normal_capacity(self):
+        ch = _make_checker(adv=1_000_000.0)
+        cr = ch.check_capacity()
+        assert cr.passed
+
+    def test_low_adv_fails(self):
+        ch = _make_checker(adv=1.0)
+        cr = ch.check_capacity()
+        assert not cr.passed
+
+    def test_zero_adv(self):
+        ch = _make_checker(adv=0.0)
+        cr = ch.check_capacity()
+        assert not cr.passed
+        assert cr.score == pytest.approx(0.0)
+
+
+# ===========================================================================
+# Parameter sensitivity / cliff detection
+# ===========================================================================
+
+
+class TestParameterSensitivity:
+    def test_no_sweep_passes(self):
+        ch = _make_checker()
+        cr = ch.check_parameter_sensitivity()
+        assert cr.passed
+
+    def test_smooth_params_pass(self):
+        sweep = {"alpha": [1.5, 1.4, 1.3, 1.2, 1.1]}
+        ch = _make_checker(param_sweep=sweep)
+        cr = ch.check_parameter_sensitivity()
+        assert cr.passed
+
+    def test_cliff_detected(self):
+        # 2.0 -> 0.5 is a 75% drop
+        sweep = {"alpha": [2.0, 0.5, 0.4]}
+        ch = _make_checker(param_sweep=sweep)
+        cr = ch.check_parameter_sensitivity()
+        assert not cr.passed
+        assert "alpha" in cr.detail
+
+    def test_multiple_cliffs(self):
+        sweep = {
+            "alpha": [2.0, 0.3],
+            "beta": [1.0, 0.1],
+        }
+        ch = _make_checker(param_sweep=sweep)
+        cr = ch.check_parameter_sensitivity()
+        assert not cr.passed
+        assert "alpha" in cr.detail
+        assert "beta" in cr.detail
+
+    def test_cliff_exactly_50_pct_no_flag(self):
+        # 2.0 -> 1.0 is exactly 50%, threshold is > 50%
+        sweep = {"alpha": [2.0, 1.0]}
+        ch = _make_checker(param_sweep=sweep)
+        cr = ch.check_parameter_sensitivity()
+        assert cr.passed
+
+    def test_cliff_just_over_50_pct(self):
+        sweep = {"alpha": [2.0, 0.99]}
+        ch = _make_checker(param_sweep=sweep)
+        cr = ch.check_parameter_sensitivity()
+        assert not cr.passed
+
+    def test_single_value_param(self):
+        sweep = {"alpha": [1.5]}
+        ch = _make_checker(param_sweep=sweep)
+        cr = ch.check_parameter_sensitivity()
+        assert cr.passed
+
+
+# ===========================================================================
+# OOS degradation
+# ===========================================================================
+
+
+class TestOOSDegradation:
+    def test_no_sharpe_skipped(self):
+        ch = _make_checker()
+        cr = ch.check_oos_degradation()
+        assert cr.passed  # skipped
+
+    def test_small_degradation_passes(self):
+        ch = _make_checker(is_sharpe=2.0, oos_sharpe=1.8)
+        cr = ch.check_oos_degradation()
+        assert cr.passed  # 10% degradation
+
+    def test_large_degradation_fails(self):
+        ch = _make_checker(is_sharpe=2.0, oos_sharpe=1.0)
+        cr = ch.check_oos_degradation()
+        assert not cr.passed
+        assert "50%" in cr.detail
+
+    def test_exactly_30_pct_passes(self):
+        ch = _make_checker(is_sharpe=2.0, oos_sharpe=1.4)
+        cr = ch.check_oos_degradation()
+        assert cr.passed
+
+    def test_zero_is_sharpe(self):
+        ch = _make_checker(is_sharpe=0.0, oos_sharpe=1.0)
+        cr = ch.check_oos_degradation()
+        assert cr.passed  # near zero IS
+
+
+# ===========================================================================
+# Overfitting ratio
+# ===========================================================================
+
+
+class TestOverfittingRatio:
+    def test_low_ratio_passes(self):
+        trades = _make_trades(n=200)
+        ch = _make_checker(trades=trades, n_params_tested=5)
+        cr = ch.check_overfitting_ratio()
+        assert cr.passed
+
+    def test_high_ratio_fails(self):
+        trades = _make_trades(n=10)
+        ch = _make_checker(trades=trades, n_params_tested=5)
+        cr = ch.check_overfitting_ratio()
+        assert not cr.passed
+
+    def test_zero_trades(self):
+        empty = pd.DataFrame(columns=["date", "pnl", "entry_price", "exit_price", "quantity"])
+        ch = _make_checker(trades=empty, n_params_tested=5)
+        cr = ch.check_overfitting_ratio()
+        assert not cr.passed
+        assert cr.score == pytest.approx(0.0)
+
+
+# ===========================================================================
+# Complexity penalty
+# ===========================================================================
+
+
+class TestComplexityPenalty:
+    def test_few_params_passes(self):
+        ch = _make_checker(n_params_tested=2)
+        cr = ch.check_complexity_penalty()
+        assert cr.passed
+        assert cr.score == pytest.approx(100.0)
+
+    def test_many_params_fails(self):
+        ch = _make_checker(n_params_tested=50)
+        cr = ch.check_complexity_penalty()
+        assert not cr.passed
+
+    def test_boundary_3(self):
+        ch = _make_checker(n_params_tested=3)
+        cr = ch.check_complexity_penalty()
+        assert cr.score == pytest.approx(100.0)
+
+    def test_moderate_params(self):
+        ch = _make_checker(n_params_tested=10)
+        cr = ch.check_complexity_penalty()
+        assert cr.passed
+        assert 60 <= cr.score <= 70
+
+
+# ===========================================================================
+# Credibility score and grade
+# ===========================================================================
+
+
+class TestCredibilityScore:
+    def test_good_backtest_high_score(self):
         ch = _make_checker(
-            uses_close_price_for_signal=True,
-            signal_generated_before_trade=False,
-            assumed_slippage_bps=0.5,
-            realistic_slippage_bps=5.0,
-            assumed_fill_rate=1.0,
-            avg_trade_contracts=200,
-            n_free_params=100,
-        ); ch.check()
-        assert ch.credibility.score < 40
+            n_params_tested=2,
+            adv=1_000_000.0,
+            assumed_spread_bps=5.0,
+            assumed_commission=1.0,
+            is_sharpe=2.0,
+            oos_sharpe=1.8,
+            trades=_make_trades(n=200, add_ticker=True),
+            returns=_make_returns(gap=False),
+        )
+        res = ch.run_all()
+        assert res.credibility_score >= 70
 
-    def test_grade_range(self):
-        ch = _make_checker(); ch.check()
-        assert ch.credibility.grade in ("A", "B", "C", "D", "F")
+    def test_bad_backtest_low_score(self):
+        ch = _make_checker(
+            trades=_make_trades(n=10, add_look_ahead=True, big_quantity=True),
+            returns=_make_returns(gap=True),
+            n_params_tested=50,
+            adv=1.0,
+            assumed_spread_bps=0.1,
+            assumed_commission=0.01,
+            is_sharpe=3.0,
+            oos_sharpe=0.5,
+            param_sweep={"x": [3.0, 0.1]},
+        )
+        res = ch.run_all()
+        assert res.credibility_score < 40
 
-    def test_critical_count(self):
-        ch = _make_checker(uses_close_price_for_signal=True); ch.check()
-        assert ch.credibility.n_critical >= 1
 
-    def test_passed_count(self):
-        ch = _make_checker(); ch.check()
-        assert ch.credibility.n_passed > 0
+class TestGradeAssignment:
+    def test_grade_a(self):
+        assert _grade_from_score(90) == "A"
 
-    def test_top_issues_list(self):
-        ch = _make_checker(); ch.check()
-        assert isinstance(ch.credibility.top_issues, list)
+    def test_grade_b(self):
+        assert _grade_from_score(75) == "B"
 
-# ── Pipeline ─────────────────────────────────────────────────────────────
+    def test_grade_c(self):
+        assert _grade_from_score(60) == "C"
 
-class TestPipeline:
-    def test_check_keys(self):
+    def test_grade_d(self):
+        assert _grade_from_score(45) == "D"
+
+    def test_grade_f(self):
+        assert _grade_from_score(30) == "F"
+
+    def test_boundary_85(self):
+        assert _grade_from_score(85) == "A"
+
+    def test_boundary_70(self):
+        assert _grade_from_score(70) == "B"
+
+    def test_run_all_sets_grade(self):
         ch = _make_checker()
-        result = ch.check()
-        expected = {"flags", "sensitivity", "degradation", "capacity",
-                    "complexity", "credibility"}
-        assert set(result.keys()) == expected
+        res = ch.run_all()
+        assert res.grade in ("A", "B", "C", "D", "F")
 
-# ── Report ───────────────────────────────────────────────────────────────
 
-class TestReport:
-    def test_html(self, tmp_path):
+# ===========================================================================
+# HTML report
+# ===========================================================================
+
+
+class TestHTMLReport:
+    def test_report_contains_html(self):
         ch = _make_checker()
-        path = ch.generate_report(str(tmp_path / "r.html"))
-        c = open(path).read()
-        assert "<!DOCTYPE html>" in c and "Reality Check" in c
+        html = ch.generate_report()
+        assert "<!DOCTYPE html>" in html
 
-    def test_sections(self, tmp_path):
+    def test_report_has_gauge(self):
         ch = _make_checker()
-        path = ch.generate_report(str(tmp_path / "r.html"))
-        c = open(path).read()
-        assert "Bias Flags" in c and "Degradation" in c and "Sensitivity" in c
-        assert "Complexity" in c and "Capacity" in c
+        html = ch.generate_report()
+        assert "<svg" in html
+        assert "Grade" in html
 
-    def test_charts(self, tmp_path):
+    def test_report_has_checklist(self):
         ch = _make_checker()
-        path = ch.generate_report(str(tmp_path / "r.html"))
-        assert "data:image/png;base64," in open(path).read()
+        ch.run_all()
+        html = ch.generate_report()
+        assert "look_ahead_bias" in html
+        assert "survivorship_bias" in html
 
-    def test_auto_check(self, tmp_path):
-        ch = _make_checker()
-        assert ch.credibility is None
-        ch.generate_report(str(tmp_path / "r.html"))
-        assert ch.credibility is not None
+    def test_report_has_tornado(self):
+        ch = _make_checker(param_sweep={"alpha": [2.0, 1.5, 1.0]})
+        html = ch.generate_report()
+        assert "Parameter Sensitivity" in html
+        assert "alpha" in html
 
-    def test_default_path(self):
+    def test_report_has_degradation(self):
+        ch = _make_checker(is_sharpe=2.0, oos_sharpe=1.5)
+        html = ch.generate_report()
+        assert "In-Sample" in html
+        assert "OOS" in html
+
+    def test_report_writes_file(self, tmp_path):
         ch = _make_checker()
-        path = ch.generate_report()
-        assert "backtest_reality.html" in path
+        out = tmp_path / "report.html"
+        html = ch.generate_report(output=str(out))
+        assert out.exists()
+        assert "<!DOCTYPE html>" in out.read_text()
+
+    def test_report_auto_runs(self):
+        ch = _make_checker()
+        assert ch._result is None
+        ch.generate_report()
+        assert ch._result is not None
+
+    def test_report_no_sweep_no_crash(self):
+        ch = _make_checker()
+        html = ch.generate_report()
+        assert "No parameter sweep" in html
+
+    def test_report_no_oos_no_crash(self):
+        ch = _make_checker()
+        html = ch.generate_report()
+        assert "IS/OOS Sharpe not provided" in html
+
+
+# ===========================================================================
+# Edge cases
+# ===========================================================================
+
+
+class TestEdgeCases:
+    def test_empty_trades(self):
+        empty = pd.DataFrame(columns=["date", "pnl", "entry_price", "exit_price", "quantity"])
+        ch = _make_checker(trades=empty)
+        res = ch.run_all()
+        assert isinstance(res, BacktestRealityResult)
+
+    def test_single_return(self):
+        returns = pd.Series([0.01], index=pd.to_datetime(["2024-01-02"]))
+        ch = _make_checker(returns=returns)
+        res = ch.run_all()
+        assert res.credibility_score >= 0
+
+    def test_all_zero_returns(self):
+        returns = pd.Series(np.zeros(100), index=pd.bdate_range("2024-01-02", periods=100))
+        ch = _make_checker(returns=returns)
+        res = ch.run_all()
+        assert isinstance(res.grade, str)
+
+    def test_negative_adv(self):
+        ch = _make_checker(adv=-100)
+        cr = ch.check_fill_realism()
+        assert not cr.passed
+
+    def test_weights_sum_to_one(self):
+        assert pytest.approx(sum(_CHECK_WEIGHTS.values()), abs=1e-9) == 1.0
+
+    def test_run_all_returns_nine_checks(self):
+        ch = _make_checker()
+        res = ch.run_all()
+        assert len(res.checks) == 9
+
+    def test_recommendations_populated_for_failures(self):
+        ch = _make_checker(
+            trades=_make_trades(add_look_ahead=True),
+            assumed_spread_bps=0.1,
+        )
+        res = ch.run_all()
+        assert len(res.recommendations) > 0
