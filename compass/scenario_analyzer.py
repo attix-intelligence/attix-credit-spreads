@@ -216,7 +216,7 @@ class ScenarioAnalyzer:
             )
             results.append(sr)
 
-        worst = max(results, key=lambda r: r.adjusted_drawdown_pct)
+        worst = min(results, key=lambda r: r.adjusted_drawdown_pct)
         pw_loss = sum(r.probability_weighted_loss for r in results)
         es = self._expected_shortfall(results)
 

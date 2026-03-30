@@ -824,7 +824,7 @@ def _build_html(result: CombinerResult) -> str:
 </head>
 <body>
 <h1>Alpha Signal Combiner</h1>
-<p class="meta">{result.n_signals} signals &middot; Method: {result.method} &middot;
+<p class="meta">{len(result.signal_names)} signals &middot; Method: {result.method} &middot;
    {len(result.combined_signal)} observations</p>
 
 {_ic_dashboard(result.signal_metrics, result.combined_metrics)}
