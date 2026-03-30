@@ -139,7 +139,7 @@ def compute_sharpe(returns: pd.Series, risk_free_rate: float = 0.0,
         return 0.0
     excess = returns - risk_free_rate / ann
     vol = excess.std(ddof=1)
-    if vol == 0:
+    if vol < 1e-14:
         return 0.0
     return float(excess.mean() / vol * np.sqrt(ann))
 

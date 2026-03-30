@@ -779,14 +779,17 @@ tr:nth-child(even) {{ background: #f9f9f9; }}
         )
         rows = ""
         for i, t in enumerate(trades, 1):
+            exit_px = f"{t.exit_price:.4f}" if t.exit_price is not None else ""
+            entry_dt = t.entry_date.strftime("%Y-%m-%d") if t.entry_date else ""
+            exit_dt = t.exit_date.strftime("%Y-%m-%d") if t.exit_date else ""
             rows += (
                 f"<tr><td>{i}</td>"
-                f"<td>{t.entry_date.strftime('%Y-%m-%d') if t.entry_date else ''}</td>"
-                f"<td>{t.exit_date.strftime('%Y-%m-%d') if t.exit_date else ''}</td>"
+                f"<td>{entry_dt}</td>"
+                f"<td>{exit_dt}</td>"
                 f"<td>{t.direction}</td>"
                 f"<td>{t.size:.2f}</td>"
                 f"<td>{t.entry_price:.4f}</td>"
-                f"<td>{t.exit_price:.4f if t.exit_price else ''}</td>"
+                f"<td>{exit_px}</td>"
                 f"<td>{t.pnl:.2f}</td>"
                 f"<td>{t.costs:.2f}</td>"
                 f"<td>{t.exit_reason}</td></tr>"
