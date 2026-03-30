@@ -1,6 +1,7 @@
 """Multi-factor risk model for portfolio construction — fundamental and
 statistical factors, cross-sectional exposure estimation, factor return
-attribution, Ledoit-Wolf covariance shrinkage, and factor-neutral portfolios.
+attribution, Ledoit-Wolf covariance shrinkage, factor-neutral portfolios,
+factor-mimicking portfolios, and factor timing signals.
 
 Provides:
   1. Fundamental factors (value, momentum, quality, size, volatility)
@@ -11,10 +12,14 @@ Provides:
   6. Factor covariance with Ledoit-Wolf shrinkage
   7. Risk decomposition (systematic vs idiosyncratic)
   8. Factor-neutral portfolio construction
-  9. HTML report with charts and tables
+  9. Factor-mimicking portfolios
+  10. Factor timing signals (momentum + mean-reversion)
+  11. HTML report with charts, heatmaps, and tables
 """
 from __future__ import annotations
 
+import base64
+import io
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -71,6 +76,26 @@ class NeutralPortfolio:
 
 
 @dataclass
+class MimickingPortfolio:
+    """Factor-mimicking portfolio: replicates a single factor's return."""
+    factor: str
+    weights: Dict[str, float]
+    tracking_error: float
+    correlation_with_factor: float
+
+
+@dataclass
+class FactorTimingSignal:
+    """Factor timing signal based on momentum and mean-reversion."""
+    factor: str
+    momentum_1m: float
+    momentum_3m: float
+    z_score: float           # current return vs rolling mean
+    signal: str              # "overweight", "underweight", "neutral"
+    strength: float          # 0-1
+
+
+@dataclass
 class FactorModelResult:
     """Complete factor model output."""
     exposures: List[FactorExposure] = field(default_factory=list)
@@ -78,6 +103,8 @@ class FactorModelResult:
     risk_decomposition: Optional[RiskDecomposition] = None
     factor_covariance: Optional[pd.DataFrame] = None
     neutral_portfolio: Optional[NeutralPortfolio] = None
+    mimicking_portfolios: List[MimickingPortfolio] = field(default_factory=list)
+    timing_signals: List[FactorTimingSignal] = field(default_factory=list)
     n_factors: int = 0
     n_assets: int = 0
     pca_variance_explained: List[float] = field(default_factory=list)
@@ -152,12 +179,20 @@ class FactorModel:
         # Factor-neutral portfolio
         neutral = self._neutral_portfolio(exposures, assets, factor_names)
 
+        # Factor-mimicking portfolios
+        mimicking = self._mimicking_portfolios(R, F, assets, factor_names)
+
+        # Factor timing signals
+        timing = self._timing_signals(F, factor_names)
+
         return FactorModelResult(
             exposures=exposures,
             factor_returns=factor_rets,
             risk_decomposition=risk_dec,
             factor_covariance=cov,
             neutral_portfolio=neutral,
+            mimicking_portfolios=mimicking,
+            timing_signals=timing,
             n_factors=len(factor_names),
             n_assets=n_assets,
             pca_variance_explained=pca_var,
@@ -347,9 +382,132 @@ class FactorModel:
             is_neutral=is_neutral,
         )
 
+    # ── Factor-mimicking portfolios ───────────────────────────────────────
+    def _mimicking_portfolios(
+        self,
+        R: pd.DataFrame,
+        F: pd.DataFrame,
+        assets: List[str],
+        factor_names: List[str],
+    ) -> List[MimickingPortfolio]:
+        """Build factor-mimicking portfolios via cross-sectional regression."""
+        results: List[MimickingPortfolio] = []
+        R_vals = R.values  # T × N
+        for j, fname in enumerate(factor_names):
+            f_series = F.iloc[:, j].values  # T × 1
+            # Regress factor on asset returns: f = R @ w + eps
+            # OLS: w = (R'R)^{-1} R'f
+            try:
+                RtR = R_vals.T @ R_vals
+                reg = np.eye(RtR.shape[0]) * 1e-6
+                w = np.linalg.solve(RtR + reg, R_vals.T @ f_series)
+                # Normalize weights
+                w_sum = np.sum(np.abs(w))
+                if w_sum > 1e-10:
+                    w = w / w_sum
+            except np.linalg.LinAlgError:
+                w = np.ones(len(assets)) / len(assets)
+
+            # Tracking: correlation between mimicking portfolio returns and factor
+            mim_ret = R_vals @ w
+            corr = float(np.corrcoef(mim_ret, f_series)[0, 1]) if len(f_series) > 2 else 0.0
+            te = float(np.std(mim_ret - f_series)) if len(f_series) > 2 else 0.0
+
+            results.append(MimickingPortfolio(
+                factor=fname,
+                weights={a: float(w[i]) for i, a in enumerate(assets)},
+                tracking_error=te,
+                correlation_with_factor=corr,
+            ))
+        return results
+
+    # ── Factor timing signals ─────────────────────────────────────────────
+    def _timing_signals(
+        self, F: pd.DataFrame, factor_names: List[str],
+    ) -> List[FactorTimingSignal]:
+        """Compute momentum + mean-reversion timing signals per factor."""
+        results: List[FactorTimingSignal] = []
+        for j, fname in enumerate(factor_names):
+            series = F.iloc[:, j]
+            cum = series.cumsum()
+            n = len(cum)
+
+            # Momentum
+            m1 = float(cum.iloc[-1] - cum.iloc[-min(21, n)]) if n >= 21 else float(cum.iloc[-1])
+            m3 = float(cum.iloc[-1] - cum.iloc[-min(63, n)]) if n >= 63 else float(cum.iloc[-1])
+
+            # Z-score: current rolling mean vs long-term
+            window = min(60, n)
+            rolling_mean = float(series.iloc[-window:].mean())
+            long_mean = float(series.mean())
+            long_std = float(series.std())
+            z = (rolling_mean - long_mean) / long_std if long_std > 1e-10 else 0.0
+
+            # Signal
+            if m1 > 0 and z > 0.5:
+                signal = "overweight"
+                strength = min(abs(z) / 2, 1.0)
+            elif m1 < 0 and z < -0.5:
+                signal = "underweight"
+                strength = min(abs(z) / 2, 1.0)
+            else:
+                signal = "neutral"
+                strength = 0.0
+
+            results.append(FactorTimingSignal(
+                factor=fname, momentum_1m=m1, momentum_3m=m3,
+                z_score=z, signal=signal, strength=strength,
+            ))
+        return results
+
     @staticmethod
     def _now() -> str:
         return datetime.now(tz=timezone.utc).isoformat(timespec="seconds")
+
+    # ── Charts ─────────────────────────────────────────────────────────────
+    @staticmethod
+    def _fig_to_b64(fig) -> str:
+        import matplotlib; matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+        buf = io.BytesIO()
+        fig.savefig(buf, format="png", dpi=120, bbox_inches="tight", facecolor="white")
+        plt.close(fig); buf.seek(0)
+        return base64.b64encode(buf.read()).decode("ascii")
+
+    def _chart_exposure_heatmap(self, r: FactorModelResult) -> str:
+        import matplotlib; matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+        if not r.exposures:
+            return ""
+        factors = list(r.exposures[0].exposures.keys())
+        assets = [e.asset for e in r.exposures]
+        matrix = np.array([[e.exposures.get(f, 0) for f in factors] for e in r.exposures])
+        fig, ax = plt.subplots(figsize=(max(5, len(factors) * 1.2), max(3, len(assets) * 0.4)))
+        vmax = max(abs(matrix.max()), abs(matrix.min()), 0.01)
+        im = ax.imshow(matrix, cmap="RdYlGn", vmin=-vmax, vmax=vmax, aspect="auto")
+        ax.set_xticks(range(len(factors))); ax.set_xticklabels(factors, fontsize=8, rotation=45, ha="right")
+        ax.set_yticks(range(len(assets))); ax.set_yticklabels(assets, fontsize=8)
+        for i in range(len(assets)):
+            for j in range(len(factors)):
+                ax.text(j, i, f"{matrix[i,j]:.2f}", ha="center", va="center", fontsize=7,
+                        color="white" if abs(matrix[i,j]) > vmax * 0.6 else "black")
+        fig.colorbar(im, shrink=0.8); ax.set_title("Factor Exposure Heatmap", fontsize=11)
+        fig.tight_layout()
+        return self._fig_to_b64(fig)
+
+    def _chart_variance_decomp(self, r: FactorModelResult) -> str:
+        import matplotlib; matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+        if not r.pca_variance_explained:
+            return ""
+        fig, ax = plt.subplots(figsize=(6, 3))
+        xs = range(1, len(r.pca_variance_explained) + 1)
+        ax.bar(xs, r.pca_variance_explained, color="#3b82f6", alpha=0.85)
+        ax.plot(xs, np.cumsum(r.pca_variance_explained), "o-", color="#dc2626", lw=1.2, label="Cumulative")
+        ax.set_xlabel("Factor"); ax.set_ylabel("Variance Explained")
+        ax.set_title("PCA Variance Decomposition", fontsize=11)
+        ax.legend(fontsize=8); ax.grid(True, alpha=0.2); fig.tight_layout()
+        return self._fig_to_b64(fig)
 
     # ── HTML ────────────────────────────────────────────────────────────────
     def _build_html(self, r: FactorModelResult) -> str:
@@ -359,6 +517,16 @@ class FactorModel:
         risk_sec = self._html_risk_decomp(r.risk_decomposition)
         cov_hm = self._svg_covariance(r.factor_covariance)
         neutral_sec = self._html_neutral(r.neutral_portfolio)
+
+        # New charts
+        exp_heatmap_b64 = self._chart_exposure_heatmap(r)
+        var_decomp_b64 = self._chart_variance_decomp(r)
+        exp_heatmap = f'<div style="background:#fff;border-radius:8px;padding:1em;margin:1em 0;text-align:center"><img src="data:image/png;base64,{exp_heatmap_b64}" style="max-width:100%"></div>' if exp_heatmap_b64 else ""
+        var_decomp = f'<div style="background:#fff;border-radius:8px;padding:1em;margin:1em 0;text-align:center"><img src="data:image/png;base64,{var_decomp_b64}" style="max-width:100%"></div>' if var_decomp_b64 else ""
+
+        # Mimicking portfolios section
+        mim_sec = self._html_mimicking(r.mimicking_portfolios)
+        timing_sec = self._html_timing(r.timing_signals)
 
         return f"""<!DOCTYPE html>
 <html lang="en">
