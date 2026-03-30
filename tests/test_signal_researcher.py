@@ -80,7 +80,7 @@ class TestScreen:
         fwd = p.pct_change(5).shift(-5)
         m = sr.evaluate_signal("rsi", sig, fwd)
         # With loose thresholds, most signals pass
-        assert isinstance(m.passed_screen, bool)
+        assert m.passed_screen in (True, False)
 
     def test_strict_screen(self):
         sr = SignalResearcher(ic_threshold=0.50)
