@@ -509,6 +509,20 @@ class FactorModel:
         ax.legend(fontsize=8); ax.grid(True, alpha=0.2); fig.tight_layout()
         return self._fig_to_b64(fig)
 
+    @staticmethod
+    def _html_mimicking(portfolios: Any) -> str:
+        """Stub for mimicking portfolios HTML section."""
+        if not portfolios:
+            return ""
+        return "<h2>Mimicking Portfolios</h2><p>Available.</p>"
+
+    @staticmethod
+    def _html_timing(signals: Any) -> str:
+        """Stub for timing signals HTML section."""
+        if not signals:
+            return ""
+        return "<h2>Timing Signals</h2><p>Available.</p>"
+
     # ── HTML ────────────────────────────────────────────────────────────────
     def _build_html(self, r: FactorModelResult) -> str:
         cards = self._html_cards(r)
@@ -669,3 +683,29 @@ svg{{display:block;margin:0 auto}}
 <table><thead><tr><th>Asset</th><th>Weight</th></tr></thead><tbody>{rows}</tbody></table>
 <h3 style="margin-top:12px;font-size:.95rem;color:#94a3b8">Residual Exposures</h3>
 <table><thead><tr><th>Factor</th><th>Exposure</th></tr></thead><tbody>{exp_rows}</tbody></table></div>"""
+
+    @staticmethod
+    def _html_mimicking(portfolios: list) -> str:
+        if not portfolios:
+            return ""
+        rows = ""
+        for mp in portfolios:
+            rows += (f"<tr><td>{mp.factor}</td><td>{mp.tracking_error:.4f}</td>"
+                     f"<td>{mp.correlation_with_factor:.3f}</td></tr>")
+        return f"""<div class="sec"><h2>Factor-Mimicking Portfolios</h2>
+<table><thead><tr><th>Factor</th><th>Tracking Error</th><th>Correlation</th></tr></thead>
+<tbody>{rows}</tbody></table></div>"""
+
+    @staticmethod
+    def _html_timing(signals: list) -> str:
+        if not signals:
+            return ""
+        rows = ""
+        for s in signals:
+            cls = "pos" if s.signal == "overweight" else "neg" if s.signal == "underweight" else ""
+            rows += (f"<tr><td>{s.factor}</td><td>{s.momentum_1m:.4f}</td>"
+                     f"<td>{s.z_score:.2f}</td>"
+                     f'<td class="{cls}">{s.signal}</td><td>{s.strength:.2f}</td></tr>')
+        return f"""<div class="sec"><h2>Factor Timing Signals</h2>
+<table><thead><tr><th>Factor</th><th>Mom 1M</th><th>Z-Score</th><th>Signal</th><th>Strength</th></tr></thead>
+<tbody>{rows}</tbody></table></div>"""

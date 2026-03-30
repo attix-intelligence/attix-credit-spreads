@@ -10,6 +10,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
+
+hypothesis = pytest.importorskip("hypothesis")
 from hypothesis import given
 from hypothesis import strategies as st
 
