@@ -12,7 +12,7 @@ import hashlib
 import logging
 import os
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Dict, Optional
 
 from shared.database import get_trade_by_id, get_trades, init_db, load_scanner_state, save_scanner_state, upsert_trade
@@ -168,15 +168,45 @@ class ExecutionEngine:
 
         # Bug #3 fix: defense-in-depth duplicate check before submitting.
         # If dedup layer fails (Bug #2) the same opportunity can arrive again.
+        # Stale-pending recovery: a pending_open older than PENDING_STALE_MINUTES means
+        # the previous submission attempt was abandoned (e.g. market_closed, CB, crash).
+        # Treat it as failed_open so this scan can proceed — prevents infinite blocking.
+        PENDING_STALE_MINUTES = 60
         try:
             existing = get_trade_by_id(client_id, path=self.db_path)
-            if existing and existing.get("status") not in ("rejected", "cancelled", "failed_open"):
-                logger.info(
-                    "ExecutionEngine: trade %s already exists (status=%s), skipping duplicate",
-                    client_id, existing.get("status"),
-                )
-                return {"status": "duplicate", "client_order_id": client_id,
-                        "message": f"trade already exists with status={existing.get('status')}"}
+            if existing:
+                existing_status = existing.get("status", "")
+                # Recover stale pending_open before deciding to block
+                if existing_status == "pending_open":
+                    try:
+                        entry_str = existing.get("entry_date", "")
+                        entry_dt = datetime.fromisoformat(entry_str) if entry_str else None
+                        if entry_dt is not None:
+                            if entry_dt.tzinfo is None:
+                                entry_dt = entry_dt.replace(tzinfo=timezone.utc)
+                            age_minutes = (datetime.now(timezone.utc) - entry_dt).total_seconds() / 60
+                            if age_minutes > PENDING_STALE_MINUTES:
+                                logger.warning(
+                                    "ExecutionEngine: trade %s has been pending_open for %.0f min "
+                                    "(> %d min threshold) — marking failed_open and retrying",
+                                    client_id, age_minutes, PENDING_STALE_MINUTES,
+                                )
+                                upsert_trade(
+                                    {"id": client_id, "status": "failed_open",
+                                     "exit_reason": f"stale_pending_open: {age_minutes:.0f}min"},
+                                    source="execution", path=self.db_path,
+                                )
+                                existing_status = "failed_open"  # allow submission to proceed
+                    except Exception as age_err:
+                        logger.debug("ExecutionEngine: stale-pending age check failed (non-fatal): %s", age_err)
+
+                if existing_status not in ("rejected", "cancelled", "failed_open"):
+                    logger.info(
+                        "ExecutionEngine: trade %s already exists (status=%s), skipping duplicate",
+                        client_id, existing_status,
+                    )
+                    return {"status": "duplicate", "client_order_id": client_id,
+                            "message": f"trade already exists with status={existing_status}"}
         except Exception as e:
             logger.debug("ExecutionEngine: duplicate check failed (non-fatal): %s", e)
 
@@ -257,21 +287,27 @@ class ExecutionEngine:
                     "ExecutionEngine [DRY RUN]: would submit %s %s x%d @ %.2f credit (client_id=%s)",
                     ticker, spread_type, contracts, credit, client_id,
                 )
+            self._mark_pending_failed(client_id, "dry_run: alpaca not configured")
             return {"status": "dry_run", "client_order_id": client_id, "message": "alpaca not configured"}
 
         # Market hours guard — check Alpaca clock before submitting any order
         clock = self.alpaca.get_market_clock()
         is_open = clock.get("is_open")
         if is_open is False:
+            next_open = clock.get("next_open", "unknown")
             logger.warning(
                 "ExecutionEngine: market is CLOSED — blocking order for %s %s (client_id=%s). "
                 "next_open=%s",
-                ticker, spread_type, client_id, clock.get("next_open"),
+                ticker, spread_type, client_id, next_open,
             )
+            # Bug fix: mark the DB record as failed_open so it does not block future scans.
+            # Previously this returned without updating the DB, leaving the trade stuck
+            # in pending_open forever (duplicate check would then block all future scans).
+            self._mark_pending_failed(client_id, f"market_closed: next_open={next_open}")
             return {
                 "status": "market_closed",
                 "client_order_id": client_id,
-                "message": f"market closed; next_open={clock.get('next_open')}",
+                "message": f"market closed; next_open={next_open}",
             }
         # is_open=None means clock check failed — fail open (don't block)
 
@@ -282,6 +318,8 @@ class ExecutionEngine:
                 "ExecutionEngine: entry BLOCKED by drawdown CB for %s %s: %s",
                 ticker, spread_type, cb_reason,
             )
+            # Bug fix: same as market_closed — must update DB before returning.
+            self._mark_pending_failed(client_id, f"drawdown_cb_tripped: {cb_reason}")
             return {"status": "drawdown_cb_tripped", "message": cb_reason, "client_order_id": client_id}
 
         # Submit to Alpaca
@@ -364,6 +402,24 @@ class ExecutionEngine:
                     "ExecutionEngine: DB update to failed_open failed for %s: %s", client_id, db_err
                 )
             return {"status": "error", "message": str(e), "client_order_id": client_id}
+
+    def _mark_pending_failed(self, client_id: str, reason: str) -> None:
+        """Update a pending_open DB record to failed_open.
+
+        Called whenever submit_opportunity() bails out after the DB write but
+        before Alpaca is contacted (market closed, CB tripped, dry-run with no
+        provider).  Without this, the record would stay pending_open forever
+        and block all future scans via the duplicate check.
+        """
+        try:
+            upsert_trade(
+                {"id": client_id, "status": "failed_open", "exit_reason": reason},
+                source="execution",
+                path=self.db_path,
+            )
+            logger.debug("ExecutionEngine: marked %s as failed_open (%s)", client_id, reason)
+        except Exception as db_err:
+            logger.error("ExecutionEngine: _mark_pending_failed DB update failed for %s: %s", client_id, db_err)
 
     def _check_drawdown_cb(self) -> bool:
         """Return True if account drawdown exceeds the configured threshold.
