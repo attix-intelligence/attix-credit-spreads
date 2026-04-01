@@ -643,7 +643,8 @@ class TestDailyReport:
         from shared.database import close_trade, init_db, upsert_trade
         init_db(db_path)
         today_str = datetime.now(timezone.utc).date().isoformat()
-        yesterday = datetime.now(timezone.utc).replace(day=datetime.now(timezone.utc).day - 1)
+        from datetime import timedelta
+        yesterday = datetime.now(timezone.utc) - timedelta(days=1)
         yesterday_str = yesterday.date().isoformat()
 
         # Open position

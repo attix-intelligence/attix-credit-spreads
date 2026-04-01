@@ -419,9 +419,12 @@ class TestGetHistory:
     """Tests for get_deviation_history()."""
 
     def test_ordered_newest_first(self, db_path):
+        from datetime import timedelta
+        today = datetime.now()
         for i in range(3):
+            d = (today - timedelta(days=3 - i)).strftime("%Y-%m-%d")
             _upsert_snapshot({
-                "snapshot_date": f"2026-03-0{i+1}",
+                "snapshot_date": d,
                 "live_trades": 10 + i,
                 "overall_status": "PASS",
                 "details": {},
@@ -429,7 +432,7 @@ class TestGetHistory:
 
         history = get_deviation_history(days=30, db_path=db_path)
         assert len(history) == 3
-        assert history[0]["snapshot_date"] == "2026-03-03"
+        assert history[0]["snapshot_date"] == (today - timedelta(days=1)).strftime("%Y-%m-%d")
 
     def test_respects_days_param(self, db_path):
         today = datetime.now()
