@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"/><title>Transformer Predictor</title>
+<style>body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:900px;margin:0 auto;padding:20px;background:#0d1117;color:#c9d1d9}h1,h2{color:#58a6ff}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:20px 0}.c{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:10px;text-align:center}.c .l{color:#8b949e;font-size:.8em}.c .v{color:#f0f6fc;font-weight:600;font-size:1.1em}
+table{width:100%;border-collapse:collapse;margin:12px 0}th,td{padding:6px 10px;text-align:right;border-bottom:1px solid #21262d}th{color:#8b949e;background:#161b22}</style></head><body>
+<h1>Transformer Price Predictor</h1>
+<div class="cards">
+<div class="c"><div class="l">Transformer OOS Acc</div><div class="v">54.0%</div></div>
+<div class="c"><div class="l">Transformer Sharpe</div><div class="v">0.434</div></div>
+<div class="c"><div class="l">XGBoost OOS Acc</div><div class="v">55.9%</div></div>
+<div class="c"><div class="l">XGBoost Sharpe</div><div class="v">1.377</div></div>
+<div class="c"><div class="l">Winner</div><div class="v">XGBoost</div></div>
+<div class="c"><div class="l">Architecture</div><div class="v">3L 32D 4H</div></div>
+</div>
+<h2>Walk-Forward Folds</h2>
+<table><tr><th>Fold</th><th>Train N</th><th>Test N</th><th>Train Acc</th><th>Test Acc</th><th>Test Sharpe</th></tr><tr><td>1</td><td>121</td><td>121</td><td>62.0%</td><td>58.7%</td><td>1.416</td></tr><tr><td>2</td><td>242</td><td>121</td><td>50.0%</td><td>54.5%</td><td>0.000</td></tr><tr><td>3</td><td>363</td><td>121</td><td>60.0%</td><td>48.8%</td><td>-0.114</td></tr></table>
+</body></html>
