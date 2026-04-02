@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"/><title>Adaptive Stop-Loss</title>
+<style>
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:1100px;margin:0 auto;padding:20px;background:#0d1117;color:#c9d1d9}
+h1,h2{color:#58a6ff}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin:20px 0}
+.c{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:10px;text-align:center}
+.c .l{color:#8b949e;font-size:.8em}.c .v{color:#f0f6fc;font-weight:600;font-size:1.1em}
+table{width:100%;border-collapse:collapse;margin:12px 0}th,td{padding:6px 10px;text-align:right;border-bottom:1px solid #21262d}th{color:#8b949e;background:#161b22}
+</style></head><body>
+<h1>Adaptive Stop-Loss Optimizer</h1>
+<div class="cards">
+<div class="c"><div class="l">Best Stop</div><div class="v">keltner</div></div>
+<div class="c"><div class="l">Regime Adaptive</div><div class="v">Yes</div></div>
+<div class="c"><div class="l">DD Reduction</div><div class="v">10.9%</div></div>
+<div class="c"><div class="l">Return Preserved</div><div class="v">100.0%</div></div>
+<div class="c"><div class="l">No-Stop DD</div><div class="v">3.6%</div></div>
+<div class="c"><div class="l">Best DD</div><div class="v">3.2%</div></div>
+<div class="c"><div class="l">No-Stop Sharpe</div><div class="v">5.15</div></div>
+<div class="c"><div class="l">Best Sharpe</div><div class="v">5.25</div></div>
+</div>
+<h2>Top 15 Configurations (by Sharpe)</h2>
+<table><tr><th style="text-align:left">Type</th><th>Adaptive</th><th>Param</th><th>Return</th><th>Max DD</th><th>Sharpe</th><th>Preserved</th><th>DD Reduction</th><th>Stops</th></tr><tr style='color:#3fb950;font-weight:700'><td style='text-align:left'>keltner</td><td>✓</td><td>2.00</td><td>163.1%</td><td>3.2%</td><td>5.25</td><td>100.0%</td><td>10.9%</td><td>2</td></tr><tr><td style='text-align:left'>keltner</td><td></td><td>2.00</td><td>163.1%</td><td>3.2%</td><td>5.21</td><td>100.0%</td><td>10.9%</td><td>3</td></tr><tr><td style='text-align:left'>fixed_pct</td><td>✓</td><td>3.00</td><td>163.1%</td><td>3.6%</td><td>5.15</td><td>100.0%</td><td>0.0%</td><td>1</td></tr><tr><td style='text-align:left'>fixed_pct</td><td></td><td>3.00</td><td>163.1%</td><td>3.6%</td><td>5.15</td><td>100.0%</td><td>0.0%</td><td>1</td></tr><tr><td style='text-align:left'>fixed_pct</td><td>✓</td><td>5.00</td><td>163.1%</td><td>3.6%</td><td>5.15</td><td>100.0%</td><td>0.0%</td><td>0</td></tr><tr><td style='text-align:left'>fixed_pct</td><td></td><td>5.00</td><td>163.1%</td><td>3.6%</td><td>5.15</td><td>100.0%</td><td>0.0%</td><td>0</td></tr><tr><td style='text-align:left'>fixed_pct</td><td>✓</td><td>7.00</td><td>163.1%</td><td>3.6%</td><td>5.15</td><td>100.0%</td><td>0.0%</td><td>0</td></tr><tr><td style='text-align:left'>fixed_pct</td><td></td><td>7.00</td><td>163.1%</td><td>3.6%</td><td>5.15</td><td>100.0%</td><td>0.0%</td><td>0</td></tr><tr><td style='text-align:left'>fixed_pct</td><td>✓</td><td>10.00</td><td>163.1%</td><td>3.6%</td><td>5.15</td><td>100.0%</td><td>0.0%</td><td>0</td></tr><tr><td style='text-align:left'>fixed_pct</td><td></td><td>10.00</td><td>163.1%</td><td>3.6%</td><td>5.15</td><td>100.0%</td><td>0.0%</td><td>0</td></tr><tr><td style='text-align:left'>atr_trailing</td><td>✓</td><td>2.00</td><td>163.1%</td><td>3.6%</td><td>5.15</td><td>100.0%</td><td>0.0%</td><td>0</td></tr><tr><td style='text-align:left'>atr_trailing</td><td></td><td>2.00</td><td>163.1%</td><td>3.6%</td><td>5.15</td><td>100.0%</td><td>0.0%</td><td>0</td></tr><tr><td style='text-align:left'>atr_trailing</td><td>✓</td><td>2.50</td><td>163.1%</td><td>3.6%</td><td>5.15</td><td>100.0%</td><td>0.0%</td><td>0</td></tr><tr><td style='text-align:left'>atr_trailing</td><td></td><td>2.50</td><td>163.1%</td><td>3.6%</td><td>5.15</td><td>100.0%</td><td>0.0%</td><td>0</td></tr><tr><td style='text-align:left'>atr_trailing</td><td>✓</td><td>3.00</td><td>163.1%</td><td>3.6%</td><td>5.15</td><td>100.0%</td><td>0.0%</td><td>0</td></tr></table>
+</body></html>

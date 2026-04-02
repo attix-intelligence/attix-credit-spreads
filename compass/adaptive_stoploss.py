@@ -510,16 +510,16 @@ def _build_html(r: OptimizationResult) -> str:
     b = r.best_stop
     # Top results sorted by Sharpe
     top = sorted(r.stop_results, key=lambda x: x.sharpe, reverse=True)[:15]
-    rows = "".join(
-        f"<tr{'  style=\"color:#3fb950;font-weight:700\"' if s is b else ''}>"
-        f"<td style='text-align:left'>{s.stop_type}</td>"
-        f"<td>{'✓' if s.regime_adaptive else ''}</td>"
-        f"<td>{_fr(s.base_param)}</td>"
-        f"<td>{_fp(s.total_return_pct)}</td><td>{_fp(s.max_dd_pct)}</td>"
-        f"<td>{_fr(s.sharpe)}</td><td>{_fp(s.return_preserved_pct)}</td>"
-        f"<td>{_fp(s.dd_reduction_pct)}</td><td>{s.n_stops_triggered}</td></tr>"
-        for s in top
-    )
+
+    def _row(s):
+        hl = " style='color:#3fb950;font-weight:700'" if s is b else ""
+        ad = "✓" if s.regime_adaptive else ""
+        return (f"<tr{hl}><td style='text-align:left'>{s.stop_type}</td>"
+                f"<td>{ad}</td><td>{_fr(s.base_param)}</td>"
+                f"<td>{_fp(s.total_return_pct)}</td><td>{_fp(s.max_dd_pct)}</td>"
+                f"<td>{_fr(s.sharpe)}</td><td>{_fp(s.return_preserved_pct)}</td>"
+                f"<td>{_fp(s.dd_reduction_pct)}</td><td>{s.n_stops_triggered}</td></tr>")
+    rows = "".join(_row(s) for s in top)
 
     return f"""<!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8"/><title>Adaptive Stop-Loss</title>
