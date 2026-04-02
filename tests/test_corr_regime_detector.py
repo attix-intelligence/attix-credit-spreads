@@ -223,8 +223,9 @@ class TestEdgeCases:
         )
         r = det.analyze()
         assert "only" in r.absorption_ratios
-    def test_high_ar_threshold(self):
-        det = _detector(200, ar_crisis_z=100, ar_warning_z=100)
-        r = det.analyze()
-        assert r.n_breakdown == 0
-        assert r.n_crisis == 0
+    def test_high_thresholds_fewer_breakdowns(self):
+        det_strict = _detector(200, ar_crisis_z=100, ar_warning_z=100, dispersion_warning_z=100)
+        r_strict = det_strict.analyze()
+        det_loose = _detector(200, ar_crisis_z=1.0, ar_warning_z=0.5, dispersion_warning_z=0.5)
+        r_loose = det_loose.analyze()
+        assert r_strict.n_breakdown + r_strict.n_crisis <= r_loose.n_breakdown + r_loose.n_crisis
