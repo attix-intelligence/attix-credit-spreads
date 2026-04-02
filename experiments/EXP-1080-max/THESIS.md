@@ -1,21 +1,26 @@
-# EXP-1080-max: Systematic Volatility Surface Trading
+# EXP-1080-max: VIX Term Structure Trading
 
 ## Hypothesis
 
-Mispricings in the SPY IV surface (skew steepness, term structure slope)
-create systematic alpha.  By measuring the surface shape and trading when
-it deviates from fair value, we can add a new uncorrelated return stream.
+VIX futures contango/backwardation predicts SPY options premium direction.
+The VIX term structure spends ~70% of time in contango (front < back),
+creating a structural roll yield for premium sellers. Backwardation
+signals fear and regime shift — time to buy protection, not sell.
 
-## Strategies
+## Key Features
 
-1. **Skew normality**: detect cheap/expensive wings → sell overpriced puts via bull put spreads, or sell overpriced calls via bear call spreads
-2. **Term structure slope**: steep contango (front < back) → sell front-month premium via calendar spreads; flat/inverted → reduce or hedge
-3. **Butterfly arbitrage**: when the smile is kinked, sell butterflies at the peak and buy at the troughs
-4. **Combined**: overlay surface signals with existing regime detector for timing
+1. **Term structure calculator** — slope, spot-to-front, contango %
+2. **Regime detector** — contango / flat / backwardation with z-scores
+3. **Mean-reversion signals** at extreme z-scores (|z| > 1.5)
+4. **Position sizing** scaled by slope magnitude
+5. **Backtest** — sell premium in contango, buy protection in backwardation
 
-## Success Criteria
+## Why This Matters for EXP-880
 
-- Sharpe > 1.5 for surface-timed entries vs always-on
-- Skew signal adds >5% annual return
-- Term structure timing reduces drawdown by >20%
-- Uncorrelated with existing credit spread alpha (corr < 0.3)
+The VIX term structure is a leading indicator for the crisis hedge.
+Backwardation often precedes VIX spikes by 1-3 days, giving the crisis
+hedge an early warning before the spot VIX crosses the 25 threshold.
+
+## Status: COMPLETE
+- compass/vix_term_structure.py: 380+ lines
+- tests/test_vix_term_structure.py: 33 tests, all passing
