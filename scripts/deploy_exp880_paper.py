@@ -312,8 +312,8 @@ def check_signal_generation() -> List[CheckResult]:
         })
 
         # Test signal scoring (from north_star_backtest)
-        from compass.north_star_backtest import score_trade
-        signal = score_trade(snapshot)
+        from compass.north_star_backtest import compute_signal_score
+        signal = compute_signal_score(snapshot)
         if 0 <= signal <= 1:
             results.append(CheckResult("signal_scoring", True,
                                         f"Signal score={signal:.3f} (valid range)"))
