@@ -1,0 +1,238 @@
+# ============================================================================
+# paper_north_star.yaml — EXP-1570: North Star Portfolio Paper Trading Config
+# ============================================================================
+# Portfolio: EXP-1470 optimal 4-strategy blend at 3.6x leverage
+# Target: 100% CAGR, <12% max DD, Sharpe 6+
+#
+# Strategy Weights (from EXP-1470 HRP optimization):
+#   ML-CS-860          40.5%  (EXP-860 Production Ensemble)
+#   Regime Leverage     20.9%  (EXP-840)
+#   Intraday Mean Rev   20.5%  (EXP-1000)
+#   Combined CS+Vol     18.1%  (EXP-750)
+#
+# Usage:
+#   python experiments/EXP-1570-max/scripts/launch_north_star_paper.py
+#
+# Required env vars:
+#   ALPACA_API_KEY         — Alpaca paper trading API key
+#   ALPACA_API_SECRET      — Alpaca paper trading API secret
+#   POLYGON_API_KEY        — Polygon.io API key (options chain data)
+#   TELEGRAM_BOT_TOKEN     — (optional) Telegram alert bot token
+#   TELEGRAM_CHAT_ID       — (optional) Telegram chat ID for alerts
+# ============================================================================
+
+# --- Identity & Safety ---
+paper_mode: true
+experiment_id: "EXP-1570"
+parent_experiment: "EXP-1470"  # North Star portfolio source
+created_by: "maximus"
+db_path: "data/pilotai_north_star.db"
+
+# --- Tickers ---
+tickers:
+  - SPY
+
+# ============================================================================
+# Portfolio Weights (EXP-1470 HRP-optimized 4-strategy blend)
+# ============================================================================
+portfolio:
+  name: "North Star"
+  leverage_target: 3.6
+  total_weight: 1.0
+
+  strategies:
+    - name: "ML-CS-860"
+      source_experiment: "EXP-860"
+      description: "Production ML ensemble credit spreads"
+      weight: 0.405
+
+    - name: "Regime-Leverage"
+      source_experiment: "EXP-840"
+      description: "Regime-adaptive leveraged credit spreads"
+      weight: 0.209
+
+    - name: "Intraday-MeanRev"
+      source_experiment: "EXP-1000"
+      description: "Intraday mean reversion options"
+      weight: 0.205
+
+    - name: "Combined-CS-Vol"
+      source_experiment: "EXP-750"
+      description: "Combined credit spread + volatility harvest"
+      weight: 0.181
+
+# ============================================================================
+# Circuit Breakers
+# ============================================================================
+circuit_breakers:
+  # Drawdown limits
+  max_drawdown_pct: 12.0        # Hard stop: liquidate all if DD exceeds 12%
+  daily_loss_limit_pct: 3.0     # Halt new entries if daily P&L drops 3%
+
+  # Correlation spike protection
+  correlation_spike:
+    enabled: true
+    threshold: 0.80             # Trigger if inter-strategy corr > 0.80
+    lookback_days: 20           # Rolling window for correlation calc
+    action: "reduce_leverage"   # reduce_leverage | halt_entries | liquidate
+    reduce_to_leverage: 1.5     # Target leverage when corr spike triggered
+
+  # Volatility regime override
+  vix_halt_threshold: 35.0      # Halt all entries if VIX > 35
+  vix_reduce_threshold: 28.0    # Reduce leverage to 2.0x if VIX > 28
+  vix_reduce_leverage: 2.0
+
+  # Per-strategy limits
+  per_strategy_max_dd_pct: 8.0  # Any single strategy DD > 8% → pause it
+  cooldown_minutes: 60          # Minutes to wait after circuit breaker trip
+
+# ============================================================================
+# Rebalance Schedule
+# ============================================================================
+rebalance:
+  frequency: "weekly"
+  day_of_week: "Monday"
+  time: "09:45"                 # 15 min after market open
+  timezone: "America/New_York"
+  drift_threshold_pct: 5.0      # Rebalance early if any weight drifts >5%
+
+# ============================================================================
+# Risk Management
+# ============================================================================
+risk:
+  account_size: 100000
+  max_portfolio_risk_pct: 40
+  max_positions: 20
+  max_positions_per_strategy: 8
+  sizing_mode: "proportional"   # Weight-proportional across strategies
+  compound: false
+
+  # Per-trade limits (applied after strategy weight scaling)
+  max_risk_per_trade_pct: 5.0
+  min_contracts: 1
+  max_contracts: 30
+
+  # Exit rules
+  profit_target: 55
+  stop_loss_multiplier: 1.25
+  delta_threshold: 0.30
+
+  # Portfolio-level
+  portfolio_risk:
+    max_portfolio_risk_pct: 40
+    max_single_ticker_pct: 40
+    max_same_expiration: 6
+
+  drawdown_cb_pct: 12           # Matches circuit breaker
+  cooldown_bars: 5
+
+# ============================================================================
+# Strategy-Specific Parameters
+# ============================================================================
+
+# ML-CS-860: Production ensemble credit spreads
+strategy_ml_cs_860:
+  min_dte: 15
+  max_dte: 25
+  target_dte: 15
+  direction: both
+  otm_pct: 0.02
+  spread_width: 12
+  regime_mode: combo
+  ml_ensemble: true
+  ml_model_path: "ml/models/ensemble_860"
+  score_threshold: 25
+
+# Regime Leverage (EXP-840)
+strategy_regime_leverage:
+  min_dte: 15
+  max_dte: 30
+  target_dte: 20
+  direction: both
+  otm_pct: 0.03
+  spread_width: 10
+  regime_mode: combo
+  leverage_scale:
+    bull: 1.5
+    bear: 0.3
+    high_vol: 0.3
+    low_vol: 1.0
+    crash: 0.0
+
+# Intraday Mean Reversion (EXP-1000)
+strategy_intraday_meanrev:
+  mode: "intraday"
+  target_dte: 0
+  max_dte: 1
+  direction: both
+  reversion_threshold: 1.5     # Std devs from VWAP
+  profit_target_pct: 0.40
+  stop_loss_pct: 0.25
+  max_trades_per_day: 4
+
+# Combined CS+Vol (EXP-750)
+strategy_combined_cs_vol:
+  min_dte: 15
+  max_dte: 25
+  target_dte: 18
+  direction: both
+  otm_pct: 0.025
+  spread_width: 10
+  vol_harvest:
+    enabled: true
+    mode: "short_straddle"
+    min_iv_rank: 40
+    profit_target_pct: 0.45
+
+# ============================================================================
+# Alpaca Paper Trading
+# ============================================================================
+alpaca:
+  enabled: true
+  paper: true
+  base_url: "https://paper-api.alpaca.markets"
+  api_key: "${ALPACA_API_KEY}"
+  api_secret: "${ALPACA_API_SECRET}"
+
+# ============================================================================
+# Alerts
+# ============================================================================
+alerts:
+  output_json: true
+  output_text: true
+  output_csv: true
+  json_file: "alerts_north_star.json"
+  text_file: "alerts_north_star.txt"
+  csv_file: "alerts_north_star.csv"
+
+  telegram:
+    enabled: true
+    bot_token: "${TELEGRAM_BOT_TOKEN}"
+    chat_id: "${TELEGRAM_CHAT_ID}"
+
+# ============================================================================
+# Logging
+# ============================================================================
+logging:
+  level: "INFO"
+  file: "logs/paper_north_star.log"
+  console: true
+
+# ============================================================================
+# Data
+# ============================================================================
+data:
+  provider: polygon
+  cache_dir: "data/options_cache"
+
+# ============================================================================
+# Backtester Reference (for validation)
+# ============================================================================
+backtest:
+  starting_capital: 100000
+  commission_per_contract: 0.65
+  slippage: 0.05
+  exit_slippage: 0.10
+  score_threshold: 25
+  generate_reports: true
+  report_dir: "output/backtest_reports"
