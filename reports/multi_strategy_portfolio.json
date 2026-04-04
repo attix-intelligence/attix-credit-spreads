@@ -1,0 +1,136 @@
+{
+  "generated": "2026-04-04T21:18:22.258717",
+  "strategies": {
+    "EXP-1220 Tail Risk": {
+      "n_trades": 1508,
+      "pnl": 383790.19,
+      "wr": 0.9622,
+      "dd": 0.0016,
+      "sharpe": 35.386,
+      "cagr": 0.3014
+    },
+    "Cross-Asset Pairs": {
+      "n_trades": 121,
+      "pnl": 5061.0,
+      "wr": 0.9339,
+      "dd": 0.0034,
+      "sharpe": 2.001,
+      "cagr": 0.0083
+    },
+    "Vol Term Structure": {
+      "n_trades": 98,
+      "pnl": 3723.0,
+      "wr": 0.949,
+      "dd": 0.0018,
+      "sharpe": 1.125,
+      "cagr": 0.0061
+    },
+    "TLT Put Spreads": {
+      "n_trades": 29,
+      "pnl": 575.0,
+      "wr": 0.8966,
+      "dd": 0.003,
+      "sharpe": 0.476,
+      "cagr": 0.001
+    }
+  },
+  "correlation_matrix": {
+    "Cross-Asset Pairs": {
+      "Cross-Asset Pairs": 1.0,
+      "EXP-1220 Tail Risk": -0.025275229924329307,
+      "TLT Put Spreads": 0.03587065782649395,
+      "Vol Term Structure": 0.017437475506219366
+    },
+    "EXP-1220 Tail Risk": {
+      "Cross-Asset Pairs": -0.025275229924329307,
+      "EXP-1220 Tail Risk": 1.0,
+      "TLT Put Spreads": -0.009835764835783082,
+      "Vol Term Structure": -0.03490548945841409
+    },
+    "TLT Put Spreads": {
+      "Cross-Asset Pairs": 0.03587065782649395,
+      "EXP-1220 Tail Risk": -0.009835764835783082,
+      "TLT Put Spreads": 1.0,
+      "Vol Term Structure": -0.001586116654351894
+    },
+    "Vol Term Structure": {
+      "Cross-Asset Pairs": 0.017437475506219366,
+      "EXP-1220 Tail Risk": -0.03490548945841409,
+      "TLT Put Spreads": -0.001586116654351894,
+      "Vol Term Structure": 1.0
+    }
+  },
+  "optimization": {
+    "max_sharpe": {
+      "weights": {
+        "Cross-Asset Pairs": 0.1965,
+        "EXP-1220 Tail Risk": 0.575,
+        "TLT Put Spreads": 0.1056,
+        "Vol Term Structure": 0.1229
+      },
+      "metrics": {
+        "total_return": 222192.12,
+        "cagr": 0.2159,
+        "max_dd": 0.0012,
+        "sharpe": 35.587,
+        "n_days": 1508
+      }
+    },
+    "risk_parity": {
+      "weights": {
+        "Cross-Asset Pairs": 0.2444,
+        "EXP-1220 Tail Risk": 0.057,
+        "TLT Put Spreads": 0.5117,
+        "Vol Term Structure": 0.1869
+      },
+      "metrics": {
+        "total_return": 24103.01,
+        "cagr": 0.0367,
+        "max_dd": 0.0013,
+        "sharpe": 19.582,
+        "n_days": 1508
+      }
+    },
+    "max_return_at_dd_constraint": {
+      "weights": {
+        "Cross-Asset Pairs": 0.1965,
+        "EXP-1220 Tail Risk": 0.575,
+        "TLT Put Spreads": 0.1056,
+        "Vol Term Structure": 0.1229
+      },
+      "metrics": {
+        "total_return": 222192.12,
+        "cagr": 0.2159,
+        "max_dd": 0.0012,
+        "sharpe": 35.587,
+        "n_days": 1508
+      }
+    },
+    "min_variance": {
+      "weights": {
+        "Cross-Asset Pairs": 0.1501,
+        "EXP-1220 Tail Risk": 0.05,
+        "TLT Put Spreads": 0.7049,
+        "Vol Term Structure": 0.095
+      },
+      "metrics": {
+        "total_return": 20708.17,
+        "cagr": 0.032,
+        "max_dd": 0.0019,
+        "sharpe": 18.466,
+        "n_days": 1508
+      }
+    }
+  },
+  "walk_forward": {
+    "n_rebalances": 13,
+    "total_return": 143293.11,
+    "cagr": 0.1602
+  },
+  "exp1220_alone": {
+    "total": 383790.19,
+    "cagr": 0.3014,
+    "dd": 0.0016,
+    "sharpe": 35.386
+  }
+}
