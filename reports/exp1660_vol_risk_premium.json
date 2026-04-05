@@ -1,0 +1,86 @@
+{
+  "experiment": "EXP-1660",
+  "n_trades": 28,
+  "total_pnl": 7575.0,
+  "win_rate": 0.75,
+  "max_dd": 0.0173,
+  "sharpe": 1.828,
+  "cagr": 0.0225,
+  "spy_corr": -0.702,
+  "is_sharpe": 0.272,
+  "oos_sharpe": 1.801,
+  "wf_ratio": 6.631,
+  "oos_n": 26,
+  "oos_pnl": 7065.0,
+  "oos_wr": 0.769,
+  "yearly": {
+    "2021": {
+      "n": 2,
+      "pnl": 510.0,
+      "wr": 0.5,
+      "sharpe": 0.272,
+      "ret": 0.0051
+    },
+    "2023": {
+      "n": 13,
+      "pnl": 2514.0,
+      "wr": 0.769,
+      "sharpe": 0.799,
+      "ret": 0.0251
+    },
+    "2024": {
+      "n": 13,
+      "pnl": 4551.0,
+      "wr": 0.769,
+      "sharpe": 1.865,
+      "ret": 0.0455
+    }
+  },
+  "regime_stats": {
+    "bull": {
+      "n": 23,
+      "pnl": 4025.0,
+      "wr": 0.696,
+      "sharpe": 1.011
+    },
+    "sideways": {
+      "n": 5,
+      "pnl": 3550.0,
+      "wr": 1.0,
+      "sharpe": 6.458
+    }
+  },
+  "exit_breakdown": {
+    "profit_target": 20,
+    "stop_loss": 5,
+    "expiration": 3
+  },
+  "wf_windows": [
+    {
+      "is_year": "2021",
+      "oos_year": "2023",
+      "is_trades": 2,
+      "oos_trades": 13,
+      "is_sharpe": 0.272,
+      "oos_sharpe": 0.799,
+      "oos_pnl": 2514.0,
+      "oos_wr": 0.769
+    },
+    {
+      "is_year": "2023",
+      "oos_year": "2024",
+      "is_trades": 13,
+      "oos_trades": 13,
+      "is_sharpe": 0.799,
+      "oos_sharpe": 1.865,
+      "oos_pnl": 4551.0,
+      "oos_wr": 0.769
+    }
+  ],
+  "avg_hold": 2.7,
+  "avg_credit": 2.9796,
+  "avg_vix": 15.2,
+  "profitable_years": 3,
+  "total_years": 3,
+  "n_sample_trades": 25
+}
