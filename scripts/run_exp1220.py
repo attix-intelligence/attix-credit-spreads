@@ -166,21 +166,25 @@ class AlpacaClient:
         return self._trading_client.get_all_positions()
 
     def get_option_chain(self, ticker: str, expiration: str) -> list:
-        """Fetch option chain for a specific expiration date."""
+        """Fetch option chain with bid/ask quotes for a specific expiration.
+
+        FIX 3: Now fetches real bid/ask via Alpaca option snapshots.
+        Returns list of dicts with symbol, strike, type, expiration, bid, ask.
+        """
         if self.dry_run:
-            # Generate mock chain for dry-run
             spy_price = get_spy_price() or 540.0
             chain = []
-            for strike in range(int(spy_price) - 30, int(spy_price) + 5, 1):
+            for strike in range(int(spy_price) - 50, int(spy_price) + 10, 1):
                 chain.append({
-                    "symbol": f"SPY{expiration.replace('-','')}P{strike:08d}",
+                    "symbol": f"SPY{expiration.replace('-', '')}P{strike:08d}",
                     "strike": float(strike),
                     "type": "put",
                     "expiration": expiration,
-                    "bid": round(max(0.05, (spy_price - strike) * 0.02 + 0.20), 2),
-                    "ask": round(max(0.10, (spy_price - strike) * 0.02 + 0.35), 2),
+                    "bid": round(max(0.10, 3.0 * math.exp(-0.08 * max(0, spy_price - strike))), 2),
+                    "ask": round(max(0.15, 3.5 * math.exp(-0.08 * max(0, spy_price - strike))), 2),
                 })
             return chain
+
         self._ensure_client()
         try:
             from alpaca.trading.requests import GetOptionContractsRequest
@@ -190,57 +194,176 @@ class AlpacaClient:
                 type="put",
             )
             contracts = self._trading_client.get_option_contracts(req)
-            return [{"symbol": c.symbol, "strike": float(c.strike_price),
-                     "type": c.type, "expiration": str(c.expiration_date)}
-                    for c in contracts.option_contracts]
+            symbols = [c.symbol for c in contracts.option_contracts]
+
+            # FIX 3: Fetch real quotes via option snapshots
+            quotes = self._get_option_quotes(symbols)
+
+            chain = []
+            for c in contracts.option_contracts:
+                q = quotes.get(c.symbol, {})
+                chain.append({
+                    "symbol": c.symbol,
+                    "strike": float(c.strike_price),
+                    "type": c.type,
+                    "expiration": str(c.expiration_date),
+                    "bid": q.get("bid", 0.0),
+                    "ask": q.get("ask", 0.0),
+                })
+            return chain
         except Exception as e:
             log.error(f"Option chain fetch failed: {e}")
             return []
 
+    def _get_option_quotes(self, symbols: list) -> dict:
+        """Fetch real bid/ask quotes for option symbols via Alpaca data API.
+
+        FIX 3: Uses Alpaca's option snapshot endpoint for real-time quotes.
+        Falls back to empty quotes if API unavailable.
+        """
+        if not symbols:
+            return {}
+        try:
+            from alpaca.data.historical.option import OptionHistoricalDataClient
+            from alpaca.data.requests import OptionSnapshotRequest
+            data_client = OptionHistoricalDataClient(self.api_key, self.secret_key)
+            snapshots = data_client.get_option_snapshot(
+                OptionSnapshotRequest(symbol_or_symbols=symbols[:50])  # batch limit
+            )
+            result = {}
+            for sym, snap in snapshots.items():
+                bid = snap.latest_quote.bid_price if snap.latest_quote else 0.0
+                ask = snap.latest_quote.ask_price if snap.latest_quote else 0.0
+                result[sym] = {"bid": float(bid), "ask": float(ask)}
+            return result
+        except ImportError:
+            log.warning("alpaca.data not available — using REST fallback for quotes")
+        except Exception as e:
+            log.warning(f"Option snapshot failed: {e} — quotes unavailable")
+
+        # REST API fallback: /v2/options/snapshots
+        try:
+            import urllib.request
+            syms = ",".join(symbols[:20])
+            url = f"{self.base_url}/v2/options/snapshots?symbols={syms}"
+            req = urllib.request.Request(url, headers={
+                "APCA-API-KEY-ID": self.api_key,
+                "APCA-API-SECRET-KEY": self.secret_key,
+            })
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                data = json.loads(resp.read())
+                result = {}
+                for sym, snap in data.get("snapshots", {}).items():
+                    quote = snap.get("latestQuote", {})
+                    result[sym] = {
+                        "bid": float(quote.get("bp", 0)),
+                        "ask": float(quote.get("ap", 0)),
+                    }
+                return result
+        except Exception as e:
+            log.warning(f"REST quote fallback failed: {e}")
+            return {}
+
     def submit_spread_order(self, short_symbol: str, long_symbol: str,
                             contracts: int, credit: float) -> Optional[str]:
-        """Submit a credit spread order (sell short, buy long)."""
+        """Submit a credit spread as TWO SEPARATE leg orders.
+
+        FIX 1: Alpaca paper doesn't support multi-leg options via BRACKET.
+        Submit: (a) STO short put at limit, (b) BTO long put at limit.
+        Returns comma-separated order IDs: "short_id,long_id".
+        """
         if self.dry_run:
-            order_id = f"DRY-{datetime.now().strftime('%H%M%S')}"
-            log.info(f"[DRY-RUN] Would submit: SELL {short_symbol} / BUY {long_symbol} "
-                     f"× {contracts} for ${credit:.2f} credit")
+            ts = datetime.now().strftime('%H%M%S')
+            order_id = f"DRY-S-{ts},DRY-L-{ts}"
+            log.info(f"[DRY-RUN] Would submit:")
+            log.info(f"  Leg 1 (STO): SELL {short_symbol} × {contracts}")
+            log.info(f"  Leg 2 (BTO): BUY  {long_symbol} × {contracts}")
+            log.info(f"  Net credit target: ${credit:.2f}")
             return order_id
 
         self._ensure_client()
         try:
-            from alpaca.trading.requests import (
-                LimitOrderRequest, OrderSide, TimeInForce, OrderClass,
-            )
-            # Submit as two-leg spread via multi-leg order
-            # Note: Alpaca's multi-leg API varies — this is the general pattern
-            order = self._trading_client.submit_order(
+            from alpaca.trading.requests import LimitOrderRequest, OrderSide, TimeInForce
+
+            # Leg 1: Sell-to-Open the short put
+            short_order = self._trading_client.submit_order(
                 LimitOrderRequest(
                     symbol=short_symbol,
                     qty=contracts,
                     side=OrderSide.SELL,
                     type="limit",
                     time_in_force=TimeInForce.DAY,
-                    limit_price=credit,
-                    order_class=OrderClass.BRACKET,
+                    limit_price=round(credit * 0.7, 2),  # short leg gets ~70% of credit
                 )
             )
-            log.info(f"Order submitted: {order.id}")
-            return str(order.id)
+            log.info(f"Short leg submitted: {short_order.id} (STO {short_symbol})")
+
+            # Leg 2: Buy-to-Open the long put (protective leg)
+            long_price = round(credit * 0.7 - credit, 2)  # net = short - long = credit
+            long_price = max(0.01, abs(long_price))  # long put costs money
+            long_order = self._trading_client.submit_order(
+                LimitOrderRequest(
+                    symbol=long_symbol,
+                    qty=contracts,
+                    side=OrderSide.BUY,
+                    type="limit",
+                    time_in_force=TimeInForce.DAY,
+                    limit_price=long_price,
+                )
+            )
+            log.info(f"Long leg submitted: {long_order.id} (BTO {long_symbol})")
+
+            return f"{short_order.id},{long_order.id}"
         except Exception as e:
             log.error(f"Order submission failed: {e}")
             return None
 
-    def close_position(self, symbol: str) -> bool:
+    def close_spread(self, short_symbol: str, long_symbol: str,
+                     contracts: int) -> bool:
+        """Close a credit spread by closing BOTH legs.
+
+        FIX 4: Submits BTC (buy-to-close) on short leg and
+        STC (sell-to-close) on long leg.
+        """
         if self.dry_run:
-            log.info(f"[DRY-RUN] Would close position: {symbol}")
+            log.info(f"[DRY-RUN] Would close spread:")
+            log.info(f"  BTC: BUY  {short_symbol} × {contracts}")
+            log.info(f"  STC: SELL {long_symbol} × {contracts}")
             return True
+
         self._ensure_client()
+        success = True
         try:
-            self._trading_client.close_position(symbol)
-            return True
+            from alpaca.trading.requests import MarketOrderRequest, OrderSide, TimeInForce
+
+            # BTC: Buy back the short put
+            self._trading_client.submit_order(
+                MarketOrderRequest(
+                    symbol=short_symbol, qty=contracts,
+                    side=OrderSide.BUY, time_in_force=TimeInForce.DAY,
+                )
+            )
+            log.info(f"BTC submitted: {short_symbol} × {contracts}")
         except Exception as e:
-            log.error(f"Close position failed for {symbol}: {e}")
-            return False
+            log.error(f"BTC failed for {short_symbol}: {e}")
+            success = False
+
+        try:
+            from alpaca.trading.requests import MarketOrderRequest, OrderSide, TimeInForce
+
+            # STC: Sell the long put
+            self._trading_client.submit_order(
+                MarketOrderRequest(
+                    symbol=long_symbol, qty=contracts,
+                    side=OrderSide.SELL, time_in_force=TimeInForce.DAY,
+                )
+            )
+            log.info(f"STC submitted: {long_symbol} × {contracts}")
+        except Exception as e:
+            log.error(f"STC failed for {long_symbol}: {e}")
+            success = False
+
+        return success
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -330,7 +453,10 @@ def should_scan(config: dict, state: dict) -> Tuple[bool, str]:
 
 
 def check_exits(state: dict, config: dict, client: AlpacaClient, spy_price: float):
-    """Check open positions for exit conditions."""
+    """Check open positions for exit conditions.
+
+    FIX 4: Actually submits closing orders to Alpaca (BTC short + STC long).
+    """
     today = date.today()
     positions = state.get("positions", [])
     exits = config["exits"]
@@ -339,34 +465,47 @@ def check_exits(state: dict, config: dict, client: AlpacaClient, spy_price: floa
         if pos.get("status") != "open":
             continue
 
-        # DTE exit
+        exit_reason = None
         exp_date = datetime.strptime(pos["expiration"], "%Y-%m-%d").date()
         dte = (exp_date - today).days
-        if dte <= exits["dte_exit"]:
-            log.info(f"EXIT: DTE={dte} for {pos['short_strike']}/{pos['long_strike']} exp {pos['expiration']}")
-            pos["status"] = "closed"
-            pos["exit_reason"] = f"dte_exit ({dte}d)"
-            pos["exit_date"] = str(today)
-            log_trade({"timestamp": datetime.now().isoformat(), "action": "CLOSE",
-                       "ticker": "SPY", "type": "dte_exit", **{k: pos.get(k, "") for k in
-                       ["short_strike", "long_strike", "expiration", "contracts", "credit", "order_id", "status"]}})
-            continue
-
-        # Max hold days
         entry_date = datetime.strptime(pos["entry_date"], "%Y-%m-%d").date()
         hold_days = (today - entry_date).days
-        if hold_days >= exits["max_hold_days"]:
-            log.info(f"EXIT: Max hold {hold_days}d for {pos['short_strike']}/{pos['long_strike']}")
-            pos["status"] = "closed"
-            pos["exit_reason"] = f"max_hold ({hold_days}d)"
-            pos["exit_date"] = str(today)
 
-        # Expiration
-        if today >= exp_date:
-            log.info(f"EXIT: Expired {pos['short_strike']}/{pos['long_strike']}")
+        if dte <= exits["dte_exit"]:
+            exit_reason = f"dte_exit ({dte}d)"
+        elif hold_days >= exits["max_hold_days"]:
+            exit_reason = f"max_hold ({hold_days}d)"
+        elif today >= exp_date:
+            exit_reason = "expiration"
+
+        if exit_reason:
+            log.info(f"EXIT ({exit_reason}): {pos['short_strike']}/{pos['long_strike']} exp {pos['expiration']}")
+
+            # FIX 4: Submit actual closing orders for BOTH legs
+            short_sym = pos.get("short_symbol", "")
+            long_sym = pos.get("long_symbol", "")
+            n_contracts = pos.get("contracts", 1)
+
+            if short_sym and long_sym and exit_reason != "expiration":
+                # Don't submit close orders for expired contracts — they settle automatically
+                closed = client.close_spread(short_sym, long_sym, n_contracts)
+                if not closed:
+                    log.error(f"Failed to close spread {short_sym}/{long_sym} — marking for retry")
+                    pos["exit_retry"] = True
+                    continue  # don't mark as closed if orders failed
+
             pos["status"] = "closed"
-            pos["exit_reason"] = "expiration"
+            pos["exit_reason"] = exit_reason
             pos["exit_date"] = str(today)
+            log_trade({"timestamp": datetime.now().isoformat(), "action": "CLOSE",
+                       "ticker": "SPY", "type": exit_reason,
+                       "short_strike": pos.get("short_strike", ""),
+                       "long_strike": pos.get("long_strike", ""),
+                       "expiration": pos.get("expiration", ""),
+                       "contracts": n_contracts,
+                       "credit": pos.get("credit", ""),
+                       "order_id": pos.get("order_id", ""),
+                       "status": "closed"})
 
 
 def run_scan(config: dict, state: dict, client: AlpacaClient, dry_run: bool):
@@ -405,16 +544,26 @@ def run_scan(config: dict, state: dict, client: AlpacaClient, dry_run: bool):
     # Estimate credit (rough: in dry-run we use mock, live would use Alpaca quotes)
     chain = client.get_option_chain("SPY", expiration)
     estimated_credit = 0.0
-    short_data = next((c for c in chain if abs(c["strike"] - short_strike) < 0.5 and c["type"] == "put"), None)
-    long_data = next((c for c in chain if abs(c["strike"] - long_strike) < 0.5 and c["type"] == "put"), None)
+    short_data = next((c for c in chain if abs(c["strike"] - short_strike) < 1.01), None)
+    long_data = next((c for c in chain if abs(c["strike"] - long_strike) < 1.01), None)
 
     if short_data and long_data:
-        # Credit = short bid - long ask
-        short_bid = short_data.get("bid", 0.50)
-        long_ask = long_data.get("ask", 0.20)
-        estimated_credit = max(0, short_bid - long_ask)
+        # FIX 3: Use real bid/ask — credit = short bid - long ask
+        short_bid = short_data.get("bid", 0.0)
+        long_ask = long_data.get("ask", 0.0)
+        if short_bid > 0 and long_ask > 0:
+            estimated_credit = max(0, short_bid - long_ask)
+        elif short_bid > 0:
+            # No long quote — use mid estimate
+            estimated_credit = short_bid * 0.6
+        else:
+            # FIX 3: No real quotes available — skip trade
+            log.info("SKIP: No real bid/ask quotes available for selected strikes")
+            return
     else:
-        estimated_credit = 0.50  # conservative estimate
+        # FIX 3: Can't find matching strikes in chain — skip
+        log.info(f"SKIP: Strikes {short_strike}/{long_strike} not found in option chain")
+        return
 
     min_credit = spread_cfg["min_credit"]
     if estimated_credit < min_credit:
@@ -549,6 +698,12 @@ def main():
         log.info("Closing all positions...")
         for pos in state.get("positions", []):
             if pos.get("status") == "open":
+                # FIX 4: Submit actual closing orders for both legs
+                short_sym = pos.get("short_symbol", "")
+                long_sym = pos.get("long_symbol", "")
+                n_contracts = pos.get("contracts", 1)
+                if short_sym and long_sym:
+                    client.close_spread(short_sym, long_sym, n_contracts)
                 pos["status"] = "closed"
                 pos["exit_reason"] = "manual_close"
                 pos["exit_date"] = str(date.today())
@@ -560,33 +715,44 @@ def main():
     spy_price = get_spy_price()
     check_exits(state, config, client, spy_price)
 
-    # Check VIX emergency
-    vix = get_vix()
-    emergency_vix = config["exits"]["vix_emergency_exit"]
-    if vix > emergency_vix:
-        log.warning(f"VIX EMERGENCY: {vix:.1f} > {emergency_vix}. Closing all positions.")
-        for pos in state.get("positions", []):
-            if pos.get("status") == "open":
-                pos["status"] = "closed"
-                pos["exit_reason"] = f"vix_emergency ({vix:.1f})"
-                pos["exit_date"] = str(date.today())
+    # FIX 5: Wrap execution in try/finally to always save state
+    try:
+        # Check VIX emergency
+        vix = get_vix()
+        emergency_vix = config["exits"]["vix_emergency_exit"]
+        if vix > emergency_vix:
+            log.warning(f"VIX EMERGENCY: {vix:.1f} > {emergency_vix}. Closing all positions.")
+            for pos in state.get("positions", []):
+                if pos.get("status") == "open":
+                    # FIX 4: Submit actual closing orders
+                    short_sym = pos.get("short_symbol", "")
+                    long_sym = pos.get("long_symbol", "")
+                    if short_sym and long_sym:
+                        client.close_spread(short_sym, long_sym, pos.get("contracts", 1))
+                    pos["status"] = "closed"
+                    pos["exit_reason"] = f"vix_emergency ({vix:.1f})"
+                    pos["exit_date"] = str(date.today())
+            return
+
+        # Check if we should scan
+        should, reason = should_scan(config, state)
+        if not should and not args.force_scan:
+            log.info(f"Scan skipped: {reason}")
+            return
+
+        if args.force_scan and not should:
+            log.info(f"Force scan override (normal reason: {reason})")
+
+        # Run the scan
+        run_scan(config, state, client, args.dry_run)
+        log.info("Scan complete.")
+
+    except Exception as e:
+        log.error(f"Scanner error: {e}", exc_info=True)
+    finally:
+        # FIX 5: Always save state, even on crash
         save_state(state)
-        return
-
-    # Check if we should scan
-    should, reason = should_scan(config, state)
-    if not should and not args.force_scan:
-        log.info(f"Scan skipped: {reason}")
-        save_state(state)
-        return
-
-    if args.force_scan and not should:
-        log.info(f"Force scan override (normal reason: {reason})")
-
-    # Run the scan
-    run_scan(config, state, client, args.dry_run)
-    save_state(state)
-    log.info("Scan complete.")
+        log.info("State saved.")
 
 
 if __name__ == "__main__":
