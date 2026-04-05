@@ -23,11 +23,11 @@ tr:hover { background:#1e293b40; }
 
 <div class="grid">
   <div class="card"><div class="card-label">Strategies Tested</div><div class="card-value">5</div></div>
-  <div class="card"><div class="card-label">Live (Passed)</div><div class="card-value positive">3</div></div>
-  <div class="card"><div class="card-label">Killed</div><div class="card-value negative">2</div></div>
+  <div class="card"><div class="card-label">Live (Passed)</div><div class="card-value positive">2</div></div>
+  <div class="card"><div class="card-label">Killed</div><div class="card-value negative">3</div></div>
   <div class="card"><div class="card-label">Best OOS Sharpe</div><div class="card-value positive">3.15</div></div>
-  <div class="card"><div class="card-label">Lowest SPY Corr</div><div class="card-value positive">0.000</div></div>
-  <div class="card"><div class="card-label">Lowest 1220 Corr</div><div class="card-value positive">0.000</div></div>
+  <div class="card"><div class="card-label">Lowest SPY Corr</div><div class="card-value positive">0.152</div></div>
+  <div class="card"><div class="card-label">Lowest 1220 Corr</div><div class="card-value positive">0.141</div></div>
 </div>
 
 <h2>Strategy Summary — All Strategies</h2>
@@ -50,19 +50,19 @@ tr:hover { background:#1e293b40; }
           <td>0.0%</td>
           <td style="color:#ef4444;font-weight:700">KILLED — Only 11 OOS trades (<15)</td>
         </tr><tr>
-          <td style="text-align:left">Vol Risk Premium (IC)</td>
-          <td>45</td>
-          <td style="color:#22c55e">$5,884</td>
-          <td>64%</td>
-          <td>2.30</td>
+          <td style="text-align:left">VIX Mean-Reversion</td>
+          <td>35</td>
+          <td style="color:#22c55e">$99</td>
+          <td>83%</td>
+          <td>0.06</td>
           <td>1.2%</td>
-          <td>1.0%</td>
-          <td style="color:#22c55e">+0.048</td>
-          <td style="color:#22c55e">+0.097</td>
-          <td>18</td>
-          <td>0.98</td>
-          <td>0.4%</td>
-          <td style="color:#22c55e;font-weight:700">LIVE</td>
+          <td>0.0%</td>
+          <td style="color:#22c55e">+0.156</td>
+          <td style="color:#22c55e">+0.177</td>
+          <td>14</td>
+          <td>2.24</td>
+          <td>0.2%</td>
+          <td style="color:#ef4444;font-weight:700">KILLED — Only 14 OOS trades (<15)</td>
         </tr><tr>
           <td style="text-align:left">Sector IV Rotation</td>
           <td>21</td>
@@ -92,19 +92,19 @@ tr:hover { background:#1e293b40; }
           <td>4.2%</td>
           <td style="color:#22c55e;font-weight:700">LIVE</td>
         </tr><tr>
-          <td style="text-align:left">XLF Mean-Reversion Puts</td>
-          <td>4</td>
-          <td style="color:#22c55e">$650</td>
-          <td>100%</td>
-          <td>1.44</td>
+          <td style="text-align:left">Correlation Breakout (XLF/XLI)</td>
+          <td>17</td>
+          <td style="color:#22c55e">$8</td>
+          <td>82%</td>
+          <td>0.01</td>
+          <td>0.8%</td>
           <td>0.0%</td>
-          <td>0.2%</td>
-          <td style="color:#22c55e">+0.000</td>
-          <td style="color:#22c55e">+0.000</td>
-          <td>2</td>
-          <td>1.22</td>
-          <td>0.0%</td>
-          <td style="color:#ef4444;font-weight:700">KILLED — Only 2 OOS trades (<15)</td>
+          <td style="color:#22c55e">-0.152</td>
+          <td style="color:#22c55e">-0.141</td>
+          <td>16</td>
+          <td>-0.10</td>
+          <td>0.8%</td>
+          <td style="color:#ef4444;font-weight:700">KILLED — Negative OOS Sharpe (-0.11)</td>
         </tr>
 </table>
 
@@ -120,40 +120,40 @@ tr:hover { background:#1e293b40; }
               <td>0.0%</td><td>1.2%</td>
             </tr>
         </table>
-        <h2>Vol Risk Premium (IC)</h2>
-        <p style="color:#94a3b8;font-size:0.85rem">Short vol via iron condors when VIX 15-30 — systematic risk premium harvest</p>
+        <h2>VIX Mean-Reversion</h2>
+        <p style="color:#94a3b8;font-size:0.85rem">Sell SPY puts when VIX z-score > 1.5 — harvest decaying fear premium</p>
         <table>
         <tr><th>Year</th><th>Trades</th><th>P&L</th><th>Win%</th><th>Sharpe</th><th>Max DD</th><th>Return</th></tr>
         <tr>
-              <td>2020</td><td>6</td>
-              <td style="color:#22c55e">$660</td>
-              <td>50%</td><td>0.50</td>
-              <td>0.3%</td><td>0.7%</td>
+              <td>2020</td><td>5</td>
+              <td style="color:#ef4444">$-1,008</td>
+              <td>80%</td><td>-0.77</td>
+              <td>1.2%</td><td>-1.0%</td>
             </tr><tr>
-              <td>2021</td><td>13</td>
-              <td style="color:#22c55e">$1,424</td>
-              <td>46%</td><td>0.74</td>
-              <td>1.2%</td><td>1.4%</td>
+              <td>2021</td><td>8</td>
+              <td style="color:#ef4444">$-45</td>
+              <td>75%</td><td>-0.11</td>
+              <td>0.4%</td><td>-0.0%</td>
             </tr><tr>
               <td>2022</td><td>8</td>
-              <td style="color:#22c55e">$2,923</td>
-              <td>100%</td><td>5.97</td>
-              <td>0.0%</td><td>2.9%</td>
+              <td style="color:#22c55e">$540</td>
+              <td>75%</td><td>0.58</td>
+              <td>0.5%</td><td>0.5%</td>
             </tr><tr>
-              <td>2023 (OOS)</td><td>7</td>
-              <td style="color:#22c55e">$612</td>
-              <td>57%</td><td>0.71</td>
-              <td>0.4%</td><td>0.6%</td>
+              <td>2023 (OOS)</td><td>6</td>
+              <td style="color:#22c55e">$219</td>
+              <td>100%</td><td>6.45</td>
+              <td>0.0%</td><td>0.2%</td>
             </tr><tr>
               <td>2024 (OOS)</td><td>4</td>
-              <td style="color:#22c55e">$7</td>
-              <td>50%</td><td>0.03</td>
-              <td>0.1%</td><td>0.0%</td>
+              <td style="color:#22c55e">$150</td>
+              <td>100%</td><td>3.41</td>
+              <td>0.0%</td><td>0.1%</td>
             </tr><tr>
-              <td>2025 (OOS)</td><td>7</td>
-              <td style="color:#22c55e">$258</td>
-              <td>86%</td><td>0.99</td>
-              <td>0.2%</td><td>0.3%</td>
+              <td>2025 (OOS)</td><td>4</td>
+              <td style="color:#22c55e">$243</td>
+              <td>75%</td><td>0.82</td>
+              <td>0.0%</td><td>0.2%</td>
             </tr>
         </table>
         <h2>Sector IV Rotation</h2>
@@ -218,25 +218,25 @@ tr:hover { background:#1e293b40; }
               <td>1.0%</td><td>5.6%</td>
             </tr>
         </table>
-        <h2>XLF Mean-Reversion Puts</h2>
-        <p style="color:#94a3b8;font-size:0.85rem">Sell XLF puts after >2σ 5-day drops — contrarian + theta</p>
+        <h2>Correlation Breakout (XLF/XLI)</h2>
+        <p style="color:#94a3b8;font-size:0.85rem">Trade XLF/XLI pair divergence — sell puts on underperformer when corr breaks down</p>
         <table>
         <tr><th>Year</th><th>Trades</th><th>P&L</th><th>Win%</th><th>Sharpe</th><th>Max DD</th><th>Return</th></tr>
         <tr>
-              <td>2021</td><td>1</td>
-              <td style="color:#22c55e">$50</td>
-              <td>100%</td><td>50.00</td>
-              <td>0.0%</td><td>0.1%</td>
-            </tr><tr>
               <td>2022</td><td>1</td>
-              <td style="color:#22c55e">$50</td>
-              <td>100%</td><td>50.00</td>
+              <td style="color:#22c55e">$104</td>
+              <td>100%</td><td>104.00</td>
               <td>0.0%</td><td>0.1%</td>
             </tr><tr>
-              <td>2025 (OOS)</td><td>2</td>
-              <td style="color:#22c55e">$550</td>
-              <td>100%</td><td>1.22</td>
-              <td>0.0%</td><td>0.5%</td>
+              <td>2024 (OOS)</td><td>9</td>
+              <td style="color:#22c55e">$432</td>
+              <td>89%</td><td>3.65</td>
+              <td>0.0%</td><td>0.4%</td>
+            </tr><tr>
+              <td>2025 (OOS)</td><td>7</td>
+              <td style="color:#ef4444">$-528</td>
+              <td>71%</td><td>-0.58</td>
+              <td>0.0%</td><td>-0.5%</td>
             </tr>
         </table>
 

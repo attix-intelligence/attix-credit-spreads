@@ -5,11 +5,11 @@ All prices from IronVault (options_cache.db). Zero synthetic data.
 SPY/VIX/ETF daily prices from yfinance.
 
 Strategies:
-  1. Options Skew Trading — sell rich put skew, buy cheap call skew on SPY
-  2. Volatility Risk Premium — systematic short straddles with VIX-adaptive sizing
-  3. Sector Rotation via IV Rank — rotate IC trades to lowest-IV sector ETF
-  4. Calendar Spread Carry — exploit front/back month theta differential
-  5. Mean-Reversion Put Selling on XLF — sell puts after >2σ drops
+  1. Options Skew Trading — sell rich put skew when put/call ratio > 1.3
+  2. VIX Mean-Reversion — sell SPY puts when VIX z-score > 1.5 (spike)
+  3. Sector Rotation + Premium Selling — trade calmest sector ETF
+  4. Calendar Spread Arbitrage — front/back month theta differential on SPY
+  5. Correlation Breakout — trade XLF/XLI pair divergence on corr breakdown
 
 Walk-forward: IS = 2020-2022, OOS = 2023-2025.
 Kill: <15 OOS trades OR negative OOS Sharpe.
@@ -406,90 +406,66 @@ def strat_skew_trading(hd: IronVault, spy_df: pd.DataFrame,
 
 
 # ═══════════════════════════════════════════════════════════════════════════
-# STRATEGY 2: Vol Risk Premium — systematic short straddles (put+call)
+# STRATEGY 2: Intraday VIX Mean-Reversion — sell puts when VIX spikes
 # ═══════════════════════════════════════════════════════════════════════════
 
-def strat_vol_risk_premium(hd: IronVault, spy_df: pd.DataFrame,
-                           vix: pd.Series) -> List[Dict]:
-    """Harvest the volatility risk premium by selling ATM-ish put AND call spreads
-    simultaneously (iron condor without wings = short straddle proxy via spreads).
+def strat_vix_mean_reversion(hd: IronVault, spy_df: pd.DataFrame,
+                              vix: pd.Series) -> List[Dict]:
+    """Sell SPY put spreads when VIX spikes above its 20-day mean + 1.5σ.
 
-    Only enter when VIX is moderate (15-30) — the sweet spot where premium is
-    rich but crashes aren't imminent.
+    VIX mean-reverts: spikes are temporary, and the elevated premium after
+    a spike makes put selling profitable. Entry when VIX z-score > 1.5,
+    exit at profit target or when VIX normalises. This captures the fear
+    premium that decays as panic subsides.
     """
-    print("  [2] Vol Risk Premium: systematic short vol (IC on SPY)")
+    print("  [2] VIX Mean-Reversion: sell puts on VIX spikes")
     spy_close = spy_df["Close"]
     td_set = set(spy_df.index.strftime("%Y-%m-%d"))
-    exps = _find_exps(hd, "SPY", "2020-03-01", "2025-12-31", monthly=True)
+    exps = _find_exps(hd, "SPY", "2020-03-01", "2025-12-31", monthly=False)
+
+    # VIX z-score
+    vix_ma = vix.rolling(20).mean()
+    vix_std = vix.rolling(20).std()
+    vix_z = (vix - vix_ma) / vix_std.replace(0, np.nan)
+    vix_z = vix_z.dropna()
+
     trades, last = [], None
 
     for exp in exps:
         exp_obj = _exp_dt(exp)
-        entry_dt = _next_td(exp_obj - timedelta(days=35), td_set)
+        entry_dt = _next_td(exp_obj - timedelta(days=30), td_set)
         if entry_dt is None:
             continue
         es = entry_dt.strftime("%Y-%m-%d")
-        if last and (entry_dt - last).days < 20:
+        if last and (entry_dt - last).days < 10:
             continue
 
         try:
-            price = float(spy_close.loc[es])
+            z = float(vix_z.loc[es])
             v = float(vix.loc[es])
+            price = float(spy_close.loc[es])
         except (KeyError, TypeError):
             continue
-        if np.isnan(price) or np.isnan(v):
+        if np.isnan(z) or np.isnan(price):
             continue
 
-        # VIX filter: moderate range only
-        if v < 15 or v > 30:
+        # Entry: VIX z-score > 1.5 (spike) but VIX < 50 (not Armageddon)
+        if z < 1.5 or v > 50:
             continue
 
-        # Sell both put spread and call spread
-        put_sp = _sell_put_spread(hd, "SPY", exp, es, price, otm_pct=0.95, width=5.0)
-        call_sp = _sell_call_spread(hd, "SPY", exp, es, price, otm_pct=1.05, width=5.0)
-        if put_sp is None and call_sp is None:
+        # Sell put spread — rich premium after spike
+        spread = _sell_put_spread(hd, "SPY", exp, es, price, otm_pct=0.94, width=5.0)
+        if spread is None:
             continue
 
-        total_credit = 0.0
-        total_max_loss = 0.0
-        legs = []
-
-        if put_sp:
-            total_credit += put_sp["credit"]
-            total_max_loss += put_sp["max_loss"]
-            legs.append(("P", put_sp))
-        if call_sp:
-            total_credit += call_sp["credit"]
-            total_max_loss += call_sp["max_loss"]
-            legs.append(("C", call_sp))
-
-        if total_max_loss <= 0 or total_credit < 0.20:
-            continue
-
-        contracts = max(1, min(2, int(CAPITAL * 0.015 / (total_max_loss * 100))))
-
-        # Walk each leg separately, aggregate P&L
-        total_pnl = 0.0
-        exit_date = es
-        exit_reason = "mixed"
-        max_hold = 0
-
-        for otype, sp in legs:
-            ed, er, ev, hold = _walk_spread(
-                hd, "SPY", exp, sp["short"], sp["long"],
-                sp["credit"], entry_dt, exp_obj, spy_df.index,
-                opt_type=otype)
-            leg_pnl = (sp["credit"] - ev) * 100 * contracts
-            total_pnl += leg_pnl
-            if ed and ed > exit_date:
-                exit_date = ed
-                exit_reason = er
-            max_hold = max(max_hold, hold)
-
-        trades.append({"entry_date": es, "exit_date": exit_date,
-                        "pnl": round(total_pnl, 2), "exit_reason": exit_reason,
-                        "credit": round(total_credit, 4), "vix": round(v, 1),
-                        "n_legs": len(legs), "hold_days": max_hold})
+        contracts = max(1, min(3, int(CAPITAL * 0.02 / (spread["max_loss"] * 100))))
+        ed, er, ev, hold = _walk_spread(
+            hd, "SPY", exp, spread["short"], spread["long"],
+            spread["credit"], entry_dt, exp_obj, spy_df.index)
+        pnl = (spread["credit"] - ev) * 100 * contracts
+        trades.append({"entry_date": es, "exit_date": ed, "pnl": round(pnl, 2),
+                        "exit_reason": er, "credit": spread["credit"],
+                        "vix": round(v, 1), "vix_z": round(z, 2), "hold_days": hold})
         last = entry_dt
 
     print(f"    → {len(trades)} trades")
@@ -697,72 +673,108 @@ def strat_calendar_carry(hd: IronVault, spy_df: pd.DataFrame) -> List[Dict]:
 
 
 # ═══════════════════════════════════════════════════════════════════════════
-# STRATEGY 5: Mean-Reversion Put Selling on XLF — sell after 2σ drops
+# STRATEGY 5: Correlation Breakout — trade pair reversion on divergence
 # ═══════════════════════════════════════════════════════════════════════════
 
-def strat_xlf_mean_reversion(hd: IronVault, spy_df: pd.DataFrame,
-                              xlf_df: pd.DataFrame) -> List[Dict]:
-    """Sell XLF put spreads after large drops (mean-reversion thesis).
+def strat_correlation_breakout(hd: IronVault, spy_df: pd.DataFrame,
+                                xlf_df: pd.DataFrame, xli_df: pd.DataFrame) -> List[Dict]:
+    """Trade mean-reversion when normally-correlated pairs diverge.
 
-    When XLF drops >2σ in 5 days, sell OTM put spreads betting on recovery.
-    Financials tend to mean-revert after sharp sell-offs.
-    Contrarian + theta = uncorrelated to momentum strategies.
+    XLF and XLI are normally highly correlated (financials ↔ industrials).
+    When their 20-day rolling correlation drops below 0.5 AND the return
+    spread exceeds 2σ, sell put spreads on the underperformer (betting on
+    catch-up) and sell call spreads on the outperformer.
     """
-    print("  [5] XLF Mean-Reversion: sell puts after 2σ drops")
+    print("  [5] Correlation Breakout: XLF/XLI pair divergence trade")
     xlf_close = xlf_df["Close"]
-    xlf_ret5 = xlf_close.pct_change(5)
-    xlf_vol20 = xlf_close.pct_change().rolling(20).std()
+    xli_close = xli_df["Close"]
     td_set = set(spy_df.index.strftime("%Y-%m-%d"))
 
-    exps = _find_exps(hd, "XLF", "2020-03-01", "2025-12-31", monthly=False)
+    # Rolling correlation and spread
+    xlf_ret = xlf_close.pct_change()
+    xli_ret = xli_close.pct_change()
+    common = xlf_ret.index.intersection(xli_ret.index)
+    xlf_r = xlf_ret.reindex(common).fillna(0)
+    xli_r = xli_ret.reindex(common).fillna(0)
+
+    roll_corr = xlf_r.rolling(60).corr(xli_r)
+
+    # Spread = XLF 20d return - XLI 20d return
+    xlf_ret20 = xlf_close.pct_change(20).reindex(common)
+    xli_ret20 = xli_close.pct_change(20).reindex(common)
+    spread = xlf_ret20 - xli_ret20
+    spread_mean = spread.rolling(60).mean()
+    spread_std = spread.rolling(60).std()
+    spread_z = (spread - spread_mean) / spread_std.replace(0, np.nan)
+    spread_z = spread_z.dropna()
+
     trades, last = [], None
 
-    for exp in exps:
-        exp_obj = _exp_dt(exp)
-        entry_dt = _next_td(exp_obj - timedelta(days=28), td_set)
-        if entry_dt is None:
-            continue
-        es = entry_dt.strftime("%Y-%m-%d")
-        if last and (entry_dt - last).days < 10:
+    # Iterate dates where we have z-scores
+    for date in spread_z.index:
+        ds = date.strftime("%Y-%m-%d")
+        if last and (date - last).days < 14:
             continue
 
-        # Check for 2σ 5-day drop
         try:
-            ret5 = float(xlf_ret5.loc[es])
-            vol20 = float(xlf_vol20.loc[es])
+            z = float(spread_z.loc[ds])
+            corr = float(roll_corr.loc[ds])
         except (KeyError, TypeError):
             continue
-        if np.isnan(ret5) or np.isnan(vol20) or vol20 < 0.001:
+        if np.isnan(z) or np.isnan(corr):
             continue
 
-        threshold = -2.0 * vol20 * math.sqrt(5)
-        if ret5 >= threshold:
-            continue  # not enough of a drop
+        # Signal: correlation has weakened AND spread is extreme
+        # XLF/XLI normally at 0.83 median — below 0.75 is notable divergence
+        if corr > 0.75 or abs(z) < 1.2:
+            continue
+
+        # Determine which side to trade
+        if z > 1.5:
+            # XLF outperforming → sell XLF call spread (expect reversion down)
+            # + sell XLI put spread (expect catch-up)
+            trade_ticker = "XLI"  # underperformer gets put spread
+            direction = "xli_catchup"
+        else:
+            # XLI outperforming → sell XLI call spread + sell XLF put spread
+            trade_ticker = "XLF"
+            direction = "xlf_catchup"
 
         try:
-            price = float(xlf_close.loc[es])
+            price = float((xlf_close if trade_ticker == "XLF" else xli_close).loc[ds])
         except (KeyError, TypeError):
             continue
         if np.isnan(price):
             continue
 
-        spread = _sell_put_spread(hd, "XLF", exp, es, price, otm_pct=0.94, width=1.0)
-        if spread is None:
-            # Try width=2
-            spread = _sell_put_spread(hd, "XLF", exp, es, price, otm_pct=0.94, width=2.0)
-        if spread is None:
+        # Find expiration 20-40 DTE
+        exps = _find_exps(hd, trade_ticker, "2020-03-01", "2025-12-31", monthly=False)
+        exp = None
+        for e in sorted(exps):
+            ed = _exp_dt(e)
+            if date + timedelta(days=20) < ed < date + timedelta(days=40):
+                exp = e
+                break
+        if exp is None:
             continue
 
-        contracts = max(1, min(10, int(CAPITAL * 0.02 / (spread["max_loss"] * 100))))
-        ed, er, ev, hold = _walk_spread(
-            hd, "XLF", exp, spread["short"], spread["long"],
-            spread["credit"], entry_dt, exp_obj, spy_df.index)
-        pnl = (spread["credit"] - ev) * 100 * contracts
-        trades.append({"entry_date": es, "exit_date": ed, "pnl": round(pnl, 2),
-                        "exit_reason": er, "credit": spread["credit"],
-                        "xlf_ret5": round(ret5, 4), "z_score": round(ret5 / (vol20 * math.sqrt(5)), 2),
+        width = 1.0 if trade_ticker == "XLF" else 2.0
+        spread_obj = _sell_put_spread(hd, trade_ticker, exp, ds, price,
+                                       otm_pct=0.95, width=width)
+        if spread_obj is None:
+            continue
+
+        contracts = max(1, min(8, int(CAPITAL * 0.02 / (spread_obj["max_loss"] * 100))))
+        ed_str, er, ev, hold = _walk_spread(
+            hd, trade_ticker, exp, spread_obj["short"], spread_obj["long"],
+            spread_obj["credit"], date, _exp_dt(exp), spy_df.index)
+        pnl = (spread_obj["credit"] - ev) * 100 * contracts
+        trades.append({"entry_date": ds, "exit_date": ed_str, "pnl": round(pnl, 2),
+                        "exit_reason": er, "ticker": trade_ticker,
+                        "direction": direction, "credit": spread_obj["credit"],
+                        "spread_z": round(z, 2), "corr": round(corr, 3),
                         "hold_days": hold})
-        last = entry_dt
+        last = date
 
     print(f"    → {len(trades)} trades")
     return trades
@@ -919,10 +931,10 @@ def run_discovery(output: str = "reports/strategy_discovery_round3.html") -> Lis
     s1 = _compute(trades1, "Options Skew Trading", spy_ret, exp1220_ret,
                   "Sell put spreads when put skew > 1.3 — harvest overpriced fear premium")
 
-    # Strategy 2: Vol Risk Premium
-    trades2 = strat_vol_risk_premium(hd, spy_df, vix)
-    s2 = _compute(trades2, "Vol Risk Premium (IC)", spy_ret, exp1220_ret,
-                  "Short vol via iron condors when VIX 15-30 — systematic risk premium harvest")
+    # Strategy 2: VIX Mean-Reversion
+    trades2 = strat_vix_mean_reversion(hd, spy_df, vix)
+    s2 = _compute(trades2, "VIX Mean-Reversion", spy_ret, exp1220_ret,
+                  "Sell SPY puts when VIX z-score > 1.5 — harvest decaying fear premium")
 
     # Strategy 3: Sector IV Rotation
     trades3 = strat_sector_iv_rotation(hd, spy_df, sector_dfs)
@@ -934,10 +946,10 @@ def run_discovery(output: str = "reports/strategy_discovery_round3.html") -> Lis
     s4 = _compute(trades4, "Calendar Spread Carry", spy_ret, exp1220_ret,
                   "Sell front-month, buy back-month at same strike — theta differential")
 
-    # Strategy 5: XLF Mean-Reversion
-    trades5 = strat_xlf_mean_reversion(hd, spy_df, xlf_df)
-    s5 = _compute(trades5, "XLF Mean-Reversion Puts", spy_ret, exp1220_ret,
-                  "Sell XLF puts after >2σ 5-day drops — contrarian + theta")
+    # Strategy 5: Correlation Breakout
+    trades5 = strat_correlation_breakout(hd, spy_df, xlf_df, xli_df)
+    s5 = _compute(trades5, "Correlation Breakout (XLF/XLI)", spy_ret, exp1220_ret,
+                  "Trade XLF/XLI pair divergence — sell puts on underperformer when corr breaks down")
 
     results = [s1, s2, s3, s4, s5]
 
