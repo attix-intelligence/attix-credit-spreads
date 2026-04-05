@@ -1,7 +1,16 @@
 {
-  "experiment": "EXP-1630-optimization",
-  "timestamp": "2026-04-04T22:28:29.974995",
+  "experiment": "EXP-1630-deep-optimization",
+  "timestamp": "2026-04-05T00:34:26.985602",
   "sizing_sweep": [
+    {
+      "risk_pct": 0.01,
+      "n_trades": 63,
+      "pnl": 4391.0,
+      "cagr": 0.0109,
+      "max_dd": 0.048,
+      "sharpe": 0.601,
+      "oos_sharpe": 3.985
+    },
     {
       "risk_pct": 0.02,
       "n_trades": 63,
@@ -12,6 +21,15 @@
       "oos_sharpe": 4.097
     },
     {
+      "risk_pct": 0.03,
+      "n_trades": 63,
+      "pnl": 16565.0,
+      "cagr": 0.0393,
+      "max_dd": 0.0511,
+      "sharpe": 1.519,
+      "oos_sharpe": 4.106
+    },
+    {
       "risk_pct": 0.05,
       "n_trades": 63,
       "pnl": 25173.0,
@@ -19,109 +37,446 @@
       "max_dd": 0.0508,
       "sharpe": 1.98,
       "oos_sharpe": 4.102
-    },
-    {
-      "risk_pct": 0.1,
-      "n_trades": 63,
-      "pnl": 39371.0,
-      "cagr": 0.087,
-      "max_dd": 0.0811,
-      "sharpe": 2.177,
-      "oos_sharpe": 4.062
     }
   ],
   "leverage_sweep": [
     {
       "leverage": 1.0,
       "n_trades": 63,
-      "pnl": 25173.0,
-      "cagr": 0.058,
-      "max_dd": 0.0508,
-      "sharpe": 1.98
+      "pnl": 16565.0,
+      "cagr": 0.0393,
+      "max_dd": 0.0511,
+      "sharpe": 1.519
+    },
+    {
+      "leverage": 1.25,
+      "n_trades": 63,
+      "pnl": 19897.0,
+      "cagr": 0.0466,
+      "max_dd": 0.0509,
+      "sharpe": 1.733
     },
     {
       "leverage": 1.5,
       "n_trades": 63,
-      "pnl": 33633.0,
-      "cagr": 0.0755,
-      "max_dd": 0.0599,
-      "sharpe": 2.201
+      "pnl": 23128.0,
+      "cagr": 0.0537,
+      "max_dd": 0.0508,
+      "sharpe": 1.892
+    },
+    {
+      "leverage": 1.75,
+      "n_trades": 63,
+      "pnl": 26090.0,
+      "cagr": 0.06,
+      "max_dd": 0.0508,
+      "sharpe": 2.007
     },
     {
       "leverage": 2.0,
       "n_trades": 63,
-      "pnl": 39371.0,
-      "cagr": 0.087,
-      "max_dd": 0.0811,
-      "sharpe": 2.177
-    },
-    {
-      "leverage": 2.5,
-      "n_trades": 63,
-      "pnl": 41232.0,
-      "cagr": 0.0906,
-      "max_dd": 0.1005,
-      "sharpe": 2.046
-    },
-    {
-      "leverage": 3.0,
-      "n_trades": 63,
-      "pnl": 41372.0,
-      "cagr": 0.0909,
-      "max_dd": 0.1168,
-      "sharpe": 1.892
+      "pnl": 28967.0,
+      "cagr": 0.066,
+      "max_dd": 0.0507,
+      "sharpe": 2.106
     }
   ],
   "pairs": {
     "GLD-TLT": {
       "n_trades": 63,
-      "pnl": 25173.0,
-      "cagr": 0.058,
-      "max_dd": 0.0508,
-      "sharpe": 1.98,
-      "oos_sharpe": 4.102,
-      "spy_corr": 0.0463
+      "pnl": 16565.0,
+      "cagr": 0.0393,
+      "max_dd": 0.0511,
+      "sharpe": 1.519,
+      "oos_sharpe": 4.106,
+      "spy_corr": 0.0082,
+      "regime_stats": {
+        "bear": {
+          "n_trades": 7,
+          "pnl": 2909.0,
+          "win_rate": 1.0,
+          "avg_pnl": 415.57,
+          "sharpe": 2.234
+        },
+        "bull": {
+          "n_trades": 49,
+          "pnl": 6559.0,
+          "win_rate": 0.816,
+          "avg_pnl": 133.86,
+          "sharpe": 0.755
+        },
+        "crash": {
+          "n_trades": 2,
+          "pnl": 6004.0,
+          "win_rate": 1.0,
+          "avg_pnl": 3002.0,
+          "sharpe": 1.879
+        },
+        "high_vol": {
+          "n_trades": 4,
+          "pnl": 1018.0,
+          "win_rate": 1.0,
+          "avg_pnl": 254.5,
+          "sharpe": 5.741
+        },
+        "low_vol": {
+          "n_trades": 1,
+          "pnl": 75.0,
+          "win_rate": 1.0,
+          "avg_pnl": 75.0,
+          "sharpe": 0.0
+        }
+      }
     },
     "GLD-SPY": {
       "n_trades": 57,
-      "pnl": -3730.0,
-      "cagr": -0.0094,
-      "max_dd": 0.1309,
-      "sharpe": -0.266,
-      "oos_sharpe": 0.527,
-      "spy_corr": -0.0365
-    },
-    "TLT-QQQ": {
-      "n_trades": 27,
-      "pnl": 13797.0,
-      "cagr": 0.0434,
-      "max_dd": 0.1027,
-      "sharpe": 0.761,
-      "oos_sharpe": 0.733,
-      "spy_corr": 0.343
+      "pnl": -1952.0,
+      "cagr": -0.0049,
+      "max_dd": 0.0773,
+      "sharpe": -0.24,
+      "oos_sharpe": 0.557,
+      "spy_corr": -0.0344,
+      "regime_stats": {
+        "bear": {
+          "n_trades": 7,
+          "pnl": 1817.0,
+          "win_rate": 0.857,
+          "avg_pnl": 259.57,
+          "sharpe": 0.977
+        },
+        "bull": {
+          "n_trades": 44,
+          "pnl": -2627.0,
+          "win_rate": 0.705,
+          "avg_pnl": -59.7,
+          "sharpe": -0.352
+        },
+        "crash": {
+          "n_trades": 3,
+          "pnl": -518.0,
+          "win_rate": 0.333,
+          "avg_pnl": -172.67,
+          "sharpe": -0.96
+        },
+        "high_vol": {
+          "n_trades": 3,
+          "pnl": -624.0,
+          "win_rate": 0.667,
+          "avg_pnl": -208.0,
+          "sharpe": -0.523
+        }
+      }
     },
     "GLD-QQQ": {
       "n_trades": 27,
-      "pnl": 8189.0,
-      "cagr": 0.0262,
-      "max_dd": 0.0522,
-      "sharpe": 1.191,
-      "oos_sharpe": 3.583,
-      "spy_corr": 0.2512
+      "pnl": 4925.0,
+      "cagr": 0.0159,
+      "max_dd": 0.0307,
+      "sharpe": 1.231,
+      "oos_sharpe": 3.566,
+      "spy_corr": 0.2061,
+      "regime_stats": {
+        "bear": {
+          "n_trades": 5,
+          "pnl": 1161.0,
+          "win_rate": 0.8,
+          "avg_pnl": 232.2,
+          "sharpe": 1.235
+        },
+        "bull": {
+          "n_trades": 16,
+          "pnl": 4435.0,
+          "win_rate": 0.688,
+          "avg_pnl": 277.19,
+          "sharpe": 1.537
+        },
+        "crash": {
+          "n_trades": 2,
+          "pnl": 736.0,
+          "win_rate": 0.5,
+          "avg_pnl": 368.0,
+          "sharpe": 0.263
+        },
+        "high_vol": {
+          "n_trades": 4,
+          "pnl": -1407.0,
+          "win_rate": 0.5,
+          "avg_pnl": -351.75,
+          "sharpe": -0.956
+        }
+      }
+    },
+    "TLT-XLF": {
+      "n_trades": 57,
+      "pnl": 26060.0,
+      "cagr": 0.0551,
+      "max_dd": 0.0658,
+      "sharpe": 1.685,
+      "oos_sharpe": 0.964,
+      "spy_corr": 0.3706,
+      "regime_stats": {
+        "bear": {
+          "n_trades": 5,
+          "pnl": 1754.0,
+          "win_rate": 0.8,
+          "avg_pnl": 350.8,
+          "sharpe": 1.793
+        },
+        "bull": {
+          "n_trades": 44,
+          "pnl": 6497.0,
+          "win_rate": 0.568,
+          "avg_pnl": 147.66,
+          "sharpe": 0.72
+        },
+        "crash": {
+          "n_trades": 3,
+          "pnl": 14720.0,
+          "win_rate": 1.0,
+          "avg_pnl": 4906.67,
+          "sharpe": 1.546
+        },
+        "high_vol": {
+          "n_trades": 3,
+          "pnl": 3433.0,
+          "win_rate": 0.667,
+          "avg_pnl": 1144.33,
+          "sharpe": 1.015
+        },
+        "low_vol": {
+          "n_trades": 2,
+          "pnl": -344.0,
+          "win_rate": 0.0,
+          "avg_pnl": -172.0,
+          "sharpe": -2.123
+        }
+      }
+    },
+    "TLT-QQQ": {
+      "n_trades": 27,
+      "pnl": 8221.0,
+      "cagr": 0.0263,
+      "max_dd": 0.0626,
+      "sharpe": 0.773,
+      "oos_sharpe": 0.829,
+      "spy_corr": 0.3424,
+      "regime_stats": {
+        "bear": {
+          "n_trades": 2,
+          "pnl": -150.0,
+          "win_rate": 0.5,
+          "avg_pnl": -75.0,
+          "sharpe": -0.455
+        },
+        "bull": {
+          "n_trades": 18,
+          "pnl": 2084.0,
+          "win_rate": 0.667,
+          "avg_pnl": 115.78,
+          "sharpe": 0.523
+        },
+        "crash": {
+          "n_trades": 3,
+          "pnl": 9451.0,
+          "win_rate": 0.667,
+          "avg_pnl": 3150.33,
+          "sharpe": 0.998
+        },
+        "high_vol": {
+          "n_trades": 4,
+          "pnl": -3164.0,
+          "win_rate": 0.5,
+          "avg_pnl": -791.0,
+          "sharpe": -1.359
+        }
+      }
+    },
+    "GLD-XLF": {
+      "n_trades": 61,
+      "pnl": -492.0,
+      "cagr": -0.0012,
+      "max_dd": 0.0266,
+      "sharpe": -0.128,
+      "oos_sharpe": 0.155,
+      "spy_corr": -0.0122,
+      "regime_stats": {
+        "bear": {
+          "n_trades": 7,
+          "pnl": -277.0,
+          "win_rate": 0.714,
+          "avg_pnl": -39.57,
+          "sharpe": -0.212
+        },
+        "bull": {
+          "n_trades": 46,
+          "pnl": -298.0,
+          "win_rate": 0.63,
+          "avg_pnl": -6.48,
+          "sharpe": -0.093
+        },
+        "crash": {
+          "n_trades": 2,
+          "pnl": 257.0,
+          "win_rate": 0.5,
+          "avg_pnl": 128.5,
+          "sharpe": 0.461
+        },
+        "high_vol": {
+          "n_trades": 5,
+          "pnl": 426.0,
+          "win_rate": 0.8,
+          "avg_pnl": 85.2,
+          "sharpe": 0.663
+        },
+        "low_vol": {
+          "n_trades": 1,
+          "pnl": -600.0,
+          "win_rate": 0.0,
+          "avg_pnl": -600.0,
+          "sharpe": 0.0
+        }
+      }
     }
+  },
+  "regime_filtered": {
+    "Bull only": {
+      "n_trades": 51,
+      "pnl": 4009.0,
+      "cagr": 0.0106,
+      "max_dd": 0.072,
+      "sharpe": 0.455
+    },
+    "Bear only": {
+      "n_trades": 9,
+      "pnl": 2347.0,
+      "cagr": 0.0093,
+      "max_dd": 0.007,
+      "sharpe": 1.378
+    },
+    "High vol only": {
+      "n_trades": 7,
+      "pnl": 2402.0,
+      "cagr": 0.0093,
+      "max_dd": 0.0,
+      "sharpe": 3.012
+    },
+    "Low vol only": {
+      "n_trades": 1,
+      "pnl": 75.0,
+      "cagr": 0.0015,
+      "max_dd": 0.0,
+      "sharpe": 0.0
+    },
+    "Bull + Low vol": {
+      "n_trades": 51,
+      "pnl": 5544.0,
+      "cagr": 0.0146,
+      "max_dd": 0.0591,
+      "sharpe": 0.638
+    },
+    "Bear + High vol": {
+      "n_trades": 13,
+      "pnl": 5085.0,
+      "cagr": 0.0185,
+      "max_dd": 0.0,
+      "sharpe": 3.459
+    },
+    "All except crash": {
+      "n_trades": 62,
+      "pnl": 11569.0,
+      "cagr": 0.0279,
+      "max_dd": 0.0535,
+      "sharpe": 1.2
+    }
+  },
+  "walk_forward": [
+    {
+      "is": "2020-2020",
+      "oos": 2021,
+      "is_sharpe": 1.406,
+      "oos_sharpe": -0.248,
+      "wf_ratio": -0.177,
+      "oos_pnl": -2037.0
+    },
+    {
+      "is": "2021-2021",
+      "oos": 2022,
+      "is_sharpe": -0.248,
+      "oos_sharpe": 2.558,
+      "wf_ratio": -10.297,
+      "oos_pnl": 5118.0
+    },
+    {
+      "is": "2022-2022",
+      "oos": 2023,
+      "is_sharpe": 2.558,
+      "oos_sharpe": 2.611,
+      "wf_ratio": 1.021,
+      "oos_pnl": 5048.0
+    },
+    {
+      "is": "2023-2023",
+      "oos": 2024,
+      "is_sharpe": 2.611,
+      "oos_sharpe": 1.772,
+      "wf_ratio": 0.679,
+      "oos_pnl": 1411.0
+    },
+    {
+      "is": "2020-2020",
+      "oos": 2021,
+      "is_sharpe": 1.406,
+      "oos_sharpe": -0.248,
+      "wf_ratio": -0.177,
+      "oos_pnl": -2037.0
+    },
+    {
+      "is": "2020-2021",
+      "oos": 2022,
+      "is_sharpe": 0.521,
+      "oos_sharpe": 2.558,
+      "wf_ratio": 4.909,
+      "oos_pnl": 5118.0
+    },
+    {
+      "is": "2020-2022",
+      "oos": 2023,
+      "is_sharpe": 1.038,
+      "oos_sharpe": 2.611,
+      "wf_ratio": 2.515,
+      "oos_pnl": 5048.0
+    },
+    {
+      "is": "2020-2023",
+      "oos": 2024,
+      "is_sharpe": 1.439,
+      "oos_sharpe": 1.772,
+      "wf_ratio": 1.232,
+      "oos_pnl": 1411.0
+    }
+  ],
+  "capacity": {
+    "avg_contracts": 14.1,
+    "max_contracts": 50,
+    "avg_credit_per_trade": 0.657,
+    "max_capital_est": "$707,865",
+    "max_capital_raw": 707865,
+    "slippage_est_bps": 5.7,
+    "oi_limit_contracts": 100,
+    "notes": "Avg 14 contracts/trade. OI-limited to ~100 contracts. Estimated max capital ~$0.7M before market impact. Slippage ~5.7bps at current size."
   },
   "best_portfolio": {
     "pairs": [
       "GLD-TLT",
-      "GLD-SPY",
-      "TLT-QQQ",
-      "GLD-QQQ"
+      "GLD-QQQ",
+      "TLT-XLF",
+      "TLT-QQQ"
     ],
-    "cagr": 0.0942,
-    "max_dd": 0.1341,
-    "sharpe": 0.908,
+    "cagr": 0.1255,
+    "max_dd": 0.0929,
+    "sharpe": 1.524,
     "n_trades": 174,
-    "leverage": 1.0,
-    "risk_pct": 0.05
+    "leverage": 1.25,
+    "risk_pct": 0.03
   }
 }
