@@ -1,0 +1,253 @@
+{
+  "generated": "2026-04-05T10:56:27.329710",
+  "focus": "sharpe_maximization",
+  "portfolio_sharpe_baseline": 3.94,
+  "strategies": [
+    {
+      "name": "SPY Term Structure",
+      "n_trades": 100,
+      "total_pnl": -5494.0,
+      "win_rate": 0.42,
+      "sharpe": -1.099,
+      "max_dd": 0.056,
+      "cagr": -0.0097,
+      "spy_corr": -0.5849,
+      "exp1220_corr": -0.5551,
+      "oos_sharpe": -1.432,
+      "oos_n": 50,
+      "oos_pnl": -4060.0,
+      "killed": true,
+      "kill_reason": "Negative OOS Sharpe (-1.43)",
+      "yearly": {
+        "2020": {
+          "n": 13,
+          "pnl": -1256.0,
+          "wr": 0.3077,
+          "sharpe": -1.26
+        },
+        "2021": {
+          "n": 24,
+          "pnl": -672.0,
+          "wr": 0.375,
+          "sharpe": -0.526
+        },
+        "2022": {
+          "n": 13,
+          "pnl": 494.0,
+          "wr": 0.5385,
+          "sharpe": 0.313
+        },
+        "2023": {
+          "n": 18,
+          "pnl": 136.0,
+          "wr": 0.5,
+          "sharpe": 0.104
+        },
+        "2024": {
+          "n": 20,
+          "pnl": -1610.0,
+          "wr": 0.4,
+          "sharpe": -1.229
+        },
+        "2025": {
+          "n": 12,
+          "pnl": -2586.0,
+          "wr": 0.4167,
+          "sharpe": -1.196
+        }
+      }
+    },
+    {
+      "name": "Sector Mom Reversal",
+      "n_trades": 21,
+      "total_pnl": 820.0,
+      "win_rate": 0.9524,
+      "sharpe": 5.525,
+      "max_dd": 0.0003,
+      "cagr": 0.0015,
+      "spy_corr": -0.5287,
+      "exp1220_corr": -0.5113,
+      "oos_sharpe": 5.538,
+      "oos_n": 9,
+      "oos_pnl": 345.0,
+      "killed": true,
+      "kill_reason": "Only 9 OOS trades (<10)",
+      "yearly": {
+        "2020": {
+          "n": 5,
+          "pnl": 220.0,
+          "wr": 1.0,
+          "sharpe": 3.011
+        },
+        "2021": {
+          "n": 4,
+          "pnl": 135.0,
+          "wr": 0.75,
+          "sharpe": 1.171
+        },
+        "2022": {
+          "n": 3,
+          "pnl": 120.0,
+          "wr": 1.0,
+          "sharpe": 1.774
+        },
+        "2023": {
+          "n": 4,
+          "pnl": 120.0,
+          "wr": 1.0,
+          "sharpe": 4.431
+        },
+        "2024": {
+          "n": 3,
+          "pnl": 125.0,
+          "wr": 1.0,
+          "sharpe": 4.49
+        },
+        "2025": {
+          "n": 2,
+          "pnl": 100.0,
+          "wr": 1.0,
+          "sharpe": 1.667
+        }
+      }
+    },
+    {
+      "name": "Overnight Gap Fade",
+      "n_trades": 184,
+      "total_pnl": -2266.0,
+      "win_rate": 0.587,
+      "sharpe": -0.667,
+      "max_dd": 0.0363,
+      "cagr": -0.0039,
+      "spy_corr": -0.1896,
+      "exp1220_corr": -0.1814,
+      "oos_sharpe": -0.823,
+      "oos_n": 91,
+      "oos_pnl": -1296.0,
+      "killed": true,
+      "kill_reason": "Negative OOS Sharpe (-0.82)",
+      "yearly": {
+        "2020": {
+          "n": 30,
+          "pnl": -152.0,
+          "wr": 0.5667,
+          "sharpe": -0.16
+        },
+        "2021": {
+          "n": 23,
+          "pnl": -222.0,
+          "wr": 0.7826,
+          "sharpe": -0.259
+        },
+        "2022": {
+          "n": 40,
+          "pnl": -596.0,
+          "wr": 0.65,
+          "sharpe": -1.154
+        },
+        "2023": {
+          "n": 31,
+          "pnl": 150.0,
+          "wr": 0.5806,
+          "sharpe": 0.216
+        },
+        "2024": {
+          "n": 31,
+          "pnl": -1084.0,
+          "wr": 0.3548,
+          "sharpe": -1.669
+        },
+        "2025": {
+          "n": 29,
+          "pnl": -362.0,
+          "wr": 0.6207,
+          "sharpe": -0.503
+        }
+      }
+    },
+    {
+      "name": "Dividend Capture Puts",
+      "n_trades": 23,
+      "total_pnl": 198.0,
+      "win_rate": 0.8261,
+      "sharpe": 1.198,
+      "max_dd": 0.0012,
+      "cagr": 0.0003,
+      "spy_corr": 0.5937,
+      "exp1220_corr": 0.5253,
+      "oos_sharpe": 1.052,
+      "oos_n": 11,
+      "oos_pnl": 92.0,
+      "killed": false,
+      "kill_reason": "",
+      "yearly": {
+        "2020": {
+          "n": 4,
+          "pnl": 22.0,
+          "wr": 0.75,
+          "sharpe": 0.217
+        },
+        "2021": {
+          "n": 4,
+          "pnl": 110.0,
+          "wr": 1.0,
+          "sharpe": 1.46
+        },
+        "2022": {
+          "n": 4,
+          "pnl": -26.0,
+          "wr": 0.75,
+          "sharpe": -0.325
+        },
+        "2023": {
+          "n": 3,
+          "pnl": -36.0,
+          "wr": 0.6667,
+          "sharpe": -0.631
+        },
+        "2024": {
+          "n": 4,
+          "pnl": 58.0,
+          "wr": 1.0,
+          "sharpe": 2.454
+        },
+        "2025": {
+          "n": 4,
+          "pnl": 70.0,
+          "wr": 0.75,
+          "sharpe": 1.179
+        }
+      }
+    },
+    {
+      "name": "Correlation Spike Premium",
+      "n_trades": 2,
+      "total_pnl": 234.0,
+      "win_rate": 0.5,
+      "sharpe": 0.249,
+      "max_dd": 0.0,
+      "cagr": 0.0026,
+      "spy_corr": 0.0,
+      "exp1220_corr": 0.0,
+      "oos_sharpe": 0.0,
+      "oos_n": 0,
+      "oos_pnl": 0,
+      "killed": true,
+      "kill_reason": "Only 0 OOS trades (<10)",
+      "yearly": {
+        "2021": {
+          "n": 1,
+          "pnl": -352.0,
+          "wr": 0.0,
+          "sharpe": 0.0
+        },
+        "2022": {
+          "n": 1,
+          "pnl": 586.0,
+          "wr": 1.0,
+          "sharpe": 0.0
+        }
+      }
+    }
+  ]
+}
