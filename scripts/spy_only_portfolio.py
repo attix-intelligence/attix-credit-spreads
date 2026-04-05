@@ -217,7 +217,8 @@ def simulate_portfolio(
     n_years = n_days / TRADING_DAYS
     cagr = cum[-1] ** (1 / n_years) - 1 if cum[-1] > 0 else -1
     vol = np.std(combined) * math.sqrt(TRADING_DAYS)
-    sharpe = (cagr - 0.045) / vol if vol > 1e-8 else 0
+    _rf_daily = 0.045 / 252
+    sharpe = (float(np.mean(combined)) - _rf_daily) / float(np.std(combined)) * math.sqrt(TRADING_DAYS) if float(np.std(combined)) > 1e-12 else 0
     peak = np.maximum.accumulate(cum)
     dd = ((cum - peak) / peak).min()
     calmar = cagr / abs(dd) if abs(dd) > 1e-8 else float("inf")
@@ -286,7 +287,8 @@ def walk_forward(returns: Dict[str, np.ndarray], weights: Dict[str, float],
             n_yr = len(r) / TRADING_DAYS
             cagr = cum[-1] ** (1 / n_yr) - 1 if cum[-1] > 0 else -1
             vol = np.std(r) * math.sqrt(TRADING_DAYS)
-            sharpe = (cagr - 0.045) / vol if vol > 1e-8 else 0
+            _rf_daily = 0.045 / 252
+            sharpe = (float(np.mean(r)) - _rf_daily) / float(np.std(r)) * math.sqrt(TRADING_DAYS) if float(np.std(r)) > 1e-12 else 0
             pk = np.maximum.accumulate(cum)
             dd = ((cum - pk) / pk).min()
             return {"sharpe": float(sharpe), "cagr": float(cagr),

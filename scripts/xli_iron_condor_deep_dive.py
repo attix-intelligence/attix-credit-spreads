@@ -368,7 +368,8 @@ def correlation_analysis(xli_trades: List[Dict], vix: pd.Series) -> Dict:
         n_years = len(rets) / 12
         cagr = (1 + total_ret) ** (1 / n_years) - 1 if n_years > 0 and total_ret > -1 else 0
         vol = np.std(rets) * math.sqrt(12)
-        sharpe = (cagr - 0.045) / vol if vol > 0 else 0
+        _rf_monthly = 0.045 / 12
+        sharpe = (float(np.mean(rets)) - _rf_monthly) / float(np.std(rets)) * math.sqrt(12) if float(np.std(rets)) > 1e-12 else 0
         return {"label": label, "cagr": cagr, "vol": vol, "sharpe": sharpe, "dd": dd}
 
     return {

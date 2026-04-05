@@ -268,27 +268,9 @@ def load_tlt_iron_condors() -> pd.Series:
 
 
 def calc_metrics(rets: np.ndarray) -> dict:
-    if len(rets) < 2:
-        return {"cagr_pct": 0, "sharpe": 0, "max_dd_pct": 0, "calmar": 0,
-                "sortino": 0, "vol_pct": 0, "total_ret_pct": 0, "n_days": 0}
-    eq = np.cumprod(1 + rets)
-    total = float(eq[-1] - 1)
-    n_yr = len(rets) / TRADING_DAYS
-    cagr = eq[-1] ** (1 / max(n_yr, 0.01)) - 1 if eq[-1] > 0 else 0
-    mu, std = float(rets.mean()), float(rets.std())
-    sharpe = mu / std * math.sqrt(TRADING_DAYS) if std > 1e-12 else 0
-    hwm = np.maximum.accumulate(eq)
-    dd = float((1 - eq / hwm).max())
-    calmar = cagr / dd if dd > 1e-6 else 0
-    down = rets[rets < 0]
-    down_std = float(down.std()) if len(down) > 1 else std
-    sortino = mu / down_std * math.sqrt(TRADING_DAYS) if down_std > 1e-12 else 0
-    return {
-        "cagr_pct": round(cagr * 100, 2), "sharpe": round(sharpe, 2),
-        "max_dd_pct": round(dd * 100, 2), "calmar": round(calmar, 2),
-        "sortino": round(sortino, 2), "vol_pct": round(std * math.sqrt(TRADING_DAYS) * 100, 2),
-        "total_ret_pct": round(total * 100, 2), "n_days": len(rets),
-    }
+    """Compute standard portfolio metrics. Uses correct Sharpe (arithmetic mean)."""
+    from compass.metrics import full_metrics as _fm
+    return _fm(rets)
 
 
 def yearly_metrics(rets: np.ndarray, dates) -> dict:

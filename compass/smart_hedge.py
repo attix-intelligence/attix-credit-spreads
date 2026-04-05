@@ -321,7 +321,8 @@ def backtest_variant(
     n_years = n / TRADING_DAYS
     cagr = cum[-1] ** (1/n_years) - 1 if cum[-1] > 0 else -1
     vol = np.std(daily_arr) * math.sqrt(TRADING_DAYS)
-    sharpe = (cagr - 0.045) / vol if vol > 1e-8 else 0
+    _rf_daily = 0.045 / 252
+    sharpe = (float(np.mean(daily_arr)) - _rf_daily) / float(np.std(daily_arr)) * math.sqrt(TRADING_DAYS) if float(np.std(daily_arr)) > 1e-12 else 0
     pk = np.maximum.accumulate(cum)
     max_dd = ((cum - pk) / pk).min()
     calmar = cagr / abs(max_dd) if abs(max_dd) > 1e-8 else float("inf")

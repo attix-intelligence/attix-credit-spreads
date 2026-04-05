@@ -208,7 +208,8 @@ def main():
     n_yr = n / 252
     nh_cagr = no_hedge_cum[-1] ** (1/n_yr) - 1
     nh_vol = np.std(no_hedge_daily) * np.sqrt(252)
-    nh_sharpe = (nh_cagr - 0.045) / nh_vol
+    _rf_daily = 0.045 / 252
+    nh_sharpe = (float(np.mean(no_hedge_daily)) - _rf_daily) / float(np.std(no_hedge_daily)) * np.sqrt(252) if float(np.std(no_hedge_daily)) > 1e-12 else 0
     nh_pk = np.maximum.accumulate(no_hedge_cum)
     nh_dd = ((no_hedge_cum - nh_pk) / nh_pk).min()
     # COVID DD

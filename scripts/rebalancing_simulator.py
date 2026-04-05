@@ -306,7 +306,8 @@ def simulate_rebalancing(
     n_years = n_days / TRADING_DAYS
     cagr = (eq_arr[-1] / CAPITAL) ** (1 / n_years) - 1
     ann_vol = np.std(daily_rets) * math.sqrt(TRADING_DAYS)
-    sharpe = (cagr - 0.045) / ann_vol if ann_vol > 0 else 0
+    _rf_daily = 0.045 / 252
+    sharpe = (float(np.mean(daily_rets)) - _rf_daily) / float(np.std(daily_rets)) * math.sqrt(TRADING_DAYS) if float(np.std(daily_rets)) > 1e-12 else 0
     max_dd = dd.min()
     calmar = cagr / abs(max_dd) if abs(max_dd) > 1e-8 else float("inf")
 

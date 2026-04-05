@@ -282,7 +282,8 @@ def leverage_sweep(
         n_years = len(levered) / 252
         cagr = float(cum[-1] ** (1 / n_years) - 1) if cum[-1] > 0 else 0.0
         ann_vol = float(np.std(levered) * np.sqrt(252))
-        sharpe = (cagr - 0.045) / ann_vol if ann_vol > 0 else 0.0
+        _rf_daily = 0.045 / 252
+        sharpe = (float(np.mean(levered)) - _rf_daily) / float(np.std(levered)) * np.sqrt(252) if float(np.std(levered)) > 1e-12 else 0.0
         max_dd = float(dd.min())
         calmar = cagr / abs(max_dd) if max_dd != 0 else float("inf")
 

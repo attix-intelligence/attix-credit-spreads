@@ -269,7 +269,8 @@ def simulate_portfolio_with_costs(aum: float, seed: int = 7000) -> Dict:
     n_years = len(daily) / TRADING_DAYS
     cagr = cum[-1] ** (1 / n_years) - 1 if cum[-1] > 0 else -1
     vol = np.std(daily) * math.sqrt(TRADING_DAYS)
-    sharpe = (cagr - 0.045) / vol if vol > 1e-8 else 0
+    _rf_daily = 0.045 / 252
+    sharpe = (float(np.mean(daily)) - _rf_daily) / float(np.std(daily)) * math.sqrt(TRADING_DAYS) if float(np.std(daily)) > 1e-12 else 0
     peak = np.maximum.accumulate(cum)
     dd = ((cum - peak) / peak).min()
 

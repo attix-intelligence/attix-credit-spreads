@@ -170,7 +170,8 @@ def optimize_weights(
             n_years = len(combined) / TRADING_DAYS
             cagr = cum[-1] ** (1 / n_years) - 1 if cum[-1] > 0 else -1
             vol = np.std(combined) * math.sqrt(TRADING_DAYS)
-            sharpe = (cagr - 0.045) / vol if vol > 1e-8 else 0
+            _rf_daily = 0.045 / 252
+            sharpe = (float(np.mean(combined)) - _rf_daily) / float(np.std(combined)) * math.sqrt(TRADING_DAYS) if float(np.std(combined)) > 1e-12 else 0
 
             if target == "sharpe":
                 score = sharpe
@@ -240,7 +241,8 @@ def run_backtest(
     n_years = len(combined) / TRADING_DAYS
     cagr = cum[-1] ** (1 / n_years) - 1 if cum[-1] > 0 else -1
     vol = np.std(combined) * math.sqrt(TRADING_DAYS)
-    sharpe = (cagr - 0.045) / vol if vol > 1e-8 else 0
+    _rf_daily = 0.045 / 252
+    sharpe = (float(np.mean(combined)) - _rf_daily) / float(np.std(combined)) * math.sqrt(TRADING_DAYS) if float(np.std(combined)) > 1e-12 else 0
 
     # Max DD
     peak = np.maximum.accumulate(cum)
@@ -278,7 +280,8 @@ def run_backtest(
         yr_cum = np.cumprod(1 + yr_ret)
         yr_cagr = yr_cum[-1] - 1 if len(yr_cum) > 0 else 0
         yr_vol = np.std(yr_ret) * math.sqrt(TRADING_DAYS)
-        yr_sharpe = (yr_cagr - 0.045) / yr_vol if yr_vol > 1e-8 else 0
+        _rf_daily = 0.045 / 252
+        yr_sharpe = (float(np.mean(yr_ret)) - _rf_daily) / float(np.std(yr_ret)) * math.sqrt(TRADING_DAYS) if float(np.std(yr_ret)) > 1e-12 else 0
         yr_peak = np.maximum.accumulate(yr_cum)
         yr_dd = ((yr_cum - yr_peak) / yr_peak).min() if len(yr_cum) > 0 else 0
         yearly[yr] = {
@@ -312,11 +315,13 @@ def run_backtest(
 
         t_cagr = train_cum[-1] ** (1 / (len(train_ret) / TRADING_DAYS)) - 1
         t_vol = np.std(train_ret) * math.sqrt(TRADING_DAYS)
-        t_sharpe = (t_cagr - 0.045) / t_vol if t_vol > 1e-8 else 0
+        _rf_daily = 0.045 / 252
+        t_sharpe = (float(np.mean(train_ret)) - _rf_daily) / float(np.std(train_ret)) * math.sqrt(TRADING_DAYS) if float(np.std(train_ret)) > 1e-12 else 0
 
         o_cagr = test_cum[-1] ** (1 / (len(test_ret) / TRADING_DAYS)) - 1
         o_vol = np.std(test_ret) * math.sqrt(TRADING_DAYS)
-        o_sharpe = (o_cagr - 0.045) / o_vol if o_vol > 1e-8 else 0
+        _rf_daily = 0.045 / 252
+        o_sharpe = (float(np.mean(test_ret)) - _rf_daily) / float(np.std(test_ret)) * math.sqrt(TRADING_DAYS) if float(np.std(test_ret)) > 1e-12 else 0
         o_peak = np.maximum.accumulate(test_cum)
         o_dd = ((test_cum - o_peak) / o_peak).min()
 
@@ -341,7 +346,8 @@ def run_backtest(
         lev_cum = np.cumprod(1 + lev_ret)
         l_cagr = lev_cum[-1] ** (1 / n_years) - 1 if lev_cum[-1] > 0 else -1
         l_vol = np.std(lev_ret) * math.sqrt(TRADING_DAYS)
-        l_sharpe = (l_cagr - 0.045) / l_vol if l_vol > 1e-8 else 0
+        _rf_daily = 0.045 / 252
+        l_sharpe = (float(np.mean(lev_ret)) - _rf_daily) / float(np.std(lev_ret)) * math.sqrt(TRADING_DAYS) if float(np.std(lev_ret)) > 1e-12 else 0
         l_peak = np.maximum.accumulate(lev_cum)
         l_dd = ((lev_cum - l_peak) / l_peak).min()
 
