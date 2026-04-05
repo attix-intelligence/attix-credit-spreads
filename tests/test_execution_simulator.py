@@ -371,3 +371,207 @@ class TestHTMLReport:
         assert path.exists()
         assert "execution_sim.html" in str(path)
         path.unlink(missing_ok=True)
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# Capital Scaling & IronVault Integration Tests
+# ══════════════════════════════════════════════════════════════════════════
+
+from compass.execution_simulator import (
+    CapitalScaleAnalyzer,
+    CapitalLevelResult,
+    StrategyProfile,
+    TickerLiquidity,
+    fill_probability,
+    latency_impact_bps,
+    _default_liquidity,
+    _default_ticker,
+    STRATEGY_PROFILES,
+    EXP1220_PROFILE,
+    CAPITAL_LEVELS,
+)
+
+
+@pytest.fixture
+def analyzer():
+    return CapitalScaleAnalyzer(_default_liquidity())
+
+
+class TestFillProbability:
+    """Fill probability as f(order_size, ADV)."""
+
+    def test_small_order_high_fill(self):
+        p = fill_probability(1, 10000, "limit")
+        assert p > 0.70  # limit orders: 85% of base, so ~78% at 0.01% ADV
+
+    def test_large_order_low_fill(self):
+        p = fill_probability(5000, 10000, "limit")
+        assert p < 0.50
+
+    def test_market_better_than_limit(self):
+        p_market = fill_probability(100, 1000, "market")
+        p_limit = fill_probability(100, 1000, "limit")
+        assert p_market > p_limit
+
+    def test_bounds(self):
+        assert 0.01 <= fill_probability(1, 1, "market") <= 0.99
+        assert 0.01 <= fill_probability(100000, 100, "limit") <= 0.99
+
+    def test_zero_adv(self):
+        assert fill_probability(10, 0, "limit") == 0.01
+
+    def test_monotone_decreasing(self):
+        probs = [fill_probability(n, 1000, "limit") for n in [1, 10, 100, 500, 1000]]
+        for i in range(len(probs) - 1):
+            assert probs[i] >= probs[i + 1]
+
+    def test_huge_order_no_crash(self):
+        # Should not overflow/crash even with extreme participation
+        p = fill_probability(1_000_000, 100, "market")
+        assert 0.01 <= p <= 0.99
+
+
+class TestLatencyImpact:
+    """Latency cost model for limit vs market orders."""
+
+    def test_market_more_costly(self):
+        m = latency_impact_bps("market", 10.0, 50.0)
+        l = latency_impact_bps("limit", 10.0, 50.0)
+        assert m > l
+
+    def test_higher_latency_more_costly(self):
+        fast = latency_impact_bps("market", 10.0, 10.0)
+        slow = latency_impact_bps("market", 10.0, 200.0)
+        assert slow > fast
+
+    def test_positive_values(self):
+        assert latency_impact_bps("market", 10.0) > 0
+        assert latency_impact_bps("limit", 10.0) > 0
+
+    def test_wider_spread_more_costly(self):
+        narrow = latency_impact_bps("market", 5.0, 50.0)
+        wide = latency_impact_bps("market", 20.0, 50.0)
+        assert wide > narrow
+
+
+class TestCapitalScaleAnalyzer:
+    """Capital-level execution cost analysis."""
+
+    def test_analyze_returns_result(self, analyzer):
+        r = analyzer.analyze_strategy(EXP1220_PROFILE, 100_000)
+        assert isinstance(r, CapitalLevelResult)
+        assert r.capital == 100_000
+        assert r.contracts_per_trade >= 1
+
+    def test_costs_increase_with_capital(self, analyzer):
+        r_small = analyzer.analyze_strategy(EXP1220_PROFILE, 100_000)
+        r_big = analyzer.analyze_strategy(EXP1220_PROFILE, 10_000_000)
+        assert r_big.market_impact_bps > r_small.market_impact_bps
+        assert r_big.participation_rate > r_small.participation_rate
+
+    def test_sharpe_degrades_with_capital(self, analyzer):
+        r_small = analyzer.analyze_strategy(EXP1220_PROFILE, 100_000)
+        r_big = analyzer.analyze_strategy(EXP1220_PROFILE, 100_000_000)
+        assert r_big.net_sharpe <= r_small.net_sharpe
+
+    def test_fill_probability_degrades(self, analyzer):
+        r_small = analyzer.analyze_strategy(EXP1220_PROFILE, 100_000)
+        r_big = analyzer.analyze_strategy(EXP1220_PROFILE, 100_000_000)
+        assert r_big.fill_probability <= r_small.fill_probability
+
+    def test_run_sweep(self, analyzer):
+        results = analyzer.run_sweep()
+        assert len(results) == len(CAPITAL_LEVELS) * len(STRATEGY_PROFILES)
+
+    def test_exp1220_retains_alpha_at_1m(self, analyzer):
+        r = analyzer.analyze_strategy(EXP1220_PROFILE, 1_000_000)
+        assert r.net_cagr > 0.30  # should keep majority of 55.6% CAGR
+        assert r.sharpe_retention > 0.80
+
+    def test_capacity_ceiling_positive(self, analyzer):
+        ceiling = analyzer.find_capacity_ceiling(EXP1220_PROFILE)
+        assert ceiling > 1_000_000
+
+    def test_leverage_increases_impact(self, analyzer):
+        r_1x = analyzer.analyze_strategy(EXP1220_PROFILE, 1_000_000, leverage=1.0)
+        r_2x = analyzer.analyze_strategy(EXP1220_PROFILE, 1_000_000, leverage=2.0)
+        assert r_2x.contracts_per_trade > r_1x.contracts_per_trade
+
+    def test_net_cagr_bounded(self, analyzer):
+        r = analyzer.analyze_strategy(EXP1220_PROFILE, 100_000)
+        assert r.net_cagr <= r.gross_cagr
+
+    def test_annual_cost_positive(self, analyzer):
+        r = analyzer.analyze_strategy(EXP1220_PROFILE, 1_000_000)
+        assert r.annual_cost_pct > 0
+
+    def test_all_strategies_run(self, analyzer):
+        for key, profile in STRATEGY_PROFILES.items():
+            r = analyzer.analyze_strategy(profile, 1_000_000)
+            assert r.strategy == profile.name
+
+    def test_small_capital_minimal_impact(self, analyzer):
+        """At $100K, participation rate should be tiny."""
+        r = analyzer.analyze_strategy(EXP1220_PROFILE, 100_000)
+        assert r.participation_rate < 0.05  # < 5% of ADV
+
+
+class TestIronVaultLiquidity:
+    """IronVault data integration."""
+
+    def test_default_all_tickers(self):
+        liq = _default_liquidity()
+        for tk in ["SPY", "GLD", "TLT", "XLF", "QQQ", "XLI"]:
+            assert tk in liq
+            assert liq[tk].avg_daily_volume > 0
+            assert liq[tk].spread_cents > 0
+
+    def test_default_ticker(self):
+        t = _default_ticker("SPY")
+        assert t.ticker == "SPY"
+        assert t.avg_daily_volume > 0
+
+    def test_unknown_ticker_has_defaults(self):
+        t = _default_ticker("ZZZZZ")
+        assert t.avg_daily_volume > 0
+
+    def test_spy_more_liquid(self):
+        liq = _default_liquidity()
+        assert liq["SPY"].avg_daily_volume > liq["GLD"].avg_daily_volume
+
+    def test_from_ironvault_or_fallback(self):
+        """Should work even without DB access."""
+        try:
+            a = CapitalScaleAnalyzer.from_ironvault()
+        except Exception:
+            a = CapitalScaleAnalyzer()
+        assert len(a.liquidity) >= 5
+
+
+class TestDegradationReport:
+    """HTML degradation curve report."""
+
+    def test_report_generated(self, analyzer, tmp_path):
+        results = analyzer.run_sweep()
+        out = str(tmp_path / "deg.html")
+        path = CapitalScaleAnalyzer.generate_degradation_report(
+            results, analyzer.liquidity, output_path=out)
+        assert Path(path).exists()
+        html = Path(path).read_text()
+        assert "Degradation" in html
+
+    def test_report_has_all_strategies(self, analyzer, tmp_path):
+        results = analyzer.run_sweep()
+        out = str(tmp_path / "deg2.html")
+        CapitalScaleAnalyzer.generate_degradation_report(results, output_path=out)
+        html = Path(out).read_text()
+        assert "EXP-1220" in html
+        assert "Almgren-Chriss" in html
+
+    def test_report_has_svg_chart(self, analyzer, tmp_path):
+        results = analyzer.run_sweep()
+        out = str(tmp_path / "deg3.html")
+        CapitalScaleAnalyzer.generate_degradation_report(results, output_path=out)
+        html = Path(out).read_text()
+        assert "<svg" in html
+        assert "Sharpe Retention" in html
