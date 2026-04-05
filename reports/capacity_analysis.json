@@ -1,0 +1,880 @@
+{
+  "generated": "2026-04-05T08:09:00.819592",
+  "strategies": [
+    {
+      "name": "Tail Risk Protection",
+      "experiment": "EXP-1220-real",
+      "status": "LIVE-READY",
+      "tickers": "SPY",
+      "sharpe": 5.78,
+      "cagr": 0.99,
+      "base_cost_bps": 120.7,
+      "costs_at_levels": {
+        "$1M": 122.2,
+        "$10M": 127.1,
+        "$100M": 142.5,
+        "$1B": 191.2
+      },
+      "sharpe_at_levels": {
+        "$1M": 5.07,
+        "$10M": 5.05,
+        "$100M": 4.96,
+        "$1B": 4.68
+      },
+      "alpha_decay_pct": {
+        "$1M": 12.2,
+        "$10M": 12.7,
+        "$100M": 14.2,
+        "$1B": 19.1
+      },
+      "max_aum_50pct": 28523459999.99999,
+      "max_aum_breakeven": 99999999999.99991,
+      "forced_exit": {
+        "$1M": {
+          "SPY": {
+            "contracts": 50,
+            "adv": 500000,
+            "participation_pct": 0.0,
+            "exit_cost_bps": 243.4,
+            "feasible": true,
+            "days_to_exit": 1
+          }
+        },
+        "$10M": {
+          "SPY": {
+            "contracts": 500,
+            "adv": 500000,
+            "participation_pct": 0.1,
+            "exit_cost_bps": 250.7,
+            "feasible": true,
+            "days_to_exit": 1
+          }
+        },
+        "$100M": {
+          "SPY": {
+            "contracts": 5000,
+            "adv": 500000,
+            "participation_pct": 1.0,
+            "exit_cost_bps": 273.8,
+            "feasible": true,
+            "days_to_exit": 1
+          }
+        },
+        "$1B": {
+          "SPY": {
+            "contracts": 50000,
+            "adv": 500000,
+            "participation_pct": 10.0,
+            "exit_cost_bps": 346.7,
+            "feasible": true,
+            "days_to_exit": 1
+          }
+        }
+      },
+      "bottleneck_ticker": "SPY",
+      "bottleneck_reason": "SPY ATM strike ADV = 500,000 contracts/day"
+    },
+    {
+      "name": "GLD-TLT Relative Value",
+      "experiment": "EXP-1630",
+      "status": "LIVE-READY",
+      "tickers": "GLD, TLT",
+      "sharpe": 4.08,
+      "cagr": 0.019,
+      "base_cost_bps": 810.1,
+      "costs_at_levels": {
+        "$1M": 831.8,
+        "$10M": 900.6,
+        "$100M": 1118.2,
+        "$1B": 1806.2
+      },
+      "sharpe_at_levels": {
+        "$1M": 2.14,
+        "$10M": 1.98,
+        "$100M": 1.47,
+        "$1B": 0.0
+      },
+      "alpha_decay_pct": {
+        "$1M": 47.5,
+        "$10M": 51.5,
+        "$100M": 63.9,
+        "$1B": 100.0
+      },
+      "max_aum_50pct": 5559999.999928622,
+      "max_aum_breakeven": 734729999.9999354,
+      "forced_exit": {
+        "$1M": {
+          "GLD": {
+            "contracts": 100,
+            "adv": 5000,
+            "participation_pct": 2.0,
+            "exit_cost_bps": 1647.7,
+            "feasible": true,
+            "days_to_exit": 1
+          },
+          "TLT": {
+            "contracts": 100,
+            "adv": 8000,
+            "participation_pct": 1.2,
+            "exit_cost_bps": 1237.7,
+            "feasible": true,
+            "days_to_exit": 1
+          }
+        },
+        "$10M": {
+          "GLD": {
+            "contracts": 1000,
+            "adv": 5000,
+            "participation_pct": 20.0,
+            "exit_cost_bps": 1750.9,
+            "feasible": true,
+            "days_to_exit": 2
+          },
+          "TLT": {
+            "contracts": 1000,
+            "adv": 8000,
+            "participation_pct": 12.5,
+            "exit_cost_bps": 1319.3,
+            "feasible": true,
+            "days_to_exit": 2
+          }
+        },
+        "$100M": {
+          "GLD": {
+            "contracts": 10000,
+            "adv": 5000,
+            "participation_pct": 200.0,
+            "exit_cost_bps": 2077.3,
+            "feasible": false,
+            "days_to_exit": 20
+          },
+          "TLT": {
+            "contracts": 10000,
+            "adv": 8000,
+            "participation_pct": 125.0,
+            "exit_cost_bps": 1577.3,
+            "feasible": false,
+            "days_to_exit": 13
+          }
+        },
+        "$1B": {
+          "GLD": {
+            "contracts": 100000,
+            "adv": 5000,
+            "participation_pct": 2000.0,
+            "exit_cost_bps": 3109.3,
+            "feasible": false,
+            "days_to_exit": 200
+          },
+          "TLT": {
+            "contracts": 100000,
+            "adv": 8000,
+            "participation_pct": 1250.0,
+            "exit_cost_bps": 2393.2,
+            "feasible": false,
+            "days_to_exit": 125
+          }
+        }
+      },
+      "bottleneck_ticker": "GLD",
+      "bottleneck_reason": "GLD ATM strike ADV = 5,000 contracts/day"
+    },
+    {
+      "name": "XLI-TLT Relative Value",
+      "experiment": "EXP-1630-opt",
+      "status": "LIVE-READY",
+      "tickers": "XLI, TLT",
+      "sharpe": 3.4,
+      "cagr": 0.114,
+      "base_cost_bps": 1349.2,
+      "costs_at_levels": {
+        "$1M": 1383.6,
+        "$10M": 1492.4,
+        "$100M": 1836.4,
+        "$1B": 2924.3
+      },
+      "sharpe_at_levels": {
+        "$1M": 1.05,
+        "$10M": 0.86,
+        "$100M": 0.28,
+        "$1B": 0.0
+      },
+      "alpha_decay_pct": {
+        "$1M": 69.2,
+        "$10M": 74.6,
+        "$100M": 91.8,
+        "$1B": 100.0
+      },
+      "max_aum_50pct": 100000,
+      "max_aum_breakeven": 126859999.99992368,
+      "forced_exit": {
+        "$1M": {
+          "XLI": {
+            "contracts": 150,
+            "adv": 3000,
+            "participation_pct": 5.0,
+            "exit_cost_bps": 2742.1,
+            "feasible": true,
+            "days_to_exit": 1
+          },
+          "TLT": {
+            "contracts": 150,
+            "adv": 8000,
+            "participation_pct": 1.9,
+            "exit_cost_bps": 1646.2,
+            "feasible": true,
+            "days_to_exit": 1
+          }
+        },
+        "$10M": {
+          "XLI": {
+            "contracts": 1500,
+            "adv": 3000,
+            "participation_pct": 50.0,
+            "exit_cost_bps": 2905.3,
+            "feasible": false,
+            "days_to_exit": 5
+          },
+          "TLT": {
+            "contracts": 1500,
+            "adv": 8000,
+            "participation_pct": 18.8,
+            "exit_cost_bps": 1746.1,
+            "feasible": true,
+            "days_to_exit": 2
+          }
+        },
+        "$100M": {
+          "XLI": {
+            "contracts": 15000,
+            "adv": 3000,
+            "participation_pct": 500.0,
+            "exit_cost_bps": 3421.3,
+            "feasible": false,
+            "days_to_exit": 50
+          },
+          "TLT": {
+            "contracts": 15000,
+            "adv": 8000,
+            "participation_pct": 187.5,
+            "exit_cost_bps": 2062.1,
+            "feasible": false,
+            "days_to_exit": 19
+          }
+        },
+        "$1B": {
+          "XLI": {
+            "contracts": 150000,
+            "adv": 3000,
+            "participation_pct": 5000.0,
+            "exit_cost_bps": 5053.2,
+            "feasible": false,
+            "days_to_exit": 500
+          },
+          "TLT": {
+            "contracts": 150000,
+            "adv": 8000,
+            "participation_pct": 1875.0,
+            "exit_cost_bps": 3061.4,
+            "feasible": false,
+            "days_to_exit": 188
+          }
+        }
+      },
+      "bottleneck_ticker": "XLI",
+      "bottleneck_reason": "XLI ATM strike ADV = 3,000 contracts/day"
+    },
+    {
+      "name": "TLT-SPY Relative Value",
+      "experiment": "EXP-1630-opt",
+      "status": "LIVE-READY",
+      "tickers": "TLT, SPY",
+      "sharpe": 1.83,
+      "cagr": 0.092,
+      "base_cost_bps": 351.6,
+      "costs_at_levels": {
+        "$1M": 370.4,
+        "$10M": 430.0,
+        "$100M": 618.4,
+        "$1B": 1214.3
+      },
+      "sharpe_at_levels": {
+        "$1M": 1.3,
+        "$10M": 1.22,
+        "$100M": 0.95,
+        "$1B": 0.1
+      },
+      "alpha_decay_pct": {
+        "$1M": 28.8,
+        "$10M": 33.4,
+        "$100M": 48.1,
+        "$1B": 94.4
+      },
+      "max_aum_50pct": 118524999.99994,
+      "max_aum_breakeven": 1016483333.3332975,
+      "forced_exit": {
+        "$1M": {
+          "TLT": {
+            "contracts": 120,
+            "adv": 8000,
+            "participation_pct": 1.5,
+            "exit_cost_bps": 727.0,
+            "feasible": true,
+            "days_to_exit": 1
+          },
+          "SPY": {
+            "contracts": 120,
+            "adv": 500000,
+            "participation_pct": 0.0,
+            "exit_cost_bps": 348.1,
+            "feasible": true,
+            "days_to_exit": 1
+          }
+        },
+        "$10M": {
+          "TLT": {
+            "contracts": 1200,
+            "adv": 8000,
+            "participation_pct": 15.0,
+            "exit_cost_bps": 816.4,
+            "feasible": true,
+            "days_to_exit": 2
+          },
+          "SPY": {
+            "contracts": 1200,
+            "adv": 500000,
+            "participation_pct": 0.2,
+            "exit_cost_bps": 359.4,
+            "feasible": true,
+            "days_to_exit": 1
+          }
+        },
+        "$100M": {
+          "TLT": {
+            "contracts": 12000,
+            "adv": 8000,
+            "participation_pct": 150.0,
+            "exit_cost_bps": 1099.1,
+            "feasible": false,
+            "days_to_exit": 15
+          },
+          "SPY": {
+            "contracts": 12000,
+            "adv": 500000,
+            "participation_pct": 2.4,
+            "exit_cost_bps": 395.1,
+            "feasible": true,
+            "days_to_exit": 1
+          }
+        },
+        "$1B": {
+          "TLT": {
+            "contracts": 120000,
+            "adv": 8000,
+            "participation_pct": 1500.0,
+            "exit_cost_bps": 1992.8,
+            "feasible": false,
+            "days_to_exit": 150
+          },
+          "SPY": {
+            "contracts": 120000,
+            "adv": 500000,
+            "participation_pct": 24.0,
+            "exit_cost_bps": 508.2,
+            "feasible": true,
+            "days_to_exit": 3
+          }
+        }
+      },
+      "bottleneck_ticker": "TLT",
+      "bottleneck_reason": "TLT ATM strike ADV = 8,000 contracts/day"
+    },
+    {
+      "name": "XLF-TLT Relative Value",
+      "experiment": "EXP-1630-opt",
+      "status": "LIVE-READY",
+      "tickers": "XLF, TLT",
+      "sharpe": 1.41,
+      "cagr": 0.071,
+      "base_cost_bps": 1075.4,
+      "costs_at_levels": {
+        "$1M": 1094.2,
+        "$10M": 1153.8,
+        "$100M": 1342.2,
+        "$1B": 1938.1
+      },
+      "sharpe_at_levels": {
+        "$1M": 0.58,
+        "$10M": 0.54,
+        "$100M": 0.4,
+        "$1B": 0.0
+      },
+      "alpha_decay_pct": {
+        "$1M": 58.6,
+        "$10M": 61.8,
+        "$100M": 71.9,
+        "$1B": 100.0
+      },
+      "max_aum_50pct": 100000,
+      "max_aum_breakeven": 657619999.9999919,
+      "forced_exit": {
+        "$1M": {
+          "XLF": {
+            "contracts": 150,
+            "adv": 10000,
+            "participation_pct": 1.5,
+            "exit_cost_bps": 2174.7,
+            "feasible": true,
+            "days_to_exit": 1
+          },
+          "TLT": {
+            "contracts": 150,
+            "adv": 8000,
+            "participation_pct": 1.9,
+            "exit_cost_bps": 1646.2,
+            "feasible": true,
+            "days_to_exit": 1
+          }
+        },
+        "$10M": {
+          "XLF": {
+            "contracts": 1500,
+            "adv": 10000,
+            "participation_pct": 15.0,
+            "exit_cost_bps": 2264.0,
+            "feasible": true,
+            "days_to_exit": 2
+          },
+          "TLT": {
+            "contracts": 1500,
+            "adv": 8000,
+            "participation_pct": 18.8,
+            "exit_cost_bps": 1746.1,
+            "feasible": true,
+            "days_to_exit": 2
+          }
+        },
+        "$100M": {
+          "XLF": {
+            "contracts": 15000,
+            "adv": 10000,
+            "participation_pct": 150.0,
+            "exit_cost_bps": 2546.7,
+            "feasible": false,
+            "days_to_exit": 15
+          },
+          "TLT": {
+            "contracts": 15000,
+            "adv": 8000,
+            "participation_pct": 187.5,
+            "exit_cost_bps": 2062.1,
+            "feasible": false,
+            "days_to_exit": 19
+          }
+        },
+        "$1B": {
+          "XLF": {
+            "contracts": 150000,
+            "adv": 10000,
+            "participation_pct": 1500.0,
+            "exit_cost_bps": 3440.5,
+            "feasible": false,
+            "days_to_exit": 150
+          },
+          "TLT": {
+            "contracts": 150000,
+            "adv": 8000,
+            "participation_pct": 1875.0,
+            "exit_cost_bps": 3061.4,
+            "feasible": false,
+            "days_to_exit": 188
+          }
+        }
+      },
+      "bottleneck_ticker": "TLT",
+      "bottleneck_reason": "TLT ATM strike ADV = 8,000 contracts/day"
+    },
+    {
+      "name": "The Champion (Paper)",
+      "experiment": "EXP-400",
+      "status": "PAPER",
+      "tickers": "SPY",
+      "sharpe": 3.25,
+      "cagr": 0.225,
+      "base_cost_bps": 60.6,
+      "costs_at_levels": {
+        "$1M": 61.7,
+        "$10M": 65.5,
+        "$100M": 77.4,
+        "$1B": 115.1
+      },
+      "sharpe_at_levels": {
+        "$1M": 3.18,
+        "$10M": 3.18,
+        "$100M": 3.17,
+        "$1B": 3.13
+      },
+      "alpha_decay_pct": {
+        "$1M": 2.1,
+        "$10M": 2.2,
+        "$100M": 2.6,
+        "$1B": 3.8
+      },
+      "max_aum_50pct": 99999999999.99991,
+      "max_aum_breakeven": 99999999999.99991,
+      "forced_exit": {
+        "$1M": {
+          "SPY": {
+            "contracts": 30,
+            "adv": 500000,
+            "participation_pct": 0.0,
+            "exit_cost_bps": 242.6,
+            "feasible": true,
+            "days_to_exit": 1
+          }
+        },
+        "$10M": {
+          "SPY": {
+            "contracts": 300,
+            "adv": 500000,
+            "participation_pct": 0.1,
+            "exit_cost_bps": 248.3,
+            "feasible": true,
+            "days_to_exit": 1
+          }
+        },
+        "$100M": {
+          "SPY": {
+            "contracts": 3000,
+            "adv": 500000,
+            "participation_pct": 0.6,
+            "exit_cost_bps": 266.1,
+            "feasible": true,
+            "days_to_exit": 1
+          }
+        },
+        "$1B": {
+          "SPY": {
+            "contracts": 30000,
+            "adv": 500000,
+            "participation_pct": 6.0,
+            "exit_cost_bps": 322.7,
+            "feasible": true,
+            "days_to_exit": 1
+          }
+        }
+      },
+      "bottleneck_ticker": "SPY",
+      "bottleneck_reason": "SPY ATM strike ADV = 500,000 contracts/day"
+    },
+    {
+      "name": "The Blend (Paper)",
+      "experiment": "EXP-401",
+      "status": "PAPER",
+      "tickers": "SPY",
+      "sharpe": 0.91,
+      "cagr": 0.074,
+      "base_cost_bps": 60.5,
+      "costs_at_levels": {
+        "$1M": 61.4,
+        "$10M": 64.5,
+        "$100M": 74.2,
+        "$1B": 105.0
+      },
+      "sharpe_at_levels": {
+        "$1M": 0.89,
+        "$10M": 0.89,
+        "$100M": 0.88,
+        "$1B": 0.87
+      },
+      "alpha_decay_pct": {
+        "$1M": 2.6,
+        "$10M": 2.7,
+        "$100M": 3.1,
+        "$1B": 4.4
+      },
+      "max_aum_50pct": 99999999999.99991,
+      "max_aum_breakeven": 99999999999.99991,
+      "forced_exit": {
+        "$1M": {
+          "SPY": {
+            "contracts": 20,
+            "adv": 500000,
+            "participation_pct": 0.0,
+            "exit_cost_bps": 242.1,
+            "feasible": true,
+            "days_to_exit": 1
+          }
+        },
+        "$10M": {
+          "SPY": {
+            "contracts": 200,
+            "adv": 500000,
+            "participation_pct": 0.0,
+            "exit_cost_bps": 246.8,
+            "feasible": true,
+            "days_to_exit": 1
+          }
+        },
+        "$100M": {
+          "SPY": {
+            "contracts": 2000,
+            "adv": 500000,
+            "participation_pct": 0.4,
+            "exit_cost_bps": 261.3,
+            "feasible": true,
+            "days_to_exit": 1
+          }
+        },
+        "$1B": {
+          "SPY": {
+            "contracts": 20000,
+            "adv": 500000,
+            "participation_pct": 4.0,
+            "exit_cost_bps": 307.5,
+            "feasible": true,
+            "days_to_exit": 1
+          }
+        }
+      },
+      "bottleneck_ticker": "SPY",
+      "bottleneck_reason": "SPY ATM strike ADV = 500,000 contracts/day"
+    },
+    {
+      "name": "ML V2 Aggressive (Paper)",
+      "experiment": "EXP-503",
+      "status": "PAPER",
+      "tickers": "SPY",
+      "sharpe": 4.97,
+      "cagr": 0.769,
+      "base_cost_bps": 60.7,
+      "costs_at_levels": {
+        "$1M": 62.2,
+        "$10M": 67.1,
+        "$100M": 82.5,
+        "$1B": 131.2
+      },
+      "sharpe_at_levels": {
+        "$1M": 4.85,
+        "$10M": 4.84,
+        "$100M": 4.81,
+        "$1B": 4.72
+      },
+      "alpha_decay_pct": {
+        "$1M": 2.4,
+        "$10M": 2.6,
+        "$100M": 3.2,
+        "$1B": 5.0
+      },
+      "max_aum_50pct": 99999999999.99991,
+      "max_aum_breakeven": 99999999999.99991,
+      "forced_exit": {
+        "$1M": {
+          "SPY": {
+            "contracts": 50,
+            "adv": 500000,
+            "participation_pct": 0.0,
+            "exit_cost_bps": 243.4,
+            "feasible": true,
+            "days_to_exit": 1
+          }
+        },
+        "$10M": {
+          "SPY": {
+            "contracts": 500,
+            "adv": 500000,
+            "participation_pct": 0.1,
+            "exit_cost_bps": 250.7,
+            "feasible": true,
+            "days_to_exit": 1
+          }
+        },
+        "$100M": {
+          "SPY": {
+            "contracts": 5000,
+            "adv": 500000,
+            "participation_pct": 1.0,
+            "exit_cost_bps": 273.8,
+            "feasible": true,
+            "days_to_exit": 1
+          }
+        },
+        "$1B": {
+          "SPY": {
+            "contracts": 50000,
+            "adv": 500000,
+            "participation_pct": 10.0,
+            "exit_cost_bps": 346.7,
+            "feasible": true,
+            "days_to_exit": 1
+          }
+        }
+      },
+      "bottleneck_ticker": "SPY",
+      "bottleneck_reason": "SPY ATM strike ADV = 500,000 contracts/day"
+    },
+    {
+      "name": "IBIT Adaptive (Paper)",
+      "experiment": "EXP-600",
+      "status": "PAPER",
+      "tickers": "IBIT",
+      "sharpe": 2.0,
+      "cagr": 1.39,
+      "base_cost_bps": 317.4,
+      "costs_at_levels": {
+        "$1M": 355.1,
+        "$10M": 474.3,
+        "$100M": 851.1,
+        "$1B": 2042.8
+      },
+      "sharpe_at_levels": {
+        "$1M": 1.8,
+        "$10M": 1.74,
+        "$100M": 1.53,
+        "$1B": 0.87
+      },
+      "alpha_decay_pct": {
+        "$1M": 9.9,
+        "$10M": 13.2,
+        "$100M": 23.6,
+        "$1B": 56.7
+      },
+      "max_aum_50pct": 740766666.6666651,
+      "max_aum_breakeven": 3204766666.666602,
+      "forced_exit": {
+        "$1M": {
+          "IBIT": {
+            "contracts": 30,
+            "adv": 500,
+            "participation_pct": 6.0,
+            "exit_cost_bps": 1282.7,
+            "feasible": true,
+            "days_to_exit": 1
+          }
+        },
+        "$10M": {
+          "IBIT": {
+            "contracts": 300,
+            "adv": 500,
+            "participation_pct": 60.0,
+            "exit_cost_bps": 1461.4,
+            "feasible": false,
+            "days_to_exit": 6
+          }
+        },
+        "$100M": {
+          "IBIT": {
+            "contracts": 3000,
+            "adv": 500,
+            "participation_pct": 600.0,
+            "exit_cost_bps": 2026.7,
+            "feasible": false,
+            "days_to_exit": 60
+          }
+        },
+        "$1B": {
+          "IBIT": {
+            "contracts": 30000,
+            "adv": 500,
+            "participation_pct": 6000.0,
+            "exit_cost_bps": 3814.3,
+            "feasible": false,
+            "days_to_exit": 600
+          }
+        }
+      },
+      "bottleneck_ticker": "IBIT",
+      "bottleneck_reason": "IBIT ATM strike ADV = 500 contracts/day"
+    }
+  ],
+  "portfolio": {
+    "bottleneck_strategy": "XLI-TLT Relative Value",
+    "bottleneck_max_aum": 100000,
+    "bottleneck_ticker": "TLT",
+    "bottleneck_utilization": {
+      "demand_contracts": 5776,
+      "adv_contracts": 8000,
+      "utilization_pct": 72.2,
+      "feasible": false
+    },
+    "ticker_utilization_at_100M": {
+      "SPY": {
+        "demand_contracts": 2998,
+        "adv_contracts": 500000,
+        "utilization_pct": 0.6,
+        "feasible": true
+      },
+      "GLD": {
+        "demand_contracts": 1111,
+        "adv_contracts": 5000,
+        "utilization_pct": 22.2,
+        "feasible": false
+      },
+      "TLT": {
+        "demand_contracts": 5776,
+        "adv_contracts": 8000,
+        "utilization_pct": 72.2,
+        "feasible": false
+      },
+      "XLI": {
+        "demand_contracts": 1666,
+        "adv_contracts": 3000,
+        "utilization_pct": 55.5,
+        "feasible": false
+      },
+      "XLF": {
+        "demand_contracts": 1666,
+        "adv_contracts": 10000,
+        "utilization_pct": 16.7,
+        "feasible": false
+      },
+      "IBIT": {
+        "demand_contracts": 333,
+        "adv_contracts": 500,
+        "utilization_pct": 66.6,
+        "feasible": false
+      }
+    },
+    "portfolio_max_aum_conservative": 100000,
+    "portfolio_max_aum_diversified": 164694255833.33313,
+    "can_reach_1B": true
+  },
+  "market_data": {
+    "option_adv": {
+      "SPY": 3096094,
+      "GLD": 43368,
+      "TLT": 60364,
+      "XLI": 38067,
+      "XLF": 123026,
+      "QQQ": 454160,
+      "IBIT": 5000
+    },
+    "atm_strike_adv": {
+      "SPY": 500000,
+      "GLD": 5000,
+      "TLT": 8000,
+      "XLI": 3000,
+      "XLF": 10000,
+      "QQQ": 50000,
+      "IBIT": 500
+    },
+    "underlying_price": {
+      "SPY": 570,
+      "GLD": 230,
+      "TLT": 88,
+      "XLI": 125,
+      "XLF": 43,
+      "QQQ": 490,
+      "IBIT": 50
+    },
+    "bid_ask_per_leg": {
+      "SPY": 0.03,
+      "GLD": 0.08,
+      "TLT": 0.06,
+      "XLI": 0.1,
+      "XLF": 0.08,
+      "QQQ": 0.04,
+      "IBIT": 0.15
+    }
+  }
+}
