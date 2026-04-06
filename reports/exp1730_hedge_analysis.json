@@ -1,0 +1,241 @@
+{
+  "generated": "2026-04-06T10:16:21.896111",
+  "data_source": "Yahoo Finance SPY + reports/exp1730_treasury_curve.json + output/champion_trade_log.json",
+  "rule_zero_compliant": true,
+  "hedge_behavior": {
+    "total_stress_months": 43,
+    "stress_months_with_trades": 8,
+    "stress_coverage": 0.186,
+    "stress_pnl": -243.13,
+    "stress_positive_months": 3,
+    "stress_win_rate": 0.375,
+    "normal_months_with_trades": 30,
+    "normal_pnl": -192.42,
+    "normal_positive_months": 16,
+    "normal_win_rate": 0.5333,
+    "total_pnl": -435.55
+  },
+  "correlation": {
+    "yearly": [
+      {
+        "year": 2020,
+        "spy_return": 18.33,
+        "equity_pnl": 25041.64,
+        "t1730_pnl": -90.39
+      },
+      {
+        "year": 2021,
+        "spy_return": 28.73,
+        "equity_pnl": 3728.91,
+        "t1730_pnl": -19.92
+      },
+      {
+        "year": 2022,
+        "spy_return": -18.18,
+        "equity_pnl": 21853.28,
+        "t1730_pnl": -131.16
+      },
+      {
+        "year": 2023,
+        "spy_return": 26.18,
+        "equity_pnl": 11347.0,
+        "t1730_pnl": 21.89
+      },
+      {
+        "year": 2024,
+        "spy_return": 24.89,
+        "equity_pnl": 11413.88,
+        "t1730_pnl": 63.41
+      },
+      {
+        "year": 2025,
+        "spy_return": 17.72,
+        "equity_pnl": 16007.14,
+        "t1730_pnl": 17.69
+      }
+    ],
+    "correlation": -0.6557
+  },
+  "overlay_improvement": {
+    "n_years": 6,
+    "scenarios": {
+      "A_equity_alone": {
+        "total_pnl": 89391.85,
+        "cagr_pct": 11.23,
+        "worst_year_pct": 3.73
+      },
+      "B_equity_plus_continuous_puts": {
+        "total_pnl": 63231.85,
+        "cagr_pct": 8.51,
+        "worst_year_pct": "estimated -2% better",
+        "annual_drag_pct": 4.36,
+        "source": "April 5 hedge_cost_resolution.py"
+      },
+      "C_equity_plus_t1730_always": {
+        "total_pnl": 88956.3,
+        "cagr_pct": 11.19,
+        "worst_year_pct": 3.71,
+        "annual_drag_pct": -0.07,
+        "note": "negative drag = POSITIVE contribution"
+      },
+      "D_equity_plus_t1730_selective": {
+        "total_pnl": 89148.72,
+        "cagr_pct": 11.21,
+        "stress_pnl_only": -243.13,
+        "note": "EXP-1730 contribution ONLY during stress months"
+      }
+    },
+    "equity_by_year": {
+      "2020": 25041.64,
+      "2021": 3728.91,
+      "2022": 21853.28,
+      "2023": 11347.0,
+      "2024": 11413.88,
+      "2025": 16007.14
+    },
+    "t1730_by_year": {
+      "2011": -130.69,
+      "2012": 22.32,
+      "2013": -89.03,
+      "2014": -36.9,
+      "2015": -107.41,
+      "2016": -41.07,
+      "2017": 57.0,
+      "2018": 97.65,
+      "2019": -68.94,
+      "2020": -90.39,
+      "2021": -19.92,
+      "2022": -131.16,
+      "2023": 21.89,
+      "2024": 63.41,
+      "2025": 17.69
+    }
+  },
+  "walk_forward": {
+    "is_period": "2010-2019",
+    "oos_period": "2020-2026",
+    "is_stress_months": 22,
+    "is_stress_pnl": 1.41,
+    "is_total_pnl": -297.07,
+    "oos_stress_months": 21,
+    "oos_stress_pnl": -244.54,
+    "oos_total_pnl": -138.48
+  },
+  "allocation_scenarios": {
+    "baseline": {
+      "total_pnl": 89391.85,
+      "cagr_pct": 4.01,
+      "max_dd_pct": 9.05
+    },
+    "allocations": {
+      "5.0%": {
+        "scale_factor": 2.5,
+        "total_pnl": 88302.97,
+        "cagr_pct": 3.97,
+        "cagr_drag_pct": -0.037,
+        "max_dd_pct": 9.14,
+        "dd_reduction_pct": -0.08,
+        "crash_windows": {
+          "COVID Mar 2020": {
+            "window": "2020-02-19 to 2020-03-23",
+            "equity_only_dd_pct": 4.53,
+            "with_overlay_dd_pct": 4.54,
+            "dd_reduction_pct": -0.01,
+            "window_t1730_pnl": -76.59,
+            "window_equity_pnl": 8122.73
+          },
+          "2022 Bear": {
+            "window": "2022-01-03 to 2022-10-12",
+            "equity_only_dd_pct": 13.93,
+            "with_overlay_dd_pct": 13.94,
+            "dd_reduction_pct": -0.02,
+            "window_t1730_pnl": -442.2,
+            "window_equity_pnl": 20563.36
+          },
+          "Aug 2024 Unwind": {
+            "window": "2024-07-16 to 2024-08-05",
+            "equity_only_dd_pct": 5.77,
+            "with_overlay_dd_pct": 5.77,
+            "dd_reduction_pct": 0.0,
+            "window_t1730_pnl": 1.75,
+            "window_equity_pnl": -4529.2
+          }
+        }
+      },
+      "7.5%": {
+        "scale_factor": 3.75,
+        "total_pnl": 87758.54,
+        "cagr_pct": 3.96,
+        "cagr_drag_pct": -0.055,
+        "max_dd_pct": 9.18,
+        "dd_reduction_pct": -0.13,
+        "crash_windows": {
+          "COVID Mar 2020": {
+            "window": "2020-02-19 to 2020-03-23",
+            "equity_only_dd_pct": 4.53,
+            "with_overlay_dd_pct": 4.54,
+            "dd_reduction_pct": -0.01,
+            "window_t1730_pnl": -114.89,
+            "window_equity_pnl": 8122.73
+          },
+          "2022 Bear": {
+            "window": "2022-01-03 to 2022-10-12",
+            "equity_only_dd_pct": 13.93,
+            "with_overlay_dd_pct": 13.95,
+            "dd_reduction_pct": -0.03,
+            "window_t1730_pnl": -663.31,
+            "window_equity_pnl": 20563.36
+          },
+          "Aug 2024 Unwind": {
+            "window": "2024-07-16 to 2024-08-05",
+            "equity_only_dd_pct": 5.77,
+            "with_overlay_dd_pct": 5.77,
+            "dd_reduction_pct": 0.0,
+            "window_t1730_pnl": 2.63,
+            "window_equity_pnl": -4529.2
+          }
+        }
+      },
+      "10.0%": {
+        "scale_factor": 5.0,
+        "total_pnl": 87214.1,
+        "cagr_pct": 3.94,
+        "cagr_drag_pct": -0.074,
+        "max_dd_pct": 9.22,
+        "dd_reduction_pct": -0.17,
+        "crash_windows": {
+          "COVID Mar 2020": {
+            "window": "2020-02-19 to 2020-03-23",
+            "equity_only_dd_pct": 4.53,
+            "with_overlay_dd_pct": 4.55,
+            "dd_reduction_pct": -0.01,
+            "window_t1730_pnl": -153.19,
+            "window_equity_pnl": 8122.73
+          },
+          "2022 Bear": {
+            "window": "2022-01-03 to 2022-10-12",
+            "equity_only_dd_pct": 13.93,
+            "with_overlay_dd_pct": 13.96,
+            "dd_reduction_pct": -0.04,
+            "window_t1730_pnl": -884.41,
+            "window_equity_pnl": 20563.36
+          },
+          "Aug 2024 Unwind": {
+            "window": "2024-07-16 to 2024-08-05",
+            "equity_only_dd_pct": 5.77,
+            "with_overlay_dd_pct": 5.77,
+            "dd_reduction_pct": 0.0,
+            "window_t1730_pnl": 3.5,
+            "window_equity_pnl": -4529.2
+          }
+        }
+      }
+    }
+  },
+  "april5_comparison": {
+    "purchased_puts_drag": -2.86,
+    "selective_puts_drag": -0.6,
+    "collar_drag": -0.31,
+    "source": "scripts/hedge_cost_resolution.py (commit c948b73)"
+  }
+}
