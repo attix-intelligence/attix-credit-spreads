@@ -1,0 +1,90 @@
+{
+  "experiment": "EXP-1660 Production",
+  "rule_zero_compliant": true,
+  "frozen_configs": [
+    {
+      "ticker": "XLI",
+      "short_delta": 0.15,
+      "iv_rv_threshold": 0.02,
+      "wing_width_pct": 0.08
+    },
+    {
+      "ticker": "XLF",
+      "short_delta": 0.18,
+      "iv_rv_threshold": 0.025,
+      "wing_width_pct": 0.08
+    },
+    {
+      "ticker": "QQQ",
+      "short_delta": 0.15,
+      "iv_rv_threshold": 0.015,
+      "wing_width_pct": 0.08
+    }
+  ],
+  "per_ticker_results": {
+    "XLI": {
+      "n_trades": 61,
+      "total_pnl": 6173.0,
+      "win_rate": 0.59,
+      "trade_sharpe": 1.424,
+      "active_months": 37
+    },
+    "XLF": {
+      "n_trades": 204,
+      "total_pnl": 5323.0,
+      "win_rate": 0.603,
+      "trade_sharpe": 0.566,
+      "active_months": 58
+    },
+    "QQQ": {
+      "n_trades": 73,
+      "total_pnl": -3375.0,
+      "win_rate": 0.603,
+      "trade_sharpe": -0.233,
+      "active_months": 30
+    }
+  },
+  "baseline": {
+    "name": "EXP-1220 @ 1.5\u00d7 solo",
+    "cagr": 2.9267,
+    "sharpe": 6.134,
+    "max_dd": 0.0,
+    "vol": 0.2326,
+    "total_pnl": 932100.0
+  },
+  "allocation_tests": [
+    {
+      "vrp_pct": 0.05,
+      "cagr": 2.6842,
+      "sharpe": 6.131,
+      "max_dd": 0.0,
+      "vol": 0.2207,
+      "total_pnl": 885630.35,
+      "delta_sharpe": -0.003
+    },
+    {
+      "vrp_pct": 0.1,
+      "cagr": 2.4553,
+      "sharpe": 6.127,
+      "max_dd": 0.0,
+      "vol": 0.2089,
+      "total_pnl": 839160.7,
+      "delta_sharpe": -0.007
+    },
+    {
+      "vrp_pct": 0.15,
+      "cagr": 2.2392,
+      "sharpe": 6.123,
+      "max_dd": 0.0,
+      "vol": 0.1971,
+      "total_pnl": 792691.05,
+      "delta_sharpe": -0.011
+    }
+  ],
+  "dispersion_correlation": -0.09280672647603269,
+  "caveats": [
+    "EXP-1220 monthly series distributed evenly from yearly data (underestimates vol)",
+    "VRP daily series is diluted \u2014 most days have zero PnL",
+    "Dispersion correlation depends on compass.dispersion exposing a trade list"
+  ]
+}
