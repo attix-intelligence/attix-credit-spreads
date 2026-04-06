@@ -234,9 +234,11 @@ class TestScriptFailsWithoutEnv:
         """))
         test_script.chmod(0o755)
 
+        # Clean env so parent's POLYGON_API_KEY doesn't leak into subprocess
         result = subprocess.run(
             ["bash", str(test_script)],
             capture_output=True, text=True, timeout=10,
+            env={"PATH": os.environ.get("PATH", "/usr/bin:/bin")},
         )
         assert result.returncode == 1
         assert "POLYGON_API_KEY" in result.stdout

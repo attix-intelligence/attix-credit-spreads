@@ -87,6 +87,7 @@ def build_overlapping_positions(
     entry_spacing_days: int = 5,
     starting_capital: float = 100_000,
     leverage: float = 1.0,
+    tbill_yield_annual: float = 0.05,  # NEW: 5% T-bill yield on idle capital
 ) -> OverlappingResult:
     """Build a daily return stream from overlapping trade positions.
 
@@ -94,9 +95,15 @@ def build_overlapping_positions(
       - Sort trades by entry date
       - Each trade gets allocation = 1/max_concurrent of capital
       - Daily portfolio return = sum of active position returns (weighted)
+        + T-bill yield on idle capital (1 - capital_utilized)
       - Capital compounds daily
       - If max_concurrent already open, skip new entries until a slot frees
+
+    Args:
+        tbill_yield_annual: Annualized T-bill yield earned on idle capital.
+            Default 5% (current 3-month T-bill). Set to 0 to disable.
     """
+    tbill_daily = tbill_yield_annual / 252
     trades = trades.sort_values("entry_date").reset_index(drop=True)
 
     # Build business day calendar
@@ -163,13 +170,16 @@ def build_overlapping_positions(
 
         # Compute daily portfolio return
         n_active = len(active_positions)
+        utilization = n_active / max_concurrent
+        # Deployed capital earns strategy returns; idle capital earns T-bill yield
         if n_active > 0:
-            # Each position contributes its daily PnL scaled by allocation
             daily_dollar_pnl = sum(p["scaled_daily"] for p in active_positions)
-            daily_ret = daily_dollar_pnl / max(equity, 1.0)
+            strategy_ret = daily_dollar_pnl / max(equity, 1.0)
             total_active_days += 1
         else:
-            daily_ret = 0.0
+            strategy_ret = 0.0
+        idle_ret = (1 - utilization) * tbill_daily
+        daily_ret = strategy_ret + idle_ret
 
         equity *= (1 + daily_ret)
         equity = max(equity, 1.0)
@@ -220,27 +230,42 @@ def build_overlapping_positions(
     )
 
 
-def run_comparison(trades: pd.DataFrame, starting_capital: float = 100_000):
-    """Compare single-position vs overlapping at various concurrency levels."""
+def run_comparison(trades: pd.DataFrame, starting_capital: float = 100_000,
+                    tbill_yield: float = 0.05):
+    """Compare single-position vs overlapping at various concurrency levels.
+
+    Phase 7: all results include T-bill yield on idle capital (default 5%).
+    """
     results = {}
 
-    # Single position (the diluted baseline)
-    r1 = build_overlapping_positions(trades, max_concurrent=1, entry_spacing_days=1,
-                                      starting_capital=starting_capital, leverage=1.0)
-    results["1 position (diluted)"] = r1
+    # Single position WITHOUT T-bill (shows the raw dilution)
+    r0 = build_overlapping_positions(
+        trades, max_concurrent=1, entry_spacing_days=1,
+        starting_capital=starting_capital, leverage=1.0, tbill_yield_annual=0.0)
+    results["1 position (no T-bill)"] = r0
 
-    # Overlapping variations
-    for n in [2, 3, 4, 6]:
+    # Single position WITH T-bill — proves idle capital drag is fixable
+    r1 = build_overlapping_positions(
+        trades, max_concurrent=1, entry_spacing_days=1,
+        starting_capital=starting_capital, leverage=1.0, tbill_yield_annual=tbill_yield)
+    results["1 position (+5% T-bill)"] = r1
+
+    # Overlapping variations — all with T-bill
+    for n in [3, 4, 5]:
         spacing = max(1, int(r1.avg_hold_days / n))
-        r = build_overlapping_positions(trades, max_concurrent=n, entry_spacing_days=spacing,
-                                         starting_capital=starting_capital, leverage=1.0)
-        results[f"{n} concurrent"] = r
+        r = build_overlapping_positions(
+            trades, max_concurrent=n, entry_spacing_days=spacing,
+            starting_capital=starting_capital, leverage=1.0,
+            tbill_yield_annual=tbill_yield)
+        results[f"{n} concurrent (+T-bill)"] = r
 
     # With leverage
-    for lev in [1.0, 1.6]:
-        r = build_overlapping_positions(trades, max_concurrent=4, entry_spacing_days=2,
-                                         starting_capital=starting_capital, leverage=lev)
-        results[f"4 concurrent @ {lev}×"] = r
+    for lev in [1.0, 1.5, 1.6]:
+        r = build_overlapping_positions(
+            trades, max_concurrent=4, entry_spacing_days=2,
+            starting_capital=starting_capital, leverage=lev,
+            tbill_yield_annual=tbill_yield)
+        results[f"4 concurrent @ {lev}× (+T-bill)"] = r
 
     return results
 
@@ -345,8 +370,8 @@ def generate_report(comparison, best_result, wf_windows):
 <div class="subtitle">Overlapping positions model on REAL IronVault data (EXP-400, 246 trades) | Corrected Sharpe</div>
 
 <div class="callout danger">
-    <strong>THE DILUTION BUG:</strong> Single-position model has {comparison['1 position (diluted)'].capital_utilization_pct:.0f}% capital utilization
-    — {100 - comparison['1 position (diluted)'].capital_utilization_pct:.0f}% zero-return days crush Sharpe.
+    <strong>THE DILUTION BUG:</strong> Single-position model has {comparison['1 position (no T-bill)'].capital_utilization_pct:.0f}% capital utilization
+    — {100 - comparison['1 position (no T-bill)'].capital_utilization_pct:.0f}% zero-return days crush Sharpe.
     Real trading deploys capital continuously with 4-6 overlapping positions.
 </div>
 
@@ -369,8 +394,8 @@ def generate_report(comparison, best_result, wf_windows):
 
 <div class="callout ok">
     <strong>Impact:</strong> Going from 1 → 4 concurrent positions increases capital utilization from
-    {comparison['1 position (diluted)'].capital_utilization_pct:.0f}% to {best_result.capital_utilization_pct:.0f}%,
-    changing Sharpe from {comparison['1 position (diluted)'].metrics['sharpe']:.2f} to {bm['sharpe']:.2f}.
+    {comparison['1 position (no T-bill)'].capital_utilization_pct:.0f}% to {best_result.capital_utilization_pct:.0f}%,
+    changing Sharpe from {comparison['1 position (no T-bill)'].metrics['sharpe']:.2f} to {bm['sharpe']:.2f}.
     These are the <strong>honest numbers</strong> from real IronVault trade data with the corrected Sharpe formula.
 </div>
 
@@ -413,7 +438,7 @@ def main():
         m = r.metrics
         print(f"  {name:30s}  CAGR={m['cagr_pct']:7.1f}%  Sharpe={m['sharpe']:.2f}  DD={m['max_dd_pct']:.1f}%  Util={r.capital_utilization_pct:.0f}%")
 
-    best = comparison["4 concurrent @ 1.6×"]
+    best = comparison["4 concurrent @ 1.6× (+T-bill)"]
 
     print("\n[3/4] Walk-forward OOS...")
     wf = walk_forward_oos(trades)
@@ -423,9 +448,9 @@ def main():
 
     print(f"\n{'━'*56}")
     bm = best.metrics
-    dm = comparison["1 position (diluted)"].metrics
+    dm = comparison["1 position (no T-bill)"].metrics
     print(f"  DILUTION FIX IMPACT:")
-    print(f"    Single position: CAGR={dm['cagr_pct']:.1f}%  Sharpe={dm['sharpe']:.2f}  Util={comparison['1 position (diluted)'].capital_utilization_pct:.0f}%")
+    print(f"    Single position: CAGR={dm['cagr_pct']:.1f}%  Sharpe={dm['sharpe']:.2f}  Util={comparison['1 position (no T-bill)'].capital_utilization_pct:.0f}%")
     print(f"    4 concurrent:    CAGR={bm['cagr_pct']:.1f}%  Sharpe={bm['sharpe']:.2f}  Util={best.capital_utilization_pct:.0f}%")
     print(f"{'━'*56}")
 
