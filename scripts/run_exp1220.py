@@ -38,15 +38,34 @@ sys.path.insert(0, str(ROOT))
 
 LOG_DIR = ROOT / "logs"
 LOG_DIR.mkdir(exist_ok=True)
+
+# Default paths — overridable per instance via set_instance_id() so multiple
+# leverage configs can coexist (e.g. 2x/3x/4x/5x running simultaneously).
+_DEFAULT_CONFIG = ROOT / "configs" / "deploy_exp1220_1.5x.yaml"
+_CONFIG_PATH = _DEFAULT_CONFIG
+_INSTANCE_ID = "exp1220"
 JOURNAL_PATH = LOG_DIR / "trade_journal.csv"
-STATE_PATH = LOG_DIR / "exp1220_state.json"
-HEALTH_PATH = LOG_DIR / "exp1220_health.json"
+STATE_PATH = LOG_DIR / f"{_INSTANCE_ID}_state.json"
+HEALTH_PATH = LOG_DIR / f"{_INSTANCE_ID}_health.json"
+
+
+def set_instance_id(instance_id: str) -> None:
+    """Re-route state/health/log/journal paths to an instance-specific namespace.
+
+    Called when --config is provided, so multiple leverage configs can run
+    on separate .env/accounts without cross-writing state files.
+    """
+    global _INSTANCE_ID, STATE_PATH, HEALTH_PATH, JOURNAL_PATH
+    _INSTANCE_ID = instance_id
+    STATE_PATH = LOG_DIR / f"{instance_id}_state.json"
+    HEALTH_PATH = LOG_DIR / f"{instance_id}_health.json"
+    JOURNAL_PATH = LOG_DIR / f"{instance_id}_trade_journal.csv"
 
 
 def setup_logging(log_level: str = "INFO", max_bytes: int = 50 * 1024 * 1024,
                    backup_count: int = 5) -> logging.Logger:
     """Configure logging with rotation. Safe to call multiple times."""
-    logger = logging.getLogger("exp1220")
+    logger = logging.getLogger(f"exp1220.{_INSTANCE_ID}")
     logger.setLevel(getattr(logging, log_level.upper(), logging.INFO))
 
     # Clear existing handlers so we don't duplicate on re-init
@@ -57,7 +76,7 @@ def setup_logging(log_level: str = "INFO", max_bytes: int = 50 * 1024 * 1024,
                              datefmt="%Y-%m-%d %H:%M:%S")
 
     rotating = logging.handlers.RotatingFileHandler(
-        LOG_DIR / "exp1220.log",
+        LOG_DIR / f"{_INSTANCE_ID}.log",
         maxBytes=max_bytes,
         backupCount=backup_count,
     )
@@ -99,8 +118,8 @@ def write_health(status: str, details: Optional[dict] = None,
 # ═══════════════════════════════════════════════════════════════════════════
 
 def load_config() -> dict:
-    path = ROOT / "configs" / "deploy_exp1220_1.5x.yaml"
-    with open(path) as f:
+    """Load the YAML config at _CONFIG_PATH (default 1.5x, overridable via --config)."""
+    with open(_CONFIG_PATH) as f:
         return yaml.safe_load(f)
 
 
@@ -916,7 +935,28 @@ def main():
                         help="Validate config + API connectivity, no trading")
     parser.add_argument("--health", action="store_true",
                         help="Write health status file and exit")
+    parser.add_argument("--config", type=str, default=None,
+                        help=("Config YAML path (default: configs/deploy_exp1220_1.5x.yaml). "
+                              "Multi-instance safe: state/journal/health files are namespaced "
+                              "by the config filename stem."))
     args = parser.parse_args()
+
+    # Route state/log/health files to an instance-specific namespace
+    # derived from the config filename.
+    if args.config:
+        cfg_path = Path(args.config)
+        if not cfg_path.is_absolute():
+            cfg_path = ROOT / cfg_path
+        if not cfg_path.exists():
+            print(f"ERROR: config not found: {cfg_path}", file=sys.stderr)
+            sys.exit(2)
+        global _CONFIG_PATH
+        _CONFIG_PATH = cfg_path
+        # Derive instance id from filename stem (e.g. paper_exp1220_3x)
+        set_instance_id(cfg_path.stem)
+        # Re-initialize logger with new instance paths
+        global log
+        log = setup_logging()
 
     if args.smoke_test:
         sys.exit(run_smoke_test())

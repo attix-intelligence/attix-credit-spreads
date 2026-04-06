@@ -429,6 +429,168 @@ For questions or issues, check:
 
 ---
 
+## Appendix A — Multi-Leverage Sweep (2× / 3× / 4× / 5×)
+
+**Added:** 2026-04-06
+**For:** Carlos's leverage sweep — paper-only stress test
+
+Carlos wants to paper trade EXP-1220 simultaneously at four leverage levels
+in addition to the validated 1.5× baseline. The goal is to measure REAL
+paper execution variance vs the (extrapolated) projections at each level.
+
+> **⚠️ HONEST WARNING:** The 1.5× config is the ONLY one with real backtest
+> validation (CAGR 99.2%, Sharpe 3.83, Max DD 11.2% on real Yahoo/IronVault
+> data). Configs 2×–5× are EXTRAPOLATED projections. The 5× config is a
+> STRESS SWEEP point — paper-only, never live, never on a real account.
+
+### A.1 — Sweep configs
+
+```
+configs/paper_exp1220_2x.yaml   # 2x lev, 2% risk/trade, DD halt 13%
+configs/paper_exp1220_3x.yaml   # 3x lev, 3% risk/trade, DD halt 16%
+configs/paper_exp1220_4x.yaml   # 4x lev, 4% risk/trade, DD halt 18%
+configs/paper_exp1220_5x.yaml   # 5x lev, 5% risk/trade, DD halt 20% (stress)
+```
+
+Each config:
+- Uses the SAME strategy code (`scripts/run_exp1220.py`) via the new
+  `--config` flag.
+- Writes its own namespaced state/log/health/journal files under `logs/`
+  using the config filename stem (e.g. `logs/paper_exp1220_3x.log`,
+  `logs/paper_exp1220_3x_state.json`, etc).
+- Has progressively tighter entry filters and exits at higher leverage.
+
+### A.2 — Smoke test all four configs
+
+Before installing any LaunchAgents:
+
+```bash
+cd ~/pilotai
+for lev in 2x 3x 4x 5x; do
+  echo "═══ Smoke test paper_exp1220_${lev}.yaml ═══"
+  python3 scripts/run_exp1220.py \
+    --config configs/paper_exp1220_${lev}.yaml \
+    --smoke-test || { echo "FAIL: $lev"; exit 1; }
+done
+echo "All four sweep configs pass smoke test."
+```
+
+Then dry-run each one against live Alpaca quotes (no orders sent):
+
+```bash
+for lev in 2x 3x 4x 5x; do
+  python3 scripts/run_exp1220.py \
+    --config configs/paper_exp1220_${lev}.yaml \
+    --dry-run --force-scan
+done
+```
+
+You should see four separate log files appear under `logs/`:
+```
+logs/paper_exp1220_2x.log
+logs/paper_exp1220_3x.log
+logs/paper_exp1220_4x.log
+logs/paper_exp1220_5x.log
+```
+
+### A.3 — LaunchAgent for each leverage level
+
+Copy `deploy/com.pilotai.exp1220.plist` four times, one per leverage:
+
+```bash
+cd deploy
+for lev in 2x 3x 4x 5x; do
+  cp com.pilotai.exp1220.plist com.pilotai.exp1220.${lev}.plist
+done
+```
+
+Edit each new plist and change:
+1. `<key>Label</key>` value to `com.pilotai.exp1220.${lev}`
+2. The `ProgramArguments` array to add `--config configs/paper_exp1220_${lev}.yaml`
+3. The `StandardOutPath` and `StandardErrorPath` to point to
+   `logs/paper_exp1220_${lev}.launchagent.{out,err}.log`
+
+Install all four:
+
+```bash
+for lev in 2x 3x 4x 5x; do
+  cp deploy/com.pilotai.exp1220.${lev}.plist ~/Library/LaunchAgents/
+  launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.pilotai.exp1220.${lev}.plist
+done
+launchctl list | grep com.pilotai.exp1220
+```
+
+You should see five entries (1.5× baseline + 2x/3x/4x/5x).
+
+### A.4 — Same Alpaca paper account, separate state
+
+All four sweep instances use the SAME Alpaca paper account (PA3YFVQCXTD6).
+**This is intentional** — the goal is to compare what each config WOULD
+have done on the same market days, not to actually run them on isolated
+sub-accounts. Per-instance state/journal files provide the accounting
+separation; equity is shared.
+
+> If Carlos later wants TRUE separate sub-accounts, each config will need
+> its own `ALPACA_API_KEY_ID`/`ALPACA_API_SECRET_KEY` env vars and the
+> plists will need per-instance environment blocks. Defer until requested.
+
+### A.5 — Comparison dashboard
+
+After at least one scan has run for each instance:
+
+```bash
+python3 scripts/compare_leverage_sweep.py
+open reports/leverage_sweep_comparison.html
+```
+
+The dashboard shows:
+- Per-instance card: trades, win rate, realized P&L, return %, current DD
+- Summary table across all 5 levels (1.5× baseline + 2×/3×/4×/5×)
+- Projected (extrapolated) vs realized return — measures the linear-scaling
+  assumption error
+- Health status from each `*_health.json` file
+
+Optional live Alpaca equity overlay (single shared account):
+```bash
+python3 scripts/compare_leverage_sweep.py --with-alpaca
+```
+
+Schedule it once an hour during market hours via cron / LaunchAgent if you
+want a continuously-updated dashboard.
+
+### A.6 — Halt criteria for the sweep
+
+- **Per-instance auto-halt:** triggers at the `max_drawdown_halt_pct` set
+  in each config (13/16/18/20%). The runner writes a halt marker to its
+  state file and stops opening new positions until manual reset.
+- **Manual sweep abort:** if any instance hits its DD halt within the
+  first 2 weeks of paper trading, STOP all sweep instances, dump state to
+  Carlos, and re-evaluate the projected curves before resuming.
+- **8-week paper validation gate:** none of these configs (especially 4×
+  and 5×) should be considered for any future live deployment until they
+  have ≥8 weeks of clean paper data showing the halt/recovery logic
+  actually fires correctly under at least one stress event (VIX > 25 day
+  or back-to-back losses).
+
+### A.7 — File inventory for the sweep
+
+```
+configs/paper_exp1220_2x.yaml
+configs/paper_exp1220_3x.yaml
+configs/paper_exp1220_4x.yaml
+configs/paper_exp1220_5x.yaml
+scripts/run_exp1220.py            (modified: --config + set_instance_id)
+scripts/compare_leverage_sweep.py (NEW)
+reports/leverage_sweep_comparison.html (generated)
+logs/paper_exp1220_{2,3,4,5}x.log
+logs/paper_exp1220_{2,3,4,5}x_state.json
+logs/paper_exp1220_{2,3,4,5}x_health.json
+logs/paper_exp1220_{2,3,4,5}x_trade_journal.csv
+```
+
+---
+
 *Deployment package validated: 2026-04-06*
-*Scanner version: 1.0.0*
+*Scanner version: 1.0.0 (multi-instance support added 2026-04-06)*
 *Config version: 1.0.0*
+*Sweep configs (2x/3x/4x/5x): 1.0.0 — paper-only, projections extrapolated*
