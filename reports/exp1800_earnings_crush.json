@@ -1,0 +1,158 @@
+{
+  "experiment": "EXP-1800",
+  "name": "Systematic Earnings Vol Crush",
+  "data_source": "yfinance earnings_dates + SEC 8-K dates + IronVault SPY/QQQ options",
+  "rule_zero_compliant": true,
+  "single_name_options_available": false,
+  "single_name_contracts_in_ironvault": {
+    "AAPL": 0,
+    "MSFT": 0,
+    "AMZN": 0,
+    "GOOGL": 0,
+    "TSLA": 0,
+    "NVDA": 0,
+    "META": 0
+  },
+  "earnings_universe_size": 176,
+  "earnings_per_ticker": {
+    "AAPL": 25,
+    "MSFT": 25,
+    "AMZN": 25,
+    "GOOGL": 25,
+    "TSLA": 25,
+    "NVDA": 25,
+    "META": 26
+  },
+  "target_tickers": [
+    "AAPL",
+    "MSFT",
+    "AMZN",
+    "GOOGL",
+    "TSLA",
+    "NVDA",
+    "META"
+  ],
+  "ticker_to_index": {
+    "AAPL": "SPY",
+    "MSFT": "SPY",
+    "NVDA": "QQQ",
+    "AMZN": "QQQ",
+    "GOOGL": "QQQ",
+    "META": "QQQ",
+    "TSLA": "QQQ"
+  },
+  "skip_reasons": {
+    "no_spy_price": 0,
+    "no_qqq_price": 0,
+    "no_expiration": 44,
+    "no_strikes": 0,
+    "no_entry_prices": 6,
+    "no_exit_prices": 10,
+    "low_credit": 2,
+    "weekend_earnings": 0
+  },
+  "metrics": {
+    "n_trades": 114,
+    "total_pnl": 5310.0,
+    "win_rate": 0.588,
+    "trade_sharpe": 0.759,
+    "sharpe_arith": -2.09,
+    "cagr": 0.008,
+    "max_dd": 0.0335,
+    "is_sharpe": 1.248,
+    "oos_sharpe": -0.024,
+    "oos_n": 46,
+    "oos_pnl": -68.0,
+    "oos_wr": 0.565,
+    "spy_corr": -0.5398,
+    "exp1220_corr": 0.0,
+    "by_ticker": {
+      "AAPL": {
+        "n": 21,
+        "pnl": -2177.0,
+        "wr": 0.571,
+        "avg_pnl": -103.67
+      },
+      "AMZN": {
+        "n": 19,
+        "pnl": 1910.0,
+        "wr": 0.632,
+        "avg_pnl": 100.53
+      },
+      "GOOGL": {
+        "n": 13,
+        "pnl": -278.0,
+        "wr": 0.538,
+        "avg_pnl": -21.38
+      },
+      "META": {
+        "n": 16,
+        "pnl": -1180.0,
+        "wr": 0.438,
+        "avg_pnl": -73.75
+      },
+      "MSFT": {
+        "n": 24,
+        "pnl": 2758.0,
+        "wr": 0.625,
+        "avg_pnl": 114.92
+      },
+      "NVDA": {
+        "n": 11,
+        "pnl": 2437.0,
+        "wr": 0.545,
+        "avg_pnl": 221.55
+      },
+      "TSLA": {
+        "n": 10,
+        "pnl": 1840.0,
+        "wr": 0.8,
+        "avg_pnl": 184.0
+      }
+    },
+    "yearly": {
+      "2020": {
+        "n": 26,
+        "pnl": 4857.0,
+        "wr": 0.654
+      },
+      "2021": {
+        "n": 22,
+        "pnl": 388.0,
+        "wr": 0.727
+      },
+      "2022": {
+        "n": 20,
+        "pnl": 133.0,
+        "wr": 0.4
+      },
+      "2023": {
+        "n": 14,
+        "pnl": -492.0,
+        "wr": 0.429
+      },
+      "2024": {
+        "n": 16,
+        "pnl": 675.0,
+        "wr": 0.625
+      },
+      "2025": {
+        "n": 14,
+        "pnl": -355.0,
+        "wr": 0.571
+      },
+      "2026": {
+        "n": 2,
+        "pnl": 104.0,
+        "wr": 1.0
+      }
+    },
+    "avg_net_credit": 5.18
+  },
+  "n_trades": 114,
+  "total_pnl": 5310.0,
+  "trade_sharpe": 0.759,
+  "oos_sharpe": -0.024,
+  "spy_correlation": -0.5398,
+  "exp1220_correlation": 0.0
+}
