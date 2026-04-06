@@ -1,0 +1,166 @@
+{
+  "experiment": "EXP-1660 Universe",
+  "data_source": "IronVault options_cache.db \u2014 100% real",
+  "rule_zero_compliant": true,
+  "universe_tested": [
+    "SPY",
+    "QQQ",
+    "XLF",
+    "XLI",
+    "XLK"
+  ],
+  "rejected_tickers": {
+    "XLE": "Only 1.8K contracts, 2.5 exps/month, strike density too low for delta-based strangles",
+    "SOXX": "Only 3.5K contracts, 1.8 exps/month, fewer than 5 strikes per expiration in most months",
+    "GLD": "Strike density at 10-delta put level too sparse; prior run produced only 5 trades with wide delta",
+    "TLT": "Same as GLD \u2014 delta-based strike selection fails at thin OTM wings"
+  },
+  "best_per_ticker": [
+    {
+      "ticker": "SPY",
+      "short_delta": 0.15,
+      "iv_rv_threshold": 0.01,
+      "wing_width_pct": 0.08,
+      "n_trades": 151,
+      "total_pnl": -11032.0,
+      "win_rate": 0.589,
+      "trade_sharpe": -0.641,
+      "daily_sharpe": -1.538,
+      "cagr": -0.0183,
+      "max_dd": 0.1309,
+      "spy_corr": -0.5087,
+      "is_sharpe": -0.666,
+      "oos_sharpe": -0.622,
+      "oos_n": 94,
+      "is_viable": false
+    },
+    {
+      "ticker": "QQQ",
+      "short_delta": 0.15,
+      "iv_rv_threshold": 0.015,
+      "wing_width_pct": 0.08,
+      "n_trades": 73,
+      "total_pnl": -3375.0,
+      "win_rate": 0.603,
+      "trade_sharpe": -0.233,
+      "daily_sharpe": -0.912,
+      "cagr": -0.0071,
+      "max_dd": 0.1654,
+      "spy_corr": -0.5317,
+      "is_sharpe": -1.275,
+      "oos_sharpe": 0.727,
+      "oos_n": 33,
+      "is_viable": true
+    },
+    {
+      "ticker": "XLF",
+      "short_delta": 0.18,
+      "iv_rv_threshold": 0.025,
+      "wing_width_pct": 0.08,
+      "n_trades": 204,
+      "total_pnl": 5323.0,
+      "win_rate": 0.603,
+      "trade_sharpe": 0.566,
+      "daily_sharpe": -2.036,
+      "cagr": 0.0083,
+      "max_dd": 0.0509,
+      "spy_corr": -0.5297,
+      "is_sharpe": 0.555,
+      "oos_sharpe": 0.86,
+      "oos_n": 83,
+      "is_viable": true
+    },
+    {
+      "ticker": "XLI",
+      "short_delta": 0.15,
+      "iv_rv_threshold": 0.02,
+      "wing_width_pct": 0.08,
+      "n_trades": 61,
+      "total_pnl": 6173.0,
+      "win_rate": 0.59,
+      "trade_sharpe": 1.424,
+      "daily_sharpe": -2.49,
+      "cagr": 0.0097,
+      "max_dd": 0.0214,
+      "spy_corr": -0.3372,
+      "is_sharpe": 0.908,
+      "oos_sharpe": 1.231,
+      "oos_n": 39,
+      "is_viable": true
+    },
+    {
+      "ticker": "XLK",
+      "short_delta": 0.15,
+      "iv_rv_threshold": 0.015,
+      "wing_width_pct": 0.05,
+      "n_trades": 0,
+      "total_pnl": 0.0,
+      "win_rate": 0.0,
+      "trade_sharpe": 0.0,
+      "daily_sharpe": 0.0,
+      "cagr": 0.0,
+      "max_dd": 0.0,
+      "spy_corr": 0.0,
+      "is_sharpe": 0.0,
+      "oos_sharpe": 0.0,
+      "oos_n": 0,
+      "is_viable": false
+    }
+  ],
+  "all_runs_count": 118,
+  "portfolio": {
+    "n_tickers": 3,
+    "tickers": [
+      "QQQ",
+      "XLF",
+      "XLI"
+    ],
+    "weights": {
+      "QQQ": 0.333,
+      "XLF": 0.333,
+      "XLI": 0.333
+    },
+    "total_pnl": 2707.0,
+    "daily_sharpe": -2.081,
+    "cagr": 0.0041,
+    "max_dd": 0.0615,
+    "spy_corr": -0.2139,
+    "is_sharpe": -2.857,
+    "oos_sharpe": -1.571,
+    "active_days": 272
+  },
+  "correlation_matrix": {
+    "names": [
+      "SPY",
+      "QQQ",
+      "XLF",
+      "XLI"
+    ],
+    "matrix": {
+      "SPY": {
+        "SPY": 1.0,
+        "QQQ": 0.006,
+        "XLF": 0.133,
+        "XLI": 0.039
+      },
+      "QQQ": {
+        "SPY": 0.006,
+        "QQQ": 1.0,
+        "XLF": -0.007,
+        "XLI": -0.015
+      },
+      "XLF": {
+        "SPY": 0.133,
+        "QQQ": -0.007,
+        "XLF": 1.0,
+        "XLI": 0.045
+      },
+      "XLI": {
+        "SPY": 0.039,
+        "QQQ": -0.015,
+        "XLF": 0.045,
+        "XLI": 1.0
+      }
+    }
+  }
+}
