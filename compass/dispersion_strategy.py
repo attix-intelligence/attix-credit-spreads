@@ -138,9 +138,9 @@ def _spread_close(ticker: str, exp: str, short_k: float, long_k: float,
         FROM option_contracts oc
         JOIN option_daily od ON oc.contract_symbol = od.contract_symbol
         WHERE oc.ticker=? AND oc.expiration=? AND oc.option_type=?
-          AND oc.strike IN (?, ?) AND od.date=?
+          AND oc.strike IN (?, ?) AND od.date=? AND od.close IS NOT NULL
     """, (ticker, exp, opt_type, short_k, long_k, date_str))
-    rows = {float(r[0]): float(r[1]) for r in cur.fetchall()}
+    rows = {float(r[0]): float(r[1]) for r in cur.fetchall() if r[1] is not None}
     conn.close()
     if short_k not in rows or long_k not in rows:
         return None
