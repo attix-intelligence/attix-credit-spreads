@@ -1,0 +1,231 @@
+{
+  "experiment": "EXP-2060",
+  "tag": "EXP-2060",
+  "description": "Cross-Vol Arb v2 \u2014 VoV overlay + leverage + capacity + corr matrix",
+  "data_sources": {
+    "vol_arb_tape": "EXP-2020 build_trades (real IronVault + Yahoo)",
+    "vvol_overlay": "EXP-1970 build_vvol_panel (real ^VIX)",
+    "capacity": "real option_daily.volume/open_interest (IronVault)",
+    "correlation_streams": [
+      "vol_arb_v2 (vvol_scaled)",
+      "EXP-1220 exp1220_standalone (real IronVault tape)",
+      "GLD calendar (EXP-1770 walk_forward)",
+      "SLV calendar (EXP-1770 walk_forward)",
+      "Crisis Alpha v5 backtest_v5 (real)"
+    ]
+  },
+  "config": {
+    "universe": [
+      "SPY",
+      "QQQ",
+      "XLF",
+      "XLI"
+    ],
+    "universe_dropped": [
+      "IWM",
+      "IBIT"
+    ],
+    "holding_days": 21,
+    "vega_notional": 10000.0,
+    "capital": 100000.0,
+    "participation_rate": 0.1,
+    "start": "2020-01-01",
+    "end": "2025-12-31"
+  },
+  "trade_counts": {
+    "baseline": 271,
+    "vvol_scaled": 253,
+    "vvol_strict_z_le_0": 154
+  },
+  "metrics": {
+    "baseline": {
+      "label": "baseline",
+      "n": 271,
+      "pnl": 47016.94,
+      "wr": 0.6568265682656826,
+      "sharpe": 2.281,
+      "cagr_pct": 6.651,
+      "max_dd_pct": 5.154,
+      "avg_pnl": 173.49,
+      "trades_per_yr": 45.28
+    },
+    "vvol_scaled": {
+      "label": "vvol_scaled",
+      "n": 253,
+      "pnl": 38464.345,
+      "wr": 0.6482213438735178,
+      "sharpe": 2.056,
+      "cagr_pct": 5.588,
+      "max_dd_pct": 5.322,
+      "avg_pnl": 152.03,
+      "trades_per_yr": 42.27
+    },
+    "vvol_strict": {
+      "label": "vvol_strict",
+      "n": 154,
+      "pnl": 20644.04,
+      "wr": 0.6493506493506493,
+      "sharpe": 1.269,
+      "cagr_pct": 3.185,
+      "max_dd_pct": 5.365,
+      "avg_pnl": 134.05,
+      "trades_per_yr": 25.73
+    }
+  },
+  "leverage_test": [
+    {
+      "variant": "baseline",
+      "leverage": 1.0,
+      "cagr_pct": 6.651,
+      "sharpe": 2.281,
+      "max_dd_pct": 5.154
+    },
+    {
+      "variant": "baseline",
+      "leverage": 1.5,
+      "cagr_pct": 9.327,
+      "sharpe": 2.281,
+      "max_dd_pct": 7.431
+    },
+    {
+      "variant": "baseline",
+      "leverage": 2.0,
+      "cagr_pct": 11.712,
+      "sharpe": 2.281,
+      "max_dd_pct": 9.537
+    },
+    {
+      "variant": "vvol_scaled",
+      "leverage": 1.0,
+      "cagr_pct": 5.588,
+      "sharpe": 2.056,
+      "max_dd_pct": 5.322
+    },
+    {
+      "variant": "vvol_scaled",
+      "leverage": 1.5,
+      "cagr_pct": 7.908,
+      "sharpe": 2.056,
+      "max_dd_pct": 7.784
+    },
+    {
+      "variant": "vvol_scaled",
+      "leverage": 2.0,
+      "cagr_pct": 10.003,
+      "sharpe": 2.056,
+      "max_dd_pct": 10.127
+    },
+    {
+      "variant": "vvol_strict",
+      "leverage": 1.0,
+      "cagr_pct": 3.185,
+      "sharpe": 1.269,
+      "max_dd_pct": 5.365
+    },
+    {
+      "variant": "vvol_strict",
+      "leverage": 1.5,
+      "cagr_pct": 4.611,
+      "sharpe": 1.269,
+      "max_dd_pct": 7.877
+    },
+    {
+      "variant": "vvol_strict",
+      "leverage": 2.0,
+      "cagr_pct": 5.945,
+      "sharpe": 1.269,
+      "max_dd_pct": 10.284
+    }
+  ],
+  "capacity": {
+    "summary": {
+      "SPY": {
+        "n_observations": 138,
+        "participation_rate": 0.1,
+        "median_daily_volume": 204.5,
+        "min_daily_volume": 1.0,
+        "median_open_interest": null,
+        "median_max_contracts_per_entry": 20,
+        "p5_max_contracts_per_entry": 0,
+        "p95_max_contracts_per_entry": 194,
+        "median_monthly_cap_contracts": 38,
+        "dollar_vega_per_month_at_median": 3800.0
+      },
+      "QQQ": {
+        "n_observations": 135,
+        "participation_rate": 0.1,
+        "median_daily_volume": 568.0,
+        "min_daily_volume": 1.0,
+        "median_open_interest": 0.0,
+        "median_max_contracts_per_entry": 56,
+        "p5_max_contracts_per_entry": 0,
+        "p95_max_contracts_per_entry": 653,
+        "median_monthly_cap_contracts": 199,
+        "dollar_vega_per_month_at_median": 19900.0
+      },
+      "XLF": {
+        "n_observations": 188,
+        "participation_rate": 0.1,
+        "median_daily_volume": 32.0,
+        "min_daily_volume": 1.0,
+        "median_open_interest": null,
+        "median_max_contracts_per_entry": 3,
+        "p5_max_contracts_per_entry": 0,
+        "p95_max_contracts_per_entry": 285,
+        "median_monthly_cap_contracts": 26,
+        "dollar_vega_per_month_at_median": 2600.0
+      },
+      "XLI": {
+        "n_observations": 81,
+        "participation_rate": 0.1,
+        "median_daily_volume": 8.0,
+        "min_daily_volume": 1.0,
+        "median_open_interest": null,
+        "median_max_contracts_per_entry": 0,
+        "p5_max_contracts_per_entry": 0,
+        "p95_max_contracts_per_entry": 25,
+        "median_monthly_cap_contracts": 1,
+        "dollar_vega_per_month_at_median": 100.0
+      }
+    },
+    "participation_rate": 0.1,
+    "notes": "max_contracts_at_10pct = 10% \u00d7 min(call_volume, put_volume) for the real ATM (strike, expiration) on the trade's entry date, pulled from IronVault option_daily. Per-month cap is the sum across all entries in that month. Dollar vega uses a $100 per-vol-point-per-contract rule of thumb for the SPY class (literature-standard for 30-DTE ATM ETF options)."
+  },
+  "correlation_matrix_monthly": {
+    "vol_arb_v2": {
+      "vol_arb_v2": 1.0,
+      "exp1220": 0.16472350602919303,
+      "GLD_calendar": -0.07004959533081728,
+      "SLV_calendar": -0.19977573898031029,
+      "crisis_alpha_v5": -0.023896335303541405
+    },
+    "exp1220": {
+      "vol_arb_v2": 0.16472350602919303,
+      "exp1220": 1.0,
+      "GLD_calendar": -0.19181651436276592,
+      "SLV_calendar": -0.247883148054174,
+      "crisis_alpha_v5": -0.2246828497864146
+    },
+    "GLD_calendar": {
+      "vol_arb_v2": -0.07004959533081728,
+      "exp1220": -0.19181651436276592,
+      "GLD_calendar": 1.0,
+      "SLV_calendar": 0.4453177801750648,
+      "crisis_alpha_v5": -0.15256496166220657
+    },
+    "SLV_calendar": {
+      "vol_arb_v2": -0.19977573898031029,
+      "exp1220": -0.247883148054174,
+      "GLD_calendar": 0.4453177801750648,
+      "SLV_calendar": 1.0,
+      "crisis_alpha_v5": 0.01677901381035311
+    },
+    "crisis_alpha_v5": {
+      "vol_arb_v2": -0.023896335303541405,
+      "exp1220": -0.2246828497864146,
+      "GLD_calendar": -0.15256496166220657,
+      "SLV_calendar": 0.01677901381035311,
+      "crisis_alpha_v5": 1.0
+    }
+  }
+}
