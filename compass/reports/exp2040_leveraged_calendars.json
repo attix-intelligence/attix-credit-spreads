@@ -1,0 +1,526 @@
+{
+  "experiment": "EXP-2040",
+  "title": "Leveraged GLD/SLV Calendar Spread Scaling",
+  "timestamp": "2026-04-07T15:30:52.923759Z",
+  "data_sources": {
+    "GLD_calendar": "compass.exp1770_commodity_calendars walk-forward (Yahoo GLD vs GC=F)",
+    "SLV_calendar": "compass.exp1770_commodity_calendars walk-forward (Yahoo SLV vs SI=F)",
+    "EXP-1220": "scripts.ultimate_portfolio.load_exp1220_dynamic (canonical)"
+  },
+  "dd_ceiling_pct": 12.0,
+  "solo_leverage": {
+    "GLD": {
+      "1.0x": {
+        "leverage": 1.0,
+        "n_days": 2643,
+        "cagr_pct": 15.199,
+        "sharpe": 2.702,
+        "max_dd_pct": -2.501,
+        "vol_pct": 5.289,
+        "hit_rate_pct": 69.7,
+        "passes_dd_ceiling": true
+      },
+      "1.5x": {
+        "leverage": 1.5,
+        "n_days": 2643,
+        "cagr_pct": 23.512,
+        "sharpe": 2.702,
+        "max_dd_pct": -3.74,
+        "vol_pct": 7.934,
+        "hit_rate_pct": 69.7,
+        "passes_dd_ceiling": true
+      },
+      "2.0x": {
+        "leverage": 2.0,
+        "n_days": 2643,
+        "cagr_pct": 32.331,
+        "sharpe": 2.702,
+        "max_dd_pct": -4.972,
+        "vol_pct": 10.578,
+        "hit_rate_pct": 69.7,
+        "passes_dd_ceiling": true
+      }
+    },
+    "SLV": {
+      "1.0x": {
+        "leverage": 1.0,
+        "n_days": 2643,
+        "cagr_pct": 24.894,
+        "sharpe": 2.266,
+        "max_dd_pct": -6.079,
+        "vol_pct": 10.038,
+        "hit_rate_pct": 70.8,
+        "passes_dd_ceiling": true
+      },
+      "1.5x": {
+        "leverage": 1.5,
+        "n_days": 2643,
+        "cagr_pct": 39.046,
+        "sharpe": 2.266,
+        "max_dd_pct": -9.144,
+        "vol_pct": 15.057,
+        "hit_rate_pct": 70.8,
+        "passes_dd_ceiling": true
+      },
+      "2.0x": {
+        "leverage": 2.0,
+        "n_days": 2643,
+        "cagr_pct": 54.411,
+        "sharpe": 2.266,
+        "max_dd_pct": -12.216,
+        "vol_pct": 20.076,
+        "hit_rate_pct": 70.8,
+        "passes_dd_ceiling": false
+      }
+    }
+  },
+  "gld_slv_mix": {
+    "equal_50_50 \u00d71.0": {
+      "weights": {
+        "GLD": 0.5,
+        "SLV": 0.5
+      },
+      "leverage": 1.0,
+      "n_days": 2643,
+      "cagr_pct": 20.096,
+      "sharpe": 2.934,
+      "max_dd_pct": -3.045,
+      "vol_pct": 6.311,
+      "hit_rate_pct": 73.9,
+      "passes_dd_ceiling": true
+    },
+    "equal_50_50 \u00d71.5": {
+      "weights": {
+        "GLD": 0.5,
+        "SLV": 0.5
+      },
+      "leverage": 1.5,
+      "n_days": 2643,
+      "cagr_pct": 31.41,
+      "sharpe": 2.934,
+      "max_dd_pct": -4.553,
+      "vol_pct": 9.467,
+      "hit_rate_pct": 73.9,
+      "passes_dd_ceiling": true
+    },
+    "equal_50_50 \u00d72.0": {
+      "weights": {
+        "GLD": 0.5,
+        "SLV": 0.5
+      },
+      "leverage": 2.0,
+      "n_days": 2643,
+      "cagr_pct": 43.646,
+      "sharpe": 2.934,
+      "max_dd_pct": -6.052,
+      "vol_pct": 12.622,
+      "hit_rate_pct": 73.9,
+      "passes_dd_ceiling": true
+    },
+    "gld_heavy_60_40 \u00d71.0": {
+      "weights": {
+        "GLD": 0.6,
+        "SLV": 0.4
+      },
+      "leverage": 1.0,
+      "n_days": 2643,
+      "cagr_pct": 19.123,
+      "sharpe": 3.052,
+      "max_dd_pct": -2.873,
+      "vol_pct": 5.791,
+      "hit_rate_pct": 73.9,
+      "passes_dd_ceiling": true
+    },
+    "gld_heavy_60_40 \u00d71.5": {
+      "weights": {
+        "GLD": 0.6,
+        "SLV": 0.4
+      },
+      "leverage": 1.5,
+      "n_days": 2643,
+      "cagr_pct": 29.848,
+      "sharpe": 3.052,
+      "max_dd_pct": -4.296,
+      "vol_pct": 8.686,
+      "hit_rate_pct": 73.9,
+      "passes_dd_ceiling": true
+    },
+    "gld_heavy_60_40 \u00d72.0": {
+      "weights": {
+        "GLD": 0.6,
+        "SLV": 0.4
+      },
+      "leverage": 2.0,
+      "n_days": 2643,
+      "cagr_pct": 41.418,
+      "sharpe": 3.052,
+      "max_dd_pct": -5.709,
+      "vol_pct": 11.581,
+      "hit_rate_pct": 73.9,
+      "passes_dd_ceiling": true
+    },
+    "slv_heavy_40_60 \u00d71.0": {
+      "weights": {
+        "GLD": 0.4,
+        "SLV": 0.6
+      },
+      "leverage": 1.0,
+      "n_days": 2643,
+      "cagr_pct": 21.064,
+      "sharpe": 2.792,
+      "max_dd_pct": -3.217,
+      "vol_pct": 6.935,
+      "hit_rate_pct": 73.9,
+      "passes_dd_ceiling": true
+    },
+    "slv_heavy_40_60 \u00d71.5": {
+      "weights": {
+        "GLD": 0.4,
+        "SLV": 0.6
+      },
+      "leverage": 1.5,
+      "n_days": 2643,
+      "cagr_pct": 32.962,
+      "sharpe": 2.792,
+      "max_dd_pct": -4.812,
+      "vol_pct": 10.402,
+      "hit_rate_pct": 73.9,
+      "passes_dd_ceiling": true
+    },
+    "slv_heavy_40_60 \u00d72.0": {
+      "weights": {
+        "GLD": 0.4,
+        "SLV": 0.6
+      },
+      "leverage": 2.0,
+      "n_days": 2643,
+      "cagr_pct": 45.851,
+      "sharpe": 2.792,
+      "max_dd_pct": -6.414,
+      "vol_pct": 13.869,
+      "hit_rate_pct": 73.9,
+      "passes_dd_ceiling": true
+    },
+    "vol_weight (0.65/0.35) \u00d71.0": {
+      "weights": {
+        "GLD": 0.6549161982358432,
+        "SLV": 0.3450838017641567
+      },
+      "leverage": 1.0,
+      "n_days": 2643,
+      "cagr_pct": 18.588,
+      "sharpe": 3.095,
+      "max_dd_pct": -2.779,
+      "vol_pct": 5.56,
+      "hit_rate_pct": 73.9,
+      "passes_dd_ceiling": true
+    },
+    "vol_weight (0.65/0.35) \u00d71.5": {
+      "weights": {
+        "GLD": 0.6549161982358432,
+        "SLV": 0.3450838017641567
+      },
+      "leverage": 1.5,
+      "n_days": 2643,
+      "cagr_pct": 28.986,
+      "sharpe": 3.095,
+      "max_dd_pct": -4.156,
+      "vol_pct": 8.339,
+      "hit_rate_pct": 73.9,
+      "passes_dd_ceiling": true
+    },
+    "vol_weight (0.65/0.35) \u00d72.0": {
+      "weights": {
+        "GLD": 0.6549161982358432,
+        "SLV": 0.3450838017641567
+      },
+      "leverage": 2.0,
+      "n_days": 2643,
+      "cagr_pct": 40.187,
+      "sharpe": 3.095,
+      "max_dd_pct": -5.523,
+      "vol_pct": 11.119,
+      "hit_rate_pct": 73.9,
+      "passes_dd_ceiling": true
+    }
+  },
+  "portfolio_integration": {
+    "overlap_window": {
+      "start": "2020-01-02",
+      "end": "2025-12-30",
+      "n_days": 1507
+    },
+    "baseline_100pct_exp1220": {
+      "n_days": 1507,
+      "cagr_pct": 58.887,
+      "sharpe": 4.088,
+      "max_dd_pct": -7.581,
+      "vol_pct": 11.498,
+      "hit_rate_pct": 79.4
+    },
+    "sweeps": {
+      "alloc_10_lev_1.0x": {
+        "alloc_to_sleeve": 0.1,
+        "alloc_to_exp1220": 0.9,
+        "sleeve_leverage": 1.0,
+        "sleeve_weights": {
+          "GLD": 0.6549161982358432,
+          "SLV": 0.3450838017641567
+        },
+        "n_days": 1507,
+        "cagr_pct": 55.026,
+        "sharpe": 4.287,
+        "max_dd_pct": -6.676,
+        "vol_pct": 10.359,
+        "hit_rate_pct": 99.1,
+        "passes_dd_ceiling": true,
+        "delta_sharpe_vs_baseline": 0.199,
+        "delta_cagr_vs_baseline": -3.861,
+        "corr_port_to_baseline": 0.998,
+        "corr_sleeve_to_baseline": -0.0154
+      },
+      "alloc_10_lev_1.5x": {
+        "alloc_to_sleeve": 0.1,
+        "alloc_to_exp1220": 0.9,
+        "sleeve_leverage": 1.5,
+        "sleeve_weights": {
+          "GLD": 0.6549161982358432,
+          "SLV": 0.3450838017641567
+        },
+        "n_days": 1507,
+        "cagr_pct": 56.665,
+        "sharpe": 4.381,
+        "max_dd_pct": -6.644,
+        "vol_pct": 10.38,
+        "hit_rate_pct": 99.1,
+        "passes_dd_ceiling": true,
+        "delta_sharpe_vs_baseline": 0.293,
+        "delta_cagr_vs_baseline": -2.222,
+        "corr_port_to_baseline": 0.9955,
+        "corr_sleeve_to_baseline": -0.0154
+      },
+      "alloc_10_lev_2.0x": {
+        "alloc_to_sleeve": 0.1,
+        "alloc_to_exp1220": 0.9,
+        "sleeve_leverage": 2.0,
+        "sleeve_weights": {
+          "GLD": 0.6549161982358432,
+          "SLV": 0.3450838017641567
+        },
+        "n_days": 1507,
+        "cagr_pct": 58.32,
+        "sharpe": 4.469,
+        "max_dd_pct": -6.611,
+        "vol_pct": 10.411,
+        "hit_rate_pct": 99.1,
+        "passes_dd_ceiling": true,
+        "delta_sharpe_vs_baseline": 0.381,
+        "delta_cagr_vs_baseline": -0.567,
+        "corr_port_to_baseline": 0.9921,
+        "corr_sleeve_to_baseline": -0.0154
+      },
+      "alloc_15_lev_1.0x": {
+        "alloc_to_sleeve": 0.15,
+        "alloc_to_exp1220": 0.85,
+        "sleeve_leverage": 1.0,
+        "sleeve_weights": {
+          "GLD": 0.6549161982358432,
+          "SLV": 0.3450838017641567
+        },
+        "n_days": 1507,
+        "cagr_pct": 53.12,
+        "sharpe": 4.397,
+        "max_dd_pct": -6.277,
+        "vol_pct": 9.807,
+        "hit_rate_pct": 99.1,
+        "passes_dd_ceiling": true,
+        "delta_sharpe_vs_baseline": 0.309,
+        "delta_cagr_vs_baseline": -5.767,
+        "corr_port_to_baseline": 0.995,
+        "corr_sleeve_to_baseline": -0.0154
+      },
+      "alloc_15_lev_1.5x": {
+        "alloc_to_sleeve": 0.15,
+        "alloc_to_exp1220": 0.85,
+        "sleeve_leverage": 1.5,
+        "sleeve_weights": {
+          "GLD": 0.6549161982358432,
+          "SLV": 0.3450838017641567
+        },
+        "n_days": 1507,
+        "cagr_pct": 55.553,
+        "sharpe": 4.533,
+        "max_dd_pct": -6.228,
+        "vol_pct": 9.861,
+        "hit_rate_pct": 99.1,
+        "passes_dd_ceiling": true,
+        "delta_sharpe_vs_baseline": 0.445,
+        "delta_cagr_vs_baseline": -3.334,
+        "corr_port_to_baseline": 0.9888,
+        "corr_sleeve_to_baseline": -0.0154
+      },
+      "alloc_15_lev_2.0x": {
+        "alloc_to_sleeve": 0.15,
+        "alloc_to_exp1220": 0.85,
+        "sleeve_leverage": 2.0,
+        "sleeve_weights": {
+          "GLD": 0.6549161982358432,
+          "SLV": 0.3450838017641567
+        },
+        "n_days": 1507,
+        "cagr_pct": 58.02,
+        "sharpe": 4.657,
+        "max_dd_pct": -6.178,
+        "vol_pct": 9.939,
+        "hit_rate_pct": 99.1,
+        "passes_dd_ceiling": true,
+        "delta_sharpe_vs_baseline": 0.569,
+        "delta_cagr_vs_baseline": -0.867,
+        "corr_port_to_baseline": 0.9803,
+        "corr_sleeve_to_baseline": -0.0154
+      },
+      "alloc_20_lev_1.0x": {
+        "alloc_to_sleeve": 0.2,
+        "alloc_to_exp1220": 0.8,
+        "sleeve_leverage": 1.0,
+        "sleeve_weights": {
+          "GLD": 0.6549161982358432,
+          "SLV": 0.3450838017641567
+        },
+        "n_days": 1507,
+        "cagr_pct": 51.231,
+        "sharpe": 4.511,
+        "max_dd_pct": -5.877,
+        "vol_pct": 9.271,
+        "hit_rate_pct": 99.1,
+        "passes_dd_ceiling": true,
+        "delta_sharpe_vs_baseline": 0.423,
+        "delta_cagr_vs_baseline": -7.656,
+        "corr_port_to_baseline": 0.99,
+        "corr_sleeve_to_baseline": -0.0154
+      },
+      "alloc_20_lev_1.5x": {
+        "alloc_to_sleeve": 0.2,
+        "alloc_to_exp1220": 0.8,
+        "sleeve_leverage": 1.5,
+        "sleeve_weights": {
+          "GLD": 0.6549161982358432,
+          "SLV": 0.3450838017641567
+        },
+        "n_days": 1507,
+        "cagr_pct": 54.439,
+        "sharpe": 4.686,
+        "max_dd_pct": -5.811,
+        "vol_pct": 9.376,
+        "hit_rate_pct": 99.1,
+        "passes_dd_ceiling": true,
+        "delta_sharpe_vs_baseline": 0.598,
+        "delta_cagr_vs_baseline": -4.448,
+        "corr_port_to_baseline": 0.9778,
+        "corr_sleeve_to_baseline": -0.0154
+      },
+      "alloc_20_lev_2.0x": {
+        "alloc_to_sleeve": 0.2,
+        "alloc_to_exp1220": 0.8,
+        "sleeve_leverage": 2.0,
+        "sleeve_weights": {
+          "GLD": 0.6549161982358432,
+          "SLV": 0.3450838017641567
+        },
+        "n_days": 1507,
+        "cagr_pct": 57.707,
+        "sharpe": 4.834,
+        "max_dd_pct": -5.744,
+        "vol_pct": 9.525,
+        "hit_rate_pct": 99.1,
+        "passes_dd_ceiling": true,
+        "delta_sharpe_vs_baseline": 0.746,
+        "delta_cagr_vs_baseline": -1.18,
+        "corr_port_to_baseline": 0.9614,
+        "corr_sleeve_to_baseline": -0.0154
+      },
+      "alloc_25_lev_1.0x": {
+        "alloc_to_sleeve": 0.25,
+        "alloc_to_exp1220": 0.75,
+        "sleeve_leverage": 1.0,
+        "sleeve_weights": {
+          "GLD": 0.6549161982358432,
+          "SLV": 0.3450838017641567
+        },
+        "n_days": 1507,
+        "cagr_pct": 49.359,
+        "sharpe": 4.631,
+        "max_dd_pct": -5.475,
+        "vol_pct": 8.753,
+        "hit_rate_pct": 99.1,
+        "passes_dd_ceiling": true,
+        "delta_sharpe_vs_baseline": 0.543,
+        "delta_cagr_vs_baseline": -9.528,
+        "corr_port_to_baseline": 0.9823,
+        "corr_sleeve_to_baseline": -0.0154
+      },
+      "alloc_25_lev_1.5x": {
+        "alloc_to_sleeve": 0.25,
+        "alloc_to_exp1220": 0.75,
+        "sleeve_leverage": 1.5,
+        "sleeve_weights": {
+          "GLD": 0.6549161982358432,
+          "SLV": 0.3450838017641567
+        },
+        "n_days": 1507,
+        "cagr_pct": 53.324,
+        "sharpe": 4.834,
+        "max_dd_pct": -5.392,
+        "vol_pct": 8.93,
+        "hit_rate_pct": 99.1,
+        "passes_dd_ceiling": true,
+        "delta_sharpe_vs_baseline": 0.746,
+        "delta_cagr_vs_baseline": -5.563,
+        "corr_port_to_baseline": 0.9614,
+        "corr_sleeve_to_baseline": -0.0154
+      },
+      "alloc_25_lev_2.0x": {
+        "alloc_to_sleeve": 0.25,
+        "alloc_to_exp1220": 0.75,
+        "sleeve_leverage": 2.0,
+        "sleeve_weights": {
+          "GLD": 0.6549161982358432,
+          "SLV": 0.3450838017641567
+        },
+        "n_days": 1507,
+        "cagr_pct": 57.384,
+        "sharpe": 4.992,
+        "max_dd_pct": -5.309,
+        "vol_pct": 9.177,
+        "hit_rate_pct": 99.1,
+        "passes_dd_ceiling": true,
+        "delta_sharpe_vs_baseline": 0.904,
+        "delta_cagr_vs_baseline": -1.503,
+        "corr_port_to_baseline": 0.9342,
+        "corr_sleeve_to_baseline": -0.0154
+      }
+    }
+  },
+  "best_portfolio": {
+    "label": "alloc_25_lev_2.0x",
+    "alloc_to_sleeve": 0.25,
+    "alloc_to_exp1220": 0.75,
+    "sleeve_leverage": 2.0,
+    "sleeve_weights": {
+      "GLD": 0.6549161982358432,
+      "SLV": 0.3450838017641567
+    },
+    "n_days": 1507,
+    "cagr_pct": 57.384,
+    "sharpe": 4.992,
+    "max_dd_pct": -5.309,
+    "vol_pct": 9.177,
+    "hit_rate_pct": 99.1,
+    "passes_dd_ceiling": true,
+    "delta_sharpe_vs_baseline": 0.904,
+    "delta_cagr_vs_baseline": -1.503,
+    "corr_port_to_baseline": 0.9342,
+    "corr_sleeve_to_baseline": -0.0154
+  },
+  "rule_zero": "All inputs are real: EXP-1770 walk-forward OOS streams from Yahoo GLD/SLV/GC=F/SI=F, plus the canonical EXP-1220 dynamic-leverage daily return stream from scripts.ultimate_portfolio. No synthetic data, no random fills, no Black-Scholes pricing."
+}

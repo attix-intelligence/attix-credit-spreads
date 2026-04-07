@@ -1,0 +1,384 @@
+{
+  "experiment": "EXP-2030",
+  "title": "Intraweek Seasonality Overlay",
+  "date_range": {
+    "start": "2020-01-01",
+    "end": "2025-12-31"
+  },
+  "data_sources": {
+    "spy_options": "IronVault options_cache.db (REAL)",
+    "spy": "Yahoo Finance SPY (REAL)",
+    "vix": "Yahoo Finance ^VIX (REAL)",
+    "fomc_dates": "federalreserve.gov public FOMC calendar (REAL)",
+    "opex_dates": "Computed deterministically from calendar (3rd Friday)"
+  },
+  "n_baseline_trades": 177,
+  "feature_keys": [
+    "dow",
+    "week_of_month",
+    "is_opex_week",
+    "is_fomc_week"
+  ],
+  "bucket_table_full": {
+    "dow": {
+      "0": {
+        "n": 47,
+        "mean_pnl": -50.81,
+        "win_rate": 0.7447,
+        "sharpe": -0.783
+      },
+      "1": {
+        "n": 6,
+        "mean_pnl": 197.33,
+        "win_rate": 1.0,
+        "sharpe": 3.087
+      },
+      "2": {
+        "n": 6,
+        "mean_pnl": 78.67,
+        "win_rate": 0.8333,
+        "sharpe": 0.379
+      },
+      "3": {
+        "n": 1,
+        "mean_pnl": 28.0,
+        "win_rate": 1.0,
+        "sharpe": 28.0
+      },
+      "4": {
+        "n": 117,
+        "mean_pnl": 59.56,
+        "win_rate": 0.8632,
+        "sharpe": 2.771
+      }
+    },
+    "week_of_month": {
+      "1": {
+        "n": 41,
+        "mean_pnl": 28.88,
+        "win_rate": 0.8293,
+        "sharpe": 0.735
+      },
+      "2": {
+        "n": 45,
+        "mean_pnl": 72.18,
+        "win_rate": 0.8444,
+        "sharpe": 1.657
+      },
+      "3": {
+        "n": 36,
+        "mean_pnl": 82.78,
+        "win_rate": 0.8889,
+        "sharpe": 2.5
+      },
+      "4": {
+        "n": 41,
+        "mean_pnl": -18.93,
+        "win_rate": 0.8049,
+        "sharpe": -0.275
+      },
+      "5": {
+        "n": 14,
+        "mean_pnl": -26.57,
+        "win_rate": 0.7857,
+        "sharpe": -0.283
+      }
+    },
+    "is_opex_week": {
+      "0": {
+        "n": 139,
+        "mean_pnl": 33.41,
+        "win_rate": 0.8345,
+        "sharpe": 1.208
+      },
+      "1": {
+        "n": 38,
+        "mean_pnl": 42.63,
+        "win_rate": 0.8421,
+        "sharpe": 0.969
+      }
+    },
+    "is_fomc_week": {
+      "0": {
+        "n": 152,
+        "mean_pnl": 32.11,
+        "win_rate": 0.8355,
+        "sharpe": 1.309
+      },
+      "1": {
+        "n": 25,
+        "mean_pnl": 55.36,
+        "win_rate": 0.84,
+        "sharpe": 0.719
+      }
+    }
+  },
+  "walk_forward": {
+    "folds": [
+      {
+        "year": 2020,
+        "skip_set": [],
+        "n_train": 0,
+        "baseline": {
+          "n": 30,
+          "total_pnl": 952.0,
+          "win_rate": 0.8333,
+          "avg_pnl": 31.73,
+          "sharpe": 0.444,
+          "sortino": 0.546,
+          "max_dd_pct": 3.02,
+          "cagr_pct": 0.96,
+          "calmar": 0.32,
+          "avg_hold_days": 6.1
+        },
+        "overlay": {
+          "n": 30,
+          "total_pnl": 952.0,
+          "win_rate": 0.8333,
+          "avg_pnl": 31.73,
+          "sharpe": 0.444,
+          "sortino": 0.546,
+          "max_dd_pct": 3.02,
+          "cagr_pct": 0.96,
+          "calmar": 0.32,
+          "avg_hold_days": 6.1
+        }
+      },
+      {
+        "year": 2021,
+        "skip_set": [
+          {
+            "feature": "dow",
+            "value": 0
+          },
+          {
+            "feature": "week_of_month",
+            "value": 2
+          },
+          {
+            "feature": "week_of_month",
+            "value": 4
+          }
+        ],
+        "n_train": 30,
+        "baseline": {
+          "n": 34,
+          "total_pnl": 2084.0,
+          "win_rate": 0.8824,
+          "avg_pnl": 61.29,
+          "sharpe": 1.193,
+          "sortino": 0.899,
+          "max_dd_pct": 1.21,
+          "cagr_pct": 2.11,
+          "calmar": 1.75,
+          "avg_hold_days": 4.7
+        },
+        "overlay": {
+          "n": 11,
+          "total_pnl": 984.0,
+          "win_rate": 0.9091,
+          "avg_pnl": 89.45,
+          "sharpe": 2.046,
+          "sortino": 2.046,
+          "max_dd_pct": 0.36,
+          "cagr_pct": 1.17,
+          "calmar": 3.25,
+          "avg_hold_days": 5.7
+        }
+      },
+      {
+        "year": 2022,
+        "skip_set": [
+          {
+            "feature": "week_of_month",
+            "value": 4
+          },
+          {
+            "feature": "week_of_month",
+            "value": 5
+          },
+          {
+            "feature": "is_fomc_week",
+            "value": 1
+          }
+        ],
+        "n_train": 64,
+        "baseline": {
+          "n": 32,
+          "total_pnl": 1368.0,
+          "win_rate": 0.7188,
+          "avg_pnl": 42.75,
+          "sharpe": 0.604,
+          "sortino": 0.749,
+          "max_dd_pct": 2.28,
+          "cagr_pct": 1.45,
+          "calmar": 0.64,
+          "avg_hold_days": 5.6
+        },
+        "overlay": {
+          "n": 20,
+          "total_pnl": 8.0,
+          "win_rate": 0.65,
+          "avg_pnl": 0.4,
+          "sharpe": 0.005,
+          "sortino": 0.009,
+          "max_dd_pct": 1.16,
+          "cagr_pct": 0.01,
+          "calmar": 0.01,
+          "avg_hold_days": 6.0
+        }
+      },
+      {
+        "year": 2023,
+        "skip_set": [
+          {
+            "feature": "dow",
+            "value": 0
+          },
+          {
+            "feature": "week_of_month",
+            "value": 4
+          },
+          {
+            "feature": "week_of_month",
+            "value": 5
+          }
+        ],
+        "n_train": 96,
+        "baseline": {
+          "n": 27,
+          "total_pnl": 1172.0,
+          "win_rate": 0.8889,
+          "avg_pnl": 43.41,
+          "sharpe": 1.16,
+          "sortino": 0.973,
+          "max_dd_pct": 1.14,
+          "cagr_pct": 1.16,
+          "calmar": 1.02,
+          "avg_hold_days": 6.2
+        },
+        "overlay": {
+          "n": 20,
+          "total_pnl": 708.0,
+          "win_rate": 0.9,
+          "avg_pnl": 35.4,
+          "sharpe": 0.744,
+          "sortino": 1.579,
+          "max_dd_pct": 1.14,
+          "cagr_pct": 0.73,
+          "calmar": 0.64,
+          "avg_hold_days": 6.4
+        }
+      },
+      {
+        "year": 2024,
+        "skip_set": [
+          {
+            "feature": "dow",
+            "value": 0
+          },
+          {
+            "feature": "week_of_month",
+            "value": 4
+          },
+          {
+            "feature": "week_of_month",
+            "value": 5
+          }
+        ],
+        "n_train": 123,
+        "baseline": {
+          "n": 27,
+          "total_pnl": 108.0,
+          "win_rate": 0.8519,
+          "avg_pnl": 4.0,
+          "sharpe": 0.115,
+          "sortino": 0.163,
+          "max_dd_pct": 0.67,
+          "cagr_pct": 0.11,
+          "calmar": 0.17,
+          "avg_hold_days": 5.3
+        },
+        "overlay": {
+          "n": 16,
+          "total_pnl": 448.0,
+          "win_rate": 0.875,
+          "avg_pnl": 28.0,
+          "sharpe": 0.844,
+          "sortino": 40.982,
+          "max_dd_pct": 0.31,
+          "cagr_pct": 0.48,
+          "calmar": 1.53,
+          "avg_hold_days": 5.2
+        }
+      },
+      {
+        "year": 2025,
+        "skip_set": [
+          {
+            "feature": "dow",
+            "value": 0
+          },
+          {
+            "feature": "week_of_month",
+            "value": 5
+          }
+        ],
+        "n_train": 150,
+        "baseline": {
+          "n": 27,
+          "total_pnl": 580.0,
+          "win_rate": 0.8519,
+          "avg_pnl": 21.48,
+          "sharpe": 0.353,
+          "sortino": 0.299,
+          "max_dd_pct": 2.29,
+          "cagr_pct": 0.61,
+          "calmar": 0.27,
+          "avg_hold_days": 6.0
+        },
+        "overlay": {
+          "n": 22,
+          "total_pnl": 668.0,
+          "win_rate": 0.8636,
+          "avg_pnl": 30.36,
+          "sharpe": 0.491,
+          "sortino": 0.326,
+          "max_dd_pct": 1.47,
+          "cagr_pct": 0.7,
+          "calmar": 0.48,
+          "avg_hold_days": 6.3
+        }
+      }
+    ],
+    "pooled_oos": {
+      "baseline": {
+        "n": 177,
+        "total_pnl": 6264.0,
+        "win_rate": 0.8362,
+        "avg_pnl": 35.39,
+        "sharpe": 0.615,
+        "sortino": 0.611,
+        "max_dd_pct": 3.02,
+        "cagr_pct": 1.03,
+        "calmar": 0.34,
+        "avg_hold_days": 5.6
+      },
+      "overlay": {
+        "n": 119,
+        "total_pnl": 3768.0,
+        "win_rate": 0.8319,
+        "avg_pnl": 31.66,
+        "sharpe": 0.482,
+        "sortino": 0.497,
+        "max_dd_pct": 3.02,
+        "cagr_pct": 0.62,
+        "calmar": 0.21,
+        "avg_hold_days": 6.0
+      }
+    }
+  },
+  "delta_sharpe_pooled_oos": -0.133,
+  "target_sharpe_lift": 0.3,
+  "target_met": false
+}
