@@ -1,0 +1,358 @@
+{
+  "experiment": "EXP-2020",
+  "name": "Cross-Sectional Vol Arbitrage (IV\u2212RV long/short)",
+  "generated": "2026-04-07T15:31:15",
+  "data_sources": {
+    "implied_vol": "IronVault options_cache.db (real Polygon ATM ~30 DTE)",
+    "realized_vol": "Yahoo Finance (trailing 20d annualised, forward 21d for settlement)",
+    "options_iv_method": "Black-Scholes inversion via scipy.optimize.brentq on ATM C and P"
+  },
+  "universe_requested": [
+    "SPY",
+    "QQQ",
+    "IWM",
+    "XLF",
+    "XLI",
+    "IBIT"
+  ],
+  "universe_used": [
+    "SPY",
+    "QQQ",
+    "XLF",
+    "XLI"
+  ],
+  "universe_dropped": [
+    "IWM",
+    "IBIT"
+  ],
+  "drop_reason": "Zero contracts in IronVault options_cache.db (Rule Zero)",
+  "params": {
+    "target_dte": 30,
+    "holding_days": 21,
+    "rv_lookback": 20,
+    "vega_notional_per_leg": 10000.0,
+    "risk_free": 0.045
+  },
+  "headline": {
+    "label": "cross_vol_arb",
+    "n": 271,
+    "pnl": 47016.94,
+    "wr": 0.6568265682656826,
+    "sharpe": 2.281,
+    "cagr_pct": 6.651,
+    "max_dd_pct": 5.154,
+    "avg_pnl": 173.49,
+    "trades_per_yr": 45.28
+  },
+  "walk_forward": [
+    {
+      "year": 2020,
+      "label": "2020",
+      "n": 47,
+      "pnl": 6218.480000000001,
+      "wr": 0.5319148936170213,
+      "sharpe": 1.1,
+      "cagr_pct": 5.843,
+      "max_dd_pct": 5.154,
+      "avg_pnl": 132.31,
+      "trades_per_yr": 44.24
+    },
+    {
+      "year": 2021,
+      "label": "2021",
+      "n": 44,
+      "pnl": 12597.679999999998,
+      "wr": 0.75,
+      "sharpe": 4.52,
+      "cagr_pct": 11.849,
+      "max_dd_pct": 0.425,
+      "avg_pnl": 286.31,
+      "trades_per_yr": 41.53
+    },
+    {
+      "year": 2022,
+      "label": "2022",
+      "n": 45,
+      "pnl": 8891.48,
+      "wr": 0.7333333333333333,
+      "sharpe": 3.566,
+      "cagr_pct": 8.486,
+      "max_dd_pct": 1.283,
+      "avg_pnl": 197.59,
+      "trades_per_yr": 43.03
+    },
+    {
+      "year": 2023,
+      "label": "2023",
+      "n": 45,
+      "pnl": 1747.8499999999995,
+      "wr": 0.5777777777777777,
+      "sharpe": 0.458,
+      "cagr_pct": 1.702,
+      "max_dd_pct": 3.06,
+      "avg_pnl": 38.84,
+      "trades_per_yr": 43.83
+    },
+    {
+      "year": 2024,
+      "label": "2024",
+      "n": 47,
+      "pnl": 2987.07,
+      "wr": 0.574468085106383,
+      "sharpe": 1.183,
+      "cagr_pct": 2.802,
+      "max_dd_pct": 2.133,
+      "avg_pnl": 63.55,
+      "trades_per_yr": 44.13
+    },
+    {
+      "year": 2025,
+      "label": "2025",
+      "n": 43,
+      "pnl": 14574.38,
+      "wr": 0.7906976744186046,
+      "sharpe": 6.237,
+      "cagr_pct": 14.574,
+      "max_dd_pct": 0.354,
+      "avg_pnl": 338.94,
+      "trades_per_yr": 43.0
+    }
+  ],
+  "correlation_to_exp1220": {
+    "n_months": 83,
+    "pearson": 0.048,
+    "spearman": 0.189
+  },
+  "pair_breakdown": {
+    "XLI\u2191 / SPY\u2193": {
+      "n": 11,
+      "total_pnl": 1903.99,
+      "avg_pnl": 173.09,
+      "win_rate": 0.545
+    },
+    "XLI\u2191 / QQQ\u2193": {
+      "n": 15,
+      "total_pnl": 4497.64,
+      "avg_pnl": 299.84,
+      "win_rate": 0.8
+    },
+    "QQQ\u2191 / SPY\u2193": {
+      "n": 10,
+      "total_pnl": 2022.42,
+      "avg_pnl": 202.24,
+      "win_rate": 0.7
+    },
+    "SPY\u2191 / QQQ\u2193": {
+      "n": 23,
+      "total_pnl": 8174.51,
+      "avg_pnl": 355.41,
+      "win_rate": 0.739
+    },
+    "QQQ\u2191 / XLI\u2193": {
+      "n": 13,
+      "total_pnl": 2768.39,
+      "avg_pnl": 212.95,
+      "win_rate": 0.846
+    },
+    "XLF\u2191 / XLI\u2193": {
+      "n": 12,
+      "total_pnl": 2244.78,
+      "avg_pnl": 187.06,
+      "win_rate": 0.583
+    },
+    "XLF\u2191 / QQQ\u2193": {
+      "n": 41,
+      "total_pnl": 10346.84,
+      "avg_pnl": 252.36,
+      "win_rate": 0.634
+    },
+    "SPY\u2191 / XLF\u2193": {
+      "n": 53,
+      "total_pnl": 8958.07,
+      "avg_pnl": 169.02,
+      "win_rate": 0.717
+    },
+    "QQQ\u2191 / XLF\u2193": {
+      "n": 33,
+      "total_pnl": -1212.86,
+      "avg_pnl": -36.75,
+      "win_rate": 0.545
+    },
+    "XLI\u2191 / XLF\u2193": {
+      "n": 19,
+      "total_pnl": 5206.56,
+      "avg_pnl": 274.03,
+      "win_rate": 0.789
+    },
+    "SPY\u2191 / XLI\u2193": {
+      "n": 11,
+      "total_pnl": 929.24,
+      "avg_pnl": 84.48,
+      "win_rate": 0.545
+    },
+    "XLF\u2191 / SPY\u2193": {
+      "n": 30,
+      "total_pnl": 1177.36,
+      "avg_pnl": 39.25,
+      "win_rate": 0.5
+    }
+  },
+  "target_sharpe": 1.5,
+  "target_sharpe_met": true,
+  "target_corr_lt": 0.3,
+  "target_corr_met": true,
+  "first_trades_sample": [
+    {
+      "entry_date": "2020-01-06",
+      "exit_date": "2020-02-05",
+      "long": "XLI",
+      "long_iv": 0.117,
+      "long_rv_fwd": 0.1641,
+      "long_spread": 0.0191,
+      "short": "SPY",
+      "short_iv": 0.1335,
+      "short_rv_fwd": 0.1329,
+      "short_spread": 0.0608,
+      "pnl_long": 471.71,
+      "pnl_short": 6.13,
+      "pnl": 477.85
+    },
+    {
+      "entry_date": "2020-01-13",
+      "exit_date": "2020-02-12",
+      "long": "XLI",
+      "long_iv": 0.1195,
+      "long_rv_fwd": 0.1653,
+      "long_spread": 0.0278,
+      "short": "QQQ",
+      "short_iv": 0.1588,
+      "short_rv_fwd": 0.1617,
+      "short_spread": 0.0605,
+      "pnl_long": 458.17,
+      "pnl_short": -28.57,
+      "pnl": 429.6
+    },
+    {
+      "entry_date": "2020-01-27",
+      "exit_date": "2020-02-26",
+      "long": "QQQ",
+      "long_iv": 0.183,
+      "long_rv_fwd": 0.2375,
+      "long_spread": 0.0493,
+      "short": "SPY",
+      "short_iv": 0.1623,
+      "short_rv_fwd": 0.2007,
+      "short_spread": 0.0617,
+      "pnl_long": 544.53,
+      "pnl_short": -383.87,
+      "pnl": 160.66
+    },
+    {
+      "entry_date": "2020-02-03",
+      "exit_date": "2020-03-04",
+      "long": "QQQ",
+      "long_iv": 0.1636,
+      "long_rv_fwd": 0.3829,
+      "long_spread": 0.0171,
+      "short": "SPY",
+      "short_iv": 0.1629,
+      "short_rv_fwd": 0.3398,
+      "short_spread": 0.0425,
+      "pnl_long": 2192.96,
+      "pnl_short": -1768.47,
+      "pnl": 424.49
+    },
+    {
+      "entry_date": "2020-02-24",
+      "exit_date": "2020-03-24",
+      "long": "SPY",
+      "long_iv": 0.2085,
+      "long_rv_fwd": 0.8919,
+      "long_spread": 0.0247,
+      "short": "QQQ",
+      "short_iv": 0.3014,
+      "short_rv_fwd": 0.8972,
+      "short_spread": 0.0675,
+      "pnl_long": 6833.86,
+      "pnl_short": -5957.73,
+      "pnl": 876.14
+    }
+  ],
+  "last_trades_sample": [
+    {
+      "entry_date": "2025-11-03",
+      "exit_date": "2025-12-03",
+      "long": "SPY",
+      "long_iv": 0.1487,
+      "long_rv_fwd": 0.1472,
+      "long_spread": 0.0012,
+      "short": "QQQ",
+      "short_iv": 0.2989,
+      "short_rv_fwd": 0.2104,
+      "short_spread": 0.0984,
+      "pnl_long": -15.6,
+      "pnl_short": 884.29,
+      "pnl": 868.69
+    },
+    {
+      "entry_date": "2025-11-10",
+      "exit_date": "2025-12-10",
+      "long": "SPY",
+      "long_iv": 0.1503,
+      "long_rv_fwd": 0.1261,
+      "long_spread": 0.03,
+      "short": "QQQ",
+      "short_iv": 0.2894,
+      "short_rv_fwd": 0.1686,
+      "short_spread": 0.1072,
+      "pnl_long": -242.19,
+      "pnl_short": 1207.85,
+      "pnl": 965.66
+    },
+    {
+      "entry_date": "2025-11-17",
+      "exit_date": "2025-12-17",
+      "long": "SPY",
+      "long_iv": 0.1876,
+      "long_rv_fwd": 0.12,
+      "long_spread": 0.0568,
+      "short": "QQQ",
+      "short_iv": 0.2933,
+      "short_rv_fwd": 0.1779,
+      "short_spread": 0.1022,
+      "pnl_long": -676.0,
+      "pnl_short": 1154.42,
+      "pnl": 478.43
+    },
+    {
+      "entry_date": "2025-11-24",
+      "exit_date": "2025-12-24",
+      "long": "SPY",
+      "long_iv": 0.1642,
+      "long_rv_fwd": 0.0891,
+      "long_spread": 0.017,
+      "short": "XLI",
+      "short_iv": 0.1796,
+      "short_rv_fwd": 0.1401,
+      "short_spread": 0.0617,
+      "pnl_long": -750.89,
+      "pnl_short": 395.52,
+      "pnl": -355.37
+    },
+    {
+      "entry_date": "2025-12-01",
+      "exit_date": "2025-12-31",
+      "long": "SPY",
+      "long_iv": 0.1419,
+      "long_rv_fwd": 0.0841,
+      "long_spread": -0.0086,
+      "short": "XLF",
+      "short_iv": 0.1584,
+      "short_rv_fwd": 0.1058,
+      "short_spread": 0.0209,
+      "pnl_long": -577.63,
+      "pnl_short": 526.02,
+      "pnl": -51.61
+    }
+  ]
+}
