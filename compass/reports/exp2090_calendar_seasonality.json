@@ -1,0 +1,645 @@
+{
+  "experiment": "EXP-2090",
+  "title": "GLD/SLV Calendar Spread Seasonality Filter",
+  "timestamp": "2026-04-07T16:01:59.365830Z",
+  "hypothesis": "Monthly seasonality (Indian wedding season, Chinese New Year, etc.) creates exploitable patterns in GLD/SLV calendar-spread returns that can be captured via a pre-frozen sizing overlay.",
+  "protocol": {
+    "train_window": "2015-01-01 \u2192 2019-12-31",
+    "test_window": "2020-01-01 \u2192 2025-12-31",
+    "overlay": "mult = clip(1 + 0.5\u00b7z, 0.25, 1.75) where z is the per-month z-score of mean daily return computed from non-zero days in the train window only",
+    "earns_slot_threshold_delta_sharpe": 0.3
+  },
+  "pairs": [
+    {
+      "pair": "GLD",
+      "future": "GC=F",
+      "train_window": {
+        "start": "2015-01-01",
+        "end": "2019-12-31",
+        "n_days": 1136,
+        "metrics": {
+          "n_days": 1136,
+          "cagr_pct": 11.412,
+          "sharpe": 2.731,
+          "max_dd_pct": -1.435,
+          "vol_pct": 3.986,
+          "hit_rate_pct": 51.7
+        }
+      },
+      "test_window": {
+        "start": "2020-01-01",
+        "end": "2025-12-31",
+        "n_days": 1507
+      },
+      "profiles": {
+        "Jan": {
+          "n_train_days": 40,
+          "mean_daily_pct": 0.1335,
+          "z": 1.051,
+          "multiplier": 1.526
+        },
+        "Feb": {
+          "n_train_days": 37,
+          "mean_daily_pct": 0.0863,
+          "z": 0.101,
+          "multiplier": 1.051
+        },
+        "Mar": {
+          "n_train_days": 41,
+          "mean_daily_pct": 0.1001,
+          "z": 0.38,
+          "multiplier": 1.19
+        },
+        "Apr": {
+          "n_train_days": 40,
+          "mean_daily_pct": 0.0347,
+          "z": -0.934,
+          "multiplier": 0.533
+        },
+        "May": {
+          "n_train_days": 42,
+          "mean_daily_pct": 0.0191,
+          "z": -1.249,
+          "multiplier": 0.376
+        },
+        "Jun": {
+          "n_train_days": 35,
+          "mean_daily_pct": 0.0701,
+          "z": -0.223,
+          "multiplier": 0.889
+        },
+        "Jul": {
+          "n_train_days": 55,
+          "mean_daily_pct": 0.1582,
+          "z": 1.547,
+          "multiplier": 1.75
+        },
+        "Aug": {
+          "n_train_days": 67,
+          "mean_daily_pct": 0.1532,
+          "z": 1.446,
+          "multiplier": 1.723
+        },
+        "Sep": {
+          "n_train_days": 57,
+          "mean_daily_pct": 0.1232,
+          "z": 0.844,
+          "multiplier": 1.422
+        },
+        "Oct": {
+          "n_train_days": 68,
+          "mean_daily_pct": 0.0427,
+          "z": -0.774,
+          "multiplier": 0.613
+        },
+        "Nov": {
+          "n_train_days": 58,
+          "mean_daily_pct": 0.0356,
+          "z": -0.916,
+          "multiplier": 0.542
+        },
+        "Dec": {
+          "n_train_days": 47,
+          "mean_daily_pct": 0.0178,
+          "z": -1.274,
+          "multiplier": 0.363
+        }
+      },
+      "test_unfiltered": {
+        "n_days": 1507,
+        "cagr_pct": 18.139,
+        "sharpe": 2.77,
+        "max_dd_pct": -2.501,
+        "vol_pct": 6.086,
+        "hit_rate_pct": 83.3
+      },
+      "test_filtered": {
+        "n_days": 1507,
+        "cagr_pct": 16.307,
+        "sharpe": 2.347,
+        "max_dd_pct": -4.282,
+        "vol_pct": 6.53,
+        "hit_rate_pct": 83.3
+      },
+      "sharpe_lift": -0.423,
+      "cagr_lift_pct": -1.832,
+      "earns_slot": false,
+      "monthly_breakdown_test": {
+        "unfiltered": [
+          {
+            "month": 1,
+            "name": "Jan",
+            "n_days": 121,
+            "mean_daily_pct": 0.0451,
+            "total_pct": 5.451,
+            "sharpe": 1.928
+          },
+          {
+            "month": 2,
+            "name": "Feb",
+            "n_days": 115,
+            "mean_daily_pct": 0.0825,
+            "total_pct": 9.485,
+            "sharpe": 3.217
+          },
+          {
+            "month": 3,
+            "name": "Mar",
+            "n_days": 132,
+            "mean_daily_pct": 0.1461,
+            "total_pct": 19.279,
+            "sharpe": 4.241
+          },
+          {
+            "month": 4,
+            "name": "Apr",
+            "n_days": 124,
+            "mean_daily_pct": 0.1241,
+            "total_pct": 15.39,
+            "sharpe": 3.932
+          },
+          {
+            "month": 5,
+            "name": "May",
+            "n_days": 126,
+            "mean_daily_pct": 0.0512,
+            "total_pct": 6.454,
+            "sharpe": 2.559
+          },
+          {
+            "month": 6,
+            "name": "Jun",
+            "n_days": 125,
+            "mean_daily_pct": 0.0401,
+            "total_pct": 5.015,
+            "sharpe": 1.462
+          },
+          {
+            "month": 7,
+            "name": "Jul",
+            "n_days": 127,
+            "mean_daily_pct": 0.0502,
+            "total_pct": 6.369,
+            "sharpe": 3.104
+          },
+          {
+            "month": 8,
+            "name": "Aug",
+            "n_days": 132,
+            "mean_daily_pct": 0.0103,
+            "total_pct": 1.362,
+            "sharpe": 0.438
+          },
+          {
+            "month": 9,
+            "name": "Sep",
+            "n_days": 124,
+            "mean_daily_pct": 0.0576,
+            "total_pct": 7.148,
+            "sharpe": 3.4
+          },
+          {
+            "month": 10,
+            "name": "Oct",
+            "n_days": 132,
+            "mean_daily_pct": 0.049,
+            "total_pct": 6.471,
+            "sharpe": 2.542
+          },
+          {
+            "month": 11,
+            "name": "Nov",
+            "n_days": 122,
+            "mean_daily_pct": 0.0472,
+            "total_pct": 5.753,
+            "sharpe": 2.442
+          },
+          {
+            "month": 12,
+            "name": "Dec",
+            "n_days": 127,
+            "mean_daily_pct": 0.0995,
+            "total_pct": 12.642,
+            "sharpe": 4.125
+          }
+        ],
+        "filtered": [
+          {
+            "month": 1,
+            "name": "Jan",
+            "n_days": 121,
+            "mean_daily_pct": 0.0687,
+            "total_pct": 8.317,
+            "sharpe": 1.928
+          },
+          {
+            "month": 2,
+            "name": "Feb",
+            "n_days": 115,
+            "mean_daily_pct": 0.0867,
+            "total_pct": 9.965,
+            "sharpe": 3.217
+          },
+          {
+            "month": 3,
+            "name": "Mar",
+            "n_days": 132,
+            "mean_daily_pct": 0.1738,
+            "total_pct": 22.942,
+            "sharpe": 4.241
+          },
+          {
+            "month": 4,
+            "name": "Apr",
+            "n_days": 124,
+            "mean_daily_pct": 0.0661,
+            "total_pct": 8.202,
+            "sharpe": 3.932
+          },
+          {
+            "month": 5,
+            "name": "May",
+            "n_days": 126,
+            "mean_daily_pct": 0.0192,
+            "total_pct": 2.425,
+            "sharpe": 2.559
+          },
+          {
+            "month": 6,
+            "name": "Jun",
+            "n_days": 125,
+            "mean_daily_pct": 0.0357,
+            "total_pct": 4.457,
+            "sharpe": 1.462
+          },
+          {
+            "month": 7,
+            "name": "Jul",
+            "n_days": 127,
+            "mean_daily_pct": 0.0878,
+            "total_pct": 11.146,
+            "sharpe": 3.104
+          },
+          {
+            "month": 8,
+            "name": "Aug",
+            "n_days": 132,
+            "mean_daily_pct": 0.0178,
+            "total_pct": 2.346,
+            "sharpe": 0.438
+          },
+          {
+            "month": 9,
+            "name": "Sep",
+            "n_days": 124,
+            "mean_daily_pct": 0.082,
+            "total_pct": 10.163,
+            "sharpe": 3.4
+          },
+          {
+            "month": 10,
+            "name": "Oct",
+            "n_days": 132,
+            "mean_daily_pct": 0.03,
+            "total_pct": 3.966,
+            "sharpe": 2.542
+          },
+          {
+            "month": 11,
+            "name": "Nov",
+            "n_days": 122,
+            "mean_daily_pct": 0.0256,
+            "total_pct": 3.118,
+            "sharpe": 2.442
+          },
+          {
+            "month": 12,
+            "name": "Dec",
+            "n_days": 127,
+            "mean_daily_pct": 0.0361,
+            "total_pct": 4.59,
+            "sharpe": 4.125
+          }
+        ]
+      }
+    },
+    {
+      "pair": "SLV",
+      "future": "SI=F",
+      "train_window": {
+        "start": "2015-01-01",
+        "end": "2019-12-31",
+        "n_days": 1136,
+        "metrics": {
+          "n_days": 1136,
+          "cagr_pct": 15.038,
+          "sharpe": 2.587,
+          "max_dd_pct": -2.198,
+          "vol_pct": 5.474,
+          "hit_rate_pct": 51.8
+        }
+      },
+      "test_window": {
+        "start": "2020-01-01",
+        "end": "2025-12-31",
+        "n_days": 1507
+      },
+      "profiles": {
+        "Jan": {
+          "n_train_days": 37,
+          "mean_daily_pct": 0.2589,
+          "z": 1.734,
+          "multiplier": 1.75
+        },
+        "Feb": {
+          "n_train_days": 36,
+          "mean_daily_pct": 0.2575,
+          "z": 1.717,
+          "multiplier": 1.75
+        },
+        "Mar": {
+          "n_train_days": 40,
+          "mean_daily_pct": 0.1541,
+          "z": 0.481,
+          "multiplier": 1.241
+        },
+        "Apr": {
+          "n_train_days": 41,
+          "mean_daily_pct": 0.0783,
+          "z": -0.426,
+          "multiplier": 0.787
+        },
+        "May": {
+          "n_train_days": 43,
+          "mean_daily_pct": 0.006,
+          "z": -1.29,
+          "multiplier": 0.355
+        },
+        "Jun": {
+          "n_train_days": 40,
+          "mean_daily_pct": 0.0838,
+          "z": -0.36,
+          "multiplier": 0.82
+        },
+        "Jul": {
+          "n_train_days": 57,
+          "mean_daily_pct": 0.0711,
+          "z": -0.512,
+          "multiplier": 0.744
+        },
+        "Aug": {
+          "n_train_days": 64,
+          "mean_daily_pct": 0.1902,
+          "z": 0.913,
+          "multiplier": 1.457
+        },
+        "Sep": {
+          "n_train_days": 57,
+          "mean_daily_pct": 0.1468,
+          "z": 0.393,
+          "multiplier": 1.197
+        },
+        "Oct": {
+          "n_train_days": 65,
+          "mean_daily_pct": 0.0699,
+          "z": -0.526,
+          "multiplier": 0.737
+        },
+        "Nov": {
+          "n_train_days": 60,
+          "mean_daily_pct": 0.0381,
+          "z": -0.906,
+          "multiplier": 0.547
+        },
+        "Dec": {
+          "n_train_days": 49,
+          "mean_daily_pct": 0.012,
+          "z": -1.219,
+          "multiplier": 0.39
+        }
+      },
+      "test_unfiltered": {
+        "n_days": 1507,
+        "cagr_pct": 32.878,
+        "sharpe": 2.355,
+        "max_dd_pct": -6.079,
+        "vol_pct": 12.402,
+        "hit_rate_pct": 85.0
+      },
+      "test_filtered": {
+        "n_days": 1507,
+        "cagr_pct": 31.782,
+        "sharpe": 2.064,
+        "max_dd_pct": -8.796,
+        "vol_pct": 13.839,
+        "hit_rate_pct": 85.0
+      },
+      "sharpe_lift": -0.291,
+      "cagr_lift_pct": -1.096,
+      "earns_slot": false,
+      "monthly_breakdown_test": {
+        "unfiltered": [
+          {
+            "month": 1,
+            "name": "Jan",
+            "n_days": 121,
+            "mean_daily_pct": 0.0924,
+            "total_pct": 11.184,
+            "sharpe": 1.737
+          },
+          {
+            "month": 2,
+            "name": "Feb",
+            "n_days": 115,
+            "mean_daily_pct": 0.1817,
+            "total_pct": 20.896,
+            "sharpe": 3.505
+          },
+          {
+            "month": 3,
+            "name": "Mar",
+            "n_days": 132,
+            "mean_daily_pct": 0.1617,
+            "total_pct": 21.341,
+            "sharpe": 2.883
+          },
+          {
+            "month": 4,
+            "name": "Apr",
+            "n_days": 124,
+            "mean_daily_pct": 0.1347,
+            "total_pct": 16.707,
+            "sharpe": 2.192
+          },
+          {
+            "month": 5,
+            "name": "May",
+            "n_days": 126,
+            "mean_daily_pct": 0.0991,
+            "total_pct": 12.489,
+            "sharpe": 2.279
+          },
+          {
+            "month": 6,
+            "name": "Jun",
+            "n_days": 125,
+            "mean_daily_pct": 0.1011,
+            "total_pct": 12.639,
+            "sharpe": 2.127
+          },
+          {
+            "month": 7,
+            "name": "Jul",
+            "n_days": 127,
+            "mean_daily_pct": 0.1423,
+            "total_pct": 18.066,
+            "sharpe": 3.515
+          },
+          {
+            "month": 8,
+            "name": "Aug",
+            "n_days": 132,
+            "mean_daily_pct": 0.0598,
+            "total_pct": 7.888,
+            "sharpe": 1.232
+          },
+          {
+            "month": 9,
+            "name": "Sep",
+            "n_days": 124,
+            "mean_daily_pct": 0.0857,
+            "total_pct": 10.626,
+            "sharpe": 1.904
+          },
+          {
+            "month": 10,
+            "name": "Oct",
+            "n_days": 132,
+            "mean_daily_pct": 0.0678,
+            "total_pct": 8.956,
+            "sharpe": 1.551
+          },
+          {
+            "month": 11,
+            "name": "Nov",
+            "n_days": 122,
+            "mean_daily_pct": 0.1466,
+            "total_pct": 17.889,
+            "sharpe": 3.11
+          },
+          {
+            "month": 12,
+            "name": "Dec",
+            "n_days": 127,
+            "mean_daily_pct": 0.1259,
+            "total_pct": 15.989,
+            "sharpe": 2.51
+          }
+        ],
+        "filtered": [
+          {
+            "month": 1,
+            "name": "Jan",
+            "n_days": 121,
+            "mean_daily_pct": 0.1617,
+            "total_pct": 19.571,
+            "sharpe": 1.737
+          },
+          {
+            "month": 2,
+            "name": "Feb",
+            "n_days": 115,
+            "mean_daily_pct": 0.318,
+            "total_pct": 36.567,
+            "sharpe": 3.505
+          },
+          {
+            "month": 3,
+            "name": "Mar",
+            "n_days": 132,
+            "mean_daily_pct": 0.2006,
+            "total_pct": 26.477,
+            "sharpe": 2.883
+          },
+          {
+            "month": 4,
+            "name": "Apr",
+            "n_days": 124,
+            "mean_daily_pct": 0.106,
+            "total_pct": 13.15,
+            "sharpe": 2.192
+          },
+          {
+            "month": 5,
+            "name": "May",
+            "n_days": 126,
+            "mean_daily_pct": 0.0352,
+            "total_pct": 4.432,
+            "sharpe": 2.279
+          },
+          {
+            "month": 6,
+            "name": "Jun",
+            "n_days": 125,
+            "mean_daily_pct": 0.0829,
+            "total_pct": 10.365,
+            "sharpe": 2.127
+          },
+          {
+            "month": 7,
+            "name": "Jul",
+            "n_days": 127,
+            "mean_daily_pct": 0.1058,
+            "total_pct": 13.438,
+            "sharpe": 3.515
+          },
+          {
+            "month": 8,
+            "name": "Aug",
+            "n_days": 132,
+            "mean_daily_pct": 0.087,
+            "total_pct": 11.49,
+            "sharpe": 1.232
+          },
+          {
+            "month": 9,
+            "name": "Sep",
+            "n_days": 124,
+            "mean_daily_pct": 0.1025,
+            "total_pct": 12.716,
+            "sharpe": 1.904
+          },
+          {
+            "month": 10,
+            "name": "Oct",
+            "n_days": 132,
+            "mean_daily_pct": 0.05,
+            "total_pct": 6.602,
+            "sharpe": 1.551
+          },
+          {
+            "month": 11,
+            "name": "Nov",
+            "n_days": 122,
+            "mean_daily_pct": 0.0802,
+            "total_pct": 9.781,
+            "sharpe": 3.11
+          },
+          {
+            "month": 12,
+            "name": "Dec",
+            "n_days": 127,
+            "mean_daily_pct": 0.0492,
+            "total_pct": 6.243,
+            "sharpe": 2.51
+          }
+        ]
+      }
+    }
+  ],
+  "decision": {
+    "GLD": "REJECTED",
+    "SLV": "REJECTED"
+  },
+  "rule_zero": "EXP-1770 walk-forward OOS streams from Yahoo GLD/SLV/GC=F/SI=F. Overlay multipliers frozen on train window, applied as-is on test window. No test-window leakage, no synthetic data."
+}
