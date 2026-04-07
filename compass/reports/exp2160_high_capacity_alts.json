@@ -1,0 +1,422 @@
+{
+  "experiment": "EXP-2160",
+  "tag": "EXP-2160",
+  "description": "High-capacity alternatives to GLD/SLV calendar spreads",
+  "data_sources": {
+    "spot": "Yahoo Finance daily close",
+    "options": "IronVault data/options_cache.db",
+    "iv_method": "Black-Scholes inversion (Brent) for strike selection & delta hedge"
+  },
+  "coverage": {
+    "SPY": {
+      "n_contracts": 193272,
+      "n_snapshot_dates": 1244
+    },
+    "QQQ": {
+      "n_contracts": 23022,
+      "n_snapshot_dates": 99
+    },
+    "IWM": {
+      "n_contracts": 0,
+      "n_snapshot_dates": 0
+    },
+    "XLF": {
+      "n_contracts": 9256,
+      "n_snapshot_dates": 312
+    },
+    "XLI": {
+      "n_contracts": 17287,
+      "n_snapshot_dates": 313
+    }
+  },
+  "window": {
+    "start": "2020-01-01",
+    "end": "2025-12-31"
+  },
+  "capital": 100000.0,
+  "config": {
+    "credit_spread_target_dte": 30,
+    "credit_spread_short_delta": -0.3,
+    "credit_spread_long_delta": -0.15,
+    "credit_spread_risk_per_trade": 0.02,
+    "straddle_target_dte": 7,
+    "straddle_risk_per_trade": 0.01
+  },
+  "variant_metrics": {
+    "SPY_short_straddle": {
+      "n_days": 1566,
+      "n_trades": 301,
+      "n_wins": 179,
+      "win_rate": 0.5946843853820598,
+      "total_return": 0.023019561744345607,
+      "cagr": 0.0038011732675682364,
+      "sharpe_daily_spread": 0.3709917871077151,
+      "sharpe_per_trade": 0.15918152219519324,
+      "max_dd": -0.03866862593893109,
+      "vol": 0.01000664287794322
+    },
+    "XLF_put_credit_spread": {
+      "n_days": 1566,
+      "n_trades": 248,
+      "n_wins": 244,
+      "win_rate": 0.9838709677419355,
+      "total_return": 1.7380612355114504,
+      "cagr": 0.18283408454986994,
+      "sharpe_daily_spread": 27.22289130326344,
+      "sharpe_per_trade": 11.285825827396735,
+      "max_dd": -0.014535192854193116,
+      "vol": 0.005956608106307552
+    },
+    "XLI_put_credit_spread": {
+      "n_days": 1566,
+      "n_trades": 248,
+      "n_wins": 240,
+      "win_rate": 0.967741935483871,
+      "total_return": 1.7487290252411074,
+      "cagr": 0.18360109111108014,
+      "sharpe_daily_spread": 21.445712442583513,
+      "sharpe_per_trade": 5.995554870839876,
+      "max_dd": -0.013701831285693767,
+      "vol": 0.007590947497469028
+    }
+  },
+  "correlations_vs_exp1220": {
+    "SPY_short_straddle": -0.578548660152751,
+    "XLF_put_credit_spread": 0.12241154197615936,
+    "XLI_put_credit_spread": -0.1289538799201462
+  },
+  "target_pass": {
+    "SPY_short_straddle": {
+      "sharpe_per_trade_ge_2": false,
+      "sharpe_daily_spread_ge_2": false,
+      "abs_corr_lt_0_30": false,
+      "note": "Use sharpe_per_trade for target assessment; sharpe_daily_spread is method-inflated on high-win-rate strategies due to P&L smearing across the holding period."
+    },
+    "XLF_put_credit_spread": {
+      "sharpe_per_trade_ge_2": true,
+      "sharpe_daily_spread_ge_2": true,
+      "abs_corr_lt_0_30": true,
+      "note": "Use sharpe_per_trade for target assessment; sharpe_daily_spread is method-inflated on high-win-rate strategies due to P&L smearing across the holding period."
+    },
+    "XLI_put_credit_spread": {
+      "sharpe_per_trade_ge_2": true,
+      "sharpe_daily_spread_ge_2": true,
+      "abs_corr_lt_0_30": true,
+      "note": "Use sharpe_per_trade for target assessment; sharpe_daily_spread is method-inflated on high-win-rate strategies due to P&L smearing across the holding period."
+    }
+  },
+  "blocked_variants": {
+    "QQQ": {
+      "reason": "only 99 sparse IronVault snapshots ending 2023 \u2014 weekly cadence needs \u22655\u00d7 more density",
+      "unblock": "OCC-construction backfill via Polygon Starter (same path as TLT Dec 2025 backfill)",
+      "coverage": {
+        "n_contracts": 23022,
+        "n_snapshot_dates": 99
+      }
+    },
+    "IWM": {
+      "reason": "0 IronVault contracts \u2014 missing entirely",
+      "unblock": "Polygon Starter backfill from scratch + OCC symbol construction",
+      "coverage": {
+        "n_contracts": 0,
+        "n_snapshot_dates": 0
+      }
+    }
+  },
+  "trade_counts": {
+    "SPY_short_straddle": 301,
+    "XLF_put_credit_spread": 248,
+    "XLI_put_credit_spread": 248
+  },
+  "first_trades_sample": {
+    "SPY_short_straddle": [
+      {
+        "entry_date": "2020-01-27",
+        "expiration": "2020-02-03",
+        "strike": 323.0,
+        "call_symbol": "O:SPY200203C00323000",
+        "put_symbol": "O:SPY200203P00323000",
+        "call_entry": 3.38,
+        "put_entry": 2.91,
+        "call_exit": 0.88,
+        "put_exit": 0.01,
+        "premium_collected": 6.29,
+        "option_pnl_per_contract": 540.0,
+        "delta_hedge_pnl_per_share": 3.304849771817367,
+        "net_pnl_per_contract": 870.4849771817367,
+        "pnl_pct_capital": 0.004613062942139569,
+        "n_rehedges": 4.0
+      },
+      {
+        "entry_date": "2020-02-24",
+        "expiration": "2020-03-02",
+        "strike": 324.0,
+        "call_symbol": "O:SPY200302C00324000",
+        "put_symbol": "O:SPY200302P00324000",
+        "call_entry": 3.7,
+        "put_entry": 5.58,
+        "call_exit": 0.01,
+        "put_exit": 22.07,
+        "premium_collected": 9.280000000000001,
+        "option_pnl_per_contract": -1280.0,
+        "delta_hedge_pnl_per_share": -13.073985890302218,
+        "net_pnl_per_contract": -2587.398589030222,
+        "pnl_pct_capital": -0.009293816770941887,
+        "n_rehedges": 4.0
+      },
+      {
+        "entry_date": "2020-03-02",
+        "expiration": "2020-03-09",
+        "strike": 310.0,
+        "call_symbol": "O:SPY200309C00310000",
+        "put_symbol": "O:SPY200309P00310000",
+        "call_entry": 5.01,
+        "put_entry": 6.29,
+        "call_exit": 0.01,
+        "put_exit": 35.0,
+        "premium_collected": 11.3,
+        "option_pnl_per_contract": -2371.0,
+        "delta_hedge_pnl_per_share": 5.464088419689093,
+        "net_pnl_per_contract": -1824.591158031091,
+        "pnl_pct_capital": -0.005382274802451595,
+        "n_rehedges": 4.0
+      },
+      {
+        "entry_date": "2020-03-09",
+        "expiration": "2020-03-16",
+        "strike": 275.0,
+        "call_symbol": "O:SPY200316C00275000",
+        "put_symbol": "O:SPY200316P00275000",
+        "call_entry": 10.05,
+        "put_entry": 9.68,
+        "call_exit": 0.01,
+        "put_exit": 33.25,
+        "premium_collected": 19.73,
+        "option_pnl_per_contract": -1353.0,
+        "delta_hedge_pnl_per_share": 23.452709085904285,
+        "net_pnl_per_contract": 992.2709085904286,
+        "pnl_pct_capital": 0.0016764164699956555,
+        "n_rehedges": 4.0
+      },
+      {
+        "entry_date": "2020-03-23",
+        "expiration": "2020-03-30",
+        "strike": 300.0,
+        "call_symbol": "O:SPY200330C00300000",
+        "put_symbol": "O:SPY200330P00300000",
+        "call_entry": 0.04,
+        "put_entry": 80.33,
+        "call_exit": 0.01,
+        "put_exit": 39.67,
+        "premium_collected": 80.37,
+        "option_pnl_per_contract": 4069.0,
+        "delta_hedge_pnl_per_share": 37.735583410092175,
+        "net_pnl_per_contract": 7842.558341009218,
+        "pnl_pct_capital": 0.003252688955667213,
+        "n_rehedges": 4.0
+      }
+    ],
+    "XLF_put_credit_spread": [
+      {
+        "ticker": "XLF",
+        "entry_date": "2020-01-02",
+        "expiration": "2021-01-15",
+        "short_strike": 27.0,
+        "long_strike": 26.0,
+        "short_symbol": "O:XLF210115P00027000",
+        "long_symbol": "O:XLF210115P00026000",
+        "short_entry": 0.95,
+        "long_entry": 0.75,
+        "short_exit": 0.01,
+        "long_exit": 0.01,
+        "net_credit": 0.19999999999999996,
+        "exit_net": 0.0,
+        "pnl_per_spread": 19.999999999999996,
+        "pnl_pct_capital": 0.004999999999999999,
+        "short_delta": -0.192889631715369,
+        "long_delta": -0.15799797132843518
+      },
+      {
+        "ticker": "XLF",
+        "entry_date": "2020-01-27",
+        "expiration": "2021-01-15",
+        "short_strike": 28.0,
+        "long_strike": 25.0,
+        "short_symbol": "O:XLF210115P00028000",
+        "long_symbol": "O:XLF210115P00025000",
+        "short_entry": 1.4,
+        "long_entry": 0.65,
+        "short_exit": 0.01,
+        "long_exit": 0.01,
+        "net_credit": 0.7499999999999999,
+        "exit_net": 0.0,
+        "pnl_per_spread": 74.99999999999999,
+        "pnl_pct_capital": 0.006666666666666665,
+        "short_delta": -0.2801783765023954,
+        "long_delta": -0.1514667467588866
+      },
+      {
+        "ticker": "XLF",
+        "entry_date": "2020-02-03",
+        "expiration": "2021-01-15",
+        "short_strike": 28.0,
+        "long_strike": 25.0,
+        "short_symbol": "O:XLF210115P00028000",
+        "long_symbol": "O:XLF210115P00025000",
+        "short_entry": 1.36,
+        "long_entry": 0.67,
+        "short_exit": 0.01,
+        "long_exit": 0.01,
+        "net_credit": 0.6900000000000001,
+        "exit_net": 0.0,
+        "pnl_per_spread": 69.0,
+        "pnl_pct_capital": 0.005974025974025974,
+        "short_delta": -0.2707488747504597,
+        "long_delta": -0.1500364444003326
+      },
+      {
+        "ticker": "XLF",
+        "entry_date": "2020-02-18",
+        "expiration": "2021-01-15",
+        "short_strike": 28.0,
+        "long_strike": 26.0,
+        "short_symbol": "O:XLF210115P00028000",
+        "long_symbol": "O:XLF210115P00026000",
+        "short_entry": 0.99,
+        "long_entry": 0.6,
+        "short_exit": 0.01,
+        "long_exit": 0.01,
+        "net_credit": 0.39,
+        "exit_net": 0.0,
+        "pnl_per_spread": 39.0,
+        "pnl_pct_capital": 0.0048447204968944104,
+        "short_delta": -0.22702220578800336,
+        "long_delta": -0.1476342272004626
+      },
+      {
+        "ticker": "XLF",
+        "entry_date": "2020-02-24",
+        "expiration": "2021-01-15",
+        "short_strike": 28.0,
+        "long_strike": 25.0,
+        "short_symbol": "O:XLF210115P00028000",
+        "long_symbol": "O:XLF210115P00025000",
+        "short_entry": 1.45,
+        "long_entry": 0.72,
+        "short_exit": 0.01,
+        "long_exit": 0.01,
+        "net_credit": 0.73,
+        "exit_net": 0.0,
+        "pnl_per_spread": 73.0,
+        "pnl_pct_capital": 0.006431718061674008,
+        "short_delta": -0.29112158059619486,
+        "long_delta": -0.1625368354112786
+      }
+    ],
+    "XLI_put_credit_spread": [
+      {
+        "ticker": "XLI",
+        "entry_date": "2020-03-09",
+        "expiration": "2020-04-17",
+        "short_strike": 56.0,
+        "long_strike": 53.0,
+        "short_symbol": "O:XLI200417P00056000",
+        "long_symbol": "O:XLI200417P00053000",
+        "short_entry": 1.81,
+        "long_entry": 1.66,
+        "short_exit": 0.08,
+        "long_exit": 0.03,
+        "net_credit": 0.15000000000000013,
+        "exit_net": 0.05,
+        "pnl_per_spread": 10.000000000000012,
+        "pnl_pct_capital": 0.0007017543859649133,
+        "short_delta": -0.19748441280053508,
+        "long_delta": -0.16303333580613244
+      },
+      {
+        "ticker": "XLI",
+        "entry_date": "2020-03-16",
+        "expiration": "2020-04-17",
+        "short_strike": 50.0,
+        "long_strike": 48.0,
+        "short_symbol": "O:XLI200417P00050000",
+        "long_symbol": "O:XLI200417P00048000",
+        "short_entry": 3.4,
+        "long_entry": 2.16,
+        "short_exit": 0.02,
+        "long_exit": 0.08,
+        "net_credit": 1.2399999999999998,
+        "exit_net": -0.06,
+        "pnl_per_spread": 129.99999999999997,
+        "pnl_pct_capital": 0.034210526315789455,
+        "short_delta": -0.2932722704361994,
+        "long_delta": -0.2306048769649347
+      },
+      {
+        "ticker": "XLI",
+        "entry_date": "2020-03-30",
+        "expiration": "2020-04-24",
+        "short_strike": 55.0,
+        "long_strike": 47.0,
+        "short_symbol": "O:XLI200424P00055000",
+        "long_symbol": "O:XLI200424P00047000",
+        "short_entry": 2.65,
+        "long_entry": 1.45,
+        "short_exit": 0.02,
+        "long_exit": 0.02,
+        "net_credit": 1.2,
+        "exit_net": 0.0,
+        "pnl_per_spread": 120.0,
+        "pnl_pct_capital": 0.003529411764705883,
+        "short_delta": -0.3017198318234866,
+        "long_delta": -0.15138574249378867
+      },
+      {
+        "ticker": "XLI",
+        "entry_date": "2020-04-06",
+        "expiration": "2020-05-15",
+        "short_strike": 55.0,
+        "long_strike": 50.0,
+        "short_symbol": "O:XLI200515P00055000",
+        "long_symbol": "O:XLI200515P00050000",
+        "short_entry": 1.86,
+        "long_entry": 1.02,
+        "short_exit": 0.01,
+        "long_exit": 0.01,
+        "net_credit": 0.8400000000000001,
+        "exit_net": 0.0,
+        "pnl_per_spread": 84.00000000000001,
+        "pnl_pct_capital": 0.004038461538461539,
+        "short_delta": -0.2635547869229746,
+        "long_delta": -0.1477493525698208
+      },
+      {
+        "ticker": "XLI",
+        "entry_date": "2020-04-13",
+        "expiration": "2020-05-15",
+        "short_strike": 55.0,
+        "long_strike": 52.0,
+        "short_symbol": "O:XLI200515P00055000",
+        "long_symbol": "O:XLI200515P00052000",
+        "short_entry": 1.57,
+        "long_entry": 0.93,
+        "short_exit": 0.01,
+        "long_exit": 0.02,
+        "net_credit": 0.64,
+        "exit_net": -0.01,
+        "pnl_per_spread": 65.0,
+        "pnl_pct_capital": 0.005508474576271187,
+        "short_delta": -0.23044620478270228,
+        "long_delta": -0.15016983352606195
+      }
+    ]
+  },
+  "exp1220_yearly_protected_return": {
+    "2020": 0.5297,
+    "2021": 0.4913,
+    "2022": 0.1482,
+    "2023": 0.401,
+    "2024": 0.3151,
+    "2025": 0.3724
+  }
+}
