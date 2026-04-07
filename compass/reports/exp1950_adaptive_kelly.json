@@ -1,0 +1,584 @@
+{
+  "experiment": "EXP-1950",
+  "title": "Adaptive Kelly Position Sizing for EXP-1220",
+  "generated": "2026-04-07T14:01:07",
+  "rule_zero": true,
+  "sources": {
+    "exp1220": "scripts.ultimate_portfolio.load_exp1220_dynamic (real Yahoo SPY+^VIX+^VIX3M)",
+    "regime": "compass.regime.RegimeClassifier on real Yahoo SPY+^VIX",
+    "sharpe_formula": "compass.metrics.full_metrics (mean/std \u00d7 \u221a252)"
+  },
+  "data_window": {
+    "start": "2020-01-02",
+    "end": "2025-12-30",
+    "n_days": 1507
+  },
+  "regime_distribution": {
+    "bull": 0.8076,
+    "high_vol": 0.0849,
+    "bear": 0.0823,
+    "crash": 0.0126,
+    "low_vol": 0.0126
+  },
+  "hyperparameters": {
+    "kelly_fractions": [
+      0.25,
+      0.5,
+      0.75
+    ],
+    "lookbacks": [
+      60,
+      90,
+      120
+    ],
+    "regime_multipliers": {
+      "bull": 1.0,
+      "low_vol": 1.1,
+      "high_vol": 0.6,
+      "bear": 0.4,
+      "crash": 0.2
+    },
+    "max_leverage": 3.0,
+    "baseline_leverage": 2.0
+  },
+  "baseline": {
+    "name": "static_2.0x",
+    "leverage": 2.0,
+    "metrics": {
+      "cagr_pct": 149.0,
+      "sharpe": 3.89,
+      "max_dd_pct": 14.74,
+      "calmar": 10.11,
+      "sortino": 6.91,
+      "vol_pct": 22.99,
+      "total_ret_pct": 23308.02,
+      "n_days": 1507
+    },
+    "yearly": [
+      {
+        "cagr_pct": 120.64,
+        "sharpe": 4.7,
+        "max_dd_pct": 5.2,
+        "calmar": 23.2,
+        "sortino": 8.04,
+        "vol_pct": 16.17,
+        "total_ret_pct": 121.34,
+        "n_days": 253,
+        "year": 2020
+      },
+      {
+        "cagr_pct": 236.51,
+        "sharpe": 5.51,
+        "max_dd_pct": 3.58,
+        "calmar": 66.12,
+        "sortino": 12.49,
+        "vol_pct": 21.69,
+        "total_ret_pct": 236.51,
+        "n_days": 252,
+        "year": 2021
+      },
+      {
+        "cagr_pct": 44.42,
+        "sharpe": 1.41,
+        "max_dd_pct": 14.74,
+        "calmar": 3.01,
+        "sortino": 2.32,
+        "vol_pct": 25.07,
+        "total_ret_pct": 44.21,
+        "n_days": 251,
+        "year": 2022
+      },
+      {
+        "cagr_pct": 203.44,
+        "sharpe": 3.63,
+        "max_dd_pct": 8.64,
+        "calmar": 23.53,
+        "sortino": 6.59,
+        "vol_pct": 30.65,
+        "total_ret_pct": 200.78,
+        "n_days": 250,
+        "year": 2023
+      },
+      {
+        "cagr_pct": 160.96,
+        "sharpe": 4.67,
+        "max_dd_pct": 3.23,
+        "calmar": 49.84,
+        "sortino": 8.96,
+        "vol_pct": 20.04,
+        "total_ret_pct": 160.96,
+        "n_days": 252,
+        "year": 2024
+      },
+      {
+        "cagr_pct": 181.09,
+        "sharpe": 4.75,
+        "max_dd_pct": 5.3,
+        "calmar": 34.17,
+        "sortino": 9.72,
+        "vol_pct": 21.32,
+        "total_ret_pct": 177.66,
+        "n_days": 249,
+        "year": 2025
+      }
+    ]
+  },
+  "variants": [
+    {
+      "name": "kelly0.25_lb60_noregime",
+      "lookback": 60,
+      "kelly_fraction": 0.25,
+      "regime_applied": false,
+      "avg_leverage": 2.846,
+      "max_leverage": 3.0,
+      "min_leverage": 0.0,
+      "metrics": {
+        "cagr_pct": 245.39,
+        "sharpe": 3.85,
+        "max_dd_pct": 19.68,
+        "calmar": 12.47,
+        "sortino": 6.52,
+        "vol_pct": 32.47,
+        "total_ret_pct": 165547.24,
+        "n_days": 1507
+      },
+      "sharpe_lift": -0.04
+    },
+    {
+      "name": "kelly0.25_lb60_regime",
+      "lookback": 60,
+      "kelly_fraction": 0.25,
+      "regime_applied": true,
+      "avg_leverage": 2.585,
+      "max_leverage": 3.0,
+      "min_leverage": 0.0,
+      "metrics": {
+        "cagr_pct": 223.68,
+        "sharpe": 3.74,
+        "max_dd_pct": 19.68,
+        "calmar": 11.37,
+        "sortino": 6.11,
+        "vol_pct": 31.63,
+        "total_ret_pct": 112252.61,
+        "n_days": 1507
+      },
+      "sharpe_lift": -0.15
+    },
+    {
+      "name": "kelly0.25_lb90_noregime",
+      "lookback": 90,
+      "kelly_fraction": 0.25,
+      "regime_applied": false,
+      "avg_leverage": 2.929,
+      "max_leverage": 3.0,
+      "min_leverage": 0.0,
+      "metrics": {
+        "cagr_pct": 270.18,
+        "sharpe": 3.92,
+        "max_dd_pct": 20.14,
+        "calmar": 13.41,
+        "sortino": 6.86,
+        "vol_pct": 33.78,
+        "total_ret_pct": 250615.33,
+        "n_days": 1507
+      },
+      "sharpe_lift": 0.03
+    },
+    {
+      "name": "kelly0.25_lb90_regime",
+      "lookback": 90,
+      "kelly_fraction": 0.25,
+      "regime_applied": true,
+      "avg_leverage": 2.655,
+      "max_leverage": 3.0,
+      "min_leverage": 0.0,
+      "metrics": {
+        "cagr_pct": 239.51,
+        "sharpe": 3.83,
+        "max_dd_pct": 20.14,
+        "calmar": 11.89,
+        "sortino": 6.33,
+        "vol_pct": 32.15,
+        "total_ret_pct": 149366.74,
+        "n_days": 1507
+      },
+      "sharpe_lift": -0.06
+    },
+    {
+      "name": "kelly0.25_lb120_noregime",
+      "lookback": 120,
+      "kelly_fraction": 0.25,
+      "regime_applied": false,
+      "avg_leverage": 2.949,
+      "max_leverage": 3.0,
+      "min_leverage": 0.0,
+      "metrics": {
+        "cagr_pct": 273.77,
+        "sharpe": 3.91,
+        "max_dd_pct": 21.5,
+        "calmar": 12.74,
+        "sortino": 6.88,
+        "vol_pct": 34.09,
+        "total_ret_pct": 265533.49,
+        "n_days": 1507
+      },
+      "sharpe_lift": 0.02
+    },
+    {
+      "name": "kelly0.25_lb120_regime",
+      "lookback": 120,
+      "kelly_fraction": 0.25,
+      "regime_applied": true,
+      "avg_leverage": 2.674,
+      "max_leverage": 3.0,
+      "min_leverage": 0.0,
+      "metrics": {
+        "cagr_pct": 242.88,
+        "sharpe": 3.82,
+        "max_dd_pct": 21.5,
+        "calmar": 11.3,
+        "sortino": 6.35,
+        "vol_pct": 32.48,
+        "total_ret_pct": 158483.07,
+        "n_days": 1507
+      },
+      "sharpe_lift": -0.07
+    },
+    {
+      "name": "kelly0.5_lb60_noregime",
+      "lookback": 60,
+      "kelly_fraction": 0.5,
+      "regime_applied": false,
+      "avg_leverage": 2.914,
+      "max_leverage": 3.0,
+      "min_leverage": 0.0,
+      "metrics": {
+        "cagr_pct": 260.18,
+        "sharpe": 3.89,
+        "max_dd_pct": 21.5,
+        "calmar": 12.1,
+        "sortino": 6.68,
+        "vol_pct": 33.25,
+        "total_ret_pct": 212752.95,
+        "n_days": 1507
+      },
+      "sharpe_lift": 0.0
+    },
+    {
+      "name": "kelly0.5_lb60_regime",
+      "lookback": 60,
+      "kelly_fraction": 0.5,
+      "regime_applied": true,
+      "avg_leverage": 2.646,
+      "max_leverage": 3.0,
+      "min_leverage": 0.0,
+      "metrics": {
+        "cagr_pct": 235.98,
+        "sharpe": 3.78,
+        "max_dd_pct": 21.5,
+        "calmar": 10.98,
+        "sortino": 6.24,
+        "vol_pct": 32.33,
+        "total_ret_pct": 140328.78,
+        "n_days": 1507
+      },
+      "sharpe_lift": -0.11
+    },
+    {
+      "name": "kelly0.5_lb90_noregime",
+      "lookback": 90,
+      "kelly_fraction": 0.5,
+      "regime_applied": false,
+      "avg_leverage": 2.957,
+      "max_leverage": 3.0,
+      "min_leverage": 0.0,
+      "metrics": {
+        "cagr_pct": 276.31,
+        "sharpe": 3.92,
+        "max_dd_pct": 21.77,
+        "calmar": 12.69,
+        "sortino": 6.93,
+        "vol_pct": 34.19,
+        "total_ret_pct": 276495.86,
+        "n_days": 1507
+      },
+      "sharpe_lift": 0.03
+    },
+    {
+      "name": "kelly0.5_lb90_regime",
+      "lookback": 90,
+      "kelly_fraction": 0.5,
+      "regime_applied": true,
+      "avg_leverage": 2.677,
+      "max_leverage": 3.0,
+      "min_leverage": 0.0,
+      "metrics": {
+        "cagr_pct": 244.52,
+        "sharpe": 3.83,
+        "max_dd_pct": 21.77,
+        "calmar": 11.23,
+        "sortino": 6.38,
+        "vol_pct": 32.54,
+        "total_ret_pct": 163068.06,
+        "n_days": 1507
+      },
+      "sharpe_lift": -0.06
+    },
+    {
+      "name": "kelly0.5_lb120_noregime",
+      "lookback": 120,
+      "kelly_fraction": 0.5,
+      "regime_applied": false,
+      "avg_leverage": 2.96,
+      "max_leverage": 3.0,
+      "min_leverage": 0.0,
+      "metrics": {
+        "cagr_pct": 276.58,
+        "sharpe": 3.92,
+        "max_dd_pct": 21.5,
+        "calmar": 12.87,
+        "sortino": 6.92,
+        "vol_pct": 34.21,
+        "total_ret_pct": 277712.64,
+        "n_days": 1507
+      },
+      "sharpe_lift": 0.03
+    },
+    {
+      "name": "kelly0.5_lb120_regime",
+      "lookback": 120,
+      "kelly_fraction": 0.5,
+      "regime_applied": true,
+      "avg_leverage": 2.68,
+      "max_leverage": 3.0,
+      "min_leverage": 0.0,
+      "metrics": {
+        "cagr_pct": 244.8,
+        "sharpe": 3.83,
+        "max_dd_pct": 21.5,
+        "calmar": 11.39,
+        "sortino": 6.38,
+        "vol_pct": 32.56,
+        "total_ret_pct": 163873.45,
+        "n_days": 1507
+      },
+      "sharpe_lift": -0.06
+    },
+    {
+      "name": "kelly0.75_lb60_noregime",
+      "lookback": 60,
+      "kelly_fraction": 0.75,
+      "regime_applied": false,
+      "avg_leverage": 2.927,
+      "max_leverage": 3.0,
+      "min_leverage": 0.0,
+      "metrics": {
+        "cagr_pct": 263.47,
+        "sharpe": 3.91,
+        "max_dd_pct": 21.5,
+        "calmar": 12.26,
+        "sortino": 6.72,
+        "vol_pct": 33.35,
+        "total_ret_pct": 224641.52,
+        "n_days": 1507
+      },
+      "sharpe_lift": 0.02
+    },
+    {
+      "name": "kelly0.75_lb60_regime",
+      "lookback": 60,
+      "kelly_fraction": 0.75,
+      "regime_applied": true,
+      "avg_leverage": 2.656,
+      "max_leverage": 3.0,
+      "min_leverage": 0.0,
+      "metrics": {
+        "cagr_pct": 238.59,
+        "sharpe": 3.79,
+        "max_dd_pct": 21.5,
+        "calmar": 11.1,
+        "sortino": 6.28,
+        "vol_pct": 32.41,
+        "total_ret_pct": 146973.72,
+        "n_days": 1507
+      },
+      "sharpe_lift": -0.1
+    },
+    {
+      "name": "kelly0.75_lb90_noregime",
+      "lookback": 90,
+      "kelly_fraction": 0.75,
+      "regime_applied": false,
+      "avg_leverage": 2.96,
+      "max_leverage": 3.0,
+      "min_leverage": 0.0,
+      "metrics": {
+        "cagr_pct": 276.58,
+        "sharpe": 3.92,
+        "max_dd_pct": 21.5,
+        "calmar": 12.87,
+        "sortino": 6.92,
+        "vol_pct": 34.21,
+        "total_ret_pct": 277712.64,
+        "n_days": 1507
+      },
+      "sharpe_lift": 0.03
+    },
+    {
+      "name": "kelly0.75_lb90_regime",
+      "lookback": 90,
+      "kelly_fraction": 0.75,
+      "regime_applied": true,
+      "avg_leverage": 2.68,
+      "max_leverage": 3.0,
+      "min_leverage": 0.0,
+      "metrics": {
+        "cagr_pct": 244.8,
+        "sharpe": 3.83,
+        "max_dd_pct": 21.5,
+        "calmar": 11.39,
+        "sortino": 6.38,
+        "vol_pct": 32.56,
+        "total_ret_pct": 163873.45,
+        "n_days": 1507
+      },
+      "sharpe_lift": -0.06
+    },
+    {
+      "name": "kelly0.75_lb120_noregime",
+      "lookback": 120,
+      "kelly_fraction": 0.75,
+      "regime_applied": false,
+      "avg_leverage": 2.96,
+      "max_leverage": 3.0,
+      "min_leverage": 0.0,
+      "metrics": {
+        "cagr_pct": 276.58,
+        "sharpe": 3.92,
+        "max_dd_pct": 21.5,
+        "calmar": 12.87,
+        "sortino": 6.92,
+        "vol_pct": 34.21,
+        "total_ret_pct": 277712.64,
+        "n_days": 1507
+      },
+      "sharpe_lift": 0.03
+    },
+    {
+      "name": "kelly0.75_lb120_regime",
+      "lookback": 120,
+      "kelly_fraction": 0.75,
+      "regime_applied": true,
+      "avg_leverage": 2.68,
+      "max_leverage": 3.0,
+      "min_leverage": 0.0,
+      "metrics": {
+        "cagr_pct": 244.8,
+        "sharpe": 3.83,
+        "max_dd_pct": 21.5,
+        "calmar": 11.39,
+        "sortino": 6.38,
+        "vol_pct": 32.56,
+        "total_ret_pct": 163873.45,
+        "n_days": 1507
+      },
+      "sharpe_lift": -0.06
+    }
+  ],
+  "best": {
+    "name": "kelly0.25_lb90_noregime",
+    "lookback": 90,
+    "kelly_fraction": 0.25,
+    "regime_applied": false,
+    "avg_leverage": 2.929,
+    "metrics": {
+      "cagr_pct": 270.18,
+      "sharpe": 3.92,
+      "max_dd_pct": 20.14,
+      "calmar": 13.41,
+      "sortino": 6.86,
+      "vol_pct": 33.78,
+      "total_ret_pct": 250615.33,
+      "n_days": 1507
+    },
+    "yearly": [
+      {
+        "cagr_pct": 184.24,
+        "sharpe": 4.7,
+        "max_dd_pct": 7.78,
+        "calmar": 23.69,
+        "sortino": 8.15,
+        "vol_pct": 21.81,
+        "total_ret_pct": 185.43,
+        "n_days": 253,
+        "year": 2020
+      },
+      {
+        "cagr_pct": 505.5,
+        "sharpe": 5.58,
+        "max_dd_pct": 5.34,
+        "calmar": 94.66,
+        "sortino": 12.65,
+        "vol_pct": 32.54,
+        "total_ret_pct": 505.5,
+        "n_days": 252,
+        "year": 2021
+      },
+      {
+        "cagr_pct": 66.07,
+        "sharpe": 1.44,
+        "max_dd_pct": 20.14,
+        "calmar": 3.28,
+        "sortino": 2.33,
+        "vol_pct": 36.61,
+        "total_ret_pct": 65.74,
+        "n_days": 251,
+        "year": 2022
+      },
+      {
+        "cagr_pct": 369.93,
+        "sharpe": 3.58,
+        "max_dd_pct": 12.78,
+        "calmar": 28.95,
+        "sortino": 6.33,
+        "vol_pct": 44.86,
+        "total_ret_pct": 364.19,
+        "n_days": 250,
+        "year": 2023
+      },
+      {
+        "cagr_pct": 314.88,
+        "sharpe": 4.75,
+        "max_dd_pct": 4.84,
+        "calmar": 65.01,
+        "sortino": 9.11,
+        "vol_pct": 30.06,
+        "total_ret_pct": 314.88,
+        "n_days": 252,
+        "year": 2024
+      },
+      {
+        "cagr_pct": 362.87,
+        "sharpe": 4.82,
+        "max_dd_pct": 7.88,
+        "calmar": 46.04,
+        "sortino": 9.86,
+        "vol_pct": 31.99,
+        "total_ret_pct": 354.5,
+        "n_days": 249,
+        "year": 2025
+      }
+    ],
+    "sharpe_lift": 0.03,
+    "cagr_delta_pct": 121.18,
+    "dd_delta_pct": 5.4,
+    "calmar_delta": 3.3
+  },
+  "success_criterion": {
+    "target_sharpe_lift": 0.5,
+    "kill_threshold": 0.2,
+    "measured_lift": 0.03,
+    "verdict": "KILL",
+    "note": "Sharpe lift +0.03 < +0.2 \u2014 below kill threshold"
+  }
+}
