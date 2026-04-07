@@ -1,0 +1,214 @@
+{
+  "experiment": "EXP-2330",
+  "title": "Monte Carlo Stress Test \u00b7 North Star v6",
+  "timestamp": "2026-04-07T19:04:42.639332Z",
+  "portfolio": {
+    "streams": [
+      "exp1220",
+      "xlf_cs",
+      "xli_cs",
+      "gld_cal",
+      "slv_cal",
+      "vol_arb",
+      "v5_hedge"
+    ],
+    "per_sleeve_leverages": {
+      "exp1220": 1.362,
+      "xlf_cs": 0.413,
+      "xli_cs": 0.2862,
+      "gld_cal": 0.2282,
+      "slv_cal": 0.112,
+      "vol_arb": 0.3861,
+      "v5_hedge": 0.2124
+    },
+    "gross_leverage": 3.0,
+    "target_vol_per_sleeve_pct": 15.0,
+    "max_gross_leverage": 3.0,
+    "historical_metrics": {
+      "n_days": 1566,
+      "cagr_pct": 25.196,
+      "sharpe": 6.017,
+      "max_dd_pct": -2.745,
+      "vol_pct": 3.748,
+      "hit_rate_pct": 60.2
+    }
+  },
+  "data": {
+    "source": "compass/cache/exp2280_v6_sparse.pkl",
+    "n_days": 1566,
+    "start": "2020-01-01",
+    "end": "2025-12-31"
+  },
+  "monte_carlo": {
+    "n_paths": 10000,
+    "horizon_days": 1260,
+    "terminal_equity": {
+      "median": 3.089727330761778,
+      "p05": 2.7503154925977595,
+      "p25": 2.9429945242190434,
+      "p75": 3.2448027189954436,
+      "p95": 3.4956416503819305,
+      "prob_loss": 0.0,
+      "prob_doubling": 1.0
+    },
+    "cagr_pct": {
+      "median": 25.31,
+      "p05": 22.43,
+      "p95": 28.44,
+      "mean": 25.34
+    },
+    "max_dd_pct": {
+      "median": -2.74,
+      "p05": -2.94,
+      "p25": -2.74,
+      "mean": -2.11,
+      "worst": -5.58
+    },
+    "sharpe": {
+      "median": 6.069,
+      "p05": 5.274,
+      "p95": 6.829,
+      "mean": 6.063
+    },
+    "breach_counts": {
+      "pct_paths_breaching_12pct_dd": 0.0,
+      "pct_paths_breaching_20pct_dd": 0.0,
+      "pct_paths_losing_money": 0.0
+    }
+  },
+  "crisis_replay": {
+    "2020_covid": {
+      "window": "2020-02-19 \u2192 2020-04-30",
+      "status": "OK",
+      "n_days": 52,
+      "cagr_pct": 18.934,
+      "sharpe": 2.335,
+      "max_dd_pct": -2.745,
+      "vol_pct": 7.55,
+      "hit_rate_pct": 57.7,
+      "total_return_pct": 3.643
+    },
+    "2022_bear": {
+      "window": "2022-01-03 \u2192 2022-10-31",
+      "status": "OK",
+      "n_days": 216,
+      "cagr_pct": 33.442,
+      "sharpe": 6.994,
+      "max_dd_pct": -0.68,
+      "vol_pct": 4.14,
+      "hit_rate_pct": 65.3,
+      "total_return_pct": 28.054
+    },
+    "2018_volmageddon": {
+      "window": "2018-02-01 \u2192 2018-02-16",
+      "status": "DATA_GAP",
+      "n_days": 0,
+      "note": "Window lies outside the 2020-2025 stream coverage; not extrapolated. No synthetic fill (Rule Zero)."
+    }
+  },
+  "correlation_stress": {
+    "forced_corr": 0.5,
+    "n_paths": 2000,
+    "horizon_days": 252,
+    "empirical_correlation": {
+      "median_cagr_pct": 22.47,
+      "median_vol_pct": 3.75,
+      "median_sharpe": 5.986,
+      "p05_max_dd_pct": -1.96,
+      "median_max_dd_pct": -1.19,
+      "worst_max_dd_pct": -3.46,
+      "pct_breaching_12_dd": 0.0
+    },
+    "forced_correlation": {
+      "median_cagr_pct": 22.5,
+      "median_vol_pct": 7.22,
+      "median_sharpe": 3.127,
+      "p05_max_dd_pct": -6.14,
+      "median_max_dd_pct": -3.51,
+      "worst_max_dd_pct": -12.27,
+      "pct_breaching_12_dd": 0.05
+    }
+  },
+  "regime_analysis": {
+    "regime_dates": {
+      "start": "2020-01-02",
+      "end": "2025-12-31",
+      "total_days": 1508
+    },
+    "by_regime": {
+      "BULL": {
+        "n_days": 731,
+        "cagr_pct": 25.957,
+        "sharpe": 6.76,
+        "max_dd_pct": -1.301,
+        "vol_pct": 3.424,
+        "hit_rate_pct": 62.0,
+        "share_of_sample_pct": 48.47
+      },
+      "BEAR": {
+        "n_days": 154,
+        "cagr_pct": 19.599,
+        "sharpe": 3.534,
+        "max_dd_pct": -3.254,
+        "vol_pct": 5.102,
+        "hit_rate_pct": 63.0,
+        "share_of_sample_pct": 10.21
+      },
+      "SIDEWAYS": {
+        "n_days": 563,
+        "cagr_pct": 26.193,
+        "sharpe": 6.493,
+        "max_dd_pct": -1.043,
+        "vol_pct": 3.594,
+        "hit_rate_pct": 62.7,
+        "share_of_sample_pct": 37.33
+      },
+      "CRISIS": {
+        "n_days": 60,
+        "cagr_pct": 50.858,
+        "sharpe": 7.148,
+        "max_dd_pct": -1.229,
+        "vol_pct": 5.78,
+        "hit_rate_pct": 65.0,
+        "share_of_sample_pct": 3.98
+      }
+    }
+  },
+  "var_cvar": {
+    "historical_daily": {
+      "var_95_pct": -0.195,
+      "cvar_95_pct": -0.386,
+      "var_99_pct": -0.486,
+      "cvar_99_pct": -0.748
+    },
+    "parametric_annual": {
+      "var_95_pct": 16.386,
+      "cvar_95_pct": 14.822,
+      "var_99_pct": 13.833,
+      "cvar_99_pct": 12.553
+    },
+    "n_observations": 1566,
+    "worst_day_pct": -2.094,
+    "best_day_pct": 1.722
+  },
+  "sign_off": {
+    "status": "APPROVE",
+    "gates_passed": 6,
+    "gates_total": 6,
+    "reasons": [
+      "(a) 0.00% MC paths breach 12% DD \u2014 PASS (<10% target)",
+      "(b) MC p05 (worst-5%) max DD = -2.94% \u2014 PASS (\u2265 -20% target)",
+      "(c) 2020 COVID replay total = +3.64% \u2014 PASS (\u2265 -15% target)",
+      "(d) 2022 bear replay total = +28.05% \u2014 PASS (\u2265 -15% target)",
+      "(e) forced-\u03c1 0.50 median DD = -3.51% \u2014 PASS (\u2265 -25% target)",
+      "(f) 99% daily historical VaR = 0.49% \u2014 PASS (\u2264 4% target)"
+    ]
+  },
+  "mc_config": {
+    "method": "Politis-Romano stationary bootstrap (block mean 10 days)",
+    "n_paths": 10000,
+    "horizon_days": 1260,
+    "seed": 20260407
+  },
+  "rule_zero": "All returns are real (EXP-1220 canonical, EXP-1770 walk-forward GLD/SLV, XLF/XLI credit spreads, vol_arb, Crisis Alpha v5). MC samples bootstrap FROM the real returns \u2014 no synthetic distribution fitting. Correlation stress uses a factor model with real marginals and an imposed correlation matrix. Regime labels come from real Yahoo SPY data."
+}
