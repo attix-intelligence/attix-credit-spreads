@@ -1,0 +1,139 @@
+{
+  "experiment": "EXP-1920",
+  "name": "Carry Trade / Interest-Rate-Differential ETF Strategy",
+  "generated": "2026-04-07T13:31:43",
+  "data_source": "Yahoo Finance (auto_adjust=False) \u2014 NO synthetic data",
+  "universe": {
+    "fx": [
+      "FXA",
+      "FXC",
+      "FXE",
+      "FXY",
+      "FXB",
+      "UUP"
+    ],
+    "commodity": [
+      "DBC",
+      "GLD",
+      "USO",
+      "UNG",
+      "DBA",
+      "SLV"
+    ]
+  },
+  "signals": {
+    "fx": "trailing-12m dividend yield (TR-return \u2212 price-return)",
+    "commodity": "3m \u2212 12m TR slope (roll-yield proxy, Erb & Harvey 2006 style)"
+  },
+  "rebalance": "monthly, long top 2 / short bottom 2 each sleeve, 50/50 blend",
+  "live_window": [
+    "2021-01-01",
+    "2025-12-31"
+  ],
+  "fx_sleeve": {
+    "label": "fx_sleeve",
+    "n_days": 1255,
+    "cagr_pct": 4.566,
+    "sharpe": 0.58,
+    "sortino": 0.823,
+    "max_dd_pct": 11.832,
+    "vol_pct": 8.297,
+    "calmar": 0.386
+  },
+  "commodity_sleeve": {
+    "label": "commodity_sleeve",
+    "n_days": 1255,
+    "cagr_pct": 4.442,
+    "sharpe": 0.302,
+    "sortino": 0.483,
+    "max_dd_pct": 59.179,
+    "vol_pct": 36.975,
+    "calmar": 0.075
+  },
+  "combined": {
+    "label": "combined_50_50",
+    "n_days": 1255,
+    "cagr_pct": 6.41,
+    "sharpe": 0.424,
+    "sortino": 0.669,
+    "max_dd_pct": 36.22,
+    "vol_pct": 18.873,
+    "calmar": 0.177
+  },
+  "walk_forward_combined": [
+    {
+      "label": "2021",
+      "n_days": 252,
+      "cagr_pct": 9.616,
+      "sharpe": 0.646,
+      "sortino": 1.02,
+      "max_dd_pct": 15.712,
+      "vol_pct": 16.234,
+      "calmar": 0.612,
+      "year": 2021
+    },
+    {
+      "label": "2022",
+      "n_days": 251,
+      "cagr_pct": 2.041,
+      "sharpe": 0.202,
+      "sortino": 0.329,
+      "max_dd_pct": 23.763,
+      "vol_pct": 22.892,
+      "calmar": 0.086,
+      "year": 2022
+    },
+    {
+      "label": "2023",
+      "n_days": 250,
+      "cagr_pct": 10.721,
+      "sharpe": 0.65,
+      "sortino": 1.163,
+      "max_dd_pct": 20.126,
+      "vol_pct": 18.205,
+      "calmar": 0.533,
+      "year": 2023
+    },
+    {
+      "label": "2024",
+      "n_days": 252,
+      "cagr_pct": 15.716,
+      "sharpe": 0.849,
+      "sortino": 1.288,
+      "max_dd_pct": 19.33,
+      "vol_pct": 19.417,
+      "calmar": 0.813,
+      "year": 2024
+    },
+    {
+      "label": "2025",
+      "n_days": 250,
+      "cagr_pct": -4.87,
+      "sharpe": -0.209,
+      "sortino": -0.321,
+      "max_dd_pct": 17.242,
+      "vol_pct": 17.014,
+      "calmar": -0.282,
+      "year": 2025
+    }
+  ],
+  "correlation_to_exp1220": {
+    "combined": {
+      "n_months": 60,
+      "pearson": -0.077,
+      "spearman": -0.018
+    },
+    "fx": {
+      "n_months": 60,
+      "pearson": -0.136,
+      "spearman": 0.014
+    },
+    "commodity": {
+      "n_months": 60,
+      "pearson": -0.048,
+      "spearman": 0.019
+    }
+  },
+  "target_sharpe": 2.0,
+  "target_met": false
+}
