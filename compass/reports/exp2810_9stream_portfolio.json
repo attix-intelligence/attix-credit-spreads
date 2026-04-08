@@ -1,0 +1,358 @@
+{
+  "experiment": "EXP-2810",
+  "tag": "EXP-2810",
+  "description": "MASTERPLAN reweight \u2014 9-stream portfolio with SLV/XLI cut and SPY weekly added",
+  "data_sources": {
+    "sparse_cube": "EXP-2450 sparse cube",
+    "qqq_trades": "exp2250_qqq_trades.pkl (real IronVault)",
+    "spy_wk_trades": "exp2610_spy_wk_trades.pkl (real IronVault)",
+    "drag_model": "EXP-2420 per-stream rescaled to new weights"
+  },
+  "config": {
+    "streams": [
+      "exp1220",
+      "qqq_cs",
+      "spy_wk",
+      "xlf_cs",
+      "gld_cal",
+      "cross_vol",
+      "v5_hedge",
+      "xli_cs",
+      "slv_cal"
+    ],
+    "static_weights": {
+      "exp1220": 0.3,
+      "qqq_cs": 0.15,
+      "spy_wk": 0.15,
+      "xlf_cs": 0.1,
+      "gld_cal": 0.1,
+      "cross_vol": 0.1,
+      "v5_hedge": 0.05,
+      "xli_cs": 0.03,
+      "slv_cal": 0.02
+    },
+    "train_days": 252,
+    "test_days": 63,
+    "target_vol": 0.12,
+    "ship_sharpe": 6.0,
+    "ship_capacity_usd": 200000000
+  },
+  "drag": {
+    "per_stream_pct": {
+      "exp1220": 0.9296,
+      "xlf_cs": 0.7802,
+      "gld_cal": 19.0967,
+      "cross_vol": 3.0219,
+      "v5_hedge": 2.3135,
+      "xli_cs": 0.1624,
+      "slv_cal": 11.6274,
+      "qqq_cs": 0.2552,
+      "spy_wk": 0.8931
+    },
+    "total_pct": 39.08,
+    "total_bps": 3908.0
+  },
+  "pooled_gross": {
+    "n": 1260,
+    "sharpe": 5.375,
+    "cagr_pct": 97.858,
+    "max_dd_pct": 6.335,
+    "vol_pct": 12.866
+  },
+  "pooled_net": {
+    "n": 1260,
+    "sharpe": 2.337,
+    "cagr_pct": 33.953,
+    "max_dd_pct": 9.041,
+    "vol_pct": 12.866
+  },
+  "fold_stats": {
+    "static_median": 6.135,
+    "static_min": 2.299,
+    "static_max": 8.668,
+    "lw_median": 8.192,
+    "lw_min": 1.942,
+    "lw_max": 10.211,
+    "n_folds": 20,
+    "pct_folds_above_6_static": 55.0
+  },
+  "folds": [
+    {
+      "fold": 0,
+      "test_start": "2020-12-18",
+      "test_end": "2021-03-16",
+      "vol_scale_static": 4.5228,
+      "vol_scale_lw": 8.6837,
+      "gross_sharpe_static": 8.668,
+      "gross_sharpe_lw": 8.746,
+      "gross_cagr_static": 189.825,
+      "max_dd_static": 1.068
+    },
+    {
+      "fold": 1,
+      "test_start": "2021-03-17",
+      "test_end": "2021-06-11",
+      "vol_scale_static": 4.4206,
+      "vol_scale_lw": 9.5685,
+      "gross_sharpe_static": 6.093,
+      "gross_sharpe_lw": 8.368,
+      "gross_cagr_static": 187.991,
+      "max_dd_static": 2.272
+    },
+    {
+      "fold": 2,
+      "test_start": "2021-06-14",
+      "test_end": "2021-09-08",
+      "vol_scale_static": 3.8729,
+      "vol_scale_lw": 11.4186,
+      "gross_sharpe_static": 6.861,
+      "gross_sharpe_lw": 8.793,
+      "gross_cagr_static": 139.304,
+      "max_dd_static": 1.748
+    },
+    {
+      "fold": 3,
+      "test_start": "2021-09-09",
+      "test_end": "2021-12-06",
+      "vol_scale_static": 3.7618,
+      "vol_scale_lw": 12.0323,
+      "gross_sharpe_static": 7.824,
+      "gross_sharpe_lw": 9.357,
+      "gross_cagr_static": 112.976,
+      "max_dd_static": 0.98
+    },
+    {
+      "fold": 4,
+      "test_start": "2021-12-07",
+      "test_end": "2022-03-03",
+      "vol_scale_static": 3.7617,
+      "vol_scale_lw": 14.6503,
+      "gross_sharpe_static": 5.356,
+      "gross_sharpe_lw": 7.249,
+      "gross_cagr_static": 73.423,
+      "max_dd_static": 1.381
+    },
+    {
+      "fold": 5,
+      "test_start": "2022-03-04",
+      "test_end": "2022-05-31",
+      "vol_scale_static": 3.7482,
+      "vol_scale_lw": 14.695,
+      "gross_sharpe_static": 4.116,
+      "gross_sharpe_lw": 3.985,
+      "gross_cagr_static": 56.234,
+      "max_dd_static": 2.39
+    },
+    {
+      "fold": 6,
+      "test_start": "2022-06-01",
+      "test_end": "2022-08-26",
+      "vol_scale_static": 4.1261,
+      "vol_scale_lw": 11.0975,
+      "gross_sharpe_static": 3.549,
+      "gross_sharpe_lw": 7.715,
+      "gross_cagr_static": 82.21,
+      "max_dd_static": 4.58
+    },
+    {
+      "fold": 7,
+      "test_start": "2022-08-29",
+      "test_end": "2022-11-23",
+      "vol_scale_static": 3.7833,
+      "vol_scale_lw": 10.4151,
+      "gross_sharpe_static": 5.042,
+      "gross_sharpe_lw": 8.304,
+      "gross_cagr_static": 117.607,
+      "max_dd_static": 1.013
+    },
+    {
+      "fold": 8,
+      "test_start": "2022-11-24",
+      "test_end": "2023-02-20",
+      "vol_scale_static": 3.3735,
+      "vol_scale_lw": 9.2522,
+      "gross_sharpe_static": 2.299,
+      "gross_sharpe_lw": 5.884,
+      "gross_cagr_static": 52.296,
+      "max_dd_static": 6.335
+    },
+    {
+      "fold": 9,
+      "test_start": "2023-02-21",
+      "test_end": "2023-05-18",
+      "vol_scale_static": 2.7762,
+      "vol_scale_lw": 8.3469,
+      "gross_sharpe_static": 3.934,
+      "gross_sharpe_lw": 5.036,
+      "gross_cagr_static": 71.57,
+      "max_dd_static": 3.207
+    },
+    {
+      "fold": 10,
+      "test_start": "2023-05-19",
+      "test_end": "2023-08-15",
+      "vol_scale_static": 2.5121,
+      "vol_scale_lw": 8.7168,
+      "gross_sharpe_static": 4.294,
+      "gross_sharpe_lw": 8.079,
+      "gross_cagr_static": 59.668,
+      "max_dd_static": 2.435
+    },
+    {
+      "fold": 11,
+      "test_start": "2023-08-16",
+      "test_end": "2023-11-10",
+      "vol_scale_static": 2.4899,
+      "vol_scale_lw": 9.1943,
+      "gross_sharpe_static": 3.895,
+      "gross_sharpe_lw": 6.44,
+      "gross_cagr_static": 39.526,
+      "max_dd_static": 2.089
+    },
+    {
+      "fold": 12,
+      "test_start": "2023-11-13",
+      "test_end": "2024-02-07",
+      "vol_scale_static": 2.5603,
+      "vol_scale_lw": 12.3355,
+      "gross_sharpe_static": 6.812,
+      "gross_sharpe_lw": 7.895,
+      "gross_cagr_static": 121.074,
+      "max_dd_static": 2.118
+    },
+    {
+      "fold": 13,
+      "test_start": "2024-02-08",
+      "test_end": "2024-05-06",
+      "vol_scale_static": 2.7241,
+      "vol_scale_lw": 12.987,
+      "gross_sharpe_static": 6.598,
+      "gross_sharpe_lw": 9.267,
+      "gross_cagr_static": 80.047,
+      "max_dd_static": 0.895
+    },
+    {
+      "fold": 14,
+      "test_start": "2024-05-07",
+      "test_end": "2024-08-01",
+      "vol_scale_static": 3.0166,
+      "vol_scale_lw": 14.4808,
+      "gross_sharpe_static": 7.466,
+      "gross_sharpe_lw": 8.989,
+      "gross_cagr_static": 94.393,
+      "max_dd_static": 1.339
+    },
+    {
+      "fold": 15,
+      "test_start": "2024-08-02",
+      "test_end": "2024-10-29",
+      "vol_scale_static": 3.3,
+      "vol_scale_lw": 13.479,
+      "gross_sharpe_static": 7.026,
+      "gross_sharpe_lw": 8.447,
+      "gross_cagr_static": 89.747,
+      "max_dd_static": 1.361
+    },
+    {
+      "fold": 16,
+      "test_start": "2024-10-30",
+      "test_end": "2025-01-24",
+      "vol_scale_static": 3.4528,
+      "vol_scale_lw": 13.5062,
+      "gross_sharpe_static": 6.177,
+      "gross_sharpe_lw": 4.992,
+      "gross_cagr_static": 70.058,
+      "max_dd_static": 1.517
+    },
+    {
+      "fold": 17,
+      "test_start": "2025-01-27",
+      "test_end": "2025-04-23",
+      "vol_scale_static": 4.1486,
+      "vol_scale_lw": 14.7231,
+      "gross_sharpe_static": 3.178,
+      "gross_sharpe_lw": 1.942,
+      "gross_cagr_static": 34.945,
+      "max_dd_static": 3.336
+    },
+    {
+      "fold": 18,
+      "test_start": "2025-04-24",
+      "test_end": "2025-07-21",
+      "vol_scale_static": 4.5052,
+      "vol_scale_lw": 11.0897,
+      "gross_sharpe_static": 8.111,
+      "gross_sharpe_lw": 9.875,
+      "gross_cagr_static": 287.634,
+      "max_dd_static": 2.129
+    },
+    {
+      "fold": 19,
+      "test_start": "2025-07-22",
+      "test_end": "2025-10-16",
+      "vol_scale_static": 4.1047,
+      "vol_scale_lw": 10.4664,
+      "gross_sharpe_static": 6.195,
+      "gross_sharpe_lw": 10.211,
+      "gross_cagr_static": 143.33,
+      "max_dd_static": 2.446
+    }
+  ],
+  "capacity": {
+    "per_stream": {
+      "exp1220": {
+        "weight": 0.3,
+        "stream_hard_cap_usd": 1000000000,
+        "max_portfolio_aum_usd": 3333333333.3333335
+      },
+      "qqq_cs": {
+        "weight": 0.15,
+        "stream_hard_cap_usd": 500000000,
+        "max_portfolio_aum_usd": 3333333333.3333335
+      },
+      "spy_wk": {
+        "weight": 0.15,
+        "stream_hard_cap_usd": 7600000000,
+        "max_portfolio_aum_usd": 50666666666.66667
+      },
+      "xlf_cs": {
+        "weight": 0.1,
+        "stream_hard_cap_usd": 30000000,
+        "max_portfolio_aum_usd": 300000000.0
+      },
+      "gld_cal": {
+        "weight": 0.1,
+        "stream_hard_cap_usd": 82000000,
+        "max_portfolio_aum_usd": 820000000.0
+      },
+      "cross_vol": {
+        "weight": 0.1,
+        "stream_hard_cap_usd": 200000000,
+        "max_portfolio_aum_usd": 2000000000.0
+      },
+      "v5_hedge": {
+        "weight": 0.05,
+        "stream_hard_cap_usd": 10000000000,
+        "max_portfolio_aum_usd": 200000000000.0
+      },
+      "xli_cs": {
+        "weight": 0.03,
+        "stream_hard_cap_usd": 10000000,
+        "max_portfolio_aum_usd": 333333333.3333334
+      },
+      "slv_cal": {
+        "weight": 0.02,
+        "stream_hard_cap_usd": 82000000,
+        "max_portfolio_aum_usd": 4100000000.0
+      }
+    },
+    "portfolio_cap_usd": 300000000.0,
+    "binding_stream": "xlf_cs"
+  },
+  "gates": {
+    "sharpe_ok": false,
+    "capacity_ok": true,
+    "ships": false
+  },
+  "verdict_html": "<ul><li><b>DOES NOT SHIP.</b> Failing gates: net Sharpe 2.337 &lt; 6.0.</li><li><b>Vs EXP-2730 (net Sharpe 6.164 baseline).</b> Static mix net Sharpe 2.337 trails the risk-parity v8a baseline by -3.827. The static mix does not expand the Sharpe buffer above the 6.0 ship gate.</li><li><b>Capacity binding stream:</b> <b>xlf_cs</b> \u2014 at 100% of its $30.0M hard cap, the portfolio is $300.0M AUM. To scale beyond this, the xlf_cs weight must be cut OR its hard cap lifted (backfill / strike staggering).</li><li><b>SPY weekly contribution.</b> At 15% weight and ~$7.6B hard cap, spy_wk contributes $1.1B of portfolio AUM headroom \u2014 4\u00d7 the $200M target. It is NOT the binding stream at this weight; the binding constraint is the old thin chains (XLF/XLI) which still cap the book. Reducing XLF/XLI further would unlock more headroom, but the task pinned them at 10%/3%.</li></ul>"
+}
