@@ -1,0 +1,979 @@
+{
+  "experiment": "EXP-2860",
+  "tag": "EXP-2860",
+  "description": "Paper trading dry run \u2014 signal \u2192 VIX ladder \u2192 mock Alpaca",
+  "data_sources": {
+    "signal_generator": "compass.exp2830_paper_signal_generator",
+    "vix_ladder": "compass.exp2820_flash_crash_protection.VIX_LADDER",
+    "market_snapshot": "real Yahoo via EXP-2830"
+  },
+  "as_of": "2026-04-08",
+  "generated_at": "2026-04-08T14:38:36.264190+00:00",
+  "signal_output": {
+    "experiment": "EXP-2830",
+    "generated_at": "2026-04-08T14:38:36Z",
+    "as_of": "2026-04-08",
+    "market": {
+      "as_of": "2026-04-08",
+      "closes": {
+        "SPY": 673.64697265625,
+        "QQQ": 605.1599731445312,
+        "XLF": 51.119998931884766,
+        "XLI": 169.63999938964844,
+        "GLD": 437.42010498046875,
+        "SLV": 68.32009887695312,
+        "VIX": 20.940000534057617,
+        "VIX3M": 22.739999771118164,
+        "VVIX": 113.48999786376953
+      },
+      "vix_20d_realized": 20.086,
+      "vix_value": 20.94,
+      "vix3m_value": 22.74,
+      "vvix_value": 113.49,
+      "vvix_percentile_60d": 0.55,
+      "term_structure_ratio": 0.9208,
+      "spy_trend_50d": -0.181,
+      "spy_20d_realized_vol": 20.086,
+      "data_sources": {
+        "SPY": "Yahoo Finance SPY 180d",
+        "QQQ": "Yahoo Finance QQQ 180d",
+        "XLF": "Yahoo Finance XLF 180d",
+        "XLI": "Yahoo Finance XLI 180d",
+        "GLD": "Yahoo Finance GLD 180d",
+        "SLV": "Yahoo Finance SLV 180d",
+        "VIX": "Yahoo Finance ^VIX 180d",
+        "VIX3M": "Yahoo Finance ^VIX3M 180d",
+        "VVIX": "Yahoo Finance ^VVIX 180d"
+      }
+    },
+    "overlay_context": {
+      "regime": "BULL",
+      "vov_gate_pass": true,
+      "term_structure_gate_pass": true,
+      "fomc_week": false,
+      "dd_circuit_pass": true,
+      "notes": []
+    },
+    "portfolio_summary": {
+      "n_streams": 8,
+      "n_open": 6,
+      "n_no_trade": 1,
+      "n_skip": 0,
+      "total_contracts": 43,
+      "max_leverage_cap": 3.0,
+      "target_vol": 0.12
+    },
+    "signals": [
+      {
+        "stream": "exp1220",
+        "action": "OPEN",
+        "underlier": "SPY",
+        "structure": "put_credit_spread",
+        "direction": "short_put",
+        "target_delta": 0.2,
+        "short_strike": 640.0,
+        "long_strike": 635.0,
+        "width": 5.0,
+        "expiry": "2026-05-08",
+        "dte_days": 30,
+        "target_contracts": 7,
+        "limit_price": 0.75,
+        "order_type": "limit_at_mid_combo",
+        "reason": "regime=BULL overlays passed",
+        "stream_weight": 0.35,
+        "vix_ladder_factor": 0.9,
+        "target_contracts_after_vix": 6
+      },
+      {
+        "stream": "xlf_cs",
+        "action": "OPEN",
+        "underlier": "XLF",
+        "structure": "put_credit_spread",
+        "direction": "short_put",
+        "target_delta": 0.2,
+        "short_strike": 49.0,
+        "long_strike": 48.0,
+        "width": 1.0,
+        "expiry": "2026-05-08",
+        "dte_days": 30,
+        "target_contracts": 10,
+        "limit_price": 0.15,
+        "order_type": "limit_at_mid_combo",
+        "reason": "regime=BULL overlays passed",
+        "stream_weight": 0.1,
+        "vix_ladder_factor": 0.9,
+        "target_contracts_after_vix": 9
+      },
+      {
+        "stream": "xli_cs",
+        "action": "OPEN",
+        "underlier": "XLI",
+        "structure": "put_credit_spread",
+        "direction": "short_put",
+        "target_delta": 0.2,
+        "short_strike": 161.0,
+        "long_strike": 158.5,
+        "width": 2.5,
+        "expiry": "2026-05-08",
+        "dte_days": 30,
+        "target_contracts": 4,
+        "limit_price": 0.38,
+        "order_type": "limit_at_mid_combo",
+        "reason": "regime=BULL overlays passed",
+        "stream_weight": 0.1,
+        "vix_ladder_factor": 0.9,
+        "target_contracts_after_vix": 4
+      },
+      {
+        "stream": "qqq_cs",
+        "action": "OPEN",
+        "underlier": "QQQ",
+        "structure": "put_credit_spread",
+        "direction": "short_put",
+        "target_delta": 0.2,
+        "short_strike": 575.0,
+        "long_strike": 570.0,
+        "width": 5.0,
+        "expiry": "2026-05-08",
+        "dte_days": 30,
+        "target_contracts": 3,
+        "limit_price": 0.75,
+        "order_type": "limit_at_mid_combo",
+        "reason": "regime=BULL overlays passed",
+        "stream_weight": 0.15,
+        "vix_ladder_factor": 0.9,
+        "target_contracts_after_vix": 3
+      },
+      {
+        "stream": "gld_cal",
+        "action": "OPEN",
+        "underlier": "GLD",
+        "structure": "calendar_spread",
+        "direction": "long_back_short_front",
+        "target_delta": 0.5,
+        "short_strike": 437.0,
+        "long_strike": 437.0,
+        "width": 0.0,
+        "expiry": "2026-05-08/2026-06-12",
+        "dte_days": 30,
+        "target_contracts": 12,
+        "limit_price": null,
+        "order_type": "combo_multi_leg",
+        "reason": "regime=BULL calendar constructive",
+        "stream_weight": 0.1,
+        "vix_ladder_factor": 0.9,
+        "target_contracts_after_vix": 11
+      },
+      {
+        "stream": "slv_cal",
+        "action": "OPEN",
+        "underlier": "SLV",
+        "structure": "calendar_spread",
+        "direction": "long_back_short_front",
+        "target_delta": 0.5,
+        "short_strike": 68.0,
+        "long_strike": 68.0,
+        "width": 0.0,
+        "expiry": "2026-05-08/2026-06-12",
+        "dte_days": 30,
+        "target_contracts": 6,
+        "limit_price": null,
+        "order_type": "combo_multi_leg",
+        "reason": "regime=BULL calendar constructive",
+        "stream_weight": 0.05,
+        "vix_ladder_factor": 0.9,
+        "target_contracts_after_vix": 5
+      },
+      {
+        "stream": "cross_vol",
+        "action": "NO_TRADE",
+        "underlier": "SPY",
+        "structure": "iv_rv_relative_value",
+        "direction": "short_iv_long_rv",
+        "target_delta": 0.3,
+        "short_strike": null,
+        "long_strike": null,
+        "width": null,
+        "expiry": "2026-05-08",
+        "dte_days": 30,
+        "target_contracts": 0,
+        "limit_price": null,
+        "order_type": "combo_multi_leg",
+        "reason": "VRP=0.85 < 2.0 threshold, waiting",
+        "stream_weight": 0.1,
+        "vix_ladder_factor": 0.9,
+        "target_contracts_after_vix": 0
+      },
+      {
+        "stream": "v5_hedge",
+        "action": "HOLD_MIN",
+        "underlier": "SPY",
+        "structure": "hedge_sleeve",
+        "direction": "long_tail_hedge",
+        "target_delta": 0.1,
+        "short_strike": null,
+        "long_strike": 606.0,
+        "width": null,
+        "expiry": "2026-05-29",
+        "dte_days": 51,
+        "target_contracts": 1,
+        "limit_price": null,
+        "order_type": "combo_multi_leg",
+        "reason": "maintain 1-contract floor, VIX=20.9",
+        "stream_weight": 0.05,
+        "vix_ladder_factor": 0.9,
+        "target_contracts_after_vix": 1
+      }
+    ],
+    "rule_zero": "All data from Yahoo Finance (real). Option chain selection happens in the Alpaca integration layer using IronVault-verified strikes."
+  },
+  "vix_ladder": {
+    "vix": 20.94,
+    "factor": 0.9,
+    "ladder": [
+      [
+        20.0,
+        1.0
+      ],
+      [
+        25.0,
+        0.9
+      ],
+      [
+        30.0,
+        0.75
+      ],
+      [
+        35.0,
+        0.6
+      ],
+      [
+        40.0,
+        0.5
+      ],
+      [
+        50.0,
+        0.35
+      ],
+      [
+        60.0,
+        0.25
+      ],
+      [
+        70.0,
+        0.15
+      ],
+      [
+        null,
+        0.0
+      ]
+    ]
+  },
+  "signals": [
+    {
+      "stream": "exp1220",
+      "action": "OPEN",
+      "underlier": "SPY",
+      "structure": "put_credit_spread",
+      "direction": "short_put",
+      "target_delta": 0.2,
+      "short_strike": 640.0,
+      "long_strike": 635.0,
+      "width": 5.0,
+      "expiry": "2026-05-08",
+      "dte_days": 30,
+      "target_contracts": 7,
+      "limit_price": 0.75,
+      "order_type": "limit_at_mid_combo",
+      "reason": "regime=BULL overlays passed",
+      "stream_weight": 0.35,
+      "vix_ladder_factor": 0.9,
+      "target_contracts_after_vix": 6
+    },
+    {
+      "stream": "xlf_cs",
+      "action": "OPEN",
+      "underlier": "XLF",
+      "structure": "put_credit_spread",
+      "direction": "short_put",
+      "target_delta": 0.2,
+      "short_strike": 49.0,
+      "long_strike": 48.0,
+      "width": 1.0,
+      "expiry": "2026-05-08",
+      "dte_days": 30,
+      "target_contracts": 10,
+      "limit_price": 0.15,
+      "order_type": "limit_at_mid_combo",
+      "reason": "regime=BULL overlays passed",
+      "stream_weight": 0.1,
+      "vix_ladder_factor": 0.9,
+      "target_contracts_after_vix": 9
+    },
+    {
+      "stream": "xli_cs",
+      "action": "OPEN",
+      "underlier": "XLI",
+      "structure": "put_credit_spread",
+      "direction": "short_put",
+      "target_delta": 0.2,
+      "short_strike": 161.0,
+      "long_strike": 158.5,
+      "width": 2.5,
+      "expiry": "2026-05-08",
+      "dte_days": 30,
+      "target_contracts": 4,
+      "limit_price": 0.38,
+      "order_type": "limit_at_mid_combo",
+      "reason": "regime=BULL overlays passed",
+      "stream_weight": 0.1,
+      "vix_ladder_factor": 0.9,
+      "target_contracts_after_vix": 4
+    },
+    {
+      "stream": "qqq_cs",
+      "action": "OPEN",
+      "underlier": "QQQ",
+      "structure": "put_credit_spread",
+      "direction": "short_put",
+      "target_delta": 0.2,
+      "short_strike": 575.0,
+      "long_strike": 570.0,
+      "width": 5.0,
+      "expiry": "2026-05-08",
+      "dte_days": 30,
+      "target_contracts": 3,
+      "limit_price": 0.75,
+      "order_type": "limit_at_mid_combo",
+      "reason": "regime=BULL overlays passed",
+      "stream_weight": 0.15,
+      "vix_ladder_factor": 0.9,
+      "target_contracts_after_vix": 3
+    },
+    {
+      "stream": "gld_cal",
+      "action": "OPEN",
+      "underlier": "GLD",
+      "structure": "calendar_spread",
+      "direction": "long_back_short_front",
+      "target_delta": 0.5,
+      "short_strike": 437.0,
+      "long_strike": 437.0,
+      "width": 0.0,
+      "expiry": "2026-05-08/2026-06-12",
+      "dte_days": 30,
+      "target_contracts": 12,
+      "limit_price": null,
+      "order_type": "combo_multi_leg",
+      "reason": "regime=BULL calendar constructive",
+      "stream_weight": 0.1,
+      "vix_ladder_factor": 0.9,
+      "target_contracts_after_vix": 11
+    },
+    {
+      "stream": "slv_cal",
+      "action": "OPEN",
+      "underlier": "SLV",
+      "structure": "calendar_spread",
+      "direction": "long_back_short_front",
+      "target_delta": 0.5,
+      "short_strike": 68.0,
+      "long_strike": 68.0,
+      "width": 0.0,
+      "expiry": "2026-05-08/2026-06-12",
+      "dte_days": 30,
+      "target_contracts": 6,
+      "limit_price": null,
+      "order_type": "combo_multi_leg",
+      "reason": "regime=BULL calendar constructive",
+      "stream_weight": 0.05,
+      "vix_ladder_factor": 0.9,
+      "target_contracts_after_vix": 5
+    },
+    {
+      "stream": "cross_vol",
+      "action": "NO_TRADE",
+      "underlier": "SPY",
+      "structure": "iv_rv_relative_value",
+      "direction": "short_iv_long_rv",
+      "target_delta": 0.3,
+      "short_strike": null,
+      "long_strike": null,
+      "width": null,
+      "expiry": "2026-05-08",
+      "dte_days": 30,
+      "target_contracts": 0,
+      "limit_price": null,
+      "order_type": "combo_multi_leg",
+      "reason": "VRP=0.85 < 2.0 threshold, waiting",
+      "stream_weight": 0.1,
+      "vix_ladder_factor": 0.9,
+      "target_contracts_after_vix": 0
+    },
+    {
+      "stream": "v5_hedge",
+      "action": "HOLD_MIN",
+      "underlier": "SPY",
+      "structure": "hedge_sleeve",
+      "direction": "long_tail_hedge",
+      "target_delta": 0.1,
+      "short_strike": null,
+      "long_strike": 606.0,
+      "width": null,
+      "expiry": "2026-05-29",
+      "dte_days": 51,
+      "target_contracts": 1,
+      "limit_price": null,
+      "order_type": "combo_multi_leg",
+      "reason": "maintain 1-contract floor, VIX=20.9",
+      "stream_weight": 0.05,
+      "vix_ladder_factor": 0.9,
+      "target_contracts_after_vix": 1
+    }
+  ],
+  "alpaca_orders": [
+    {
+      "_stream": "exp1220",
+      "order": {
+        "client_order_id": "paper-exp1220-63067277",
+        "symbol": "SPY",
+        "qty": 6,
+        "type": "limit",
+        "limit_price": 0.75,
+        "order_class": "mleg",
+        "time_in_force": "day",
+        "legs": [
+          {
+            "symbol": "SPY260508P00640000",
+            "ratio_qty": 1,
+            "side": "sell",
+            "position_intent": "sell_to_open",
+            "_meta": {
+              "stream": "exp1220",
+              "role": "short_put",
+              "strike": 640.0
+            }
+          },
+          {
+            "symbol": "SPY260508P00635000",
+            "ratio_qty": 1,
+            "side": "buy",
+            "position_intent": "buy_to_open",
+            "_meta": {
+              "stream": "exp1220",
+              "role": "long_put",
+              "strike": 635.0
+            }
+          }
+        ]
+      },
+      "validation_errors": [],
+      "mock_response": {
+        "id": "mock-ca42c250a6004f65af573d31280a5eb1",
+        "client_order_id": "paper-exp1220-63067277",
+        "created_at": "2026-04-08T14:38:36.264066+00:00",
+        "updated_at": "2026-04-08T14:38:36.264066+00:00",
+        "submitted_at": "2026-04-08T14:38:36.264066+00:00",
+        "status": "accepted",
+        "asset_class": "us_option",
+        "symbol": "SPY",
+        "qty": 6,
+        "order_class": "mleg",
+        "type": "limit",
+        "limit_price": 0.75,
+        "time_in_force": "day",
+        "legs": [
+          {
+            "symbol": "SPY260508P00640000",
+            "ratio_qty": 1,
+            "side": "sell",
+            "position_intent": "sell_to_open",
+            "_meta": {
+              "stream": "exp1220",
+              "role": "short_put",
+              "strike": 640.0
+            }
+          },
+          {
+            "symbol": "SPY260508P00635000",
+            "ratio_qty": 1,
+            "side": "buy",
+            "position_intent": "buy_to_open",
+            "_meta": {
+              "stream": "exp1220",
+              "role": "long_put",
+              "strike": 635.0
+            }
+          }
+        ],
+        "_mock": true,
+        "_mock_note": "This is a MOCK response \u2014 no Alpaca API call was made. Submitting the same payload against real Alpaca paper keys should return a similar shape."
+      }
+    },
+    {
+      "_stream": "xlf_cs",
+      "order": {
+        "client_order_id": "paper-xlf_cs-48806015",
+        "symbol": "XLF",
+        "qty": 9,
+        "type": "limit",
+        "limit_price": 0.15,
+        "order_class": "mleg",
+        "time_in_force": "day",
+        "legs": [
+          {
+            "symbol": "XLF260508P00049000",
+            "ratio_qty": 1,
+            "side": "sell",
+            "position_intent": "sell_to_open",
+            "_meta": {
+              "stream": "xlf_cs",
+              "role": "short_put",
+              "strike": 49.0
+            }
+          },
+          {
+            "symbol": "XLF260508P00048000",
+            "ratio_qty": 1,
+            "side": "buy",
+            "position_intent": "buy_to_open",
+            "_meta": {
+              "stream": "xlf_cs",
+              "role": "long_put",
+              "strike": 48.0
+            }
+          }
+        ]
+      },
+      "validation_errors": [],
+      "mock_response": {
+        "id": "mock-e64ca94318824b15889c4d4502b5bd2f",
+        "client_order_id": "paper-xlf_cs-48806015",
+        "created_at": "2026-04-08T14:38:36.264090+00:00",
+        "updated_at": "2026-04-08T14:38:36.264090+00:00",
+        "submitted_at": "2026-04-08T14:38:36.264090+00:00",
+        "status": "accepted",
+        "asset_class": "us_option",
+        "symbol": "XLF",
+        "qty": 9,
+        "order_class": "mleg",
+        "type": "limit",
+        "limit_price": 0.15,
+        "time_in_force": "day",
+        "legs": [
+          {
+            "symbol": "XLF260508P00049000",
+            "ratio_qty": 1,
+            "side": "sell",
+            "position_intent": "sell_to_open",
+            "_meta": {
+              "stream": "xlf_cs",
+              "role": "short_put",
+              "strike": 49.0
+            }
+          },
+          {
+            "symbol": "XLF260508P00048000",
+            "ratio_qty": 1,
+            "side": "buy",
+            "position_intent": "buy_to_open",
+            "_meta": {
+              "stream": "xlf_cs",
+              "role": "long_put",
+              "strike": 48.0
+            }
+          }
+        ],
+        "_mock": true,
+        "_mock_note": "This is a MOCK response \u2014 no Alpaca API call was made. Submitting the same payload against real Alpaca paper keys should return a similar shape."
+      }
+    },
+    {
+      "_stream": "xli_cs",
+      "order": {
+        "client_order_id": "paper-xli_cs-7536a486",
+        "symbol": "XLI",
+        "qty": 4,
+        "type": "limit",
+        "limit_price": 0.38,
+        "order_class": "mleg",
+        "time_in_force": "day",
+        "legs": [
+          {
+            "symbol": "XLI260508P00161000",
+            "ratio_qty": 1,
+            "side": "sell",
+            "position_intent": "sell_to_open",
+            "_meta": {
+              "stream": "xli_cs",
+              "role": "short_put",
+              "strike": 161.0
+            }
+          },
+          {
+            "symbol": "XLI260508P00158500",
+            "ratio_qty": 1,
+            "side": "buy",
+            "position_intent": "buy_to_open",
+            "_meta": {
+              "stream": "xli_cs",
+              "role": "long_put",
+              "strike": 158.5
+            }
+          }
+        ]
+      },
+      "validation_errors": [],
+      "mock_response": {
+        "id": "mock-e375ae74ef9a4fd9ae665ad0e43b2b27",
+        "client_order_id": "paper-xli_cs-7536a486",
+        "created_at": "2026-04-08T14:38:36.264111+00:00",
+        "updated_at": "2026-04-08T14:38:36.264111+00:00",
+        "submitted_at": "2026-04-08T14:38:36.264111+00:00",
+        "status": "accepted",
+        "asset_class": "us_option",
+        "symbol": "XLI",
+        "qty": 4,
+        "order_class": "mleg",
+        "type": "limit",
+        "limit_price": 0.38,
+        "time_in_force": "day",
+        "legs": [
+          {
+            "symbol": "XLI260508P00161000",
+            "ratio_qty": 1,
+            "side": "sell",
+            "position_intent": "sell_to_open",
+            "_meta": {
+              "stream": "xli_cs",
+              "role": "short_put",
+              "strike": 161.0
+            }
+          },
+          {
+            "symbol": "XLI260508P00158500",
+            "ratio_qty": 1,
+            "side": "buy",
+            "position_intent": "buy_to_open",
+            "_meta": {
+              "stream": "xli_cs",
+              "role": "long_put",
+              "strike": 158.5
+            }
+          }
+        ],
+        "_mock": true,
+        "_mock_note": "This is a MOCK response \u2014 no Alpaca API call was made. Submitting the same payload against real Alpaca paper keys should return a similar shape."
+      }
+    },
+    {
+      "_stream": "qqq_cs",
+      "order": {
+        "client_order_id": "paper-qqq_cs-3fceca6b",
+        "symbol": "QQQ",
+        "qty": 3,
+        "type": "limit",
+        "limit_price": 0.75,
+        "order_class": "mleg",
+        "time_in_force": "day",
+        "legs": [
+          {
+            "symbol": "QQQ260508P00575000",
+            "ratio_qty": 1,
+            "side": "sell",
+            "position_intent": "sell_to_open",
+            "_meta": {
+              "stream": "qqq_cs",
+              "role": "short_put",
+              "strike": 575.0
+            }
+          },
+          {
+            "symbol": "QQQ260508P00570000",
+            "ratio_qty": 1,
+            "side": "buy",
+            "position_intent": "buy_to_open",
+            "_meta": {
+              "stream": "qqq_cs",
+              "role": "long_put",
+              "strike": 570.0
+            }
+          }
+        ]
+      },
+      "validation_errors": [],
+      "mock_response": {
+        "id": "mock-496e5032f9274ecda4ba551083742052",
+        "client_order_id": "paper-qqq_cs-3fceca6b",
+        "created_at": "2026-04-08T14:38:36.264128+00:00",
+        "updated_at": "2026-04-08T14:38:36.264128+00:00",
+        "submitted_at": "2026-04-08T14:38:36.264128+00:00",
+        "status": "accepted",
+        "asset_class": "us_option",
+        "symbol": "QQQ",
+        "qty": 3,
+        "order_class": "mleg",
+        "type": "limit",
+        "limit_price": 0.75,
+        "time_in_force": "day",
+        "legs": [
+          {
+            "symbol": "QQQ260508P00575000",
+            "ratio_qty": 1,
+            "side": "sell",
+            "position_intent": "sell_to_open",
+            "_meta": {
+              "stream": "qqq_cs",
+              "role": "short_put",
+              "strike": 575.0
+            }
+          },
+          {
+            "symbol": "QQQ260508P00570000",
+            "ratio_qty": 1,
+            "side": "buy",
+            "position_intent": "buy_to_open",
+            "_meta": {
+              "stream": "qqq_cs",
+              "role": "long_put",
+              "strike": 570.0
+            }
+          }
+        ],
+        "_mock": true,
+        "_mock_note": "This is a MOCK response \u2014 no Alpaca API call was made. Submitting the same payload against real Alpaca paper keys should return a similar shape."
+      }
+    },
+    {
+      "_stream": "gld_cal",
+      "order": {
+        "client_order_id": "paper-gld_cal-512ad25f",
+        "symbol": "GLD",
+        "qty": 11,
+        "type": "market",
+        "limit_price": null,
+        "order_class": "mleg",
+        "time_in_force": "day",
+        "legs": [
+          {
+            "symbol": "GLD260508P00437000",
+            "ratio_qty": 1,
+            "side": "sell",
+            "position_intent": "sell_to_open",
+            "_meta": {
+              "stream": "gld_cal",
+              "role": "front_leg",
+              "expiry": "2026-05-08",
+              "strike": 437.0
+            }
+          },
+          {
+            "symbol": "GLD260612P00437000",
+            "ratio_qty": 1,
+            "side": "buy",
+            "position_intent": "buy_to_open",
+            "_meta": {
+              "stream": "gld_cal",
+              "role": "back_leg",
+              "expiry": "2026-06-12",
+              "strike": 437.0
+            }
+          }
+        ]
+      },
+      "validation_errors": [],
+      "mock_response": {
+        "id": "mock-460a7026048b4dd28cfa8d55782e31ce",
+        "client_order_id": "paper-gld_cal-512ad25f",
+        "created_at": "2026-04-08T14:38:36.264144+00:00",
+        "updated_at": "2026-04-08T14:38:36.264144+00:00",
+        "submitted_at": "2026-04-08T14:38:36.264144+00:00",
+        "status": "accepted",
+        "asset_class": "us_option",
+        "symbol": "GLD",
+        "qty": 11,
+        "order_class": "mleg",
+        "type": "market",
+        "limit_price": null,
+        "time_in_force": "day",
+        "legs": [
+          {
+            "symbol": "GLD260508P00437000",
+            "ratio_qty": 1,
+            "side": "sell",
+            "position_intent": "sell_to_open",
+            "_meta": {
+              "stream": "gld_cal",
+              "role": "front_leg",
+              "expiry": "2026-05-08",
+              "strike": 437.0
+            }
+          },
+          {
+            "symbol": "GLD260612P00437000",
+            "ratio_qty": 1,
+            "side": "buy",
+            "position_intent": "buy_to_open",
+            "_meta": {
+              "stream": "gld_cal",
+              "role": "back_leg",
+              "expiry": "2026-06-12",
+              "strike": 437.0
+            }
+          }
+        ],
+        "_mock": true,
+        "_mock_note": "This is a MOCK response \u2014 no Alpaca API call was made. Submitting the same payload against real Alpaca paper keys should return a similar shape."
+      }
+    },
+    {
+      "_stream": "slv_cal",
+      "order": {
+        "client_order_id": "paper-slv_cal-32737927",
+        "symbol": "SLV",
+        "qty": 5,
+        "type": "market",
+        "limit_price": null,
+        "order_class": "mleg",
+        "time_in_force": "day",
+        "legs": [
+          {
+            "symbol": "SLV260508P00068000",
+            "ratio_qty": 1,
+            "side": "sell",
+            "position_intent": "sell_to_open",
+            "_meta": {
+              "stream": "slv_cal",
+              "role": "front_leg",
+              "expiry": "2026-05-08",
+              "strike": 68.0
+            }
+          },
+          {
+            "symbol": "SLV260612P00068000",
+            "ratio_qty": 1,
+            "side": "buy",
+            "position_intent": "buy_to_open",
+            "_meta": {
+              "stream": "slv_cal",
+              "role": "back_leg",
+              "expiry": "2026-06-12",
+              "strike": 68.0
+            }
+          }
+        ]
+      },
+      "validation_errors": [],
+      "mock_response": {
+        "id": "mock-7cc2f70d91a9470cb54645f7efe5a838",
+        "client_order_id": "paper-slv_cal-32737927",
+        "created_at": "2026-04-08T14:38:36.264159+00:00",
+        "updated_at": "2026-04-08T14:38:36.264159+00:00",
+        "submitted_at": "2026-04-08T14:38:36.264159+00:00",
+        "status": "accepted",
+        "asset_class": "us_option",
+        "symbol": "SLV",
+        "qty": 5,
+        "order_class": "mleg",
+        "type": "market",
+        "limit_price": null,
+        "time_in_force": "day",
+        "legs": [
+          {
+            "symbol": "SLV260508P00068000",
+            "ratio_qty": 1,
+            "side": "sell",
+            "position_intent": "sell_to_open",
+            "_meta": {
+              "stream": "slv_cal",
+              "role": "front_leg",
+              "expiry": "2026-05-08",
+              "strike": 68.0
+            }
+          },
+          {
+            "symbol": "SLV260612P00068000",
+            "ratio_qty": 1,
+            "side": "buy",
+            "position_intent": "buy_to_open",
+            "_meta": {
+              "stream": "slv_cal",
+              "role": "back_leg",
+              "expiry": "2026-06-12",
+              "strike": 68.0
+            }
+          }
+        ],
+        "_mock": true,
+        "_mock_note": "This is a MOCK response \u2014 no Alpaca API call was made. Submitting the same payload against real Alpaca paper keys should return a similar shape."
+      }
+    },
+    {
+      "_stream": "v5_hedge",
+      "order": {
+        "client_order_id": "paper-v5_hedge-240a8835",
+        "symbol": "SPY",
+        "qty": 1,
+        "type": "market",
+        "limit_price": null,
+        "order_class": "mleg",
+        "time_in_force": "day",
+        "legs": [
+          {
+            "symbol": "SPY260529P00606000",
+            "ratio_qty": 1,
+            "side": "buy",
+            "position_intent": "buy_to_open",
+            "_meta": {
+              "stream": "v5_hedge",
+              "role": "tail_hedge",
+              "strike": 606.0
+            }
+          }
+        ]
+      },
+      "validation_errors": [],
+      "mock_response": {
+        "id": "mock-40d13e75c98545a8a52b9da9fc4f22f6",
+        "client_order_id": "paper-v5_hedge-240a8835",
+        "created_at": "2026-04-08T14:38:36.264176+00:00",
+        "updated_at": "2026-04-08T14:38:36.264176+00:00",
+        "submitted_at": "2026-04-08T14:38:36.264176+00:00",
+        "status": "accepted",
+        "asset_class": "us_option",
+        "symbol": "SPY",
+        "qty": 1,
+        "order_class": "mleg",
+        "type": "market",
+        "limit_price": null,
+        "time_in_force": "day",
+        "legs": [
+          {
+            "symbol": "SPY260529P00606000",
+            "ratio_qty": 1,
+            "side": "buy",
+            "position_intent": "buy_to_open",
+            "_meta": {
+              "stream": "v5_hedge",
+              "role": "tail_hedge",
+              "strike": 606.0
+            }
+          }
+        ],
+        "_mock": true,
+        "_mock_note": "This is a MOCK response \u2014 no Alpaca API call was made. Submitting the same payload against real Alpaca paper keys should return a similar shape."
+      }
+    }
+  ],
+  "summary": {
+    "n_streams": 8,
+    "n_open": 7,
+    "n_no_trade": 1,
+    "n_skip": 0,
+    "n_vix_flat": 0,
+    "total_contracts": 39,
+    "n_orders_built": 7,
+    "n_orders_valid": 7,
+    "all_valid": true
+  }
+}
