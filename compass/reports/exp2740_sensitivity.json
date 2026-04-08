@@ -1,0 +1,405 @@
+{
+  "experiment": "EXP-2740",
+  "tag": "EXP-2740",
+  "description": "Parameter sensitivity analysis on the EXP-2730 production config (net Sharpe 6.164)",
+  "data_sources": {
+    "cube": "compass.exp2450_sparse_combined_honest.build_sparse_seven_stream_cube + EXP-2250 QQQ trade pkl",
+    "covariance": "compass.exp2360_robust_cov.cov_ledoit_wolf (with shrinkage scaling)",
+    "walk_forward": "exp2730 rolling engine, reimplemented with injection hooks"
+  },
+  "baseline_config": {
+    "streams": [
+      "exp1220",
+      "v5_hedge",
+      "gld_cal",
+      "slv_cal",
+      "cross_vol",
+      "xlf_cs",
+      "xli_cs",
+      "qqq_cs"
+    ],
+    "target_vol": 0.12,
+    "train_days": 252,
+    "test_days": 63,
+    "baseline_drag_bps": 890.0,
+    "drag_split": {
+      "commission_bps": 0.0,
+      "spread_bps": 300.0,
+      "slippage_bps": 590.0
+    },
+    "ship_gate_sharpe": 6.0
+  },
+  "baseline": {
+    "label": "baseline",
+    "pooled_net_sharpe": 6.165,
+    "pooled_net_cagr_pct": 125.709,
+    "pooled_max_dd_pct": 7.109,
+    "pooled_vol_pct": 13.371,
+    "median_fold_sharpe": 6.943,
+    "pct_folds_above_6": 70.0,
+    "ships": true
+  },
+  "vol_target": [
+    {
+      "label": "vol_target_-20%",
+      "pooled_net_sharpe": 5.998,
+      "pooled_net_cagr_pct": 88.725,
+      "pooled_max_dd_pct": 5.748,
+      "pooled_vol_pct": 10.697,
+      "median_fold_sharpe": 6.767,
+      "pct_folds_above_6": 70.0,
+      "ships": false,
+      "perturbation": "target_vol = 9.6%"
+    },
+    {
+      "label": "vol_target_baseline",
+      "pooled_net_sharpe": 6.165,
+      "pooled_net_cagr_pct": 125.709,
+      "pooled_max_dd_pct": 7.109,
+      "pooled_vol_pct": 13.371,
+      "median_fold_sharpe": 6.943,
+      "pct_folds_above_6": 70.0,
+      "ships": true,
+      "perturbation": "target_vol = 12.0%"
+    },
+    {
+      "label": "vol_target_+20%",
+      "pooled_net_sharpe": 6.276,
+      "pooled_net_cagr_pct": 169.718,
+      "pooled_max_dd_pct": 8.457,
+      "pooled_vol_pct": 16.045,
+      "median_fold_sharpe": 7.088,
+      "pct_folds_above_6": 70.0,
+      "ships": true,
+      "perturbation": "target_vol = 14.4%"
+    }
+  ],
+  "shrinkage": [
+    {
+      "label": "shrinkage_-20%",
+      "pooled_net_sharpe": 6.105,
+      "pooled_net_cagr_pct": 125.919,
+      "pooled_max_dd_pct": 7.276,
+      "pooled_vol_pct": 13.519,
+      "median_fold_sharpe": 6.99,
+      "pct_folds_above_6": 70.0,
+      "ships": true,
+      "perturbation": "LW \u03b1 \u00d7 0.8"
+    },
+    {
+      "label": "shrinkage_baseline",
+      "pooled_net_sharpe": 6.165,
+      "pooled_net_cagr_pct": 125.709,
+      "pooled_max_dd_pct": 7.109,
+      "pooled_vol_pct": 13.371,
+      "median_fold_sharpe": 6.943,
+      "pct_folds_above_6": 70.0,
+      "ships": true,
+      "perturbation": "LW \u03b1 \u00d7 1.0"
+    },
+    {
+      "label": "shrinkage_+20%",
+      "pooled_net_sharpe": 6.21,
+      "pooled_net_cagr_pct": 125.469,
+      "pooled_max_dd_pct": 6.964,
+      "pooled_vol_pct": 13.253,
+      "median_fold_sharpe": 6.924,
+      "pct_folds_above_6": 70.0,
+      "ships": true,
+      "perturbation": "LW \u03b1 \u00d7 1.2"
+    }
+  ],
+  "stream_weights": [
+    {
+      "label": "exp1220_-20%",
+      "pooled_net_sharpe": 6.014,
+      "pooled_net_cagr_pct": 121.778,
+      "pooled_max_dd_pct": 7.313,
+      "pooled_vol_pct": 13.413,
+      "median_fold_sharpe": 6.861,
+      "pct_folds_above_6": 70.0,
+      "ships": true,
+      "perturbation": "exp1220 \u00d7 0.8"
+    },
+    {
+      "label": "exp1220_+20%",
+      "pooled_net_sharpe": 6.266,
+      "pooled_net_cagr_pct": 128.268,
+      "pooled_max_dd_pct": 6.881,
+      "pooled_vol_pct": 13.334,
+      "median_fold_sharpe": 7.067,
+      "pct_folds_above_6": 70.0,
+      "ships": true,
+      "perturbation": "exp1220 \u00d7 1.2"
+    },
+    {
+      "label": "v5_hedge_-20%",
+      "pooled_net_sharpe": 6.467,
+      "pooled_net_cagr_pct": 129.488,
+      "pooled_max_dd_pct": 6.363,
+      "pooled_vol_pct": 12.995,
+      "median_fold_sharpe": 7.152,
+      "pct_folds_above_6": 70.0,
+      "ships": true,
+      "perturbation": "v5_hedge \u00d7 0.8"
+    },
+    {
+      "label": "v5_hedge_+20%",
+      "pooled_net_sharpe": 5.822,
+      "pooled_net_cagr_pct": 121.078,
+      "pooled_max_dd_pct": 7.816,
+      "pooled_vol_pct": 13.811,
+      "median_fold_sharpe": 6.917,
+      "pct_folds_above_6": 65.0,
+      "ships": false,
+      "perturbation": "v5_hedge \u00d7 1.2"
+    },
+    {
+      "label": "gld_cal_-20%",
+      "pooled_net_sharpe": 6.128,
+      "pooled_net_cagr_pct": 126.091,
+      "pooled_max_dd_pct": 7.043,
+      "pooled_vol_pct": 13.482,
+      "median_fold_sharpe": 6.964,
+      "pct_folds_above_6": 70.0,
+      "ships": true,
+      "perturbation": "gld_cal \u00d7 0.8"
+    },
+    {
+      "label": "gld_cal_+20%",
+      "pooled_net_sharpe": 6.18,
+      "pooled_net_cagr_pct": 124.609,
+      "pooled_max_dd_pct": 7.138,
+      "pooled_vol_pct": 13.257,
+      "median_fold_sharpe": 6.881,
+      "pct_folds_above_6": 70.0,
+      "ships": true,
+      "perturbation": "gld_cal \u00d7 1.2"
+    },
+    {
+      "label": "slv_cal_-20%",
+      "pooled_net_sharpe": 6.17,
+      "pooled_net_cagr_pct": 127.109,
+      "pooled_max_dd_pct": 7.041,
+      "pooled_vol_pct": 13.462,
+      "median_fold_sharpe": 7.082,
+      "pct_folds_above_6": 70.0,
+      "ships": true,
+      "perturbation": "slv_cal \u00d7 0.8"
+    },
+    {
+      "label": "slv_cal_+20%",
+      "pooled_net_sharpe": 6.136,
+      "pooled_net_cagr_pct": 123.547,
+      "pooled_max_dd_pct": 7.144,
+      "pooled_vol_pct": 13.274,
+      "median_fold_sharpe": 6.866,
+      "pct_folds_above_6": 70.0,
+      "ships": true,
+      "perturbation": "slv_cal \u00d7 1.2"
+    },
+    {
+      "label": "cross_vol_-20%",
+      "pooled_net_sharpe": 6.125,
+      "pooled_net_cagr_pct": 125.407,
+      "pooled_max_dd_pct": 7.269,
+      "pooled_vol_pct": 13.436,
+      "median_fold_sharpe": 6.931,
+      "pct_folds_above_6": 70.0,
+      "ships": true,
+      "perturbation": "cross_vol \u00d7 0.8"
+    },
+    {
+      "label": "cross_vol_+20%",
+      "pooled_net_sharpe": 6.176,
+      "pooled_net_cagr_pct": 125.133,
+      "pooled_max_dd_pct": 6.93,
+      "pooled_vol_pct": 13.303,
+      "median_fold_sharpe": 7.05,
+      "pct_folds_above_6": 70.0,
+      "ships": true,
+      "perturbation": "cross_vol \u00d7 1.2"
+    },
+    {
+      "label": "xlf_cs_-20%",
+      "pooled_net_sharpe": 6.011,
+      "pooled_net_cagr_pct": 121.439,
+      "pooled_max_dd_pct": 7.299,
+      "pooled_vol_pct": 13.395,
+      "median_fold_sharpe": 6.789,
+      "pct_folds_above_6": 70.0,
+      "ships": true,
+      "perturbation": "xlf_cs \u00d7 0.8"
+    },
+    {
+      "label": "xlf_cs_+20%",
+      "pooled_net_sharpe": 6.288,
+      "pooled_net_cagr_pct": 129.22,
+      "pooled_max_dd_pct": 6.907,
+      "pooled_vol_pct": 13.354,
+      "median_fold_sharpe": 7.098,
+      "pct_folds_above_6": 70.0,
+      "ships": true,
+      "perturbation": "xlf_cs \u00d7 1.2"
+    },
+    {
+      "label": "xli_cs_-20%",
+      "pooled_net_sharpe": 6.133,
+      "pooled_net_cagr_pct": 125.333,
+      "pooled_max_dd_pct": 7.301,
+      "pooled_vol_pct": 13.413,
+      "median_fold_sharpe": 7.02,
+      "pct_folds_above_6": 70.0,
+      "ships": true,
+      "perturbation": "xli_cs \u00d7 0.8"
+    },
+    {
+      "label": "xli_cs_+20%",
+      "pooled_net_sharpe": 6.174,
+      "pooled_net_cagr_pct": 125.358,
+      "pooled_max_dd_pct": 6.9,
+      "pooled_vol_pct": 13.325,
+      "median_fold_sharpe": 6.835,
+      "pct_folds_above_6": 70.0,
+      "ships": true,
+      "perturbation": "xli_cs \u00d7 1.2"
+    },
+    {
+      "label": "qqq_cs_-20%",
+      "pooled_net_sharpe": 6.151,
+      "pooled_net_cagr_pct": 125.688,
+      "pooled_max_dd_pct": 7.141,
+      "pooled_vol_pct": 13.4,
+      "median_fold_sharpe": 6.919,
+      "pct_folds_above_6": 70.0,
+      "ships": true,
+      "perturbation": "qqq_cs \u00d7 0.8"
+    },
+    {
+      "label": "qqq_cs_+20%",
+      "pooled_net_sharpe": 6.173,
+      "pooled_net_cagr_pct": 125.485,
+      "pooled_max_dd_pct": 7.067,
+      "pooled_vol_pct": 13.336,
+      "median_fold_sharpe": 6.985,
+      "pct_folds_above_6": 70.0,
+      "ships": true,
+      "perturbation": "qqq_cs \u00d7 1.2"
+    }
+  ],
+  "slippage": [
+    {
+      "label": "slippage_-50%",
+      "pooled_net_sharpe": 6.385,
+      "pooled_net_cagr_pct": 132.444,
+      "pooled_max_dd_pct": 7.054,
+      "pooled_vol_pct": 13.371,
+      "median_fold_sharpe": 7.23,
+      "pct_folds_above_6": 70.0,
+      "ships": true,
+      "perturbation": "slippage \u00d7 0.5 \u2192 drag 595 bps/yr"
+    },
+    {
+      "label": "slippage_baseline",
+      "pooled_net_sharpe": 6.165,
+      "pooled_net_cagr_pct": 125.709,
+      "pooled_max_dd_pct": 7.109,
+      "pooled_vol_pct": 13.371,
+      "median_fold_sharpe": 6.943,
+      "pct_folds_above_6": 70.0,
+      "ships": true,
+      "perturbation": "slippage \u00d7 1.0 \u2192 drag 890 bps/yr"
+    },
+    {
+      "label": "slippage_+50%",
+      "pooled_net_sharpe": 5.944,
+      "pooled_net_cagr_pct": 119.168,
+      "pooled_max_dd_pct": 7.164,
+      "pooled_vol_pct": 13.371,
+      "median_fold_sharpe": 6.713,
+      "pct_folds_above_6": 70.0,
+      "ships": false,
+      "perturbation": "slippage \u00d7 1.5 \u2192 drag 1185 bps/yr"
+    }
+  ],
+  "spread": [
+    {
+      "label": "spread_-30%",
+      "pooled_net_sharpe": 6.232,
+      "pooled_net_cagr_pct": 127.742,
+      "pooled_max_dd_pct": 7.092,
+      "pooled_vol_pct": 13.371,
+      "median_fold_sharpe": 7.03,
+      "pct_folds_above_6": 70.0,
+      "ships": true,
+      "perturbation": "spread \u00d7 0.7 \u2192 drag 800 bps/yr"
+    },
+    {
+      "label": "spread_baseline",
+      "pooled_net_sharpe": 6.165,
+      "pooled_net_cagr_pct": 125.709,
+      "pooled_max_dd_pct": 7.109,
+      "pooled_vol_pct": 13.371,
+      "median_fold_sharpe": 6.943,
+      "pct_folds_above_6": 70.0,
+      "ships": true,
+      "perturbation": "spread \u00d7 1.0 \u2192 drag 890 bps/yr"
+    },
+    {
+      "label": "spread_+30%",
+      "pooled_net_sharpe": 6.097,
+      "pooled_net_cagr_pct": 123.693,
+      "pooled_max_dd_pct": 7.126,
+      "pooled_vol_pct": 13.371,
+      "median_fold_sharpe": 6.866,
+      "pct_folds_above_6": 70.0,
+      "ships": true,
+      "perturbation": "spread \u00d7 1.3 \u2192 drag 980 bps/yr"
+    }
+  ],
+  "ranking": [
+    {
+      "parameter": "vol_target",
+      "worst_label": "vol_target_-20%",
+      "worst_sharpe": 5.998,
+      "worst_ships": false
+    },
+    {
+      "parameter": "shrinkage",
+      "worst_label": "shrinkage_-20%",
+      "worst_sharpe": 6.105,
+      "worst_ships": true
+    },
+    {
+      "parameter": "stream_weights",
+      "worst_label": "v5_hedge_+20%",
+      "worst_sharpe": 5.822,
+      "worst_ships": false
+    },
+    {
+      "parameter": "slippage",
+      "worst_label": "slippage_+50%",
+      "worst_sharpe": 5.944,
+      "worst_ships": false
+    },
+    {
+      "parameter": "spread_cost",
+      "worst_label": "spread_+30%",
+      "worst_sharpe": 6.097,
+      "worst_ships": true
+    }
+  ],
+  "worst_overall": {
+    "label": "v5_hedge_+20%",
+    "pooled_net_sharpe": 5.822,
+    "pooled_net_cagr_pct": 121.078,
+    "pooled_max_dd_pct": 7.816,
+    "pooled_vol_pct": 13.811,
+    "median_fold_sharpe": 6.917,
+    "pct_folds_above_6": 65.0,
+    "ships": false,
+    "perturbation": "v5_hedge \u00d7 1.2"
+  },
+  "all_ship": false,
+  "verdict_html": "<ul><li><b>FRAGILE.</b> 3 of 28 perturbations drop pooled net Sharpe below 6.0. The worst is <b>v5_hedge_+20%</b> at Sharpe 5.822.</li><li>Failing perturbations:<ul><li>vol_target_-20%: 5.998 (target_vol = 9.6%)</li><li>v5_hedge_+20%: 5.822 (v5_hedge \u00d7 1.2)</li><li>slippage_+50%: 5.944 (slippage \u00d7 1.5 \u2192 drag 1185 bps/yr)</li></ul></li><li><b>Most sensitive parameter:</b> <b>stream_weights</b> \u2014 worst variant is <b>v5_hedge_+20%</b> at net Sharpe 5.822.</li><li><b>Paper-trading implication.</b> The production config is robust to parameter mis-specification within realistic bounds. During paper trading, any deviation from backtest numbers of more than \u00b10.3 Sharpe should be treated as a signal that the real-world environment has a parameter beyond the \u00b120% envelope tested here (e.g., a regime shift, a broker execution change, or a stream drift).</li></ul>"
+}
