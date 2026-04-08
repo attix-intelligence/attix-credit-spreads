@@ -1,0 +1,109 @@
+{
+  "experiment": "EXP-2650",
+  "tag": "EXP-2650",
+  "description": "Multi-expiry staggering capacity analysis on real SPY put volumes",
+  "data_sources": {
+    "spot": "Yahoo Finance SPY daily close",
+    "option_volumes": "IronVault data/options_cache.db option_daily.volume",
+    "oi_status": "NULL for all SPY puts \u2014 documented gap"
+  },
+  "config": {
+    "min_dte": 21,
+    "max_dte": 45,
+    "target_dte": 28,
+    "otm_pct": 0.05,
+    "participation_rate": 0.1,
+    "risk_per_trade": 0.02,
+    "max_loss_per_contract_usd": 500.0,
+    "book_sizes_usd": [
+      50000000,
+      100000000,
+      200000000,
+      500000000,
+      1000000000
+    ]
+  },
+  "oi_audit": {
+    "total_put_bars": 2376972,
+    "oi_non_null": 0,
+    "oi_positive": 0
+  },
+  "n_mondays_scanned": 281,
+  "expiry_count_distribution": {
+    "3": 0.36298932384341637,
+    "8": 0.2775800711743772,
+    "7": 0.18505338078291814,
+    "4": 0.14590747330960854,
+    "9": 0.010676156583629894,
+    "6": 0.0071174377224199285,
+    "2": 0.0071174377224199285,
+    "5": 0.0035587188612099642
+  },
+  "variants": {
+    "single_expiry": {
+      "label": "single expiry (best)",
+      "median_volume": 1487.0,
+      "p5_volume": 213.0,
+      "p95_volume": 26984.0,
+      "median_aum_cap_usd": 3717500.0000000005,
+      "p5_aum_cap_usd": 532500.0,
+      "p95_aum_cap_usd": 67460000.0,
+      "feasibility_pct": {
+        "50M": 7.47,
+        "100M": 2.85,
+        "200M": 0.0,
+        "500M": 0.0,
+        "1000M": 0.0
+      }
+    },
+    "top2_expiries": {
+      "label": "top-2 expiries",
+      "median_volume": 2141.0,
+      "p5_volume": 353.0,
+      "p95_volume": 28126.0,
+      "median_aum_cap_usd": 5352500.000000001,
+      "p5_aum_cap_usd": 882500.0000000001,
+      "p95_aum_cap_usd": 70315000.00000001,
+      "feasibility_pct": {
+        "50M": 7.83,
+        "100M": 2.85,
+        "200M": 0.0,
+        "500M": 0.0,
+        "1000M": 0.0
+      }
+    },
+    "top3_expiries": {
+      "label": "top-3 expiries",
+      "median_volume": 2270.0,
+      "p5_volume": 408.0,
+      "p95_volume": 28310.0,
+      "median_aum_cap_usd": 5675000.0,
+      "p5_aum_cap_usd": 1020000.0000000001,
+      "p95_aum_cap_usd": 70775000.0,
+      "feasibility_pct": {
+        "50M": 8.19,
+        "100M": 3.2,
+        "200M": 0.0,
+        "500M": 0.0,
+        "1000M": 0.0
+      }
+    },
+    "all_expiries": {
+      "label": "all available (3-5)",
+      "median_volume": 2553.0,
+      "p5_volume": 447.0,
+      "p95_volume": 28310.0,
+      "median_aum_cap_usd": 6382500.0,
+      "p5_aum_cap_usd": 1117500.0,
+      "p95_aum_cap_usd": 70775000.0,
+      "feasibility_pct": {
+        "50M": 8.19,
+        "100M": 3.2,
+        "200M": 0.0,
+        "500M": 0.0,
+        "1000M": 0.0
+      }
+    }
+  },
+  "headline_html": "<ul><li><b>Single-expiry median AUM cap: $3.7M.</b> At the canonical EXP-1220 single-expiration Monday entry, the median Monday in 2020-2025 supports a book of $3.7M at 10% participation.</li><li><b>Top-3 staggered median AUM cap: $5.7M.</b> Spreading entries across the three highest-volume expiries in the 21-45 DTE window multiplies median capacity by <b>1.5\u00d7</b>.</li><li><b>Feasibility with top-3 staggering:</b> $100M is tradable on 3% of Mondays, $200M on 0%, $500M on 0%. A production staggered strategy could comfortably run a $1M book with almost no forced-downsize days (the p5-Monday capacity is the binding constraint).</li><li><b>AUM ceiling for 'always-tradable' (95%+ feasibility):</b> <b>single_expiry</b>=< $50M; <b>top2_expiries</b>=< $50M; <b>top3_expiries</b>=< $50M; <b>all_expiries</b>=< $50M; </li></ul>"
+}
