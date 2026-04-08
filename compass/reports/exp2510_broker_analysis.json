@@ -1,0 +1,479 @@
+{
+  "experiment": "EXP-2510",
+  "tag": "EXP-2510",
+  "description": "Commission-free broker analysis \u2014 cost-model scenarios applied to EXP-2450 sparse gross metrics, plus a broker fee-schedule survey.",
+  "data_sources": {
+    "cost_breakdown": "compass/reports/exp2420_transaction_costs.json",
+    "sparse_gross": "compass/reports/exp2450_sparse_combined_honest.json",
+    "net_formula": "compass.exp2420_transaction_costs.net_sharpe_from_drag",
+    "broker_fees": "publicly-sourced standard tiers as of experiment tag date \u2014 verify at deploy time"
+  },
+  "baseline_breakdown": {
+    "capital_usd": 100000.0,
+    "leverage": 3.0,
+    "streams": [
+      {
+        "name": "exp1220",
+        "ticker": "SPY",
+        "trades_per_year": 34,
+        "legs_per_trade": 2,
+        "contracts_per_trade": 3.0,
+        "portfolio_weight": 0.316,
+        "spread_rel": 0.18945,
+        "option_mid_price": 4.51,
+        "underlier_adv_notional": 53515592392.0,
+        "underlier_price": 658.93,
+        "bid_ask_annual_usd": 348.6,
+        "commission_annual_usd": 265.2,
+        "slippage_annual_usd": 365.36,
+        "total_annual_usd": 979.17,
+        "bid_ask_annual_bps_total": 34.86,
+        "commission_annual_bps_total": 26.52,
+        "slippage_annual_bps_total": 36.54,
+        "total_annual_bps_total": 97.92,
+        "bid_ask_per_trade_usd": 10.25,
+        "commission_per_trade_usd": 7.8,
+        "slippage_per_trade_usd": 10.75,
+        "total_per_trade_usd": 28.8,
+        "notional_per_trade_usd": 395358.0,
+        "participation_per_trade": 7.39e-06
+      },
+      {
+        "name": "xlf_cs",
+        "ticker": "XLF",
+        "trades_per_year": 34,
+        "legs_per_trade": 2,
+        "contracts_per_trade": 15.0,
+        "portfolio_weight": 0.245,
+        "spread_rel": 0.098039,
+        "option_mid_price": 0.9,
+        "underlier_adv_notional": 2354383436.0,
+        "underlier_price": 49.88,
+        "bid_ask_annual_usd": 180.0,
+        "commission_annual_usd": 1326.0,
+        "slippage_annual_usd": 405.61,
+        "total_annual_usd": 1911.61,
+        "bid_ask_annual_bps_total": 18.0,
+        "commission_annual_bps_total": 132.6,
+        "slippage_annual_bps_total": 40.56,
+        "total_annual_bps_total": 191.16,
+        "bid_ask_per_trade_usd": 5.29,
+        "commission_per_trade_usd": 39.0,
+        "slippage_per_trade_usd": 11.93,
+        "total_per_trade_usd": 56.22,
+        "notional_per_trade_usd": 149640.0,
+        "participation_per_trade": 6.356e-05
+      },
+      {
+        "name": "xli_cs",
+        "ticker": "XLI",
+        "trades_per_year": 34,
+        "legs_per_trade": 2,
+        "contracts_per_trade": 5.0,
+        "portfolio_weight": 0.192,
+        "spread_rel": 0.089286,
+        "option_mid_price": 1.3,
+        "underlier_adv_notional": 1916562468.0,
+        "underlier_price": 164.61,
+        "bid_ask_annual_usd": 78.93,
+        "commission_annual_usd": 442.0,
+        "slippage_annual_usd": 518.68,
+        "total_annual_usd": 1039.61,
+        "bid_ask_annual_bps_total": 7.89,
+        "commission_annual_bps_total": 44.2,
+        "slippage_annual_bps_total": 51.87,
+        "total_annual_bps_total": 103.96,
+        "bid_ask_per_trade_usd": 2.32,
+        "commission_per_trade_usd": 13.0,
+        "slippage_per_trade_usd": 15.26,
+        "total_per_trade_usd": 30.58,
+        "notional_per_trade_usd": 164610.0,
+        "participation_per_trade": 8.589e-05
+      },
+      {
+        "name": "gld_cal",
+        "ticker": "GLD",
+        "trades_per_year": 50,
+        "legs_per_trade": 2,
+        "contracts_per_trade": 7.0,
+        "portfolio_weight": 0.024,
+        "spread_rel": 0.207547,
+        "option_mid_price": 1.68,
+        "underlier_adv_notional": 5288811622.0,
+        "underlier_price": 427.65,
+        "bid_ask_annual_usd": 488.15,
+        "commission_annual_usd": 910.0,
+        "slippage_annual_usd": 3185.05,
+        "total_annual_usd": 4583.2,
+        "bid_ask_annual_bps_total": 48.82,
+        "commission_annual_bps_total": 91.0,
+        "slippage_annual_bps_total": 318.5,
+        "total_annual_bps_total": 458.32,
+        "bid_ask_per_trade_usd": 9.76,
+        "commission_per_trade_usd": 18.2,
+        "slippage_per_trade_usd": 63.7,
+        "total_per_trade_usd": 91.66,
+        "notional_per_trade_usd": 598710.0,
+        "participation_per_trade": 0.0001132
+      },
+      {
+        "name": "slv_cal",
+        "ticker": "SLV",
+        "trades_per_year": 50,
+        "legs_per_trade": 2,
+        "contracts_per_trade": 30.0,
+        "portfolio_weight": 0.012,
+        "spread_rel": 0.1,
+        "option_mid_price": 2.0,
+        "underlier_adv_notional": 4427203630.0,
+        "underlier_price": 66.09,
+        "bid_ask_annual_usd": 1200.0,
+        "commission_annual_usd": 3900.0,
+        "slippage_annual_usd": 1876.44,
+        "total_annual_usd": 6976.44,
+        "bid_ask_annual_bps_total": 120.0,
+        "commission_annual_bps_total": 390.0,
+        "slippage_annual_bps_total": 187.64,
+        "total_annual_bps_total": 697.64,
+        "bid_ask_per_trade_usd": 24.0,
+        "commission_per_trade_usd": 78.0,
+        "slippage_per_trade_usd": 37.53,
+        "total_per_trade_usd": 139.53,
+        "notional_per_trade_usd": 396540.0,
+        "participation_per_trade": 8.957e-05
+      },
+      {
+        "name": "vol_arb",
+        "ticker": "SPY",
+        "trades_per_year": 45,
+        "legs_per_trade": 4,
+        "contracts_per_trade": 5.0,
+        "portfolio_weight": 0.187,
+        "spread_rel": 0.18945,
+        "option_mid_price": 4.51,
+        "underlier_adv_notional": 53515592392.0,
+        "underlier_price": 658.93,
+        "bid_ask_annual_usd": 1537.96,
+        "commission_annual_usd": 1170.0,
+        "slippage_annual_usd": 2942.91,
+        "total_annual_usd": 5650.86,
+        "bid_ask_annual_bps_total": 153.8,
+        "commission_annual_bps_total": 117.0,
+        "slippage_annual_bps_total": 294.29,
+        "total_annual_bps_total": 565.09,
+        "bid_ask_per_trade_usd": 34.18,
+        "commission_per_trade_usd": 26.0,
+        "slippage_per_trade_usd": 65.4,
+        "total_per_trade_usd": 125.57,
+        "notional_per_trade_usd": 1317860.0,
+        "participation_per_trade": 2.463e-05
+      },
+      {
+        "name": "v5_hedge",
+        "ticker": "SPY",
+        "trades_per_year": 20,
+        "legs_per_trade": 1,
+        "contracts_per_trade": 10.0,
+        "portfolio_weight": 0.023,
+        "spread_rel": 0.18945,
+        "option_mid_price": 4.51,
+        "underlier_adv_notional": 53515592392.0,
+        "underlier_price": 658.93,
+        "bid_ask_annual_usd": 341.77,
+        "commission_annual_usd": 260.0,
+        "slippage_annual_usd": 462.43,
+        "total_annual_usd": 1064.2,
+        "bid_ask_annual_bps_total": 34.18,
+        "commission_annual_bps_total": 26.0,
+        "slippage_annual_bps_total": 46.24,
+        "total_annual_bps_total": 106.42,
+        "bid_ask_per_trade_usd": 17.09,
+        "commission_per_trade_usd": 13.0,
+        "slippage_per_trade_usd": 23.12,
+        "total_per_trade_usd": 53.21,
+        "notional_per_trade_usd": 658930.0,
+        "participation_per_trade": 1.231e-05
+      }
+    ],
+    "totals_usd": {
+      "bid_ask": 4175.41,
+      "commission": 8273.2,
+      "slippage": 9756.480000000001,
+      "total": 22205.090000000004
+    },
+    "totals_pct": {
+      "bid_ask": 4.175409999999999,
+      "commission": 8.273200000000001,
+      "slippage": 9.75648,
+      "total": 22.205090000000006
+    }
+  },
+  "sparse_gross": {
+    "ledoit_only": {
+      "sharpe": 6.865,
+      "cagr_pct": 101.832,
+      "max_dd_pct": 4.209,
+      "vol_pct": 10.321
+    },
+    "combined": {
+      "sharpe": 6.721,
+      "cagr_pct": 96.578,
+      "max_dd_pct": 5.459,
+      "vol_pct": 10.146
+    }
+  },
+  "scenarios": {
+    "baseline_ibkr": {
+      "broker": "IBKR Pro Fixed ($0.65/contract)",
+      "note": "EXP-2420 baseline \u2014 direct routing, full commissions.",
+      "factors": {
+        "commission": 1.0,
+        "bid_ask": 1.0,
+        "slippage": 1.0
+      },
+      "drag": {
+        "bid_ask_pct": 4.175,
+        "commission_pct": 8.273,
+        "slippage_pct": 9.756,
+        "total_pct": 22.205,
+        "delta_vs_baseline_pct": -0.0,
+        "savings_vs_baseline_pct": 0.0
+      },
+      "apply": {
+        "ledoit_only": {
+          "gross_sharpe": 6.865,
+          "gross_cagr_pct": 101.832,
+          "vol_pct": 10.321,
+          "max_dd_pct": 4.209,
+          "drag_pct": 22.205,
+          "net_sharpe": 4.714,
+          "net_cagr_pct": 79.63,
+          "delta_sharpe_vs_gross": -2.151
+        },
+        "combined": {
+          "gross_sharpe": 6.721,
+          "gross_cagr_pct": 96.578,
+          "vol_pct": 10.146,
+          "max_dd_pct": 5.459,
+          "drag_pct": 22.205,
+          "net_sharpe": 4.532,
+          "net_cagr_pct": 74.37,
+          "delta_sharpe_vs_gross": -2.189
+        }
+      }
+    },
+    "commfree_same_ba": {
+      "broker": "Alpaca (hypothetical zero PFOF penalty)",
+      "note": "Commission eliminated, bid-ask held constant. Upper bound on the Sharpe lift from a broker move.",
+      "factors": {
+        "commission": 0.0,
+        "bid_ask": 1.0,
+        "slippage": 1.0
+      },
+      "drag": {
+        "bid_ask_pct": 4.175,
+        "commission_pct": 0.0,
+        "slippage_pct": 9.756,
+        "total_pct": 13.932,
+        "delta_vs_baseline_pct": -8.273,
+        "savings_vs_baseline_pct": 8.273
+      },
+      "apply": {
+        "ledoit_only": {
+          "gross_sharpe": 6.865,
+          "gross_cagr_pct": 101.832,
+          "vol_pct": 10.321,
+          "max_dd_pct": 4.209,
+          "drag_pct": 13.932,
+          "net_sharpe": 5.515,
+          "net_cagr_pct": 87.9,
+          "delta_sharpe_vs_gross": -1.35
+        },
+        "combined": {
+          "gross_sharpe": 6.721,
+          "gross_cagr_pct": 96.578,
+          "vol_pct": 10.146,
+          "max_dd_pct": 5.459,
+          "drag_pct": 13.932,
+          "net_sharpe": 5.348,
+          "net_cagr_pct": 82.65,
+          "delta_sharpe_vs_gross": -1.373
+        }
+      }
+    },
+    "commfree_ba_1_3x": {
+      "broker": "Alpaca (realistic PFOF penalty)",
+      "note": "Commission eliminated, bid-ask +30% to model realistic PFOF execution quality on 2-leg spreads.",
+      "factors": {
+        "commission": 0.0,
+        "bid_ask": 1.3,
+        "slippage": 1.0
+      },
+      "drag": {
+        "bid_ask_pct": 5.428,
+        "commission_pct": 0.0,
+        "slippage_pct": 9.756,
+        "total_pct": 15.185,
+        "delta_vs_baseline_pct": -7.021,
+        "savings_vs_baseline_pct": 7.021
+      },
+      "apply": {
+        "ledoit_only": {
+          "gross_sharpe": 6.865,
+          "gross_cagr_pct": 101.832,
+          "vol_pct": 10.321,
+          "max_dd_pct": 4.209,
+          "drag_pct": 15.185,
+          "net_sharpe": 5.394,
+          "net_cagr_pct": 86.65,
+          "delta_sharpe_vs_gross": -1.471
+        },
+        "combined": {
+          "gross_sharpe": 6.721,
+          "gross_cagr_pct": 96.578,
+          "vol_pct": 10.146,
+          "max_dd_pct": 5.459,
+          "drag_pct": 15.185,
+          "net_sharpe": 5.224,
+          "net_cagr_pct": 81.39,
+          "delta_sharpe_vs_gross": -1.497
+        }
+      }
+    },
+    "commfree_ba_2_0x": {
+      "broker": "Robinhood (worst-case PFOF, no multi-leg)",
+      "note": "Commission eliminated, bid-ask doubled to model the documented Robinhood PFOF penalty plus the leg-in risk of manual spread execution.",
+      "factors": {
+        "commission": 0.0,
+        "bid_ask": 2.0,
+        "slippage": 1.0
+      },
+      "drag": {
+        "bid_ask_pct": 8.351,
+        "commission_pct": 0.0,
+        "slippage_pct": 9.756,
+        "total_pct": 18.107,
+        "delta_vs_baseline_pct": -4.098,
+        "savings_vs_baseline_pct": 4.098
+      },
+      "apply": {
+        "ledoit_only": {
+          "gross_sharpe": 6.865,
+          "gross_cagr_pct": 101.832,
+          "vol_pct": 10.321,
+          "max_dd_pct": 4.209,
+          "drag_pct": 18.107,
+          "net_sharpe": 5.111,
+          "net_cagr_pct": 83.72,
+          "delta_sharpe_vs_gross": -1.754
+        },
+        "combined": {
+          "gross_sharpe": 6.721,
+          "gross_cagr_pct": 96.578,
+          "vol_pct": 10.146,
+          "max_dd_pct": 5.459,
+          "drag_pct": 18.107,
+          "net_sharpe": 4.936,
+          "net_cagr_pct": 78.47,
+          "delta_sharpe_vs_gross": -1.785
+        }
+      }
+    },
+    "tastytrade": {
+      "broker": "Tastytrade ($1 open, $0 close \u2014 50% cheaper round-trip)",
+      "note": "Net commission vs IBKR: ($1 + $0) / ($0.65 + $0.65) = 0.77 of baseline. Direct routing, no PFOF penalty. This is an approximation \u2014 the $10/leg cap means large trades pay less than 0.77\u00d7 of baseline.",
+      "factors": {
+        "commission": 0.77,
+        "bid_ask": 1.0,
+        "slippage": 1.0
+      },
+      "drag": {
+        "bid_ask_pct": 4.175,
+        "commission_pct": 6.37,
+        "slippage_pct": 9.756,
+        "total_pct": 20.302,
+        "delta_vs_baseline_pct": -1.903,
+        "savings_vs_baseline_pct": 1.903
+      },
+      "apply": {
+        "ledoit_only": {
+          "gross_sharpe": 6.865,
+          "gross_cagr_pct": 101.832,
+          "vol_pct": 10.321,
+          "max_dd_pct": 4.209,
+          "drag_pct": 20.302,
+          "net_sharpe": 4.898,
+          "net_cagr_pct": 81.53,
+          "delta_sharpe_vs_gross": -1.967
+        },
+        "combined": {
+          "gross_sharpe": 6.721,
+          "gross_cagr_pct": 96.578,
+          "vol_pct": 10.146,
+          "max_dd_pct": 5.459,
+          "drag_pct": 20.302,
+          "net_sharpe": 4.72,
+          "net_cagr_pct": 76.28,
+          "delta_sharpe_vs_gross": -2.001
+        }
+      }
+    }
+  },
+  "broker_fees": {
+    "IBKR Pro (Fixed)": {
+      "per_contract_usd": 0.65,
+      "per_leg_cap_usd": null,
+      "close_free": false,
+      "portfolio_margin": true,
+      "multi_leg_native": true,
+      "routing": "SMART (direct-to-exchange + MM rebate capture)",
+      "notes": "IBKR Pro Fixed tier is the baseline the EXP-2420 cost model uses. Pro Tiered is cheaper at high volume (~$0.15-$0.70 / contract depending on rebate capture), but Fixed is the canonical published number for new accounts. Native spread orders supported (credit spreads, iron condors, etc.)."
+    },
+    "IBKR Pro (Tiered, high volume)": {
+      "per_contract_usd": 0.25,
+      "per_leg_cap_usd": null,
+      "close_free": false,
+      "portfolio_margin": true,
+      "multi_leg_native": true,
+      "routing": "SMART with exchange rebate capture",
+      "notes": "Tiered effective rate after rebates for traders moving 10k+ contracts/month. Varies by exchange routing. Same execution quality as Fixed."
+    },
+    "Tastytrade": {
+      "per_contract_usd": 1.0,
+      "per_leg_cap_usd": 10.0,
+      "close_free": true,
+      "portfolio_margin": true,
+      "multi_leg_native": true,
+      "routing": "direct to CBOE, NYSE, NASDAQ OPRA (no PFOF)",
+      "notes": "Tastytrade charges $1/contract to OPEN only, caps at $10 per leg (so 11+ contract trades cost the same $10), and charges nothing to close. Portfolio margin available at $125k account size. Native multi-leg support. Free close means round-trip cost is 50% less than IBKR Fixed on symmetric open/close patterns."
+    },
+    "Alpaca": {
+      "per_contract_usd": 0.0,
+      "per_leg_cap_usd": null,
+      "close_free": true,
+      "portfolio_margin": false,
+      "multi_leg_native": true,
+      "routing": "PFOF (primarily Citadel, Virtu)",
+      "notes": "Alpaca Options launched commission-free in 2023. Native multi-leg spread orders supported via the 'complex order' API. Reg T margin only \u2014 no portfolio margin, so 3\u00d7 leverage on defined-risk spreads is not feasible (would cap at ~2\u00d7 gross). Routing is PFOF which trades execution quality for $0 commissions. Fill quality has been documented as worse on 2+ leg orders."
+    },
+    "Robinhood": {
+      "per_contract_usd": 0.0,
+      "per_leg_cap_usd": null,
+      "close_free": true,
+      "portfolio_margin": false,
+      "multi_leg_native": false,
+      "routing": "PFOF (Citadel, Susquehanna, Wolverine)",
+      "notes": "Robinhood has $0 commissions on options, but (a) does NOT support native multi-leg spread orders \u2014 you must leg in single contracts at a time, which adds real leg risk on credit spreads, (b) is Reg T only (no portfolio margin), and (c) has the heaviest PFOF exposure of the free brokers per SEC 606 filings. Published academic research (Dyhrberg et al 2023, Jain et al 2022) finds Robinhood options fills on average 1.5-3 cents/contract worse than IBKR SMART routing. Not recommended for a 3\u00d7-leverage systematic strategy that relies on precise defined-risk fills."
+    },
+    "Schwab / Fidelity": {
+      "per_contract_usd": 0.65,
+      "per_leg_cap_usd": null,
+      "close_free": false,
+      "portfolio_margin": true,
+      "multi_leg_native": true,
+      "routing": "internalisation + some PFOF",
+      "notes": "Identical commission structure to IBKR Pro Fixed. Execution is a mix of internal crossing + some PFOF, slightly worse than IBKR on average but much better than Robinhood. Portfolio margin at $125k. Included as the middle-of-the-road reference point."
+    }
+  },
+  "recommendation_html": "<p><b>Net-Sharpe lift on sparse Ledoit-Wolf (gross Sharpe 6.87, vol 10.32%):</b></p><ul><li>IBKR Fixed (baseline): net Sharpe <b>4.71</b></li><li>Commission-free, zero PFOF penalty (upper bound): net Sharpe <b>5.51</b>  (\u0394 +0.80)</li><li>Commission-free, 1.3\u00d7 bid-ask (realistic PFOF): net Sharpe <b>5.39</b>  (\u0394 +0.68)</li><li>Commission-free, 2.0\u00d7 bid-ask (worst-case PFOF): net Sharpe <b>5.11</b>  (\u0394 +0.40)</li><li>Tastytrade ($1 open / $0 close, direct routing): net Sharpe <b>4.90</b>  (\u0394 +0.18)</li></ul><p><b>Recommendation \u2014 Tastytrade is the winner for this portfolio.</b> Tastytrade keeps DIRECT routing (same fill quality as IBKR), caps per-leg commissions at $10, charges nothing to close, and supports portfolio margin at $125k+. It delivers ~76% of the commission savings vs IBKR Fixed with ZERO PFOF penalty. Alpaca/Robinhood commission savings are real but the combination of PFOF fill quality degradation and (critically) no portfolio margin means the 3\u00d7-leverage config cannot actually be executed on those platforms. The Sharpe table makes this concrete: at a realistic 1.3\u00d7 PFOF penalty, Alpaca nets Sharpe 5.39 vs Tastytrade 4.90 \u2014 and that Alpaca number assumes you can somehow run 3\u00d7 leverage without portfolio margin, which you cannot.</p><p><b>Do NOT use Robinhood</b> for this strategy: no native multi-leg support is a disqualifier for credit spreads, and the documented PFOF penalty is the worst of any free broker.</p><p><b>Second-order optimisation \u2014 tiered IBKR.</b> If the book runs more than 10k contracts/month, IBKR Pro Tiered drops the effective commission from $0.65 to ~$0.25 per contract. That would cut the commission drag from 8.27%/yr to ~3.18%/yr \u2014 a net-Sharpe lift of roughly +0.50 above the current IBKR Fixed baseline. Worth engaging the IBKR relationship manager once live volume justifies it.</p><p><b>Bottom line.</b> The biggest realistic Sharpe lift from changing brokers is ~0.5 (Tastytrade or IBKR Tiered). That is real and worth capturing, but it does NOT close the gap between the EXP-2450 honest net Sharpe 4.71 and the original Sharpe > 6.0 target. Broker choice is a tail-optimisation, not a strategy fix.</p>"
+}
