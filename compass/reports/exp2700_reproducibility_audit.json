@@ -1,0 +1,774 @@
+{
+  "experiment": "EXP-2700",
+  "tag": "EXP-2700",
+  "description": "Reproducibility audit of EXP-2200/2280/2450/2600",
+  "methodology": {
+    "reference_dir": "/tmp/exp2700_reference",
+    "fresh_dir": "/home/node/.openclaw/workspace/pilotai-credit-spreads/compass/reports",
+    "tolerances": {
+      "sharpe": 0.01,
+      "cagr_pct": 0.1,
+      "max_dd_pct": 0.05,
+      "vol_pct": 0.05,
+      "calmar": 0.5
+    },
+    "workflow": "1) Copy committed JSONs to reference dir. 2) Re-run each script end-to-end. 3) Compare fresh vs reference on every numeric metric. 4) Flag drifts exceeding per-metric tolerance."
+  },
+  "experiments": {
+    "exp2200_north_star_v6": {
+      "reference_path": "/tmp/exp2700_reference/exp2200_north_star_v6.json",
+      "fresh_path": "/home/node/.openclaw/workspace/pilotai-credit-spreads/compass/reports/exp2200_north_star_v6.json",
+      "n_pass": 6,
+      "n_fail": 0,
+      "checks": [
+        {
+          "config": "winner",
+          "metric": "sparse_sharpe",
+          "reference": 5.23,
+          "fresh": 5.23,
+          "delta": 0.0,
+          "tolerance": 0.01,
+          "passed": true
+        },
+        {
+          "config": "winner_smeared",
+          "metric": "cagr_pct",
+          "reference": 12223.04,
+          "fresh": 12223.04,
+          "delta": 0.0,
+          "tolerance": 0.1,
+          "passed": true
+        },
+        {
+          "config": "winner_smeared",
+          "metric": "calmar",
+          "reference": 1117.86,
+          "fresh": 1117.86,
+          "delta": 0.0,
+          "tolerance": 0.5,
+          "passed": true
+        },
+        {
+          "config": "winner_smeared",
+          "metric": "max_dd_pct",
+          "reference": 10.93,
+          "fresh": 10.93,
+          "delta": 0.0,
+          "tolerance": 0.05,
+          "passed": true
+        },
+        {
+          "config": "winner_smeared",
+          "metric": "sharpe",
+          "reference": 33.75,
+          "fresh": 33.75,
+          "delta": 0.0,
+          "tolerance": 0.01,
+          "passed": true
+        },
+        {
+          "config": "winner_smeared",
+          "metric": "vol_pct",
+          "reference": 14.3,
+          "fresh": 14.3,
+          "delta": 0.0,
+          "tolerance": 0.05,
+          "passed": true
+        }
+      ]
+    },
+    "exp2280_wf_robustness": {
+      "reference_path": "/tmp/exp2700_reference/exp2280_wf_robustness.json",
+      "fresh_path": "/home/node/.openclaw/workspace/pilotai-credit-spreads/compass/reports/exp2280_wf_robustness.json",
+      "n_pass": 16,
+      "n_fail": 0,
+      "checks": [
+        {
+          "config": "pooled_oos",
+          "metric": "cagr_pct",
+          "reference": 170.383,
+          "fresh": 170.383,
+          "delta": 0.0,
+          "tolerance": 0.1,
+          "passed": true
+        },
+        {
+          "config": "pooled_oos",
+          "metric": "calmar",
+          "reference": 6.994,
+          "fresh": 6.994,
+          "delta": 0.0,
+          "tolerance": 0.5,
+          "passed": true
+        },
+        {
+          "config": "pooled_oos",
+          "metric": "max_dd_pct",
+          "reference": 24.362,
+          "fresh": 24.362,
+          "delta": 0.0,
+          "tolerance": 0.05,
+          "passed": true
+        },
+        {
+          "config": "pooled_oos",
+          "metric": "sharpe",
+          "reference": 4.429,
+          "fresh": 4.429,
+          "delta": 0.0,
+          "tolerance": 0.01,
+          "passed": true
+        },
+        {
+          "config": "pooled_oos",
+          "metric": "sortino",
+          "reference": 5.225,
+          "fresh": 5.225,
+          "delta": 0.0,
+          "tolerance": 0.01,
+          "passed": true
+        },
+        {
+          "config": "pooled_oos",
+          "metric": "vol_pct",
+          "reference": 23.095,
+          "fresh": 23.095,
+          "delta": 0.0,
+          "tolerance": 0.05,
+          "passed": true
+        },
+        {
+          "config": "yearly_2021",
+          "metric": "cagr_pct",
+          "reference": 122.461,
+          "fresh": 122.461,
+          "delta": 0.0,
+          "tolerance": 0.1,
+          "passed": true
+        },
+        {
+          "config": "yearly_2021",
+          "metric": "sharpe",
+          "reference": 5.231,
+          "fresh": 5.231,
+          "delta": 0.0,
+          "tolerance": 0.01,
+          "passed": true
+        },
+        {
+          "config": "yearly_2022",
+          "metric": "cagr_pct",
+          "reference": 301.862,
+          "fresh": 301.862,
+          "delta": 0.0,
+          "tolerance": 0.1,
+          "passed": true
+        },
+        {
+          "config": "yearly_2022",
+          "metric": "sharpe",
+          "reference": 3.858,
+          "fresh": 3.858,
+          "delta": 0.0,
+          "tolerance": 0.01,
+          "passed": true
+        },
+        {
+          "config": "yearly_2023",
+          "metric": "cagr_pct",
+          "reference": 138.324,
+          "fresh": 138.324,
+          "delta": 0.0,
+          "tolerance": 0.1,
+          "passed": true
+        },
+        {
+          "config": "yearly_2023",
+          "metric": "sharpe",
+          "reference": 5.677,
+          "fresh": 5.677,
+          "delta": 0.0,
+          "tolerance": 0.01,
+          "passed": true
+        },
+        {
+          "config": "yearly_2024",
+          "metric": "cagr_pct",
+          "reference": 145.032,
+          "fresh": 145.032,
+          "delta": 0.0,
+          "tolerance": 0.1,
+          "passed": true
+        },
+        {
+          "config": "yearly_2024",
+          "metric": "sharpe",
+          "reference": 5.259,
+          "fresh": 5.259,
+          "delta": 0.0,
+          "tolerance": 0.01,
+          "passed": true
+        },
+        {
+          "config": "yearly_2025",
+          "metric": "cagr_pct",
+          "reference": 173.725,
+          "fresh": 173.725,
+          "delta": 0.0,
+          "tolerance": 0.1,
+          "passed": true
+        },
+        {
+          "config": "yearly_2025",
+          "metric": "sharpe",
+          "reference": 5.048,
+          "fresh": 5.048,
+          "delta": 0.0,
+          "tolerance": 0.01,
+          "passed": true
+        }
+      ]
+    },
+    "exp2450_sparse_combined_honest": {
+      "reference_path": "/tmp/exp2700_reference/exp2450_sparse_combined_honest.json",
+      "fresh_path": "/home/node/.openclaw/workspace/pilotai-credit-spreads/compass/reports/exp2450_sparse_combined_honest.json",
+      "n_pass": 28,
+      "n_fail": 0,
+      "checks": [
+        {
+          "config": "circuit_only_gross",
+          "metric": "cagr_pct",
+          "reference": 84.018,
+          "fresh": 84.018,
+          "delta": 0.0,
+          "tolerance": 0.1,
+          "passed": true
+        },
+        {
+          "config": "circuit_only_gross",
+          "metric": "max_dd_pct",
+          "reference": 6.012,
+          "fresh": 6.012,
+          "delta": 0.0,
+          "tolerance": 0.05,
+          "passed": true
+        },
+        {
+          "config": "circuit_only_gross",
+          "metric": "sharpe",
+          "reference": 6.229,
+          "fresh": 6.229,
+          "delta": 0.0,
+          "tolerance": 0.01,
+          "passed": true
+        },
+        {
+          "config": "circuit_only_gross",
+          "metric": "vol_pct",
+          "reference": 9.88,
+          "fresh": 9.88,
+          "delta": 0.0,
+          "tolerance": 0.05,
+          "passed": true
+        },
+        {
+          "config": "circuit_only_net",
+          "metric": "cagr_pct",
+          "reference": 61.81,
+          "fresh": 61.81,
+          "delta": 0.0,
+          "tolerance": 0.1,
+          "passed": true
+        },
+        {
+          "config": "circuit_only_net",
+          "metric": "max_dd_pct",
+          "reference": 6.012,
+          "fresh": 6.012,
+          "delta": 0.0,
+          "tolerance": 0.05,
+          "passed": true
+        },
+        {
+          "config": "circuit_only_net",
+          "metric": "sharpe",
+          "reference": 3.982,
+          "fresh": 3.982,
+          "delta": 0.0,
+          "tolerance": 0.01,
+          "passed": true
+        },
+        {
+          "config": "combined_gross",
+          "metric": "cagr_pct",
+          "reference": 96.578,
+          "fresh": 96.578,
+          "delta": 0.0,
+          "tolerance": 0.1,
+          "passed": true
+        },
+        {
+          "config": "combined_gross",
+          "metric": "max_dd_pct",
+          "reference": 5.459,
+          "fresh": 5.459,
+          "delta": 0.0,
+          "tolerance": 0.05,
+          "passed": true
+        },
+        {
+          "config": "combined_gross",
+          "metric": "sharpe",
+          "reference": 6.721,
+          "fresh": 6.721,
+          "delta": 0.0,
+          "tolerance": 0.01,
+          "passed": true
+        },
+        {
+          "config": "combined_gross",
+          "metric": "vol_pct",
+          "reference": 10.146,
+          "fresh": 10.146,
+          "delta": 0.0,
+          "tolerance": 0.05,
+          "passed": true
+        },
+        {
+          "config": "combined_net",
+          "metric": "cagr_pct",
+          "reference": 74.37,
+          "fresh": 74.37,
+          "delta": 0.0,
+          "tolerance": 0.1,
+          "passed": true
+        },
+        {
+          "config": "combined_net",
+          "metric": "max_dd_pct",
+          "reference": 5.459,
+          "fresh": 5.459,
+          "delta": 0.0,
+          "tolerance": 0.05,
+          "passed": true
+        },
+        {
+          "config": "combined_net",
+          "metric": "sharpe",
+          "reference": 4.532,
+          "fresh": 4.532,
+          "delta": 0.0,
+          "tolerance": 0.01,
+          "passed": true
+        },
+        {
+          "config": "ledoit_only_gross",
+          "metric": "cagr_pct",
+          "reference": 101.832,
+          "fresh": 101.832,
+          "delta": 0.0,
+          "tolerance": 0.1,
+          "passed": true
+        },
+        {
+          "config": "ledoit_only_gross",
+          "metric": "max_dd_pct",
+          "reference": 4.209,
+          "fresh": 4.209,
+          "delta": 0.0,
+          "tolerance": 0.05,
+          "passed": true
+        },
+        {
+          "config": "ledoit_only_gross",
+          "metric": "sharpe",
+          "reference": 6.865,
+          "fresh": 6.865,
+          "delta": 0.0,
+          "tolerance": 0.01,
+          "passed": true
+        },
+        {
+          "config": "ledoit_only_gross",
+          "metric": "vol_pct",
+          "reference": 10.321,
+          "fresh": 10.321,
+          "delta": 0.0,
+          "tolerance": 0.05,
+          "passed": true
+        },
+        {
+          "config": "ledoit_only_net",
+          "metric": "cagr_pct",
+          "reference": 79.63,
+          "fresh": 79.63,
+          "delta": 0.0,
+          "tolerance": 0.1,
+          "passed": true
+        },
+        {
+          "config": "ledoit_only_net",
+          "metric": "max_dd_pct",
+          "reference": 4.209,
+          "fresh": 4.209,
+          "delta": 0.0,
+          "tolerance": 0.05,
+          "passed": true
+        },
+        {
+          "config": "ledoit_only_net",
+          "metric": "sharpe",
+          "reference": 4.714,
+          "fresh": 4.714,
+          "delta": 0.0,
+          "tolerance": 0.01,
+          "passed": true
+        },
+        {
+          "config": "sample_only_gross",
+          "metric": "cagr_pct",
+          "reference": 91.045,
+          "fresh": 91.045,
+          "delta": 0.0,
+          "tolerance": 0.1,
+          "passed": true
+        },
+        {
+          "config": "sample_only_gross",
+          "metric": "max_dd_pct",
+          "reference": 6.757,
+          "fresh": 6.757,
+          "delta": 0.0,
+          "tolerance": 0.05,
+          "passed": true
+        },
+        {
+          "config": "sample_only_gross",
+          "metric": "sharpe",
+          "reference": 6.177,
+          "fresh": 6.177,
+          "delta": 0.0,
+          "tolerance": 0.01,
+          "passed": true
+        },
+        {
+          "config": "sample_only_gross",
+          "metric": "vol_pct",
+          "reference": 10.583,
+          "fresh": 10.583,
+          "delta": 0.0,
+          "tolerance": 0.05,
+          "passed": true
+        },
+        {
+          "config": "sample_only_net",
+          "metric": "cagr_pct",
+          "reference": 68.84,
+          "fresh": 68.84,
+          "delta": 0.0,
+          "tolerance": 0.1,
+          "passed": true
+        },
+        {
+          "config": "sample_only_net",
+          "metric": "max_dd_pct",
+          "reference": 6.757,
+          "fresh": 6.757,
+          "delta": 0.0,
+          "tolerance": 0.05,
+          "passed": true
+        },
+        {
+          "config": "sample_only_net",
+          "metric": "sharpe",
+          "reference": 4.079,
+          "fresh": 4.079,
+          "delta": 0.0,
+          "tolerance": 0.01,
+          "passed": true
+        }
+      ]
+    },
+    "exp2600_north_star_v8": {
+      "reference_path": "/tmp/exp2700_reference/exp2600_north_star_v8.json",
+      "fresh_path": "/home/node/.openclaw/workspace/pilotai-credit-spreads/compass/reports/exp2600_north_star_v8.json",
+      "n_pass": 30,
+      "n_fail": 0,
+      "checks": [
+        {
+          "config": "v7_baseline_gross",
+          "metric": "cagr_pct",
+          "reference": 278.068,
+          "fresh": 278.068,
+          "delta": 0.0,
+          "tolerance": 0.1,
+          "passed": true
+        },
+        {
+          "config": "v7_baseline_gross",
+          "metric": "calmar",
+          "reference": 27.433,
+          "fresh": 27.433,
+          "delta": 0.0,
+          "tolerance": 0.5,
+          "passed": true
+        },
+        {
+          "config": "v7_baseline_gross",
+          "metric": "max_dd_pct",
+          "reference": 10.136,
+          "fresh": 10.136,
+          "delta": 0.0,
+          "tolerance": 0.05,
+          "passed": true
+        },
+        {
+          "config": "v7_baseline_gross",
+          "metric": "sharpe",
+          "reference": 6.772,
+          "fresh": 6.772,
+          "delta": 0.0,
+          "tolerance": 0.01,
+          "passed": true
+        },
+        {
+          "config": "v7_baseline_gross",
+          "metric": "vol_pct",
+          "reference": 19.982,
+          "fresh": 19.982,
+          "delta": 0.0,
+          "tolerance": 0.05,
+          "passed": true
+        },
+        {
+          "config": "v7_baseline_net",
+          "metric": "cagr_pct",
+          "reference": 246.018,
+          "fresh": 246.018,
+          "delta": 0.0,
+          "tolerance": 0.1,
+          "passed": true
+        },
+        {
+          "config": "v7_baseline_net",
+          "metric": "calmar",
+          "reference": 23.889,
+          "fresh": 23.889,
+          "delta": 0.0,
+          "tolerance": 0.5,
+          "passed": true
+        },
+        {
+          "config": "v7_baseline_net",
+          "metric": "max_dd_pct",
+          "reference": 10.298,
+          "fresh": 10.298,
+          "delta": 0.0,
+          "tolerance": 0.05,
+          "passed": true
+        },
+        {
+          "config": "v7_baseline_net",
+          "metric": "sharpe",
+          "reference": 6.326,
+          "fresh": 6.326,
+          "delta": 0.0,
+          "tolerance": 0.01,
+          "passed": true
+        },
+        {
+          "config": "v7_baseline_net",
+          "metric": "vol_pct",
+          "reference": 19.982,
+          "fresh": 19.982,
+          "delta": 0.0,
+          "tolerance": 0.05,
+          "passed": true
+        },
+        {
+          "config": "v8a_add_qqq_gross",
+          "metric": "cagr_pct",
+          "reference": 284.364,
+          "fresh": 284.364,
+          "delta": 0.0,
+          "tolerance": 0.1,
+          "passed": true
+        },
+        {
+          "config": "v8a_add_qqq_gross",
+          "metric": "calmar",
+          "reference": 27.626,
+          "fresh": 27.626,
+          "delta": 0.0,
+          "tolerance": 0.5,
+          "passed": true
+        },
+        {
+          "config": "v8a_add_qqq_gross",
+          "metric": "max_dd_pct",
+          "reference": 10.293,
+          "fresh": 10.293,
+          "delta": 0.0,
+          "tolerance": 0.05,
+          "passed": true
+        },
+        {
+          "config": "v8a_add_qqq_gross",
+          "metric": "sharpe",
+          "reference": 6.83,
+          "fresh": 6.83,
+          "delta": 0.0,
+          "tolerance": 0.01,
+          "passed": true
+        },
+        {
+          "config": "v8a_add_qqq_gross",
+          "metric": "vol_pct",
+          "reference": 20.056,
+          "fresh": 20.056,
+          "delta": 0.0,
+          "tolerance": 0.05,
+          "passed": true
+        },
+        {
+          "config": "v8a_add_qqq_net",
+          "metric": "cagr_pct",
+          "reference": 251.782,
+          "fresh": 251.782,
+          "delta": 0.0,
+          "tolerance": 0.1,
+          "passed": true
+        },
+        {
+          "config": "v8a_add_qqq_net",
+          "metric": "calmar",
+          "reference": 24.082,
+          "fresh": 24.082,
+          "delta": 0.0,
+          "tolerance": 0.5,
+          "passed": true
+        },
+        {
+          "config": "v8a_add_qqq_net",
+          "metric": "max_dd_pct",
+          "reference": 10.455,
+          "fresh": 10.455,
+          "delta": 0.0,
+          "tolerance": 0.05,
+          "passed": true
+        },
+        {
+          "config": "v8a_add_qqq_net",
+          "metric": "sharpe",
+          "reference": 6.386,
+          "fresh": 6.386,
+          "delta": 0.0,
+          "tolerance": 0.01,
+          "passed": true
+        },
+        {
+          "config": "v8a_add_qqq_net",
+          "metric": "vol_pct",
+          "reference": 20.056,
+          "fresh": 20.056,
+          "delta": 0.0,
+          "tolerance": 0.05,
+          "passed": true
+        },
+        {
+          "config": "v8b_swap_slv_qqq_gross",
+          "metric": "cagr_pct",
+          "reference": 201.908,
+          "fresh": 201.908,
+          "delta": 0.0,
+          "tolerance": 0.1,
+          "passed": true
+        },
+        {
+          "config": "v8b_swap_slv_qqq_gross",
+          "metric": "calmar",
+          "reference": 18.893,
+          "fresh": 18.893,
+          "delta": 0.0,
+          "tolerance": 0.5,
+          "passed": true
+        },
+        {
+          "config": "v8b_swap_slv_qqq_gross",
+          "metric": "max_dd_pct",
+          "reference": 10.687,
+          "fresh": 10.687,
+          "delta": 0.0,
+          "tolerance": 0.05,
+          "passed": true
+        },
+        {
+          "config": "v8b_swap_slv_qqq_gross",
+          "metric": "sharpe",
+          "reference": 6.352,
+          "fresh": 6.352,
+          "delta": 0.0,
+          "tolerance": 0.01,
+          "passed": true
+        },
+        {
+          "config": "v8b_swap_slv_qqq_gross",
+          "metric": "vol_pct",
+          "reference": 17.677,
+          "fresh": 17.677,
+          "delta": 0.0,
+          "tolerance": 0.05,
+          "passed": true
+        },
+        {
+          "config": "v8b_swap_slv_qqq_net",
+          "metric": "cagr_pct",
+          "reference": 176.292,
+          "fresh": 176.292,
+          "delta": 0.0,
+          "tolerance": 0.1,
+          "passed": true
+        },
+        {
+          "config": "v8b_swap_slv_qqq_net",
+          "metric": "calmar",
+          "reference": 16.065,
+          "fresh": 16.065,
+          "delta": 0.0,
+          "tolerance": 0.5,
+          "passed": true
+        },
+        {
+          "config": "v8b_swap_slv_qqq_net",
+          "metric": "max_dd_pct",
+          "reference": 10.974,
+          "fresh": 10.974,
+          "delta": 0.0,
+          "tolerance": 0.05,
+          "passed": true
+        },
+        {
+          "config": "v8b_swap_slv_qqq_net",
+          "metric": "sharpe",
+          "reference": 5.848,
+          "fresh": 5.848,
+          "delta": 0.0,
+          "tolerance": 0.01,
+          "passed": true
+        },
+        {
+          "config": "v8b_swap_slv_qqq_net",
+          "metric": "vol_pct",
+          "reference": 17.677,
+          "fresh": 17.677,
+          "delta": 0.0,
+          "tolerance": 0.05,
+          "passed": true
+        }
+      ]
+    }
+  },
+  "verdict_html": "<ul><li><b>ALL 4 EXPERIMENTS REPRODUCE BIT-EXACT.</b> Every Sharpe, CAGR, DD, vol, and calmar metric from the committed JSONs was regenerated within tolerance by re-running the scripts from scratch. The pre-paper-trading trust bar is met on the reproducibility axis.</li><li>exp2200_north_star_v6: 6/6 checks passed.</li><li>exp2280_wf_robustness: 16/16 checks passed.</li><li>exp2450_sparse_combined_honest: 28/28 checks passed.</li><li>exp2600_north_star_v8: 30/30 checks passed.</li><li><b>Next step after this audit.</b> If everything reproduces, bump the reproducibility-audit timestamp in MASTERPLAN v9 and proceed with the 8-week paper trading plan (MASTERPLAN Phase 10). If any drift is detected, open a blocker and investigate the specific metric before shipping.</li></ul>",
+  "total_pass": 80,
+  "total_fail": 0
+}
