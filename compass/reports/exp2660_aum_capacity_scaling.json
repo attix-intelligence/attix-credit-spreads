@@ -1,0 +1,174 @@
+{
+  "experiment": "EXP-2660",
+  "name": "AUM Capacity \u2014 Multi-Underlying Scaling Audit",
+  "generated": "2026-04-08T07:03:50",
+  "candidates": [
+    "IWM",
+    "EEM",
+    "DIA",
+    "XLE",
+    "XLV",
+    "AAPL",
+    "MSFT",
+    "AMZN"
+  ],
+  "ironvault_coverage": {
+    "IWM": {
+      "n_contracts": 0,
+      "date_range": null,
+      "tradeable": false
+    },
+    "EEM": {
+      "n_contracts": 0,
+      "date_range": null,
+      "tradeable": false
+    },
+    "DIA": {
+      "n_contracts": 0,
+      "date_range": null,
+      "tradeable": false
+    },
+    "XLE": {
+      "n_contracts": 1757,
+      "date_range": [
+        "2020-04-17",
+        "2026-04-04"
+      ],
+      "tradeable": true
+    },
+    "XLV": {
+      "n_contracts": 0,
+      "date_range": null,
+      "tradeable": false
+    },
+    "AAPL": {
+      "n_contracts": 0,
+      "date_range": null,
+      "tradeable": false
+    },
+    "MSFT": {
+      "n_contracts": 0,
+      "date_range": null,
+      "tradeable": false
+    },
+    "AMZN": {
+      "n_contracts": 0,
+      "date_range": null,
+      "tradeable": false
+    }
+  },
+  "yahoo_capacity_proxies": {
+    "IWM": {
+      "n_days": 502,
+      "last_close": 246.16,
+      "median_close": 217.02,
+      "adv_shares": 33402443.0,
+      "adv_notional_usd": 7247572568.0,
+      "median_volume": 30487450.0
+    },
+    "EEM": {
+      "n_days": 502,
+      "last_close": 54.71,
+      "median_close": 43.76,
+      "adv_shares": 26946063.0,
+      "adv_notional_usd": 1215604378.0,
+      "median_volume": 24793350.0
+    },
+    "DIA": {
+      "n_days": 502,
+      "last_close": 480.57,
+      "median_close": 422.95,
+      "adv_shares": 3840416.0,
+      "adv_notional_usd": 1642173754.0,
+      "median_volume": 3463450.0
+    },
+    "XLE": {
+      "n_days": 502,
+      "last_close": 44.71,
+      "median_close": 44.5,
+      "adv_shares": 31349300.0,
+      "adv_notional_usd": 1384051050.0,
+      "median_volume": 28998600.0
+    },
+    "XLV": {
+      "n_days": 502,
+      "last_close": 154.8,
+      "median_close": 144.51,
+      "adv_shares": 9592702.0,
+      "adv_notional_usd": 1368773614.0,
+      "median_volume": 8537350.0
+    },
+    "AAPL": {
+      "n_days": 502,
+      "last_close": 271.86,
+      "median_close": 222.11,
+      "adv_shares": 55647118.0,
+      "adv_notional_usd": 12040799410.0,
+      "median_volume": 48908400.0
+    },
+    "MSFT": {
+      "n_days": 502,
+      "last_close": 483.62,
+      "median_close": 427.68,
+      "adv_shares": 21386831.0,
+      "adv_notional_usd": 9423235821.0,
+      "median_volume": 19588200.0
+    },
+    "AMZN": {
+      "n_days": 502,
+      "last_close": 230.82,
+      "median_close": 199.27,
+      "adv_shares": 42700249.0,
+      "adv_notional_usd": 8555395872.0,
+      "median_volume": 38712750.0
+    }
+  },
+  "backtests": {
+    "XLE": {
+      "ticker": "XLE",
+      "n": 11,
+      "sharpe": 1.949,
+      "cagr_pct": 0.613,
+      "max_dd_pct": -0.0,
+      "win_rate": 1.0,
+      "total_pnl_pct": 2.304,
+      "trades_per_yr": 2.95
+    }
+  },
+  "correlations_to_existing_7stream": {
+    "XLE": {
+      "n_days": 1566,
+      "by_stream": {
+        "exp1220": -0.0121,
+        "v5_hedge": -0.0005,
+        "gld_cal": -0.0152,
+        "slv_cal": -0.0131,
+        "cross_vol": -0.0112,
+        "equal_weight_portfolio": -0.0226
+      }
+    }
+  },
+  "summary": {
+    "n_candidates": 8,
+    "n_tradeable_under_rule_zero": 1,
+    "n_blocked_by_data": 7,
+    "tradeable_tickers": [
+      "XLE"
+    ],
+    "blocked_tickers": [
+      "IWM",
+      "EEM",
+      "DIA",
+      "XLV",
+      "AAPL",
+      "MSFT",
+      "AMZN"
+    ],
+    "data_unblocking_required": "7 of 8 candidates have ZERO option contracts in IronVault. Rule Zero forbids backtesting them on synthesised chains. Unblocking them requires a paid Polygon Options Advanced (~$199/mo) or CBOE DataShop subscription."
+  },
+  "rule_zero": {
+    "enforced": true,
+    "synthetic_chains_used": false,
+    "real_data_only": true
+  }
+}
