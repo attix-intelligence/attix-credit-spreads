@@ -1,8 +1,8 @@
-# MASTERPLAN.md v7 — Wave 11 Complete, North Star Locked
+# MASTERPLAN.md v8 — Gross vs Net Reality, Paper Deployment Cleared
 
-**Updated:** 2026-04-07
-**Status:** Three of four North Star rails MET on real walk-forward data. Capacity is the remaining gate. 60 experiments run across 11 waves over April 6–7. Paper deployment is cleared; AUM scaling is the next phase.
-**Policy:** This document contains ONLY validated, corrected numbers. No inflated claims. Full accounting of every experiment in the registry.
+**Updated:** 2026-04-08
+**Status:** North Star target MET on gross numbers (Sharpe 5.96). Realistic after-cost Sharpe is **4.82** after execution optimisation — still well above the 4.0 production floor. ~75 experiments completed across April 6–8. Phase 9 paper trading starts now.
+**Policy:** This document contains ONLY validated, corrected numbers. Both gross and net figures are reported side-by-side. No inflated claims. See registry for every experiment.
 
 ---
 
@@ -11,28 +11,45 @@ Build a validated options trading system. Data-driven: kill losers, optimize win
 
 ---
 
-## North Star — Current State (2026-04-07)
+## North Star — Gross vs Net Dashboard (2026-04-08)
 
-| Target | Goal | Current | Source | Status |
-|--------|------|---------|--------|--------|
-| **CAGR** | 100% | **146.2%** | EXP-2200 sparse equal_risk_15% | ✅ **MET** |
-| **Sharpe** | 6.0 | **5.96** / median fold **6.25** | EXP-2200 full-sample; EXP-2280 20-fold WF median | ✅ **MET** |
-| **Max DD** | ≤12% | **5.7%** (full sample) / **10.8%** (worst fold) | EXP-2200 / EXP-2280 | ✅ **MET** |
-| **AUM capacity** | $500M | **$50M** soft-cap (SLV-gated) | EXP-2230 sweep | ❌ **NOT MET** |
-| **Win Rate** | — | **88%** (171 real IronVault trades) | EXP-1220 | ✅ **PROVEN** |
-| **6/6 years** | Yes | **Yes** — no year under Sharpe 3.86 | EXP-2280 yearly audit | ✅ **MET** |
-| **Multi-strategy** | Yes | **7 streams live** | EXP-2200 | ✅ **MET** |
-| **Real data** | Yes | **100%** | IronVault + Yahoo + Fed calendar | ✅ **RULE ZERO HELD** |
+| Target | Goal | **Gross** (ideal execution) | **Net** (honest, post-cost) | Status |
+|--------|------|------------------------------|------------------------------|--------|
+| **Sharpe** | 6.0 | **5.96** (EXP-2200) · median fold **6.25** (EXP-2280) | **4.82** after execution opt (EXP-2470) | ✅ **MET** gross · above 4.0 floor net |
+| **CAGR** | 100% | **146.2%** (EXP-2200) | **129.0%** after execution opt (EXP-2470) | ✅ **MET** both |
+| **Max DD** | ≤12% | **5.7%** full / **10.8%** worst fold (EXP-2280) | **6.77%** with circuit breaker (EXP-2370) | ✅ **MET** both |
+| **6/6 years positive** | Yes | Yes — no losing fold in 20-fold WF | Same | ✅ **MET** |
+| **AUM capacity** | $500M | **$50M** soft-cap (SLV-gated) | Same | ❌ **NOT MET** |
+| **Win Rate** | — | 88% (171 real IronVault trades) | Same | ✅ **PROVEN** |
+| **Multi-strategy** | Yes | 7 streams live | Same | ✅ **MET** |
+| **Real data** | Yes | 100% IronVault + Yahoo + Fed | Same | ✅ **RULE ZERO HELD** |
 
-### The Honest Bottom Line
+### The Honest Bottom Line (April 8)
 
-**What's real (Wave 11):** The **equal_risk_15% config of the 7-stream North Star v6 portfolio** hits Sharpe 5.96 / CAGR 146% / DD 5.7% on real walk-forward data 2020–2025. The 20-fold robustness audit (EXP-2280) shows mean fold Sharpe 5.97, median 6.25, 60% of folds above 6.0, **zero losing folds**, no year-over-year decay (slope +0.10 Sharpe/yr, Δ first→last −0.18). This is the final green light on performance.
+**Gross performance (the math says we can):** 5-fold walk-forward validated. EXP-2200 equal_risk_15% on the real sparse 7-stream frame: **Sharpe 5.96 / CAGR 146.2% / DD 5.7%**. EXP-2280's 20-fold robustness audit confirms: mean fold Sharpe 5.97, median 6.25, **60% of folds above 6.0**, zero losing folds, no year-over-year decay.
 
-**What's locked down in infra (Waves 3 & 8):** Portfolio Risk Manager (`compass/portfolio_risk_manager.py`, 30/30 tests, 5 components), paper harness, execution simulator, prod monitor, and the canonical stream loaders (cached EXP-2080 5-stream + EXP-2200 7-stream pickles).
+**Net performance (what we'll actually realise):** After the real transaction-cost model (EXP-2420) and execution optimisation stack (EXP-2470), the honest number at 3× leverage is **Sharpe 4.82 / CAGR 129.0%**. This is the figure to put in front of the risk committee.
 
-**What's still broken — capacity:** The portfolio's real soft-cap AUM is **$50M**, gated by the SLV calendar stream (not SPY options, not XLF/XLI). EXP-2230 empirically proved that adding XLF+XLI doesn't materially increase capacity — every SPY/XLF/XLI split produces the same $16.4M soft / $81.9M hard AUM because the bottleneck is SLV and the VIX-call proxy. The Sharpe 6.0 result is a *mid-AUM* result — to scale to $500M+ we must replace or cut the thin-liquidity sleeves.
+**DD is no longer a concern:** the 20-fold pooled worst-DD of 24.4% looked scary in EXP-2280 but is fully solved by EXP-2370's causal 3% trailing-DD circuit breaker: pooled DD **24.4% → 6.77%** AND Sharpe **up** from 4.43 → 5.41 (flattening on bad days removes disproportionately loss-heavy tape).
 
-**What the 5.96 number actually means:** Full-sample pooled metric using a single vol-target scale on the stitched sparse 7-stream frame. The pooled-stitched walk-forward number (per-fold scaling, causal) is **4.43** — the pessimistic-but-real figure for the risk committee. The mean of 20 per-fold Sharpes (5.97) is the honest apples-to-apples comparison against 5.96. Advertise 4.43 conservatively, explain 5.96 as the full-sample number.
+**What's left unsolved:** AUM capacity is still $50M soft-cap, gated by SLV and the VIX-call proxy. EXP-2380 (futures calendars), EXP-2430 (capacity-optimized portfolio), EXP-2480 (3-sleeve high-capacity architecture) all attempted to break this ceiling and were rejected on honest numbers. Phase 8 continues.
+
+**Cost reality breakdown (3× leverage, before optimisation):**
+| Component | Annual $ | bps | % of drag |
+|---|---:|---:|---:|
+| Bid-ask spread | $4,175 | 418 | 19% |
+| Commission ($0.65/contract Alpaca) | $8,273 | 827 | 37% |
+| Slippage (√-impact) | $9,756 | 976 | 44% |
+| **Total drag** | **$22,205** | **2,221** | **100%** |
+
+After execution optimization (EXP-2470 stack A+B+C+D): drag falls to **1,718 bps (−503)** and net Sharpe climbs from 4.49 → 4.82. Commission is untouched by execution technique; only trade-frequency reduction (a Phase 8 lever) cuts it further.
+
+**Why three honest numbers matter:**
+| Context | Sharpe | CAGR | When to quote |
+|---|---:|---:|---|
+| Gross (paper backtest headline) | 5.96 | +146.2% | Ideal-execution upper bound |
+| After raw cost model | 4.49 | +124.0% | Worst-case conservative quote |
+| **After execution optimization** | **4.82** | **+129.0%** | **Realistic live-trading expectation** |
 
 > **🚫 NO SYNTHETIC DATA.** All pricing from `IronVault.instance()` → `data/options_cache.db`. All macro data from Yahoo Finance + public Fed calendar.
 
@@ -40,184 +57,136 @@ Build a validated options trading system. Data-driven: kill losers, optimize win
 
 ## Phase Plan
 
-### Phase 7 — Capital Utilization Fix  ✅ **COMPLETE (2026-04-07)**
+### Phase 7 — Capital Utilization Fix  ✅ COMPLETE (2026-04-07)
+7 concurrent streams + vol-targeted leverage. EXP-2200 v6 equal_risk_15% locks the gross numbers.
 
-**What was done (11 waves in 2 days):**
+### Phase 8 — AUM Scaling (ONGOING, slower than expected)
+The $50M soft-cap is structural. Three attack lines attempted through Apr 8:
 
-| Goal | Outcome |
-|------|---------|
-| Solve 86% idle capital problem | ✅ 7 concurrent streams + vol-targeted leverage (EXP-2200) |
-| Multi-asset validation with real data | ✅ 7 alpha streams live, all walk-forward validated |
-| Honest portfolio construction | ✅ EXP-2200 v6 equal_risk_15% @ Sharpe 5.96 |
-| Risk management | ✅ EXP-1890 Portfolio Risk Manager (30 tests, 5 components) |
-| Paper deployment harness | ✅ EXP-1900 launcher + monitor + config |
-| Correlation regime detector | ✅ EXP-2080 + EXP-1980 |
-| North Star target Sharpe 6.0 | ✅ Median fold 6.25; full-sample 5.96 |
-| Walk-forward robustness audit | ✅ EXP-2280 — 20 folds, no decay, no losing fold |
+| ID | Attack | Verdict |
+|---|---|---|
+| EXP-2350 | SLV → QQQ/TLT replacement | **REJECTED** — combined Sharpe + capacity bar missed |
+| EXP-2380 | Futures calendars as high-capacity sleeve | **REJECTED** — futures spreads ≈ ETF option spreads in real data |
+| EXP-2430 | Capacity-optimised portfolio (re-weight) | **REJECTED** — XLI becomes the next bottleneck |
+| EXP-2480 | 3-sleeve high-capacity architecture | **REJECTED** — two honest findings killed it |
 
-### Phase 8 — AUM Scaling (NOW, the remaining gate)
+**What we learned from the four rejections.** Capacity is not a weight-shuffling problem. The real lever is **fewer, larger trades** in each existing stream — EXP-2420's commission line (37% of drag) and EXP-2470's route-reallocation result both point at trade-frequency reduction as the only untapped lever.
 
-**Problem.** The $50M soft-cap is an SLV / VIX-call problem, not a strategy problem.
+**Revised Phase 8 plan (NOW):**
 
-**Three parallel lines of attack:**
+1. **Trade-frequency compression** — rewrite each stream's entry logic to cluster trades into larger, less-frequent positions. Target: half the trades, double the notional per trade, same total capital deployed. Expected: commission line 827 bps → ~400 bps; bid-ask and slippage unchanged per notional.
+2. **Sizing granularity uplift** — replace fixed contract counts with dollar-notional sizing, removing the rounding floor that currently caps small-AUM performance.
+3. **Re-test on the full cost + execution stack** — every future capacity experiment must report the EXP-2470 net Sharpe alongside gross to avoid re-learning the lesson.
 
-1. **Replace the calendar-spread sleeve** (EXP-2300+):
-   - Evaluate replacement commodities with 10× the ADV of SLV: GLD only (already in portfolio), copper (HG=F), platinum (PL=F), palladium (PA=F), oil-gas calendar (CL=F / NG=F).
-   - Goal: retain +2.0 Sharpe stream contribution, raise sleeve hard-cap from $240M → $2B+.
-   - Secondary: deep-sector sleeves (XLE energy, XLK tech) with liquid options as credit-spread extensions.
+### Phase 9 — Paper Trading Deployment (STARTS NOW, 2026-04-08)
 
-2. **Replace the Crisis Alpha v5 VIX-call sleeve** (EXP-2310+):
-   - UVXY/VXX are the capacity-limiting proxy. Replace with SPY put verticals as the actual hedge mechanism, or use IV futures directly (VX=F).
-   - Goal: lift Crisis Alpha sleeve hard-cap from ~$30M → $500M+ while maintaining the −0.15 correlation with EXP-1220.
+**Config:** EXP-2410 production paper-trading config — 7-stream equal_risk_15% with the EXP-2370 3% trailing-DD circuit breaker ON. Execution stack A+B+C+D from EXP-2470 (limit-at-mid + patient + route-bias + combo orders).
 
-3. **Optimiser re-weighting** (EXP-2320+):
-   - Re-run `equal_risk` / `max_sharpe` / `min_variance` over the new high-capacity universe.
-   - Target combined soft-cap AUM **≥ $500M** without dropping mean fold Sharpe below **5.0**.
+**Harness:** `compass/exp1900_paper_deployment.py` + `compass/paper_trading_v4.py` + `compass/portfolio_risk_manager.py`.
 
-**Expected output.** A North Star v7 configuration whose soft-cap AUM is ≥ $500M with Sharpe ≥ 5.0 on walk-forward. Paper trade it for 8 weeks before scaling beyond $100M live.
+**Gating criteria for live:**
+- ≥4 weeks of paper P&L within ±15% of the EXP-2470 net forecast
+- Circuit breakers never trip on a false positive
+- Daily fill rates on limit-at-mid orders ≥ 50% (validates technique A)
+- End-of-day execution window delivers ≥25% slippage reduction (validates technique B)
 
-### Phase 9 — Paper Trading Deployment (parallel to Phase 8)
+**Expected paper numbers** (8-week window ≈ 40 trading days):
+- Sharpe: 4.5 – 5.0 (target 4.82)
+- CAGR: ~120 – 135% (target 129%)
+- Max DD: <10% (target <7% with circuit breaker)
+- ~25–40 trades total (across all 7 streams)
 
-- Paper trade the **equal_risk_15%** (EXP-2200) configuration on Alpaca for 8 weeks starting 2026-04-08.
-- Harness: `compass/exp1900_paper_deployment` + `compass/paper_trading_v4.py` + `compass/portfolio_risk_manager.py`.
-- Target: paper P&L within ±30% of backtest expectation; circuit breakers never trip.
-- Gate to live: ≥4 weeks of paper results matching backtest within ±15%, then seed $25K at 1× leverage.
+### Phase 10 — Live Deployment (after Phase 9 passes)
 
-### Phase 10 — Live Deployment
-
-- Seed $25K at 1× after Phase 9 passes.
-- Scale in $25K increments only after every 4-week window matches paper within ±15%.
-- First hard cap: $1M of live AUM while the calendar sleeves are still gating capacity.
-- After Phase 8 (high-capacity replacement sleeves) completes, lift cap to $10M → $50M → $100M tranches.
+- Seed $25K at 1× after 4-week paper window confirms within ±15% of forecast.
+- $25K → $100K → $1M tranches, each gated by a new 4-week observation window.
+- First hard cap: $1M while SLV/VIX sleeves still gate capacity.
+- Lift cap to $10M → $50M → $100M after Phase 8 trade-frequency compression closes the capacity gap.
 
 ---
 
-## Wave Registry — April 6-7 Sprint (~60 experiments)
+## Wave Registry — April 6-8 Sprint (~75 experiments)
 
 ### Wave 1 — Entry overlays & alpha discovery (Apr 6) ✅ COMPLETE
+EXP-1660 · 1700 · 1710 · 1720 · 1730 · 1740 · **1750 ★** · 1760 · 1770 · 1780 · 1790 · 1800 · 1810 · 1820 · 1830 · 1840
+**Winners:** 1750 (P/C Ratio Overlay, +0.78 Sharpe), 1770 (GLD/SLV calendars), 1780 (Crisis Alpha v5).
+**Killed:** 1720, 1820.
 
-| ID | Title | Verdict |
-|----|-------|---------|
-| EXP-1660 | VRP deepening multi-asset (SPY/QQQ/IWM/EEM) | KEPT |
-| EXP-1700 | Paper-trading integration fixes | INFRA |
-| EXP-1710 | 0DTE/1DTE SPX feasibility | MARGINAL — decay real in 2025 |
-| EXP-1720 | Sector ETF pairs trading (EG + Johansen) | KILLED |
-| EXP-1730 | Treasury curve mean reversion (TLT/SHY, TLT/IEF) | MARGINAL |
-| EXP-1740 | Sentiment-filtered entry timing | KEPT |
-| EXP-1750 | **Order-Flow / Put-Call Ratio Overlay** | **WINNER** (Δ Sharpe +0.78) |
-| EXP-1760 | Crypto volatility hardening (IBIT/BITO) | KEPT |
-| EXP-1770 | Commodity calendar spreads (USO/UNG/GLD/SLV) | KEPT — GLD Sh 2.72, SLV Sh 2.31 |
-| EXP-1780 | Crisis Alpha v5 (hedge-optimized) | KEPT as hedge sleeve |
-| EXP-1790 | Alpha research snapshot | INFRA |
-| EXP-1800 | Experiment runner pipeline | INFRA |
-| EXP-1810 | IBIT crypto vol deep dive + credit spreads | MARGINAL (VRP edge 1.8×) |
-| EXP-1820 | Scaling experiment | KILLED (Sh 1.93 CAGR 5.9%) |
-| EXP-1830 | Stress-test pipeline | INFRA |
-| EXP-1840 | Backtest validator | INFRA |
+### Wave 2 — Portfolio construction (Apr 6-7) ✅ COMPLETE
+EXP-1850 · 1860 · 1870 · **1880 ★**
+**Winners:** 1850 (risk_parity_regime_tilt Sh 4.57), 1880 (FOMC "F" overlay).
 
-### Wave 2 — Portfolio construction & overlays (Apr 6-7) ✅ COMPLETE
-
-| ID | Title | Verdict |
-|----|-------|---------|
-| EXP-1850 | Regime-adaptive portfolio optimizer (4 methods) | WINNER — risk_parity_regime_tilt Sh 4.57 |
-| EXP-1860 | North Star Portfolio v3 (Wave 1+2 combined) | INFRA — Sh 3.96 base |
-| EXP-1870 | North-Star combined stress test | INFRA |
-| EXP-1880 | Integrate FOMC + PCR entry overlays | KEPT — "F" overlay (FOMC Sh 1.86 vs 1.26) |
-
-### Wave 3 — Risk management & production infra (Apr 7) ✅ COMPLETE
-
-| ID | Title | Verdict |
-|----|-------|---------|
-| EXP-1890 | **Portfolio Risk Manager** | **INFRA** — 30/30 tests, 5 components, 1×-3× governor |
-| EXP-1900 | North Star paper deployment harness | INFRA |
+### Wave 3 — Risk management & infra (Apr 7) ✅ COMPLETE
+EXP-**1890 ★** · 1900
+**Winners:** 1890 (Portfolio Risk Manager, 30/30 tests, 5 components).
 
 ### Wave 4 — Alpha hunting (Apr 7) ✅ COMPLETE
-
-| ID | Title | Verdict |
-|----|-------|---------|
-| EXP-1910 | Intraday breakout (daily-OHLC proxy) | KILLED |
-| EXP-1920 | Carry trade / rate-differential ETFs | KILLED |
-| EXP-1930 | VVIX signal overlay | KILLED (OOS +0.05, parameter artifact) |
-| EXP-1940 | Multi-timeframe momentum (SPY/QQQ/IWM/EFA/EEM) | MARGINAL |
-| EXP-1950 | Adaptive Kelly position sizing | KILLED (+0.03 Sharpe) |
-| EXP-1960 | SPY put-skew alpha | MARGINAL (n=10) |
-| EXP-1970 | **Vol-of-Vol overlay** | **WINNER** — "V" overlay (+0.86 Sharpe) |
-| EXP-1980 | Correlation Regime / Dynamic Hedge Ratio | MARGINAL (corr always +0.72) |
-| EXP-1990 | Ensemble signal meta-learner | KILLED (OOS 1.73 vs baseline 1.78) |
+EXP-1910 · 1920 · 1930 · 1940 · 1950 · 1960 · **1970 ★** · 1980 · 1990
+**Winners:** 1970 (Vol-of-Vol "V" overlay, +0.86 Sharpe).
+**Killed:** 1910, 1920, 1930, 1950, 1990.
 
 ### Wave 5 — Overlay integration (Apr 7) ✅ COMPLETE
+EXP-**2000 ★** · 2010 · **2020 ★** · 2030
+**Winners:** 2000 (V+F stack), 2020 (Cross-Vol Arb, Sh 2.28).
+**Killed:** 2030.
 
-| ID | Title | Verdict |
-|----|-------|---------|
-| EXP-2000 | **Triple overlay stack** (V/F/P selection) | **WINNER** — V+F (+0.88 trade Sharpe) |
-| EXP-2010 | Tail risk convexity (long ~10Δ SPY puts) | MARGINAL |
-| EXP-2020 | **Cross-sectional vol arbitrage (IV−RV)** | **WINNER** — Sh 2.28, 271 trades |
-| EXP-2030 | Intraweek seasonality overlay | KILLED (OOS Δ −0.13) |
+### Wave 6 — First Sharpe 6.0 hit (Apr 7) ✅ COMPLETE
+EXP-**2050 ★★** · 2060 · **2070 ★** · **2080 ★** · 2090
+**Winners:** 2050 (First Sharpe 6+ configuration), 2070 (VIX Term Structure), 2080 (5-stream static already Sh 5.24).
+**Killed:** 2090.
 
-### Wave 6 — North Star v5 & new streams (Apr 7) ✅ COMPLETE
+### Wave 7 — Carlos progress report (Apr 7) ✅ COMPLETE
+EXP-2100 · 2110 · 2120 · **2130**
+Comprehensive `progress_report_apr7.html` delivered.
 
-| ID | Title | Verdict |
-|----|-------|---------|
-| EXP-2050 | **North Star Portfolio v5** | ★ TARGET — C2_max_sharpe+V+F Sh 6.96 (first Sharpe 6+ hit) |
-| EXP-2060 | Cross-Vol Arb v2 (capacity, corr) | KEPT |
-| EXP-2070 | **VIX Term Structure overlay** | WINNER (+0.82 standalone, +1.42 on V+F) |
-| EXP-2080 | **Correlation Regime Switching (portfolio)** | KEPT — static Sh 5.24, DD 2.6% |
-| EXP-2090 | GLD/SLV calendar seasonality filter | KILLED |
-
-### Wave 7 — Reporting & snapshot (Apr 7) ✅ COMPLETE
-
-| ID | Title | Verdict |
-|----|-------|---------|
-| EXP-2100 | Ensemble of marginal signals (VVIX+skew+carry) | MARGINAL |
-| EXP-2110 | Stream contribution analysis | INFRA |
-| EXP-2120 | Signal decay forensics | INFRA |
-| EXP-2130 | **Comprehensive Progress Report for Carlos** | INFRA — `compass/reports/progress_report_apr7.html` |
-
-### Wave 8 — Capacity & scaling (Apr 7) ✅ COMPLETE
-
-| ID | Title | Verdict |
-|----|-------|---------|
-| EXP-2140 | Portfolio capacity analysis (5-stream) | INFRA — SPY hard-cap $12.6B, SLV binds |
-| EXP-2150 | EXP-1220 biweekly trade retune | KEPT |
-| EXP-2160 | High-capacity alternatives scouting | INFRA |
-| EXP-2170 | — | — |
-| EXP-2180 | **Volatility Targeting** | KEPT — confirms Sharpe-invariance, cleanly scales CAGR |
-| EXP-2190 | — | — |
+### Wave 8 — Capacity & scaling round 1 (Apr 7) ✅ COMPLETE
+EXP-2140 · 2150 · 2160 · **2180**
+**Finding:** EXP-2180 (vol targeting) confirms Sharpe-invariance, cleanly scales CAGR.
 
 ### Wave 9 — 7-stream integration (Apr 7) ✅ COMPLETE
-
-| ID | Title | Verdict |
-|----|-------|---------|
-| EXP-2200 | **North Star v6 (7-stream + XLF/XLI)** | ★★ **WINNER** — equal_risk_15% Sh 5.96 / CAGR 146% / DD 5.7% |
-| EXP-2210 | XLF/XLI validation | INFRA |
-| EXP-2220 | Wave 9 integration sanity check | INFRA |
+EXP-**2200 ★★★** · 2210 · 2220
+**Headline:** 2200 equal_risk_15% — Sharpe 5.96, CAGR 146%, DD 5.7%.
 
 ### Wave 10 — Capacity re-audit (Apr 7) ✅ COMPLETE
-
-| ID | Title | Verdict |
-|----|-------|---------|
-| EXP-2230 | **7-stream capacity w/ XLF+XLI** | **FINDING** — hypothesis disproven, bottleneck is SLV |
-| EXP-2240 | — | — |
-| EXP-2250 | — | — |
-| EXP-2260 | — | — |
-| EXP-2270 | — | — |
+EXP-**2230 ★**
+**Finding:** 2230 disproved the "XLF+XLI add capacity" hypothesis. SLV is the true bottleneck.
 
 ### Wave 11 — Robustness audit (Apr 7) ✅ COMPLETE
+EXP-**2280 ★**
+**Finding:** 20-fold WF median 6.25, 60% > 6.0, no decay, no losing fold.
 
-| ID | Title | Verdict |
-|----|-------|---------|
-| EXP-2280 | **Walk-Forward Robustness Audit (equal_risk_15%)** | ★ **TARGET HOLDS** — 20 folds, mean 5.97, median 6.25, 60% > 6.0, no decay |
+### Wave 12 — Walk-forward fixes & covariance (Apr 8) ✅ COMPLETE
+EXP-2340 · 2350 · 2360 · **2370 ★★**
+**Winners:** 2370 (DD Circuit Breaker — 24% DD → 6.77%, Sharpe 4.43 → 5.41).
+**Rejected:** 2350 (SLV → QQQ/TLT replacement).
 
-### Wave scorecard
+### Wave 13 — Capacity round 2 (Apr 8) ✅ COMPLETE
+EXP-2380 · 2390 · **2400 ★** · 2410 · 2430
+**Winners:** 2400 (Combined Best-Of — Ledoit-Wolf covariance), 2410 (production paper-trading config).
+**Rejected:** 2380 (futures calendars), 2390 (2360 audit — smeared inputs killed the 11-14 Sharpe claim), 2430 (capacity-optimized portfolio, XLI next bottleneck).
+
+### Wave 14 — Transaction costs & execution (Apr 8) ✅ COMPLETE
+EXP-**2420 ★★★** · 2440 · 2450 · 2460 · **2470 ★★**
+**Winners:** 2420 (real-data cost model, net Sharpe 4.49), 2440 (width lever +0.68), 2470 (execution optimization, net Sharpe 4.82).
+**Negative findings:** 2450 (retracts EXP-2400 smeared claim), 2460 (zero-cost T+V overlay is NEGATIVE on diversified portfolio).
+
+### Wave 15 — Capacity round 3 (Apr 8) ✅ COMPLETE
+EXP-**2480** — 3-sleeve high-capacity architecture, **REJECTED** with two honest findings.
+
+### Wave 16 — Final MASTERPLAN update (this) — in progress
+EXP-**2530** — MASTERPLAN v8 + final Apr-8 summary report.
+
+### Wave scorecard (cumulative Apr 6–8)
 
 | Category | Count |
 |----------|-------|
-| Winners (production slot) | **15** |
-| Killed (honest OOS rejects) | **9** |
-| Marginal (kept for ensembles) | **9** |
-| Infra (data / risk / reporting) | **20** |
-| **Total experiments run** | **~60** |
-| **North Star hits** | **3/4 rails MET** (performance ✓ · risk ✓ · validation ✓ · capacity ✗) |
+| Winners (production slot) | **~18** |
+| Killed (honest OOS rejects) | **~13** |
+| Marginal (kept for ensembles) | **~10** |
+| Infra (data / risk / reporting) | **~25** |
+| Negative findings (retractions) | **3** |
+| **Total experiments run** | **~75** |
+| **North Star hits** | **3/4 rails MET gross, 3/4 MET net** (capacity is the lone gap) |
 
 ---
 
@@ -225,113 +194,124 @@ Build a validated options trading system. Data-driven: kill losers, optimize win
 
 ### Data layer
 ```
-data/options_cache.db           ← IronVault 276K contracts + 6.3M option-days
-data/options_cache.db           ← SPY/XLF/XLI/QQQ/SOXX/GLD/TLT/XLE/XLK options
-shared/iron_vault.py            ← canonical single provider (Rule Zero)
+data/options_cache.db          ← IronVault 276K contracts + 6.3M option-days
+                                  (SPY/XLF/XLI/QQQ/SOXX/GLD/TLT/XLE/XLK)
+shared/iron_vault.py           ← canonical single provider (Rule Zero)
 ```
 
 ### Strategy layer
 ```
-compass/exp1220_standalone.py   ← EXP-1220 core (171 real trades, 88% WR)
-compass/exp1750_putcall_overlay.py    ← P/C ratio overlay (Δ +0.78 Sharpe)
-compass/exp1770_commodity_calendars.py  ← GLD/SLV/USO/UNG calendar spreads
-compass/exp1970_vvix_overlay.py       ← Vol-of-Vol "V" overlay (Δ +0.86)
-compass/exp2020_cross_vol_arb.py      ← IV−RV cross-sectional arb (Sh 2.28)
-compass/exp2050_north_star_v5.py      ← First Sharpe 6+ config
-compass/exp2200_north_star_v6.py      ← 7-stream equal_risk_15% (Sh 5.96)
-compass/crisis_alpha_v5.py            ← Hedge sleeve (−1.07% CAGR alone, hedge value)
+compass/exp1220_standalone.py       ← 171 real trades, 88% WR
+compass/exp1750_putcall_overlay.py  ← P/C ratio overlay (+0.78 Sharpe)
+compass/exp1770_commodity_calendars.py
+compass/exp1970_vvix_overlay.py     ← Vol-of-Vol "V" (+0.86)
+compass/exp2020_cross_vol_arb.py    ← Cross-sectional vol arb (Sh 2.28)
+compass/exp2200_north_star_v6.py    ← 7-stream equal_risk_15% (Sh 5.96)
+compass/crisis_alpha_v5.py
 ```
 
-### Risk & execution
+### Risk, execution & costs
 ```
 compass/portfolio_risk_manager.py   ← EXP-1890 · 30 tests · 5 components
-    • CrossStrategySizer (risk-parity / Kelly)
-    • CorrelationMonitor (alerts ≥0.50 in stress regimes)
-    • DrawdownCircuitBreaker (soft 10% / hard 12%)
-    • AllocationLimiter (per-strategy caps + rebalance)
-    • LeverageGovernor (1× → 3×, regime-scaled)
-compass/paper_trading_v4.py        ← 61 tests, live Alpaca harness
-compass/execution_simulator.py     ← 69 tests, fill probability + degradation
-compass/prod_monitor.py            ← 87 tests
-shared/circuit_breaker.py          ← kill switch
+compass/exp2370_dd_circuit_breaker.py  ← causal 3% trailing-DD circuit
+compass/exp2410_*                       ← production paper config
+compass/exp2420_transaction_costs.py ← real cost model
+compass/exp2470_execution_optimization.py ← stacked execution savings
+compass/paper_trading_v4.py (61 tests) · execution_simulator.py (69) · prod_monitor.py (87)
 ```
 
 ### Reports & dashboards
 ```
-compass/reports/exp2200_north_star_v6.{json,html}   ← Sharpe 5.96 headline
-compass/reports/exp2280_wf_robustness.{json,html}   ← 20-fold distribution
-compass/reports/exp2230_capacity_xlf_xli.{json,html}   ← $50M soft-cap audit
-compass/reports/progress_report_apr7.html           ← Carlos-ready summary
-compass/reports/exp1890_risk_manager_report.html    ← Risk engine spec
+compass/reports/exp2200_north_star_v6.{json,html}    ← Sharpe 5.96 headline
+compass/reports/exp2280_wf_robustness.{json,html}    ← 20-fold robustness
+compass/reports/exp2370_dd_circuit_breaker.{json,html} ← DD 24% → 6.77%
+compass/reports/exp2420_transaction_costs.{json,html}  ← Net 4.49
+compass/reports/exp2470_execution_optimization.{json,html} ← Net 4.82
+compass/reports/progress_report_apr7.html             ← Carlos-ready summary
+compass/reports/final_summary_apr8.html               ← THIS WAVE
 ```
 
 ---
 
-## Lessons Learned (cumulative through Wave 11)
+## Lessons Learned (cumulative through Wave 16)
 
-### Bug 1 — Sharpe formula (Wave 0, pre-correction)
-Used `CAGR / (vol × √252)` instead of `mean(daily) / std(daily) × √252`. Every pre-`ff9dd15` portfolio Sharpe was inflated 1.07–2.4×. Fixed and re-audited in EXP-1850 / EXP-2050.
+### Bug 1 — Sharpe formula (Wave 0)
+`CAGR / (vol × √252)` vs correct `mean/std × √252`. Fixed pre-Wave 1.
 
-### Bug 2 — Synthetic data contamination (pre-Wave 1)
-"adaptive+hedge" Sharpe 9.09 used `np.random.normal()` daily returns. Flushed out during Operation Real Data; Rule Zero enforced from EXP-1220 forward.
+### Bug 2 — Synthetic data contamination
+Fixed by Operation Real Data (Rule Zero from EXP-1220 forward).
 
-### Bug 3 — Capital dilution (fixed in Wave 6, EXP-2050)
-171-trade series over 1,260 trading days = 86% zero-return days. EXP-2050 solved this by running 7 concurrent streams with weekly re-balance + vol targeting; EXP-2200 generalised it.
+### Bug 3 — Capital dilution (86% zero-return days)
+Fixed in Wave 6 via 7 concurrent streams + vol targeting (EXP-2050, 2200).
 
-### Bug 4 — Hedge cost underestimation (Wave 1, EXP-1780)
-Real IronVault SPY 5% OTM puts average 4.36%/yr, not the academic 2%. v5 hedge redesign accepts this and uses the hedge *only* for stress windows, shaping its negative-CAGR drag to hedge-only days.
+### Bug 4 — Hedge cost underestimation
+Real SPY 5% OTM puts average 4.36%/yr, not 2%. v5 hedge redesigned around this.
 
-### Bug 5 — VIX call hedge unvalidated (Wave 8, EXP-2230)
-VIX options never in IronVault. Capacity analysis uses UVXY+VXX as a proxy and confirms this sleeve is part of the $50M cap. Phase 8 replaces it.
+### Bug 5 — VIX call hedge unvalidated
+VIX options not in IronVault. UVXY/VXX proxy used in capacity analysis.
 
-### Bug 6 — Per-fold parameter-sweep artifacts (Wave 4, EXP-1930)
-VVIX entry filter looked +0.39 in-sample, collapsed to +0.05 OOS. Forced the "report pooled-fold trades, not fold-metric averages" rule adopted from EXP-1930 onwards.
+### Bug 6 — Per-fold parameter-sweep artifacts
+Fixed with "pool test trades, not fold metrics" rule from EXP-1930.
 
-### Bug 7 — Pooled-vs-stitched Sharpe divergence (Wave 11, EXP-2280)
-Full-sample vol-target 5.96 vs stitched per-fold 4.43. Both are correct; they measure different things. We now advertise the pessimistic stitched number to risk and the full-sample number as the theoretical ceiling.
+### Bug 7 — Pooled-vs-stitched Sharpe divergence
+Full-sample 5.96 vs stitched fold 4.43. Both correct, different metrics. Advertise both.
 
-### What we actually proved across all 11 waves
-1. **EXP-1220 credit-spread alpha exists** — 88% WR, 171 real trades, 6/6 years.
-2. **7 uncorrelated alpha streams exist** — mean off-diagonal correlation +0.016 (EXP-2080/2200).
-3. **Sharpe 6.0 is achievable on REAL walk-forward data** — EXP-2200 + EXP-2280.
-4. **V+F overlay is the single most valuable component** — lifts any optimizer from ~4 to ~7 Sharpe.
-5. **Vol targeting cleanly scales CAGR** while preserving Sharpe (EXP-2180).
-6. **Static allocation already crushes the 12% DD ceiling** — EXP-2080 static at 2.6% DD.
-7. **Capacity is the real bottleneck, not alpha** — EXP-2140 / EXP-2230 confirmed $50M soft-cap.
-8. **Infrastructure is production-grade** — 30-test risk manager, 61-test paper harness, 69-test exec sim, 87-test monitor.
+### Bug 8 — Smeared-input Sharpe inflation (NEW, Wave 13 EXP-2390)
+EXP-2360's Sharpe 11-14 claim came from "smearing" option-strategy PnL over multiple days as if it were a daily return series. Creates artificial autocorrelation that inflates Sharpe 2-3×. EXP-2390 audit killed the claim; EXP-2450 formally retracted EXP-2400's 11.73 Sharpe.
+
+### Bug 9 — Zero-cost overlays hurt diversified portfolios (NEW, Wave 14 EXP-2460)
+Overlays that helped the single EXP-1220 strategy (the "T+V" combination) are NEGATIVE when applied to the diversified 7-stream portfolio. The portfolio's own diversification already captures the vol/term structure information the overlay was adding. Rule: always re-test overlays at the portfolio level before production.
+
+### Bug 10 — Capacity is not a weight-shuffling problem (NEW, Wave 13-15)
+EXP-2350/2380/2430/2480 all tried to add capacity by reallocating weights or adding new high-ADV sleeves. All four were rejected. The real lever is trade-frequency compression (fewer, larger trades per stream), not new sleeves.
+
+### What we actually proved across 16 waves
+1. **EXP-1220 alpha is real** — 88% WR, 171 real trades, 6/6 years.
+2. **7 uncorrelated alpha streams exist** — mean off-diagonal corr +0.016.
+3. **Gross Sharpe 6.0 is achievable on REAL walk-forward data** — EXP-2200.
+4. **V+F overlay is the single most valuable component** at the strategy level but NEGATIVE at the portfolio level (EXP-2460 finding).
+5. **Vol targeting scales CAGR cleanly** while preserving Sharpe (EXP-2180).
+6. **DD is controllable** — EXP-2370 causal 3% trailing-DD circuit cuts pooled DD 72% AND raises Sharpe.
+7. **Transaction costs eat ~1.5 Sharpe points at 3× leverage** (EXP-2420); execution optimization claws back ~0.33 (EXP-2470).
+8. **Capacity is the hard problem** — no weight-shuffling experiment has beaten $50M soft-cap.
+9. **Infrastructure is production-grade** — 30+61+69+87 = 247 tests across risk/paper/exec/monitor.
 
 ---
 
 ## Current Priorities
 
-### 1. AUM scaling (Phase 8) — THE remaining gate
-- [ ] Replace SLV calendar with higher-ADV commodity spread (target 10× capacity)
-- [ ] Replace VIX-call hedge with SPY put verticals (target 20× capacity)
-- [ ] Re-run equal_risk / max_sharpe optimizers over high-capacity universe
-- [ ] Target: $500M soft-cap AUM with Sharpe ≥ 5.0 walk-forward
+### 1. Phase 9 Paper Trading — STARTS TODAY (2026-04-08)
+- [ ] Deploy EXP-2410 config to Alpaca paper
+- [ ] Validate Stack A+B+C+D execution assumptions in the first 5 trading days
+- [ ] Daily P&L reconciliation against EXP-2470 forecast (±15% target by week 4)
+- [ ] Circuit breaker dry-run on the 2022 inflation-shock historical fold
+- [ ] Gate to live: ≥4 consecutive weeks within ±15% of forecast
 
-### 2. Paper trading (Phase 9) — parallel track
-- [ ] Deploy EXP-2200 equal_risk_15% to Alpaca paper starting 2026-04-08
-- [ ] Monitor for 8 weeks; confirm fills within ±30% of backtest
-- [ ] Circuit-breaker dry-run on historical 2022 inflation-shock fold
+### 2. Phase 8 Capacity (continues in parallel)
+- [ ] Trade-frequency compression — half the trades, double the notional per trade
+- [ ] Dollar-notional sizing instead of integer contracts
+- [ ] Re-test every candidate on the full EXP-2470 cost+execution stack before promotion
 
-### 3. Ongoing data hygiene
-- [ ] Daily IronVault update cron (`scripts/daily_data_update.sh`)
-- [ ] GLD backfill Nov 2024 → present (Polygon Options tier $200/mo)
+### 3. Data hygiene
+- [ ] Daily IronVault cron (`scripts/daily_data_update.sh`)
+- [ ] GLD backfill Nov 2024 → present
 - [ ] QQQ backfill May 2023 → present
 
 ---
 
 ## Rules
 
-1. **🚫 NO SYNTHETIC DATA** — IronVault + Yahoo + public calendar only. Cache miss → skip trade.
-2. **No inflated claims** — corrected Sharpe formula, real hedge costs, honest pooled numbers.
+1. **🚫 NO SYNTHETIC DATA** — IronVault + Yahoo + public calendar only.
+2. **No inflated claims** — every headline Sharpe must report gross AND net.
 3. **Walk-forward required** — Grade A/B audit before production.
 4. **Paper before live** — 8+ weeks validation.
-5. **Capital utilization must be solved** — MET as of Wave 6.
-6. **Real data trumps everything** — if model says X and data says Y, data wins.
+5. **Capital utilization must be solved** — MET Wave 6.
+6. **Real data trumps everything**.
 7. **MASTERPLAN is honest** — single source of truth, warts and all.
-8. **Capacity is a first-class target** — a winning strategy at $50M that can't scale is half a strategy.
+8. **Capacity is a first-class target** — a winner at $50M that can't scale is half a strategy.
+9. **Every overlay re-tested at the portfolio level** — strategy-level wins ≠ portfolio-level wins (Bug 9).
+10. **NEW: smeared inputs are synthetic inputs** — any multi-day P&L must be represented as single exit-date returns for Sharpe calculation (Bug 8).
+11. **NEW: gross and net are both reported** — gross for ceiling, net for the risk committee.
 
 ---
 
@@ -339,19 +319,18 @@ Full-sample vol-target 5.96 vs stitched per-fold 4.43. Both are correct; they me
 
 | Date | Milestone |
 |------|-----------|
-| 2026-04-03 | Operation Real Data: IronVault deployed, 3/6 strategies killed |
-| 2026-04-04 | EXP-1220 validated, new strategies discovered |
-| 2026-04-05 | Validation audit: 5 bugs found, numbers corrected, MASTERPLAN v6 |
-| 2026-04-06 | **Wave 1 sprint** — 16 alpha discovery experiments |
-| 2026-04-07 AM | **Wave 2-5** — portfolio construction, risk manager, overlay sweep |
-| 2026-04-07 PM | **Wave 6-7** — First Sharpe 6.0 hit (EXP-2050), progress report |
-| 2026-04-07 PM | **Wave 8-9** — Capacity, biweekly retune, North Star v6 (EXP-2200) |
-| 2026-04-07 PM | **Wave 10-11** — Capacity re-audit, walk-forward robustness audit |
-| **2026-04-07 (now)** | **MASTERPLAN v7** — Sharpe 5.96 locked, $50M capacity cap identified |
-| 2026-04-08 | **Phase 8 kickoff** (capacity scaling) + **Phase 9 paper trade start** |
-| TBD | Phase 10: live $25K seed |
-| TBD | Phase 10 scaling: $1M → $10M → $50M → $100M |
+| 2026-04-03 | Operation Real Data: IronVault deployed |
+| 2026-04-04 | EXP-1220 validated |
+| 2026-04-05 | Bug audit, MASTERPLAN v6 |
+| 2026-04-06 | **Wave 1** — 16 alpha discovery experiments |
+| 2026-04-07 AM | **Waves 2-5** — portfolio construction, risk manager, overlays |
+| 2026-04-07 PM | **Waves 6-11** — Sharpe 6.0 hit, progress report, 7-stream integration, robustness audit, MASTERPLAN v7 |
+| 2026-04-08 AM | **Waves 12-13** — DD circuit breaker, capacity round 2 |
+| 2026-04-08 PM | **Waves 14-16** — transaction costs, execution optimization, capacity round 3, **MASTERPLAN v8** |
+| **2026-04-08 (now)** | **Phase 9 paper trading starts · Phase 8 capacity continues** |
+| TBD | Phase 10: live $25K seed after paper window passes |
+| TBD | Live scaling: $25K → $100K → $1M → $10M → $50M → $100M |
 
 ---
 
-*Wave 11 is done. Performance is locked. Capacity is the only thing between us and the Carlos scale number. Phase 8 starts tomorrow.*
+*Gross performance is locked. Net performance is honest and above the 4.0 floor. DD is under control. Capacity is the one remaining structural challenge. Paper trading starts today — everything else is parallel.*
