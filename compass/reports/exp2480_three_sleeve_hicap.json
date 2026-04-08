@@ -1,0 +1,1003 @@
+{
+  "experiment": "EXP-2480",
+  "title": "3-Sleeve High-Capacity Architecture",
+  "timestamp": "2026-04-08T05:09:21.223358Z",
+  "design": {
+    "streams": [
+      "exp1220",
+      "qqq_cs",
+      "v5_hedge"
+    ],
+    "capital_weights": {
+      "exp1220": 0.6,
+      "qqq_cs": 0.3,
+      "v5_hedge": 0.1
+    },
+    "max_gross_leverage": 3.0,
+    "leverage_targets_tested": [
+      1.0,
+      2.0,
+      3.0
+    ],
+    "tc_bps_per_roundtrip": {
+      "exp1220": 5,
+      "qqq_cs": 5,
+      "v5_hedge": 10
+    },
+    "round_trips_per_year": 50
+  },
+  "data": {
+    "streams_source": "exp2280_v6_sparse.pkl",
+    "qqq_trades_source": "exp2250_qqq_trades.pkl",
+    "n_days": 1566,
+    "start": "2020-01-01",
+    "end": "2025-12-31",
+    "correlation_matrix": {
+      "exp1220": {
+        "exp1220": 1.0,
+        "qqq_cs": 0.0377,
+        "v5_hedge": -0.0834
+      },
+      "qqq_cs": {
+        "exp1220": 0.0377,
+        "qqq_cs": 1.0,
+        "v5_hedge": -0.0084
+      },
+      "v5_hedge": {
+        "exp1220": -0.0834,
+        "qqq_cs": -0.0084,
+        "v5_hedge": 1.0
+      }
+    }
+  },
+  "variants": {
+    "1x_gross": {
+      "target_gross_leverage": 1.0,
+      "per_sleeve_leverage": {
+        "exp1220": 0.6308,
+        "qqq_cs": 0.3528,
+        "v5_hedge": 0.0164
+      },
+      "gross_leverage": 1.0,
+      "gross_metrics": {
+        "n_days": 1566,
+        "cagr_pct": 1.255,
+        "sharpe": 1.745,
+        "sortino": 0.84,
+        "max_dd_pct": -1.05,
+        "vol_pct": 0.716
+      },
+      "net_metrics": {
+        "n_days": 1566,
+        "cagr_pct": 0.075,
+        "sharpe": 0.112,
+        "sortino": 0.059,
+        "max_dd_pct": -1.392,
+        "vol_pct": 0.689
+      },
+      "tc_drag_bps_annual": 117.3,
+      "walk_forward": [
+        {
+          "fold": 1,
+          "start": "2020-01-01",
+          "end": "2020-04-17",
+          "n_days": 78,
+          "cagr_pct": -3.575,
+          "sharpe": -1.965,
+          "sortino": -1.116,
+          "max_dd_pct": -1.15,
+          "vol_pct": 1.844
+        },
+        {
+          "fold": 2,
+          "start": "2020-04-20",
+          "end": "2020-08-05",
+          "n_days": 78,
+          "cagr_pct": 2.893,
+          "sharpe": 4.286,
+          "sortino": 40.76,
+          "max_dd_pct": -0.027,
+          "vol_pct": 0.666
+        },
+        {
+          "fold": 3,
+          "start": "2020-08-06",
+          "end": "2020-11-23",
+          "n_days": 78,
+          "cagr_pct": 0.14,
+          "sharpe": 0.245,
+          "sortino": 0.162,
+          "max_dd_pct": -0.389,
+          "vol_pct": 0.577
+        },
+        {
+          "fold": 4,
+          "start": "2020-11-24",
+          "end": "2021-03-11",
+          "n_days": 78,
+          "cagr_pct": -0.362,
+          "sharpe": -1.083,
+          "sortino": -0.554,
+          "max_dd_pct": -0.157,
+          "vol_pct": 0.335
+        },
+        {
+          "fold": 5,
+          "start": "2021-03-12",
+          "end": "2021-06-29",
+          "n_days": 78,
+          "cagr_pct": -1.216,
+          "sharpe": -3.075,
+          "sortino": -1.363,
+          "max_dd_pct": -0.423,
+          "vol_pct": 0.398
+        },
+        {
+          "fold": 6,
+          "start": "2021-06-30",
+          "end": "2021-10-15",
+          "n_days": 78,
+          "cagr_pct": -0.272,
+          "sharpe": -0.549,
+          "sortino": -0.322,
+          "max_dd_pct": -0.269,
+          "vol_pct": 0.495
+        },
+        {
+          "fold": 7,
+          "start": "2021-10-18",
+          "end": "2022-02-02",
+          "n_days": 78,
+          "cagr_pct": -0.578,
+          "sharpe": -0.884,
+          "sortino": -0.407,
+          "max_dd_pct": -0.403,
+          "vol_pct": 0.654
+        },
+        {
+          "fold": 8,
+          "start": "2022-02-03",
+          "end": "2022-05-23",
+          "n_days": 78,
+          "cagr_pct": 0.873,
+          "sharpe": 1.01,
+          "sortino": 1.008,
+          "max_dd_pct": -0.34,
+          "vol_pct": 0.865
+        },
+        {
+          "fold": 9,
+          "start": "2022-05-24",
+          "end": "2022-09-08",
+          "n_days": 78,
+          "cagr_pct": 1.415,
+          "sharpe": 1.78,
+          "sortino": 1.419,
+          "max_dd_pct": -0.302,
+          "vol_pct": 0.791
+        },
+        {
+          "fold": 10,
+          "start": "2022-09-09",
+          "end": "2022-12-27",
+          "n_days": 78,
+          "cagr_pct": 0.788,
+          "sharpe": 1.044,
+          "sortino": 0.92,
+          "max_dd_pct": -0.269,
+          "vol_pct": 0.754
+        },
+        {
+          "fold": 11,
+          "start": "2022-12-28",
+          "end": "2023-04-14",
+          "n_days": 78,
+          "cagr_pct": 0.907,
+          "sharpe": 3.868,
+          "sortino": 11.13,
+          "max_dd_pct": -0.017,
+          "vol_pct": 0.233
+        },
+        {
+          "fold": 12,
+          "start": "2023-04-17",
+          "end": "2023-08-02",
+          "n_days": 78,
+          "cagr_pct": 0.107,
+          "sharpe": 1.068,
+          "sortino": 1.031,
+          "max_dd_pct": -0.046,
+          "vol_pct": 0.1
+        },
+        {
+          "fold": 13,
+          "start": "2023-08-03",
+          "end": "2023-11-20",
+          "n_days": 78,
+          "cagr_pct": -0.113,
+          "sharpe": -0.64,
+          "sortino": -0.48,
+          "max_dd_pct": -0.031,
+          "vol_pct": 0.176
+        },
+        {
+          "fold": 14,
+          "start": "2023-11-21",
+          "end": "2024-03-07",
+          "n_days": 78,
+          "cagr_pct": -0.323,
+          "sharpe": -3.938,
+          "sortino": -2.953,
+          "max_dd_pct": -0.1,
+          "vol_pct": 0.082
+        },
+        {
+          "fold": 15,
+          "start": "2024-03-08",
+          "end": "2024-06-25",
+          "n_days": 78,
+          "cagr_pct": -1.738,
+          "sharpe": -2.659,
+          "sortino": -0.976,
+          "max_dd_pct": -0.541,
+          "vol_pct": 0.658
+        },
+        {
+          "fold": 16,
+          "start": "2024-06-26",
+          "end": "2024-10-11",
+          "n_days": 78,
+          "cagr_pct": -0.465,
+          "sharpe": -0.724,
+          "sortino": -0.297,
+          "max_dd_pct": -0.415,
+          "vol_pct": 0.642
+        },
+        {
+          "fold": 17,
+          "start": "2024-10-14",
+          "end": "2025-01-29",
+          "n_days": 78,
+          "cagr_pct": 0.382,
+          "sharpe": 1.053,
+          "sortino": 0.392,
+          "max_dd_pct": -0.163,
+          "vol_pct": 0.363
+        },
+        {
+          "fold": 18,
+          "start": "2025-01-30",
+          "end": "2025-05-19",
+          "n_days": 78,
+          "cagr_pct": 0.225,
+          "sharpe": 0.211,
+          "sortino": 0.182,
+          "max_dd_pct": -0.721,
+          "vol_pct": 1.094
+        },
+        {
+          "fold": 19,
+          "start": "2025-05-20",
+          "end": "2025-09-04",
+          "n_days": 78,
+          "cagr_pct": 1.232,
+          "sharpe": 4.942,
+          "sortino": 0.0,
+          "max_dd_pct": -0.001,
+          "vol_pct": 0.248
+        },
+        {
+          "fold": 20,
+          "start": "2025-09-05",
+          "end": "2025-12-31",
+          "n_days": 84,
+          "cagr_pct": 1.262,
+          "sharpe": 3.835,
+          "sortino": 0.0,
+          "max_dd_pct": -0.002,
+          "vol_pct": 0.327
+        }
+      ],
+      "walk_forward_summary": {
+        "folds": 20,
+        "pct_folds_positive": 55.0,
+        "cagr_mean_pct": 0.079,
+        "sharpe_mean": 0.391
+      }
+    },
+    "2x_gross": {
+      "target_gross_leverage": 2.0,
+      "per_sleeve_leverage": {
+        "exp1220": 1.2617,
+        "qqq_cs": 0.7055,
+        "v5_hedge": 0.0328
+      },
+      "gross_leverage": 2.0,
+      "gross_metrics": {
+        "n_days": 1566,
+        "cagr_pct": 2.521,
+        "sharpe": 1.745,
+        "sortino": 0.84,
+        "max_dd_pct": -2.098,
+        "vol_pct": 1.433
+      },
+      "net_metrics": {
+        "n_days": 1566,
+        "cagr_pct": 0.145,
+        "sharpe": 0.112,
+        "sortino": 0.059,
+        "max_dd_pct": -2.77,
+        "vol_pct": 1.378
+      },
+      "tc_drag_bps_annual": 234.5,
+      "walk_forward": [
+        {
+          "fold": 1,
+          "start": "2020-01-01",
+          "end": "2020-04-17",
+          "n_days": 78,
+          "cagr_pct": -7.055,
+          "sharpe": -1.965,
+          "sortino": -1.116,
+          "max_dd_pct": -2.296,
+          "vol_pct": 3.688
+        },
+        {
+          "fold": 2,
+          "start": "2020-04-20",
+          "end": "2020-08-05",
+          "n_days": 78,
+          "cagr_pct": 5.865,
+          "sharpe": 4.286,
+          "sortino": 40.76,
+          "max_dd_pct": -0.054,
+          "vol_pct": 1.332
+        },
+        {
+          "fold": 3,
+          "start": "2020-08-06",
+          "end": "2020-11-23",
+          "n_days": 78,
+          "cagr_pct": 0.276,
+          "sharpe": 0.245,
+          "sortino": 0.162,
+          "max_dd_pct": -0.776,
+          "vol_pct": 1.155
+        },
+        {
+          "fold": 4,
+          "start": "2020-11-24",
+          "end": "2021-03-11",
+          "n_days": 78,
+          "cagr_pct": -0.725,
+          "sharpe": -1.083,
+          "sortino": -0.554,
+          "max_dd_pct": -0.314,
+          "vol_pct": 0.669
+        },
+        {
+          "fold": 5,
+          "start": "2021-03-12",
+          "end": "2021-06-29",
+          "n_days": 78,
+          "cagr_pct": -2.418,
+          "sharpe": -3.075,
+          "sortino": -1.363,
+          "max_dd_pct": -0.844,
+          "vol_pct": 0.795
+        },
+        {
+          "fold": 6,
+          "start": "2021-06-30",
+          "end": "2021-10-15",
+          "n_days": 78,
+          "cagr_pct": -0.547,
+          "sharpe": -0.549,
+          "sortino": -0.322,
+          "max_dd_pct": -0.538,
+          "vol_pct": 0.989
+        },
+        {
+          "fold": 7,
+          "start": "2021-10-18",
+          "end": "2022-02-02",
+          "n_days": 78,
+          "cagr_pct": -1.158,
+          "sharpe": -0.884,
+          "sortino": -0.407,
+          "max_dd_pct": -0.806,
+          "vol_pct": 1.307
+        },
+        {
+          "fold": 8,
+          "start": "2022-02-03",
+          "end": "2022-05-23",
+          "n_days": 78,
+          "cagr_pct": 1.747,
+          "sharpe": 1.01,
+          "sortino": 1.008,
+          "max_dd_pct": -0.681,
+          "vol_pct": 1.729
+        },
+        {
+          "fold": 9,
+          "start": "2022-05-24",
+          "end": "2022-09-08",
+          "n_days": 78,
+          "cagr_pct": 2.844,
+          "sharpe": 1.78,
+          "sortino": 1.419,
+          "max_dd_pct": -0.604,
+          "vol_pct": 1.583
+        },
+        {
+          "fold": 10,
+          "start": "2022-09-09",
+          "end": "2022-12-27",
+          "n_days": 78,
+          "cagr_pct": 1.576,
+          "sharpe": 1.044,
+          "sortino": 0.92,
+          "max_dd_pct": -0.538,
+          "vol_pct": 1.508
+        },
+        {
+          "fold": 11,
+          "start": "2022-12-28",
+          "end": "2023-04-14",
+          "n_days": 78,
+          "cagr_pct": 1.821,
+          "sharpe": 3.868,
+          "sortino": 11.13,
+          "max_dd_pct": -0.033,
+          "vol_pct": 0.467
+        },
+        {
+          "fold": 12,
+          "start": "2023-04-17",
+          "end": "2023-08-02",
+          "n_days": 78,
+          "cagr_pct": 0.213,
+          "sharpe": 1.068,
+          "sortino": 1.031,
+          "max_dd_pct": -0.093,
+          "vol_pct": 0.2
+        },
+        {
+          "fold": 13,
+          "start": "2023-08-03",
+          "end": "2023-11-20",
+          "n_days": 78,
+          "cagr_pct": -0.226,
+          "sharpe": -0.64,
+          "sortino": -0.48,
+          "max_dd_pct": -0.061,
+          "vol_pct": 0.352
+        },
+        {
+          "fold": 14,
+          "start": "2023-11-21",
+          "end": "2024-03-07",
+          "n_days": 78,
+          "cagr_pct": -0.645,
+          "sharpe": -3.938,
+          "sortino": -2.953,
+          "max_dd_pct": -0.2,
+          "vol_pct": 0.164
+        },
+        {
+          "fold": 15,
+          "start": "2024-03-08",
+          "end": "2024-06-25",
+          "n_days": 78,
+          "cagr_pct": -3.449,
+          "sharpe": -2.659,
+          "sortino": -0.976,
+          "max_dd_pct": -1.081,
+          "vol_pct": 1.317
+        },
+        {
+          "fold": 16,
+          "start": "2024-06-26",
+          "end": "2024-10-11",
+          "n_days": 78,
+          "cagr_pct": -0.933,
+          "sharpe": -0.724,
+          "sortino": -0.297,
+          "max_dd_pct": -0.829,
+          "vol_pct": 1.283
+        },
+        {
+          "fold": 17,
+          "start": "2024-10-14",
+          "end": "2025-01-29",
+          "n_days": 78,
+          "cagr_pct": 0.764,
+          "sharpe": 1.053,
+          "sortino": 0.392,
+          "max_dd_pct": -0.325,
+          "vol_pct": 0.725
+        },
+        {
+          "fold": 18,
+          "start": "2025-01-30",
+          "end": "2025-05-19",
+          "n_days": 78,
+          "cagr_pct": 0.438,
+          "sharpe": 0.211,
+          "sortino": 0.182,
+          "max_dd_pct": -1.439,
+          "vol_pct": 2.188
+        },
+        {
+          "fold": 19,
+          "start": "2025-05-20",
+          "end": "2025-09-04",
+          "n_days": 78,
+          "cagr_pct": 2.478,
+          "sharpe": 4.942,
+          "sortino": 0.0,
+          "max_dd_pct": -0.003,
+          "vol_pct": 0.496
+        },
+        {
+          "fold": 20,
+          "start": "2025-09-05",
+          "end": "2025-12-31",
+          "n_days": 84,
+          "cagr_pct": 2.538,
+          "sharpe": 3.835,
+          "sortino": 0.0,
+          "max_dd_pct": -0.004,
+          "vol_pct": 0.654
+        }
+      ],
+      "walk_forward_summary": {
+        "folds": 20,
+        "pct_folds_positive": 55.0,
+        "cagr_mean_pct": 0.17,
+        "sharpe_mean": 0.391
+      }
+    },
+    "3x_gross": {
+      "target_gross_leverage": 3.0,
+      "per_sleeve_leverage": {
+        "exp1220": 1.8925,
+        "qqq_cs": 1.0583,
+        "v5_hedge": 0.0492
+      },
+      "gross_leverage": 3.0,
+      "gross_metrics": {
+        "n_days": 1566,
+        "cagr_pct": 3.797,
+        "sharpe": 1.745,
+        "sortino": 0.84,
+        "max_dd_pct": -3.145,
+        "vol_pct": 2.149
+      },
+      "net_metrics": {
+        "n_days": 1566,
+        "cagr_pct": 0.211,
+        "sharpe": 0.112,
+        "sortino": 0.059,
+        "max_dd_pct": -4.133,
+        "vol_pct": 2.067
+      },
+      "tc_drag_bps_annual": 351.8,
+      "walk_forward": [
+        {
+          "fold": 1,
+          "start": "2020-01-01",
+          "end": "2020-04-17",
+          "n_days": 78,
+          "cagr_pct": -10.442,
+          "sharpe": -1.965,
+          "sortino": -1.116,
+          "max_dd_pct": -3.441,
+          "vol_pct": 5.532
+        },
+        {
+          "fold": 2,
+          "start": "2020-04-20",
+          "end": "2020-08-05",
+          "n_days": 78,
+          "cagr_pct": 8.918,
+          "sharpe": 4.286,
+          "sortino": 40.76,
+          "max_dd_pct": -0.081,
+          "vol_pct": 1.998
+        },
+        {
+          "fold": 3,
+          "start": "2020-08-06",
+          "end": "2020-11-23",
+          "n_days": 78,
+          "cagr_pct": 0.41,
+          "sharpe": 0.245,
+          "sortino": 0.162,
+          "max_dd_pct": -1.163,
+          "vol_pct": 1.732
+        },
+        {
+          "fold": 4,
+          "start": "2020-11-24",
+          "end": "2021-03-11",
+          "n_days": 78,
+          "cagr_pct": -1.087,
+          "sharpe": -1.083,
+          "sortino": -0.554,
+          "max_dd_pct": -0.471,
+          "vol_pct": 1.004
+        },
+        {
+          "fold": 5,
+          "start": "2021-03-12",
+          "end": "2021-06-29",
+          "n_days": 78,
+          "cagr_pct": -3.608,
+          "sharpe": -3.075,
+          "sortino": -1.363,
+          "max_dd_pct": -1.265,
+          "vol_pct": 1.193
+        },
+        {
+          "fold": 6,
+          "start": "2021-06-30",
+          "end": "2021-10-15",
+          "n_days": 78,
+          "cagr_pct": -0.822,
+          "sharpe": -0.549,
+          "sortino": -0.322,
+          "max_dd_pct": -0.806,
+          "vol_pct": 1.484
+        },
+        {
+          "fold": 7,
+          "start": "2021-10-18",
+          "end": "2022-02-02",
+          "n_days": 78,
+          "cagr_pct": -1.738,
+          "sharpe": -0.884,
+          "sortino": -0.407,
+          "max_dd_pct": -1.208,
+          "vol_pct": 1.961
+        },
+        {
+          "fold": 8,
+          "start": "2022-02-03",
+          "end": "2022-05-23",
+          "n_days": 78,
+          "cagr_pct": 2.62,
+          "sharpe": 1.01,
+          "sortino": 1.008,
+          "max_dd_pct": -1.02,
+          "vol_pct": 2.594
+        },
+        {
+          "fold": 9,
+          "start": "2022-05-24",
+          "end": "2022-09-08",
+          "n_days": 78,
+          "cagr_pct": 4.287,
+          "sharpe": 1.78,
+          "sortino": 1.419,
+          "max_dd_pct": -0.906,
+          "vol_pct": 2.374
+        },
+        {
+          "fold": 10,
+          "start": "2022-09-09",
+          "end": "2022-12-27",
+          "n_days": 78,
+          "cagr_pct": 2.364,
+          "sharpe": 1.044,
+          "sortino": 0.92,
+          "max_dd_pct": -0.807,
+          "vol_pct": 2.263
+        },
+        {
+          "fold": 11,
+          "start": "2022-12-28",
+          "end": "2023-04-14",
+          "n_days": 78,
+          "cagr_pct": 2.743,
+          "sharpe": 3.868,
+          "sortino": 11.13,
+          "max_dd_pct": -0.05,
+          "vol_pct": 0.7
+        },
+        {
+          "fold": 12,
+          "start": "2023-04-17",
+          "end": "2023-08-02",
+          "n_days": 78,
+          "cagr_pct": 0.32,
+          "sharpe": 1.068,
+          "sortino": 1.031,
+          "max_dd_pct": -0.139,
+          "vol_pct": 0.299
+        },
+        {
+          "fold": 13,
+          "start": "2023-08-03",
+          "end": "2023-11-20",
+          "n_days": 78,
+          "cagr_pct": -0.339,
+          "sharpe": -0.64,
+          "sortino": -0.48,
+          "max_dd_pct": -0.092,
+          "vol_pct": 0.529
+        },
+        {
+          "fold": 14,
+          "start": "2023-11-21",
+          "end": "2024-03-07",
+          "n_days": 78,
+          "cagr_pct": -0.967,
+          "sharpe": -3.938,
+          "sortino": -2.953,
+          "max_dd_pct": -0.3,
+          "vol_pct": 0.247
+        },
+        {
+          "fold": 15,
+          "start": "2024-03-08",
+          "end": "2024-06-25",
+          "n_days": 78,
+          "cagr_pct": -5.135,
+          "sharpe": -2.659,
+          "sortino": -0.976,
+          "max_dd_pct": -1.619,
+          "vol_pct": 1.975
+        },
+        {
+          "fold": 16,
+          "start": "2024-06-26",
+          "end": "2024-10-11",
+          "n_days": 78,
+          "cagr_pct": -1.402,
+          "sharpe": -0.724,
+          "sortino": -0.297,
+          "max_dd_pct": -1.242,
+          "vol_pct": 1.925
+        },
+        {
+          "fold": 17,
+          "start": "2024-10-14",
+          "end": "2025-01-29",
+          "n_days": 78,
+          "cagr_pct": 1.147,
+          "sharpe": 1.053,
+          "sortino": 0.392,
+          "max_dd_pct": -0.488,
+          "vol_pct": 1.088
+        },
+        {
+          "fold": 18,
+          "start": "2025-01-30",
+          "end": "2025-05-19",
+          "n_days": 78,
+          "cagr_pct": 0.64,
+          "sharpe": 0.211,
+          "sortino": 0.182,
+          "max_dd_pct": -2.154,
+          "vol_pct": 3.281
+        },
+        {
+          "fold": 19,
+          "start": "2025-05-20",
+          "end": "2025-09-04",
+          "n_days": 78,
+          "cagr_pct": 3.739,
+          "sharpe": 4.942,
+          "sortino": 0.0,
+          "max_dd_pct": -0.004,
+          "vol_pct": 0.743
+        },
+        {
+          "fold": 20,
+          "start": "2025-09-05",
+          "end": "2025-12-31",
+          "n_days": 84,
+          "cagr_pct": 3.83,
+          "sharpe": 3.835,
+          "sortino": 0.0,
+          "max_dd_pct": -0.006,
+          "vol_pct": 0.981
+        }
+      ],
+      "walk_forward_summary": {
+        "folds": 20,
+        "pct_folds_positive": 55.0,
+        "cagr_mean_pct": 0.274,
+        "sharpe_mean": 0.391
+      }
+    }
+  },
+  "recommended": "1x_gross",
+  "capacity": {
+    "exp1220": {
+      "weight": 0.6,
+      "adv_notional_usd": 152489644798.02856,
+      "binding_leg": "SPY options 2,314,201 ct/d \u00d7 100 \u00d7 $658.93",
+      "soft_cap_aum": 2541494079.967143,
+      "hard_cap_aum": 12707470399.835714,
+      "per_tier": {
+        "$50M": {
+          "aum_usd": 50000000.0,
+          "stream_notional_usd": 30000000.0,
+          "participation_pct": 0.0197,
+          "impact_bps_per_trip": 2.1,
+          "annual_impact_bps": 105.2,
+          "flag": "OK"
+        },
+        "$100M": {
+          "aum_usd": 100000000.0,
+          "stream_notional_usd": 60000000.0,
+          "participation_pct": 0.0393,
+          "impact_bps_per_trip": 2.98,
+          "annual_impact_bps": 148.8,
+          "flag": "OK"
+        },
+        "$200M": {
+          "aum_usd": 200000000.0,
+          "stream_notional_usd": 120000000.0,
+          "participation_pct": 0.0787,
+          "impact_bps_per_trip": 4.21,
+          "annual_impact_bps": 210.4,
+          "flag": "OK"
+        },
+        "$500M": {
+          "aum_usd": 500000000.0,
+          "stream_notional_usd": 300000000.0,
+          "participation_pct": 0.1967,
+          "impact_bps_per_trip": 6.65,
+          "annual_impact_bps": 332.7,
+          "flag": "OK"
+        },
+        "$1.0B": {
+          "aum_usd": 1000000000.0,
+          "stream_notional_usd": 600000000.0,
+          "participation_pct": 0.3935,
+          "impact_bps_per_trip": 9.41,
+          "annual_impact_bps": 470.5,
+          "flag": "OK"
+        },
+        "$2.0B": {
+          "aum_usd": 2000000000.0,
+          "stream_notional_usd": 1200000000.0,
+          "participation_pct": 0.7869,
+          "impact_bps_per_trip": 13.31,
+          "annual_impact_bps": 665.3,
+          "flag": "OK"
+        }
+      }
+    },
+    "qqq_cs": {
+      "weight": 0.3,
+      "adv_notional_usd": 11089046650.0,
+      "binding_leg": "QQQ options 188,429 ct/d \u00d7 100 \u00d7 $588.50",
+      "soft_cap_aum": 369634888.3333334,
+      "hard_cap_aum": 1848174441.6666667,
+      "per_tier": {
+        "$50M": {
+          "aum_usd": 50000000.0,
+          "stream_notional_usd": 15000000.0,
+          "participation_pct": 0.1353,
+          "impact_bps_per_trip": 5.52,
+          "annual_impact_bps": 275.8,
+          "flag": "OK"
+        },
+        "$100M": {
+          "aum_usd": 100000000.0,
+          "stream_notional_usd": 30000000.0,
+          "participation_pct": 0.2705,
+          "impact_bps_per_trip": 7.8,
+          "annual_impact_bps": 390.1,
+          "flag": "OK"
+        },
+        "$200M": {
+          "aum_usd": 200000000.0,
+          "stream_notional_usd": 60000000.0,
+          "participation_pct": 0.5411,
+          "impact_bps_per_trip": 11.03,
+          "annual_impact_bps": 551.7,
+          "flag": "OK"
+        },
+        "$500M": {
+          "aum_usd": 500000000.0,
+          "stream_notional_usd": 150000000.0,
+          "participation_pct": 1.3527,
+          "impact_bps_per_trip": 17.45,
+          "annual_impact_bps": 872.3,
+          "flag": "BOTTLENECK"
+        },
+        "$1.0B": {
+          "aum_usd": 1000000000.0,
+          "stream_notional_usd": 300000000.0,
+          "participation_pct": 2.7054,
+          "impact_bps_per_trip": 24.67,
+          "annual_impact_bps": 1233.6,
+          "flag": "BOTTLENECK"
+        },
+        "$2.0B": {
+          "aum_usd": 2000000000.0,
+          "stream_notional_usd": 600000000.0,
+          "participation_pct": 5.4107,
+          "impact_bps_per_trip": 34.89,
+          "annual_impact_bps": 1744.6,
+          "flag": "BROKEN"
+        }
+      }
+    },
+    "v5_hedge": {
+      "weight": 0.1,
+      "adv_notional_usd": 721456879.9341202,
+      "binding_leg": "UVXY+VXX $0.72B/d (VIX proxy)",
+      "soft_cap_aum": 72145687.99341202,
+      "hard_cap_aum": 360728439.9670601,
+      "per_tier": {
+        "$50M": {
+          "aum_usd": 50000000.0,
+          "stream_notional_usd": 5000000.0,
+          "participation_pct": 0.693,
+          "impact_bps_per_trip": 12.49,
+          "annual_impact_bps": 624.4,
+          "flag": "OK"
+        },
+        "$100M": {
+          "aum_usd": 100000000.0,
+          "stream_notional_usd": 10000000.0,
+          "participation_pct": 1.3861,
+          "impact_bps_per_trip": 17.66,
+          "annual_impact_bps": 883.0,
+          "flag": "BOTTLENECK"
+        },
+        "$200M": {
+          "aum_usd": 200000000.0,
+          "stream_notional_usd": 20000000.0,
+          "participation_pct": 2.7722,
+          "impact_bps_per_trip": 24.97,
+          "annual_impact_bps": 1248.7,
+          "flag": "BOTTLENECK"
+        },
+        "$500M": {
+          "aum_usd": 500000000.0,
+          "stream_notional_usd": 50000000.0,
+          "participation_pct": 6.9304,
+          "impact_bps_per_trip": 39.49,
+          "annual_impact_bps": 1974.4,
+          "flag": "BROKEN"
+        },
+        "$1.0B": {
+          "aum_usd": 1000000000.0,
+          "stream_notional_usd": 100000000.0,
+          "participation_pct": 13.8608,
+          "impact_bps_per_trip": 55.85,
+          "annual_impact_bps": 2792.3,
+          "flag": "BROKEN"
+        },
+        "$2.0B": {
+          "aum_usd": 2000000000.0,
+          "stream_notional_usd": 200000000.0,
+          "participation_pct": 27.7217,
+          "impact_bps_per_trip": 78.98,
+          "annual_impact_bps": 3948.9,
+          "flag": "BROKEN"
+        }
+      }
+    },
+    "_bottleneck": {
+      "name": "v5_hedge",
+      "soft_cap_aum": 72145687.99341202,
+      "hard_cap_aum": 360728439.9670601
+    }
+  },
+  "target_check": {
+    "capacity_ge_200m": false,
+    "net_sharpe_ge_4": false,
+    "net_cagr_positive": true
+  },
+  "decision": "REJECT",
+  "rule_zero": "Real exp1220 + v5_hedge streams from exp2280_v6_sparse.pkl (derived from real IronVault option data). Real qqq_cs stream built from cached EXP-2240 IronVault-backed trades. Live Yahoo + IronVault ADV for capacity. No synthetic."
+}
