@@ -1,0 +1,181 @@
+{
+  "experiment": "EXP-2540",
+  "title": "Regime-Conditional Transaction Cost Model",
+  "timestamp": "2026-04-08T05:35:37.808462Z",
+  "regime_boundaries_vix": {
+    "LOW": "< 15.0",
+    "NORMAL": "15.0 - 25.0",
+    "HIGH": "25.0 - 35.0",
+    "CRISIS": ">= 35.0"
+  },
+  "iv_rows_scanned": 1508,
+  "calibration_note": "H-L/C ratio scaled so LOW regime = 5.0 bps (Almgren-Chriss baseline). Relative structure preserved.",
+  "regime_friction": {
+    "LOW": {
+      "n_days": 279,
+      "median_raw_hl_ratio": 0.11111111111111122,
+      "mean_raw_hl_ratio": 0.11705661968779396,
+      "p25_raw": 0.08109182883838245,
+      "p75_raw": 0.13504319349556773
+    },
+    "NORMAL": {
+      "n_days": 895,
+      "median_raw_hl_ratio": 0.15457413249211363,
+      "mean_raw_hl_ratio": 0.16763112995534085,
+      "p25_raw": 0.11273066269512189,
+      "p75_raw": 0.20486615452493176
+    },
+    "HIGH": {
+      "n_days": 275,
+      "median_raw_hl_ratio": 0.22207534699272974,
+      "mean_raw_hl_ratio": 0.23862028071060495,
+      "p25_raw": 0.16294643887347465,
+      "p75_raw": 0.28930842412479824
+    },
+    "CRISIS": {
+      "n_days": 59,
+      "median_raw_hl_ratio": 0.2730060101814564,
+      "mean_raw_hl_ratio": 0.28056785862391964,
+      "p25_raw": 0.19319498089826576,
+      "p75_raw": 0.33612842597931974
+    }
+  },
+  "regime_bps": {
+    "LOW": 5.0,
+    "NORMAL": 6.96,
+    "HIGH": 9.99,
+    "CRISIS": 12.29
+  },
+  "portfolio": {
+    "streams": [
+      "exp1220",
+      "xlf_cs",
+      "xli_cs",
+      "gld_cal",
+      "slv_cal",
+      "vol_arb",
+      "v5_hedge"
+    ],
+    "capital_weights": {
+      "exp1220": 0.6,
+      "xlf_cs": 0.075,
+      "xli_cs": 0.075,
+      "gld_cal": 0.1,
+      "slv_cal": 0.05,
+      "vol_arb": 0.075,
+      "v5_hedge": 0.025
+    },
+    "per_sleeve_leverage": {
+      "exp1220": 2.6295,
+      "xlf_cs": 0.0997,
+      "xli_cs": 0.0691,
+      "gld_cal": 0.0734,
+      "slv_cal": 0.018,
+      "vol_arb": 0.0932,
+      "v5_hedge": 0.0171
+    },
+    "gross_leverage": 3.0
+  },
+  "variants": {
+    "gross": {
+      "metrics": {
+        "n_days": 1566,
+        "cagr_pct": 8.551,
+        "sharpe": 2.992,
+        "max_dd_pct": -4.136,
+        "vol_pct": 2.756
+      },
+      "walk_forward": {
+        "n_folds": 20,
+        "pct_folds_positive": 95.0,
+        "cagr_mean_pct": 8.674,
+        "sharpe_mean": 4.831,
+        "sharpe_min": -1.012,
+        "sharpe_max": 8.081
+      }
+    },
+    "regime_tc_applied": {
+      "metrics": {
+        "n_days": 1566,
+        "cagr_pct": 0.949,
+        "sharpe": 0.359,
+        "max_dd_pct": -5.453,
+        "vol_pct": 2.74
+      },
+      "walk_forward": {
+        "n_folds": 20,
+        "pct_folds_positive": 70.0,
+        "cagr_mean_pct": 1.026,
+        "sharpe_mean": 1.156,
+        "sharpe_min": -1.609,
+        "sharpe_max": 7.102
+      },
+      "diagnostics": {
+        "tc_total_cumulative": 0.4512998539590742,
+        "tc_by_regime": {
+          "NORMAL": 0.25893,
+          "CRISIS": 0.021997,
+          "HIGH": 0.120107,
+          "LOW": 0.050267
+        },
+        "skipped_pnl_by_regime": {},
+        "active_days_by_regime": {
+          "NORMAL": 2064,
+          "CRISIS": 188,
+          "HIGH": 808,
+          "LOW": 615
+        },
+        "skipped_days_by_regime": {}
+      }
+    },
+    "regime_filtered_high_crisis": {
+      "metrics": {
+        "n_days": 1566,
+        "cagr_pct": 1.731,
+        "sharpe": 1.192,
+        "max_dd_pct": -1.884,
+        "vol_pct": 1.448
+      },
+      "walk_forward": {
+        "n_folds": 20,
+        "pct_folds_positive": 85.0,
+        "cagr_mean_pct": 1.744,
+        "sharpe_mean": 1.622,
+        "sharpe_min": -1.465,
+        "sharpe_max": 7.102
+      },
+      "diagnostics": {
+        "tc_total_cumulative": 0.30919666247671207,
+        "tc_by_regime": {
+          "NORMAL": 0.25893,
+          "LOW": 0.050267
+        },
+        "skipped_pnl_by_regime": {
+          "CRISIS": -0.010531,
+          "HIGH": 0.106408
+        },
+        "active_days_by_regime": {
+          "NORMAL": 2064,
+          "LOW": 615
+        },
+        "skipped_days_by_regime": {
+          "CRISIS": 188,
+          "HIGH": 808
+        }
+      }
+    }
+  },
+  "verdict": {
+    "skip_improves_sharpe": true,
+    "delta_sharpe": 0.833,
+    "delta_cagr_pct": 0.782,
+    "delta_dd_pct": 3.569,
+    "reasons": [
+      "NET Sharpe with TC: 0.36. NET Sharpe with TC+filter: 1.19. \u0394Sharpe = +0.83.",
+      "Filter earns a slot: \u2265 +0.05 Sharpe improvement.",
+      "Activity split: 2679 stream-days in LOW+NORMAL, 996 in HIGH+CRISIS (27.1% high-cost regime).",
+      "TC cost structure: LOW 5.0 bps, NORMAL 7.0 bps, HIGH 10.0 bps, CRISIS 12.3 bps."
+    ]
+  },
+  "rule_zero": "Friction measured from REAL IronVault option_daily H-L-C data on all 2.68M SPY option-day rows 2020-2025. Regime classification from real Yahoo ^VIX closes. Portfolio streams from exp2280_v6_sparse.pkl (real-derived). No synthetic data."
+}
