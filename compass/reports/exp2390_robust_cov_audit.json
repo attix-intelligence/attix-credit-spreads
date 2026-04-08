@@ -1,0 +1,242 @@
+{
+  "experiment": "EXP-2390",
+  "title": "Audit of EXP-2360 Robust Covariance Sharpe numbers",
+  "generated": "2026-04-08T04:36:06",
+  "rule_zero": true,
+  "sources": {
+    "base_cube": "compass.exp2080_corr_regime.load_streams (cached)",
+    "xlf_xli_smeared": "compass.exp2160_high_capacity_alts.trades_to_daily_pct (EXP-2360 method)",
+    "xlf_xli_sparse": "exit-date convention (pnl_pct_capital on expiration)",
+    "walk_forward": "compass.exp2360_robust_cov.walk_forward (verbatim)",
+    "sharpe_formula": "mean/std \u00d7 \u221a252 (verified cross-consistent)"
+  },
+  "baseline_references": {
+    "exp2110_5stream_sparse_sharpe": 5.235,
+    "exp2280_7stream_sparse_sharpe": 4.429
+  },
+  "reported_exp2360": {
+    "sample": 8.301,
+    "ledoit_wolf": 11.729,
+    "oas": 13.733,
+    "one_factor": 19.143
+  },
+  "per_stream_standalone": {
+    "exp1220": {
+      "smeared": {
+        "n": 1566,
+        "mean_daily": 0.00179485,
+        "mean_annualised_pct": 45.23,
+        "vol_ann_pct": 11.293,
+        "cagr_pct": 56.14,
+        "sharpe": 4.0051,
+        "max_dd_pct": 7.581
+      },
+      "sparse": {
+        "n": 1566,
+        "mean_daily": 0.00179485,
+        "mean_annualised_pct": 45.23,
+        "vol_ann_pct": 11.293,
+        "cagr_pct": 56.14,
+        "sharpe": 4.0051,
+        "max_dd_pct": 7.581
+      }
+    },
+    "v5_hedge": {
+      "smeared": {
+        "n": 1566,
+        "mean_daily": -3.278e-05,
+        "mean_annualised_pct": -0.826,
+        "vol_ann_pct": 6.419,
+        "cagr_pct": -1.027,
+        "sharpe": -0.1287,
+        "max_dd_pct": 12.836
+      },
+      "sparse": {
+        "n": 1566,
+        "mean_daily": -3.278e-05,
+        "mean_annualised_pct": -0.826,
+        "vol_ann_pct": 6.419,
+        "cagr_pct": -1.027,
+        "sharpe": -0.1287,
+        "max_dd_pct": 12.836
+      }
+    },
+    "gld_cal": {
+      "smeared": {
+        "n": 1566,
+        "mean_daily": 0.00064381,
+        "mean_annualised_pct": 16.224,
+        "vol_ann_pct": 5.974,
+        "cagr_pct": 17.399,
+        "sharpe": 2.7159,
+        "max_dd_pct": 2.501
+      },
+      "sparse": {
+        "n": 1566,
+        "mean_daily": 0.00064381,
+        "mean_annualised_pct": 16.224,
+        "vol_ann_pct": 5.974,
+        "cagr_pct": 17.399,
+        "sharpe": 2.7159,
+        "max_dd_pct": 2.501
+      }
+    },
+    "slv_cal": {
+      "smeared": {
+        "n": 1566,
+        "mean_daily": 0.00111538,
+        "mean_annualised_pct": 28.107,
+        "vol_ann_pct": 12.171,
+        "cagr_pct": 31.462,
+        "sharpe": 2.3094,
+        "max_dd_pct": 6.079
+      },
+      "sparse": {
+        "n": 1566,
+        "mean_daily": 0.00111538,
+        "mean_annualised_pct": 28.107,
+        "vol_ann_pct": 12.171,
+        "cagr_pct": 31.462,
+        "sharpe": 2.3094,
+        "max_dd_pct": 6.079
+      }
+    },
+    "cross_vol": {
+      "smeared": {
+        "n": 1566,
+        "mean_daily": 0.00030024,
+        "mean_annualised_pct": 7.566,
+        "vol_ann_pct": 3.532,
+        "cagr_pct": 7.791,
+        "sharpe": 2.1424,
+        "max_dd_pct": 5.479
+      },
+      "sparse": {
+        "n": 1566,
+        "mean_daily": 0.00030024,
+        "mean_annualised_pct": 7.566,
+        "vol_ann_pct": 3.532,
+        "cagr_pct": 7.791,
+        "sharpe": 2.1424,
+        "max_dd_pct": 5.479
+      }
+    },
+    "xlf_cs": {
+      "smeared": {
+        "n": 1566,
+        "mean_daily": 0.00064348,
+        "mean_annualised_pct": 16.216,
+        "vol_ann_pct": 0.596,
+        "cagr_pct": 17.596,
+        "sharpe": 27.2229,
+        "max_dd_pct": 1.454
+      },
+      "sparse": {
+        "n": 1566,
+        "mean_daily": 0.00064926,
+        "mean_annualised_pct": 16.361,
+        "vol_ann_pct": 3.301,
+        "cagr_pct": 17.706,
+        "sharpe": 4.9561,
+        "max_dd_pct": 1.304
+      }
+    },
+    "xli_cs": {
+      "smeared": {
+        "n": 1566,
+        "mean_daily": 0.00064601,
+        "mean_annualised_pct": 16.279,
+        "vol_ann_pct": 0.759,
+        "cagr_pct": 17.67,
+        "sharpe": 21.4457,
+        "max_dd_pct": 1.37
+      },
+      "sparse": {
+        "n": 1566,
+        "mean_daily": 0.00063501,
+        "mean_annualised_pct": 16.002,
+        "vol_ann_pct": 4.763,
+        "cagr_pct": 17.216,
+        "sharpe": 3.3595,
+        "max_dd_pct": 3.697
+      }
+    }
+  },
+  "walk_forward_reproduction": {
+    "smeared": {
+      "sample": {
+        "n": 1260,
+        "mean_daily": 0.00249951,
+        "mean_annualised_pct": 62.988,
+        "vol_ann_pct": 7.588,
+        "cagr_pct": 87.052,
+        "sharpe": 8.3013,
+        "max_dd_pct": 10.831,
+        "label": "smeared/sample"
+      },
+      "ledoit_wolf": {
+        "n": 1260,
+        "mean_daily": 0.00283896,
+        "mean_annualised_pct": 71.542,
+        "vol_ann_pct": 6.1,
+        "cagr_pct": 103.92,
+        "sharpe": 11.7286,
+        "max_dd_pct": 2.24,
+        "label": "smeared/ledoit_wolf"
+      },
+      "oas": {
+        "n": 1260,
+        "mean_daily": 0.002843,
+        "mean_annualised_pct": 71.644,
+        "vol_ann_pct": 5.217,
+        "cagr_pct": 104.229,
+        "sharpe": 13.7332,
+        "max_dd_pct": 1.94,
+        "label": "smeared/oas"
+      }
+    },
+    "sparse": {
+      "sample": {
+        "n": 1260,
+        "mean_daily": 0.00259416,
+        "mean_annualised_pct": 65.373,
+        "vol_ann_pct": 10.583,
+        "cagr_pct": 91.045,
+        "sharpe": 6.177,
+        "max_dd_pct": 6.757,
+        "label": "sparse/sample"
+      },
+      "ledoit_wolf": {
+        "n": 1260,
+        "mean_daily": 0.00281161,
+        "mean_annualised_pct": 70.853,
+        "vol_ann_pct": 10.321,
+        "cagr_pct": 101.832,
+        "sharpe": 6.8652,
+        "max_dd_pct": 4.209,
+        "label": "sparse/ledoit_wolf"
+      },
+      "oas": {
+        "n": 1260,
+        "mean_daily": 0.00271178,
+        "mean_annualised_pct": 68.337,
+        "vol_ann_pct": 10.254,
+        "cagr_pct": 96.845,
+        "sharpe": 6.6642,
+        "max_dd_pct": 4.356,
+        "label": "sparse/oas"
+      }
+    }
+  },
+  "inflation_factors": {
+    "oas": 2.061,
+    "ledoit_wolf": 1.708
+  },
+  "lookahead_bias": false,
+  "sharpe_formula_correct": true,
+  "vol_targeting_applied": true,
+  "cross_consistency_check_passed": true,
+  "root_cause": "EXP-2360 builds XLF/XLI streams via trades_to_daily_pct, which uniformly smears each 30-day holding-period P&L across the holding window. EXP-2160's own report flags this as 'method-inflated on high-win-rate strategies' (XLF 98% WR inflates ~2.4\u00d7). Shrinkage covariance estimators then see artificially low XLF/XLI daily vols and load them heavily in risk-parity weights, which vol-targeting amplifies to the 15% target.",
+  "verdict": "The 11.73 / 13.73 Sharpe values are arithmetically correct on the smeared cube (no bugs, no look-ahead, no formula errors) but the smeared cube is NOT tradeable \u2014 it models each 30-day P&L as if it accrued smoothly every day. The HONEST pooled Sharpe on the sparse (exit-date) cube is in the 6.66-6.87 range, in line with the EXP-2110 (5.24) and EXP-2280 (4.43) baselines. Do NOT use EXP-2360 numbers in any deployment or investor materials.",
+  "recommendation": "1. EXP-2360 headline numbers should be marked STALE. 2. Re-run EXP-2360 with sparse XLF/XLI and republish. 3. Add a unit test to exp2160 that FAILS if the sleeve    is consumed as a daily Sharpe target without the    trade-level caveat. 4. The trade-level Sharpe (XLF 11.19, XLI 6.04) remains    valid as a per-trade metric \u2014 it's the portfolio-level    daily Sharpe on smeared streams that is misleading."
+}
