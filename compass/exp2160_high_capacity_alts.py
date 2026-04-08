@@ -954,3 +954,14 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# EXP-2690 — Production signal entry point (XLF + XLI credit spreads)
+# ═══════════════════════════════════════════════════════════════════════════
+def generate_today_signals(date):
+    """Paper-trading scheduler entry point. Returns signals for BOTH
+    XLF and XLI sleeves since this module hosts both. Delegates to the
+    central signal registry in compass.exp2690_signal_generators."""
+    from compass.exp2690_signal_generators import xlf_cs_signals, xli_cs_signals
+    return list(xlf_cs_signals(date)) + list(xli_cs_signals(date))

@@ -586,3 +586,13 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# EXP-2690 — Production signal entry point
+# ═══════════════════════════════════════════════════════════════════════════
+def generate_today_signals(date):
+    """Paper-trading scheduler entry point for the QQQ sleeve.
+    Delegates to compass.exp2690_signal_generators.qqq_cs_signals."""
+    from compass.exp2690_signal_generators import qqq_cs_signals
+    return qqq_cs_signals(date)

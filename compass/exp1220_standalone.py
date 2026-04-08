@@ -505,3 +505,13 @@ def run_analysis():
 
 if __name__ == "__main__":
     run_analysis()
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# EXP-2690 — Production signal entry point
+# ═══════════════════════════════════════════════════════════════════════════
+def generate_today_signals(date):
+    """Paper-trading scheduler entry point. Delegates to the central
+    signal registry in compass.exp2690_signal_generators."""
+    from compass.exp2690_signal_generators import exp1220_signals
+    return exp1220_signals(date)

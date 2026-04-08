@@ -625,3 +625,13 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# EXP-2690 — Production signal entry point
+# ═══════════════════════════════════════════════════════════════════════════
+def generate_today_signals(date):
+    """Paper-trading scheduler entry point. Delegates to the central
+    signal registry in compass.exp2690_signal_generators."""
+    from compass.exp2690_signal_generators import v5_hedge_signals
+    return v5_hedge_signals(date)

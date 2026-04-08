@@ -521,3 +521,13 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# EXP-2690 — Production signal entry point (GLD + SLV calendar spreads)
+# ═══════════════════════════════════════════════════════════════════════════
+def generate_today_signals(date):
+    """Paper-trading scheduler entry point. Returns signals for BOTH
+    GLD and SLV futures-roll harvest sleeves."""
+    from compass.exp2690_signal_generators import gld_cal_signals, slv_cal_signals
+    return list(gld_cal_signals(date)) + list(slv_cal_signals(date))
