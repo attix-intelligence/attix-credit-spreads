@@ -33,7 +33,7 @@ try:
 except ImportError:                        # pragma: no cover — Python < 3.9
     from backports.zoneinfo import ZoneInfo  # type: ignore
 
-from shared.database import close_trade, get_trades, upsert_trade, init_db
+from shared.database import close_trade, get_open_leg_symbols, get_trades, upsert_trade, init_db
 from shared.strategy_adapter import trade_dict_to_position
 from shared.telegram_alerts import notify_api_failure
 from strategies.base import MarketSnapshot, PositionAction
@@ -505,6 +505,20 @@ class PositionMonitor:
                 logger.warning(
                     "PositionMonitor: cannot parse expiration '%s': %s", expiration_str, e
                 )
+
+        # RC4: Guard against synthetic single-leg records (no hedge) before pricing
+        _spread_type_guard = str(pos.get("strategy_type", pos.get("type", ""))).lower()
+        if (
+            pos.get("long_strike") is None
+            and "straddle" not in _spread_type_guard
+            and "strangle" not in _spread_type_guard
+        ):
+            logger.error(
+                "PositionMonitor: %s has no long_strike — skipping SL/PT "
+                "(likely a synthetic orphan record). Manual review required.",
+                pos.get("id"),
+            )
+            return None
 
         # 1b. Strategy dispatch — delegate to strategy.manage_position()
         strategy_name = pos.get("strategy_name", "")
@@ -1240,8 +1254,15 @@ class PositionMonitor:
           3. Long legs (qty >= 0) are skipped — they are hedge legs of an untracked
              spread and cannot be independently managed.
         """
-        # Build the complete set of OCC symbols from currently-tracked positions
-        managed_symbols: set = set()
+        # RC4: Seed managed_symbols from trade_legs table (exact OCC match, no reconstruction)
+        try:
+            managed_symbols: set = get_open_leg_symbols(path=self.db_path)
+        except Exception as _legs_err:
+            logger.warning(
+                "PositionMonitor: trade_legs lookup failed (%s) — falling back to strike reconstruction",
+                _legs_err,
+            )
+            managed_symbols = set()
         for pos in open_positions:
             ticker = pos.get("ticker", "")
             exp = str(pos.get("expiration", "")).split(" ")[0]
@@ -1340,56 +1361,23 @@ class PositionMonitor:
             if qty >= 0:
                 continue
 
-            # Short orphan with no recovery candidate — create a synthetic monitoring record.
-            # This ensures stop-loss / expiration checks fire on the next cycle.
-            parsed = _parse_occ_symbol(symbol)
-            if not parsed:
-                logger.warning(
-                    "PositionMonitor: ORPHAN — could not parse OCC symbol %s. "
-                    "Manual review required.",
-                    symbol,
-                )
-                continue
-
-            ticker_parsed, exp_parsed, opt_type_parsed, strike_parsed = parsed
-            try:
-                avg_entry = float(pos_data.get("avg_entry_price") or 0)
-            except (ValueError, TypeError):
-                avg_entry = 0.0
-            contracts_abs = max(1, int(abs(qty)))
-            strategy_type = "bear_call" if opt_type_parsed == "call" else "bull_put"
-
-            synthetic_id = f"synthetic-monitor-{symbol}"
-            # Truncate to fit any DB string limits while keeping the symbol readable
-            if len(synthetic_id) > 60:
-                synthetic_id = f"synthetic-monitor-{symbol[:40]}"
-
-            synthetic: Dict = {
-                "id": synthetic_id,
-                "ticker": ticker_parsed,
-                "strategy_type": strategy_type,
-                "status": "open",
-                "short_strike": strike_parsed,
-                "long_strike": None,  # single-leg record; no hedge tracked
-                "expiration": exp_parsed,
-                "credit": avg_entry if avg_entry > 0 else None,
-                "contracts": contracts_abs,
-                "entry_date": datetime.now(timezone.utc).isoformat(),
-                "alpaca_symbol": symbol,
-            }
-
-            logger.warning(
-                "PositionMonitor: ORPHAN SHORT — %s qty=%s has no DB record. "
-                "Creating synthetic monitoring record %s (credit=%.4f, sl=%.1fx). "
+            # RC4: Short orphan with no recovery candidate — alert only, do NOT create
+            # a synthetic-monitor record. Synthetic records have long_strike=None and
+            # cause mispriced SL/PT checks, accumulating as zombie positions.
+            logger.critical(
+                "PositionMonitor: UNTRACKED SHORT POSITION %s qty=%s — "
+                "no DB record found. Manual intervention required. "
                 "INVESTIGATE: how did this position become unmanaged?",
-                symbol, qty_str, synthetic_id, avg_entry, self.stop_loss_mult,
+                symbol, qty_str,
             )
             try:
-                upsert_trade(synthetic, source="execution", path=self.db_path)
-            except Exception as e:
+                notify_api_failure(
+                    error_msg=f"Untracked short option {symbol} qty={qty_str}",
+                    context="orphan_detection_critical",
+                )
+            except Exception as alert_err:
                 logger.error(
-                    "PositionMonitor: failed to create synthetic record for %s: %s",
-                    symbol, e,
+                    "PositionMonitor: Telegram alert failed for orphan %s: %s", symbol, alert_err
                 )
 
     # ------------------------------------------------------------------
