@@ -134,6 +134,18 @@ def init_db(path: Optional[str] = None) -> None:
                 deviation_score REAL,
                 timestamp TEXT DEFAULT (datetime('now'))
             );
+
+            CREATE TABLE IF NOT EXISTS trade_legs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                trade_id TEXT NOT NULL REFERENCES trades(id),
+                leg_type TEXT NOT NULL,
+                strike REAL NOT NULL,
+                occ_symbol TEXT,
+                status TEXT DEFAULT 'open',
+                UNIQUE(trade_id, leg_type)
+            );
+            CREATE INDEX IF NOT EXISTS idx_trade_legs_occ ON trade_legs(occ_symbol);
+            CREATE INDEX IF NOT EXISTS idx_trade_legs_trade_id ON trade_legs(trade_id);
         """)
         conn.commit()
 
@@ -462,6 +474,51 @@ def load_scanner_state(key: str, path: Optional[str] = None) -> Optional[str]:
             "SELECT value FROM scanner_state WHERE key = ?", (key,)
         ).fetchone()
         return row["value"] if row else None
+    finally:
+        conn.close()
+
+
+def upsert_trade_legs(trade_id: str, legs: List[Dict[str, Any]], path: Optional[str] = None) -> None:
+    """Insert or update leg records for a trade.
+
+    Each leg dict must have: leg_type (str), strike (float).
+    Optional: occ_symbol (str), status (str, default 'open').
+    leg_type examples: 'short_put', 'long_put', 'short_call', 'long_call'.
+    """
+    if not legs:
+        return
+    conn = get_db(path)
+    try:
+        for leg in legs:
+            conn.execute(
+                """
+                INSERT INTO trade_legs (trade_id, leg_type, strike, occ_symbol, status)
+                VALUES (?, ?, ?, ?, ?)
+                ON CONFLICT(trade_id, leg_type) DO UPDATE SET
+                    occ_symbol=excluded.occ_symbol,
+                    status=excluded.status
+                """,
+                (
+                    trade_id,
+                    leg["leg_type"],
+                    float(leg["strike"]),
+                    leg.get("occ_symbol"),
+                    leg.get("status", "open"),
+                ),
+            )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def get_open_leg_symbols(path: Optional[str] = None) -> set:
+    """Return the set of OCC symbols for all open trade legs."""
+    conn = get_db(path)
+    try:
+        rows = conn.execute(
+            "SELECT occ_symbol FROM trade_legs WHERE status = 'open' AND occ_symbol IS NOT NULL"
+        ).fetchall()
+        return {r["occ_symbol"] for r in rows}
     finally:
         conn.close()
 

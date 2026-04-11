@@ -15,9 +15,76 @@ import time
 from datetime import datetime, timedelta, timezone
 from typing import Dict, Optional
 
-from shared.database import get_trade_by_id, get_trades, init_db, load_scanner_state, save_scanner_state, upsert_trade
+from shared.database import get_trade_by_id, get_trades, init_db, load_scanner_state, save_scanner_state, upsert_trade, upsert_trade_legs
 
 logger = logging.getLogger(__name__)
+
+
+def _build_occ_symbol(ticker: str, expiration: str, strike: float, option_type: str) -> Optional[str]:
+    """Build OCC option symbol: TICKER(padded 6) + YYMMDD + C/P + strike*1000 (8 digits)."""
+    try:
+        exp_dt = datetime.strptime(str(expiration).split(" ")[0], "%Y-%m-%d")
+        date_str = exp_dt.strftime("%y%m%d")
+        cp = "C" if str(option_type).lower().startswith("c") else "P"
+        strike_int = int(round(float(strike) * 1000))
+        return f"{ticker.upper():<6}{date_str}{cp}{strike_int:08d}".replace(" ", "")
+    except Exception:
+        return None
+
+
+def _build_legs_for_trade(trade_record: Dict, spread_lower: str) -> list:
+    """Return a list of leg dicts for upsert_trade_legs based on trade type."""
+    ticker = trade_record.get("ticker", "")
+    exp = str(trade_record.get("expiration", ""))
+    legs = []
+    if "condor" in spread_lower:
+        for leg_type, strike, opt_type in [
+            ("short_put",  trade_record.get("put_short_strike"),  "put"),
+            ("long_put",   trade_record.get("put_long_strike"),   "put"),
+            ("short_call", trade_record.get("call_short_strike"), "call"),
+            ("long_call",  trade_record.get("call_long_strike"),  "call"),
+        ]:
+            if strike:
+                legs.append({
+                    "leg_type": leg_type,
+                    "strike": strike,
+                    "occ_symbol": _build_occ_symbol(ticker, exp, strike, opt_type),
+                })
+    elif "straddle" in spread_lower or "strangle" in spread_lower:
+        is_long = spread_lower.startswith("long_")
+        call_ltype = "long_call" if is_long else "short_call"
+        put_ltype = "long_put" if is_long else "short_put"
+        call_strike = trade_record.get("call_strike")
+        put_strike = trade_record.get("put_strike")
+        if call_strike:
+            legs.append({
+                "leg_type": call_ltype,
+                "strike": call_strike,
+                "occ_symbol": _build_occ_symbol(ticker, exp, call_strike, "call"),
+            })
+        if put_strike:
+            legs.append({
+                "leg_type": put_ltype,
+                "strike": put_strike,
+                "occ_symbol": _build_occ_symbol(ticker, exp, put_strike, "put"),
+            })
+    else:
+        opt_type = "call" if "call" in spread_lower else "put"
+        short_strike = trade_record.get("short_strike")
+        long_strike = trade_record.get("long_strike")
+        if short_strike:
+            legs.append({
+                "leg_type": f"short_{opt_type}",
+                "strike": short_strike,
+                "occ_symbol": _build_occ_symbol(ticker, exp, short_strike, opt_type),
+            })
+        if long_strike:
+            legs.append({
+                "leg_type": f"long_{opt_type}",
+                "strike": long_strike,
+                "occ_symbol": _build_occ_symbol(ticker, exp, long_strike, opt_type),
+            })
+    return legs
 
 
 class ExecutionEngine:
@@ -258,6 +325,17 @@ class ExecutionEngine:
         except Exception as e:
             logger.error("ExecutionEngine: DB write failed for %s: %s", client_id, e)
             return {"status": "error", "message": f"DB write failed: {e}", "client_order_id": client_id}
+
+        # RC4: Populate trade_legs for reliable OCC-symbol-based orphan detection
+        try:
+            legs = _build_legs_for_trade(trade_record, spread_lower)
+            if legs:
+                upsert_trade_legs(client_id, legs, path=self.db_path)
+        except Exception as leg_err:
+            logger.warning(
+                "ExecutionEngine: trade_legs write failed for %s (non-fatal): %s",
+                client_id, leg_err,
+            )
 
         # ML-1: Log trade features for future ML training
         try:
