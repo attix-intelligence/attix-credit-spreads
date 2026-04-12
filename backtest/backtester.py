@@ -487,6 +487,28 @@ class Backtester:
         logger.info("Backtester initialized (%s mode, delta_selection=%s)",
                     mode, self._use_delta_selection)
 
+    def _select_spread_width(self) -> float:
+        """Select spread width based on current IV rank environment.
+
+        Mirrors CreditSpreadStrategy._select_spread_width() in strategy/spread_strategy.py
+        so live and backtest use identical width-selection logic:
+          iv_rank >= 50  → spread_width_high_iv  (wider in high-vol)
+          iv_rank >= 25  → spread_width_low_iv   (medium in normal vol)
+          else           → spread_width           (default / low vol)
+
+        Falls back to the single spread_width value when high/low keys are absent
+        (backward-compatible with existing single-width configs).
+        """
+        default = self.strategy_params['spread_width']
+        high_iv = self.strategy_params.get('spread_width_high_iv', default)
+        low_iv  = self.strategy_params.get('spread_width_low_iv',  default)
+        iv_rank = getattr(self, '_current_iv_rank', 25.0)
+        if iv_rank >= 50:
+            return high_iv
+        elif iv_rank >= 25:
+            return low_iv
+        return default
+
     def _vix_scaled_exit_slippage(self) -> float:
         """Return exit slippage adjusted for the current VIX regime.
 
@@ -690,6 +712,13 @@ class Backtester:
                 len(open_positions), self._current_iv_rank, self._current_vix,
             )
 
+            # Capture equity BEFORE managing positions — used for daily loss limit gate below.
+            # Mirrors live _build_account_state which computes daily_pnl_pct as
+            # sum(closed_today_pnl) / account_value before any new entries.
+            _equity_sod = self.capital + sum(
+                p.get('current_value', 0) for p in open_positions
+            )
+
             # Check existing positions
             open_positions = self._manage_positions(
                 open_positions, current_date, current_price, ticker
@@ -735,15 +764,16 @@ class Backtester:
             # Heuristic mode: one scan per week on Monday (backward compat).
 
             # Drawdown circuit breaker: pause NEW entries when equity drops too far.
-            # In compound mode: uses high-water mark (peak equity) as the reference.
-            # In fixed mode: uses starting capital as the reference (original behavior).
+            # Always uses high-water mark (peak_capital) as the CB reference regardless
+            # of compound/flat mode — matching live ExecutionEngine._check_drawdown_cb()
+            # which always uses peak_equity. The old flat-mode behavior compared against
+            # starting_capital, which understated real drawdown risk after profitable runs
+            # (e.g. a +30% year then -15% is a genuine -15% drawdown from peak, not
+            # measured from starting capital). Alignment fix: alignment_fix=drawdown_cb_ref.
             # Threshold is configurable via risk.drawdown_cb_pct (default -20%).
             _cb_threshold = -abs(self.risk_params.get('drawdown_cb_pct', 20)) / 100
-            if self._compound:
-                self._peak_capital = max(self._peak_capital, self.capital)
-                _drawdown_pct = (self.capital - self._peak_capital) / self._peak_capital
-            else:
-                _drawdown_pct = (self.capital - self.starting_capital) / self.starting_capital
+            self._peak_capital = max(self._peak_capital, self.capital)
+            _drawdown_pct = (self.capital - self._peak_capital) / self._peak_capital
 
             # IV Rank entry gate: only sell premium when implied vol overstates realized vol
             # (market is pricing in fear → favorable conditions for premium selling).
@@ -761,11 +791,34 @@ class Backtester:
             _month_str = current_date.strftime("%Y-%m")
             _excluded_month = _month_str in self._exclude_months
 
+            # Daily loss limit — mirrors live RiskGate rule 3 (DAILY_LOSS_LIMIT = 8%).
+            # Blocks all new entries for the remainder of the day once the portfolio
+            # has lost more than daily_loss_limit_pct% of equity since market open.
+            # Default 0 = disabled (preserves pre-fix backtester behavior).
+            # Set risk.daily_loss_limit_pct=8 in config to match live DAILY_LOSS_LIMIT.
+            # Alignment fix: alignment_fix=daily_loss_limit.
+            _daily_loss_limit_pct = self.risk_params.get('daily_loss_limit_pct', 0.0)
+            _daily_loss_triggered = False
+            if _daily_loss_limit_pct > 0 and _equity_sod > 0:
+                _equity_now = self.capital + sum(
+                    p.get('current_value', 0) for p in open_positions
+                )
+                _daily_pnl_pct = (_equity_now - _equity_sod) / _equity_sod
+                if _daily_pnl_pct < -(_daily_loss_limit_pct / 100.0):
+                    _daily_loss_triggered = True
+                    logger.debug(
+                        "%s  Daily loss limit triggered: pnl=%.2f%% < -%.1f%% — "
+                        "skipping new entries (mirrors live DAILY_LOSS_LIMIT)",
+                        current_date.strftime("%Y-%m-%d"),
+                        _daily_pnl_pct * 100, _daily_loss_limit_pct,
+                    )
+
             _skip_new_entries = (
                 _drawdown_pct < _cb_threshold
                 or _iv_too_low
                 or _vix_too_high
                 or _excluded_month
+                or _daily_loss_triggered
                 or self._ruin_triggered  # P1-D: halt all entries after capital reaches zero
             )
 
@@ -829,6 +882,31 @@ class Backtester:
                     _rrg_block = (_regime_today == 'bear')
                 if _rrg_block:
                     _want_puts = False
+
+            # Per-ticker position limit — mirrors live RiskGate rule 5.5.
+            # In single-ticker backtests, all open_positions belong to the same
+            # ticker so len(open_positions) == per-ticker count. When set, this
+            # cap takes precedence over max_positions for the active ticker.
+            # Default None = no per-ticker limit (preserves pre-fix behavior).
+            # Set risk.max_positions_per_ticker=2 to match live config.yaml.
+            # Alignment fix: alignment_fix=max_positions_per_ticker.
+            _max_per_ticker = self.risk_params.get('max_positions_per_ticker')
+            _effective_max = self.risk_params['max_positions']
+            if _max_per_ticker is not None:
+                _effective_max = min(_effective_max, int(_max_per_ticker))
+
+            # Dedup note — live vs backtester alignment gap:
+            # Backtester dedup is contract-level: (expiration, strike, type) via
+            # _entered_today + _open_key_counts; blocks exact re-entry of same
+            # contract within a day and across open positions.
+            # Live scanner dedup is coarser: (ticker, direction) within a 30-minute
+            # window stored in the alert_dedup table. This means live blocks any
+            # bull_put alert for SPY for 30 min after one fires, regardless of strike.
+            # In real-data mode (14 intraday scans), live behavior approximates to
+            # one entry per ticker per direction per day. The backtester allows
+            # multiple different strikes per day — a minor optimism bias.
+            # Full alignment would require adding a per-(ticker, direction) daily
+            # dedup layer here; current _entered_today prevents exact-strike duplicates.
 
             if self._use_real_data:
                 # Track (expiration, short_strike, option_type) already entered today.
@@ -896,7 +974,7 @@ class Backtester:
                 for scan_hour, scan_minute in SCAN_TIMES:
                     if _skip_new_entries:
                         break
-                    if len(open_positions) >= self.risk_params['max_positions']:
+                    if len(open_positions) >= _effective_max:
                         break
                     if _want_puts:
                         new_position = self._find_backtest_opportunity(
@@ -931,7 +1009,7 @@ class Backtester:
                                 logger.debug("Duplicate key — refunding commission for bull_put %s", _key)
                                 if not _want_calls:
                                     continue  # BULL-only: deduped put → skip IC this scan time
-                    if len(open_positions) >= self.risk_params['max_positions']:
+                    if len(open_positions) >= _effective_max:
                         break
                     if _want_calls:
                         bear_call = self._find_bear_call_opportunity(
@@ -962,7 +1040,7 @@ class Backtester:
                                 logger.debug("Duplicate key — refunding commission for bear_call %s", _key)
                                 # fall through: try IC on this scan time
                     # Iron condor fallback — only if enabled in config
-                    if _ic_enabled and len(open_positions) < self.risk_params['max_positions']:
+                    if _ic_enabled and len(open_positions) < _effective_max:
                         condor = self._find_iron_condor_opportunity(
                             ticker, current_date, current_price, scan_hour, scan_minute,
                         )
@@ -1328,7 +1406,7 @@ class Backtester:
         else:
             expiration = _nearest_mwf_expiration(date, self._current_trade_dte, self._current_trade_min_dte)
         date_str = date.strftime("%Y-%m-%d")
-        spread_width = self.strategy_params['spread_width']
+        spread_width = self._select_spread_width()
 
         if self._use_real_data:
             result = self._find_real_spread(
@@ -1385,7 +1463,7 @@ class Backtester:
         else:
             expiration = _nearest_mwf_expiration(date, self._current_trade_dte, self._current_trade_min_dte)
         date_str = date.strftime("%Y-%m-%d")
-        spread_width = self.strategy_params['spread_width']
+        spread_width = self._select_spread_width()
 
         if self._use_real_data:
             result = self._find_real_spread(
@@ -1437,7 +1515,7 @@ class Backtester:
             expiration = _nearest_mwf_expiration(date, self._current_trade_dte, self._current_trade_min_dte)
             friday_exp = _nearest_friday_expiration(date, self._current_trade_dte, self._current_trade_min_dte)
         date_str = date.strftime("%Y-%m-%d")
-        spread_width = self.strategy_params['spread_width']
+        spread_width = self._select_spread_width()
 
         # Fetch each leg — bypass individual min_credit (checked on combined below).
         # Friday fallback: if primary MWF expiration has no data (Mon/Wed unavailable),

@@ -141,3 +141,13 @@ logging:
   level: "INFO"
   file: "logs/exp700_scanner.log"
   console: true
+
+# ============================================================================
+# Backtester Reference (cost model for live slippage calibration)
+# ============================================================================
+backtest:
+  starting_capital: 100000
+  commission_per_contract: 0.65   # $0.65/contract — matches all other paper configs
+  slippage: 0.05                  # $0.05/spread entry slippage — matches backtester default
+  exit_slippage: 0.10             # $0.10/spread exit slippage
+  score_threshold: 25
