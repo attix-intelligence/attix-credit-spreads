@@ -1165,6 +1165,8 @@ Examples:
     p.add_argument("--output-dir",   metavar="DIR",   default="output/sentinel_reports")
     p.add_argument("--no-telegram",  action="store_true")
     p.add_argument("--no-report",    action="store_true", help="Skip HTML report generation")
+    p.add_argument("--skip-runtime-gates", action="store_true",
+                   help="Disable runtime gates 6-9 (debugging only)")
 
     # --onboard specific
     p.add_argument("--id",               metavar="EXP_ID",  help="Experiment ID for --onboard")
