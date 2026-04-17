@@ -569,11 +569,6 @@ async def sentinel_dashboard():
         total_cls = "green" if total_pnl_val > 0 else ("red" if total_pnl_val < 0 else "muted")
         total_str = f"${total_pnl_val:+,.0f}" if total_pnl_val else "$0"
 
-        # Reconciliation warning
-        recon = exp.get("reconciliation", {})
-        recon_ok = recon.get("reconciled", True) if recon else True
-        recon_div = recon.get("divergence", 0) if recon else 0
-
         # Issues
         issues = []
         if orphans > 0:
@@ -584,8 +579,6 @@ async def sentinel_dashboard():
             issues.append(f"Sizing {sizing_dev:+.0f}%")
         if bt_wr and live_wr and (live_wr - bt_wr) < -8:
             issues.append("WR drifting")
-        if not recon_ok:
-            issues.append(f"Recon ${recon_div:+,.0f}")
         issue_str = " · ".join(issues) if issues else "—"
         issue_cls = "" if issues else "muted"
 
@@ -650,7 +643,6 @@ async def sentinel_dashboard():
     total_pnl = sum(e.get("metrics", {}).get("total_pnl", 0) or 0 for e in experiments.values())
     total_realized = sum(e.get("metrics", {}).get("realized_pnl", 0) or 0 for e in experiments.values())
     total_unrealized = sum(e.get("metrics", {}).get("unrealized_pnl", 0) or 0 for e in experiments.values() if e.get("metrics", {}).get("unrealized_pnl") is not None)
-    recon_warnings = sum(1 for e in experiments.values() if not e.get("reconciliation", {}).get("reconciled", True))
 
     html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -718,10 +710,10 @@ async def sentinel_dashboard():
       <div class="label">Halted</div>
       <div class="val">{halted}</div>
     </div>
-    <div class="top-card {'red' if recon_warnings > 0 else 'blue'}">
+    <div class="top-card blue">
       <div class="label">Total P&amp;L</div>
       <div class="val">${total_pnl:+,.0f}</div>
-      <div class="sub">Realized ${total_realized:+,.0f} · Unrealized ${total_unrealized:+,.0f}{'  · ' + str(recon_warnings) + ' recon warning' + ('s' if recon_warnings != 1 else '') if recon_warnings > 0 else ''}</div>
+      <div class="sub">Realized ${total_realized:+,.0f} · Unrealized ${total_unrealized:+,.0f}</div>
     </div>
   </div>
 
