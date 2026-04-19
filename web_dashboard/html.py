@@ -20,6 +20,7 @@ _NAV_ITEMS = [
     ("/positions", "Positions"),
     ("/trades", "Trades"),
     ("/registry", "Registry"),
+    ("/sentinel", "Sentinel"),
 ]
 
 
@@ -1319,3 +1320,282 @@ function runSync() {{
 </script>
 </body>
 </html>"""
+
+
+# ---------------------------------------------------------------------------
+# Sentinel dashboard page
+# ---------------------------------------------------------------------------
+
+_SENTINEL_CSS = """
+/* Sentinel page */
+.sentinel-summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+.summary-card { padding: 16px; border-radius: 8px; border: 1px solid #eee; }
+.summary-card .label { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #888; margin-bottom: 4px; }
+.summary-card .val { font-size: 1.5rem; font-weight: 800; }
+.summary-card.ok { border-left: 3px solid #10b981; }
+.summary-card.warn { border-left: 3px solid #f59e0b; }
+.summary-card.crit { border-left: 3px solid #e94560; }
+.summary-card.info { border-left: 3px solid #3b82f6; }
+.health-card { padding: 16px; border-radius: 8px; border: 1px solid #eee; margin-bottom: 12px; }
+.health-card .exp-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.health-card .exp-id { font-weight: 700; font-size: 1rem; }
+.health-score { display: inline-block; padding: 2px 10px; border-radius: 4px; font-weight: 700; font-size: 0.85rem; }
+.health-score.good { background: #d1fae5; color: #065f46; }
+.health-score.mid { background: #fef3c7; color: #92400e; }
+.health-score.bad { background: #fee2e2; color: #991b1b; }
+.gate-pills { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.gate-pill { display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 0.68rem; font-weight: 600; }
+.gate-pill.pass { background: #d1fae5; color: #065f46; }
+.gate-pill.warn { background: #fef3c7; color: #92400e; }
+.gate-pill.fail { background: #fee2e2; color: #991b1b; }
+.gate-pill.skip { background: #f3f4f6; color: #6b7280; }
+.fresh-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
+.fresh-green { background: #10b981; }
+.fresh-yellow { background: #f59e0b; }
+.fresh-red { background: #e94560; }
+.halt-reason { font-size: 0.78rem; color: #991b1b; margin-top: 4px; }
+.alert-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin-top: 12px; }
+.alert-table th { text-align: left; padding: 6px 8px; border-bottom: 2px solid #ddd; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; color: #999; }
+.alert-table td { padding: 6px 8px; border-bottom: 1px solid #f3f3f3; }
+@media (max-width: 600px) { .sentinel-summary { grid-template-columns: repeat(2, 1fr); } }
+"""
+
+
+def _compute_health_score(exp_state: dict, gates: dict) -> int:
+    """Compute health score 0-100 for an experiment based on state and gate results."""
+    if exp_state.get("status") == "halted":
+        return 0
+
+    score = 100
+
+    # Gate severities
+    for gate_id, gate_info in gates.items():
+        sev = gate_info.get("severity", "ok")
+        if sev == "halt":
+            return 0
+        elif sev == "critical":
+            score -= 30
+        elif sev == "warning":
+            score -= 10
+
+    # Stale health check
+    last_hc = exp_state.get("last_health_check")
+    if last_hc:
+        try:
+            hc_dt = datetime.fromisoformat(last_hc)
+            if hc_dt.tzinfo is None:
+                hc_dt = hc_dt.replace(tzinfo=timezone.utc)
+            age_h = (datetime.now(timezone.utc) - hc_dt).total_seconds() / 3600
+            if age_h > 48:
+                score -= 20
+            elif age_h > 24:
+                score -= 5
+        except (ValueError, TypeError):
+            score -= 10
+    else:
+        score -= 5
+
+    return max(0, min(100, score))
+
+
+def _freshness_dot(ts_str: str | None) -> str:
+    """Return a colored dot indicating data freshness."""
+    if not ts_str:
+        return '<span class="fresh-dot fresh-red"></span><span class="muted">never</span>'
+    try:
+        dt = datetime.fromisoformat(ts_str)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        age_h = (datetime.now(timezone.utc) - dt).total_seconds() / 3600
+        if age_h < 2:
+            cls = "fresh-green"
+        elif age_h < 24:
+            cls = "fresh-yellow"
+        else:
+            cls = "fresh-red"
+        return f'<span class="fresh-dot {cls}"></span>{ts_str[:19]}'
+    except (ValueError, TypeError):
+        return '<span class="fresh-dot fresh-red"></span><span class="muted">invalid</span>'
+
+
+def render_sentinel_page(
+    sentinel_state: dict,
+    alerts: list,
+    snapshots: dict,
+    registry: dict,
+) -> str:
+    """Render the Sentinel dashboard page with health scores, gates, and alerts."""
+    experiments = sentinel_state.get("experiments", {})
+
+    if not experiments:
+        nav = _render_nav("/sentinel")
+        return f"""<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><title>Sentinel</title>
+<style>{_CSS}\n{_SENTINEL_CSS}</style></head>
+<body>
+{nav}
+<div class="page">
+<h2 style="margin-top:24px">No experiments enrolled</h2>
+<p class="muted">Enroll experiments in sentinel_state.json to see health data.</p>
+</div></body></html>"""
+
+    # Compute per-experiment health
+    exp_cards = []
+    total_score = 0
+    halted_count = 0
+    critical_count = 0
+    warning_count = 0
+
+    for eid in sorted(experiments.keys()):
+        exp = experiments[eid]
+        status = exp.get("status", "unknown")
+
+        # Build gate status from available data
+        gates = {}
+        reg_exp = registry.get("experiments", {}).get(eid)
+        if reg_exp:
+            reg_status = reg_exp.get("status", "unknown")
+            if reg_status in ("active", "paper_trading"):
+                gates["G0"] = {"severity": "ok", "detail": f"status={reg_status}"}
+            else:
+                gates["G0"] = {"severity": "warning", "detail": f"status={reg_status}"}
+        else:
+            gates["G0"] = {"severity": "warning", "detail": "not in registry"}
+
+        if status == "active":
+            gates["G1"] = {"severity": "ok", "detail": "active"}
+        elif status == "halted":
+            gates["G1"] = {"severity": "halt", "detail": exp.get("halt_reason", "halted")}
+        else:
+            gates["G1"] = {"severity": "warning", "detail": f"status={status}"}
+
+        if exp.get("config_fingerprint"):
+            gates["G2"] = {"severity": "ok", "detail": exp["config_fingerprint"][:12] + "..."}
+        else:
+            gates["G2"] = {"severity": "warning", "detail": "no fingerprint"}
+
+        last_hc = exp.get("last_health_check")
+        if last_hc:
+            try:
+                hc_dt = datetime.fromisoformat(last_hc)
+                if hc_dt.tzinfo is None:
+                    hc_dt = hc_dt.replace(tzinfo=timezone.utc)
+                age_h = (datetime.now(timezone.utc) - hc_dt).total_seconds() / 3600
+                if age_h < 2:
+                    gates["G3"] = {"severity": "ok", "detail": f"{age_h:.1f}h ago"}
+                elif age_h < 24:
+                    gates["G3"] = {"severity": "warning", "detail": f"{age_h:.1f}h ago"}
+                else:
+                    gates["G3"] = {"severity": "critical", "detail": f"{age_h:.0f}h stale"}
+            except (ValueError, TypeError):
+                gates["G3"] = {"severity": "warning", "detail": "invalid timestamp"}
+
+        if exp.get("backtest_baseline"):
+            bl = exp["backtest_baseline"]
+            gates["G8"] = {"severity": "ok", "detail": f"WR={bl.get('win_rate', '?')}%"}
+        else:
+            gates["G8"] = {"severity": "warning", "detail": "no baseline"}
+
+        score = _compute_health_score(exp, gates)
+        total_score += score
+
+        if status == "halted":
+            halted_count += 1
+        if score < 50:
+            critical_count += 1
+        elif score < 80:
+            warning_count += 1
+
+        # Score badge class
+        if score >= 80:
+            score_cls = "good"
+        elif score >= 50:
+            score_cls = "mid"
+        else:
+            score_cls = "bad"
+
+        # Gate pills HTML
+        gate_pills = ""
+        gate_labels = {"G0": "Registry", "G1": "State", "G2": "Config", "G3": "API", "G8": "Drift"}
+        for gid in ("G0", "G1", "G2", "G3", "G8"):
+            if gid in gates:
+                g = gates[gid]
+                sev = g.get("severity", "ok")
+                pill_cls = {"ok": "pass", "warning": "warn", "critical": "fail", "halt": "fail"}.get(sev, "skip")
+                gate_pills += f'<span class="gate-pill {pill_cls}">{gid}:{gate_labels.get(gid, gid)}</span>'
+
+        # Halt reason
+        halt_html = ""
+        halt_reason = exp.get("halt_reason")
+        if halt_reason:
+            halt_html = f'<div class="halt-reason">{_html.escape(str(halt_reason))}</div>'
+
+        freshness = _freshness_dot(last_hc)
+
+        exp_cards.append(f"""<div class="health-card">
+  <div class="exp-header">
+    <span class="exp-id">{_html.escape(eid)}</span>
+    <span class="health-score {score_cls}">{score}/100</span>
+  </div>
+  <div class="gate-pills">{gate_pills}</div>
+  <div style="margin-top:6px;font-size:0.78rem;color:#666">Last check: {freshness}</div>
+  {halt_html}
+</div>""")
+
+    # Summary stats
+    n = len(experiments)
+    avg_score = total_score // n if n else 0
+
+    # Alert rows
+    alert_rows = ""
+    for a in (alerts or []):
+        sev = _html.escape(str(a.get("severity", "info")).upper())
+        eid_a = _html.escape(str(a.get("experiment_id") or "system"))
+        msg = _html.escape(str(a.get("message", "")))
+        ts = _html.escape(str(a.get("alert_time", ""))[:19])
+        resolved = "RESOLVED" if a.get("resolved") else "OPEN"
+        alert_rows += f"<tr><td>{ts}</td><td>{sev}</td><td>{eid_a}</td><td>{msg}</td><td>{resolved}</td></tr>"
+
+    if not alert_rows:
+        alert_rows = '<tr><td colspan="5" class="muted" style="text-align:center">No alerts</td></tr>'
+
+    nav = _render_nav("/sentinel")
+
+    return f"""<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sentinel Dashboard</title>
+<style>{_CSS}\n{_SENTINEL_CSS}</style></head>
+<body>
+{nav}
+<div class="page">
+
+<h2 style="margin:20px 0 16px">Sentinel Health</h2>
+
+<div class="sentinel-summary">
+  <div class="summary-card {'ok' if avg_score >= 80 else ('warn' if avg_score >= 50 else 'crit')}">
+    <div class="label">Avg Health</div><div class="val">{avg_score}</div>
+  </div>
+  <div class="summary-card {'crit' if critical_count else 'ok'}">
+    <div class="label">Critical</div><div class="val">{critical_count}</div>
+  </div>
+  <div class="summary-card {'warn' if halted_count else 'ok'}">
+    <div class="label">Halted</div><div class="val">{halted_count}</div>
+  </div>
+  <div class="summary-card {'warn' if warning_count else 'ok'}">
+    <div class="label">Warnings</div><div class="val">{warning_count}</div>
+  </div>
+</div>
+
+{''.join(exp_cards)}
+
+<h3 style="margin:24px 0 8px">Alert History</h3>
+<table class="alert-table">
+<thead><tr><th>Time</th><th>Severity</th><th>Experiment</th><th>Message</th><th>Status</th></tr></thead>
+<tbody>{alert_rows}</tbody>
+</table>
+
+<div style="margin-top:24px;font-size:0.7rem;color:#bbb">
+  Sentinel v2 &bull; <a href="/api/v1/sentinel" style="color:#3b82f6">Raw JSON</a>
+</div>
+</div></body></html>"""
