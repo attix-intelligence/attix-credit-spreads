@@ -1,6 +1,8 @@
 """Tests for sentinel/orchestrator.py — Gate 21 config parity + orchestrator."""
 
 import pytest
+from unittest.mock import patch
+
 from sentinel.orchestrator import (
     GateResult,
     GateOutcome,
@@ -11,6 +13,9 @@ from sentinel.orchestrator import (
     _get_nested,
     _values_match,
     _run_gate21_config_parity,
+    audit_experiment,
+    audit_all_experiments,
+    format_audit_report,
     RESULT_LABEL,
 )
 
@@ -271,10 +276,16 @@ class TestHelpers:
         assert _values_match(12, 13, {"tolerance_pct": 10})  # 7.7% < 10%
         assert not _values_match(12, 14, {"tolerance_pct": 10})  # 14.3% > 10%
 
-    def test_values_match_none(self):
-        """None values should match (can't compare)."""
-        assert _values_match(None, 42, {})
-        assert _values_match(42, None, {})
+    def test_values_match_both_none(self):
+        """Both None → True (no comparison possible)."""
+        assert _values_match(None, None, {})
+
+    def test_values_match_one_none(self):
+        """One side None, other has value → False (drift detected)."""
+        assert not _values_match(None, 42, {})
+        assert not _values_match(42, None, {})
+        assert not _values_match(None, "bull_put", {})
+        assert not _values_match(0.085, None, {})
 
     def test_gate_outcome_to_dict(self):
         o = GateOutcome("G21", "Config Parity", GateResult.CRITICAL, "bad")
@@ -307,3 +318,63 @@ class TestGate21Integration:
         outcome = _run_gate21_config_parity("EXP-TEST", registry)
         assert outcome.result == GateResult.WARNING
         assert "not found" in outcome.message
+
+
+# ---------------------------------------------------------------------------
+# Fix 1: Exception handlers → BLOCK for safety-critical gates
+# ---------------------------------------------------------------------------
+
+
+class TestExceptionHandlerSeverity:
+    """Exceptions in safety-critical gates must produce BLOCK, not WARNING."""
+
+    def test_gate_exception_produces_block(self):
+        """Generic gate exception in audit_experiment → BLOCK for non-G5 gates."""
+        registry = {"experiments": {"EXP-TEST": {"status": "active"}}}
+        state = {"experiments": {"EXP-TEST": {"status": "active"}}}
+
+        # Patch all gate runners to raise, except G0 and G1 which run normally
+        with patch("sentinel.orchestrator._run_gate_fingerprint", side_effect=RuntimeError("boom")), \
+             patch("sentinel.orchestrator._record_gate_runs"):
+            audit = audit_experiment("EXP-TEST", registry, state, skip_gates=["G3", "G5", "G8", "G9", "G21"])
+            g2_outcomes = [o for o in audit.gate_outcomes if o.gate_id == "G2"]
+            assert len(g2_outcomes) == 1
+            assert g2_outcomes[0].result == GateResult.BLOCK
+
+    def test_g5_exception_stays_warning(self):
+        """G5 (advisory certification) exception → WARNING, not BLOCK."""
+        registry = {"experiments": {"EXP-TEST": {"status": "active"}}}
+        state = {"experiments": {"EXP-TEST": {"status": "active"}}}
+
+        with patch("sentinel.orchestrator._run_gate_certification", side_effect=RuntimeError("boom")), \
+             patch("sentinel.orchestrator._record_gate_runs"):
+            audit = audit_experiment("EXP-TEST", registry, state, skip_gates=["G2", "G3", "G8", "G9", "G21"])
+            g5_outcomes = [o for o in audit.gate_outcomes if o.gate_id == "G5"]
+            assert len(g5_outcomes) == 1
+            assert g5_outcomes[0].result == GateResult.WARNING
+
+
+# ---------------------------------------------------------------------------
+# Fix 2: audit_all_experiments returns error audit on load failure
+# ---------------------------------------------------------------------------
+
+
+class TestAuditAllLoadFailure:
+    """audit_all_experiments must return error audit, not empty list."""
+
+    @patch("sentinel.orchestrator._load_registry", side_effect=FileNotFoundError("registry.json not found"))
+    def test_load_failure_returns_error_audit(self, mock_reg):
+        results = audit_all_experiments()
+        assert len(results) == 1
+        assert results[0].experiment_id == "SYSTEM"
+        assert results[0].health_score == 0
+        assert results[0].halted is True
+        assert results[0].worst_result >= GateResult.CRITICAL
+
+    @patch("sentinel.orchestrator._load_registry", side_effect=FileNotFoundError("registry.json not found"))
+    def test_load_failure_report_not_all_clear(self, mock_reg):
+        """format_audit_report must NOT say 'All Clear' on load failure."""
+        results = audit_all_experiments()
+        report = format_audit_report(results)
+        assert "All Clear" not in report
+        assert "HALTED" in report

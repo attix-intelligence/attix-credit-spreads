@@ -209,8 +209,10 @@ def _get_nested(d: dict, path: tuple) -> Any:
 
 def _values_match(bt_val: Any, paper_val: Any, spec: dict) -> bool:
     """Compare two values considering scaling and aliases."""
+    if bt_val is None and paper_val is None:
+        return True  # Both missing — no comparison possible
     if bt_val is None or paper_val is None:
-        return True  # Can't compare if missing
+        return False  # One side has a value, the other doesn't — drift
 
     # Apply scaling: auto-detect if bt value is a fraction (<1) while paper is percentage
     if spec.get("bt_scale_if_small") and isinstance(bt_val, (int, float)) and isinstance(paper_val, (int, float)):
@@ -386,7 +388,7 @@ def _run_gate21_config_parity(
         return GateOutcome(
             gate_id="G21",
             gate_name="Config Parity",
-            result=GateResult.WARNING,
+            result=GateResult.BLOCK,
             message=f"Failed to load backtest config: {e}",
         )
 
@@ -398,7 +400,7 @@ def _run_gate21_config_parity(
         return GateOutcome(
             gate_id="G21",
             gate_name="Config Parity",
-            result=GateResult.WARNING,
+            result=GateResult.BLOCK,
             message=f"Failed to load paper config: {e}",
         )
 
@@ -473,7 +475,7 @@ def _run_gate_monitor(
         return GateOutcome("G3", "Alpaca Health", GateResult.PASS,
                            f"OK — equity ${health.equity:,.0f}" if health.equity else "OK")
     except Exception as e:
-        return GateOutcome("G3", "Alpaca Health", GateResult.WARNING,
+        return GateOutcome("G3", "Alpaca Health", GateResult.BLOCK,
                            f"Monitor check failed: {e}")
 
 
@@ -494,7 +496,7 @@ def _run_gate_fingerprint(
         return GateOutcome("G2", "Config Fingerprint", GateResult.HALT,
                            "Config fingerprint mismatch — file changed since certification")
     except Exception as e:
-        return GateOutcome("G2", "Config Fingerprint", GateResult.WARNING,
+        return GateOutcome("G2", "Config Fingerprint", GateResult.BLOCK,
                            f"Fingerprint check error: {e}")
 
 
@@ -571,7 +573,7 @@ def _run_gate_lifecycle(
         return GateOutcome("G9", "Position Lifecycle", GateResult.PASS,
                            f"{result.total_open} open positions, none stuck")
     except Exception as e:
-        return GateOutcome("G9", "Position Lifecycle", GateResult.WARNING,
+        return GateOutcome("G9", "Position Lifecycle", GateResult.BLOCK,
                            f"Lifecycle check error: {e}")
 
 
@@ -605,7 +607,7 @@ def _run_gate_drift(
                                for a in alerts
                            ]})
     except Exception as e:
-        return GateOutcome("G8", "Runtime Drift", GateResult.WARNING,
+        return GateOutcome("G8", "Runtime Drift", GateResult.BLOCK,
                            f"Drift check error: {e}")
 
 
@@ -723,10 +725,12 @@ def audit_experiment(
         try:
             outcome = runner()
         except Exception as e:
+            # Fail-closed: unknown exception → BLOCK (G5 is advisory, override below)
+            error_result = GateResult.WARNING if gate_id == "G5" else GateResult.BLOCK
             outcome = GateOutcome(
                 gate_id=gate_id,
                 gate_name="Error",
-                result=GateResult.WARNING,
+                result=error_result,
                 message=f"Gate {gate_id} raised exception: {e}",
             )
 
@@ -769,7 +773,17 @@ def audit_all_experiments(
         state = _load_state()
     except Exception as e:
         logger.error("Failed to load registry/state: %s", e)
-        return []
+        error_audit = ExperimentAudit(experiment_id="SYSTEM")
+        error_audit.gate_outcomes.append(GateOutcome(
+            gate_id="G0",
+            gate_name="Registry/State Load",
+            result=GateResult.CRITICAL,
+            message=f"Cannot load registry or state: {e}",
+        ))
+        error_audit.health_score = 0
+        error_audit.halted = True
+        error_audit.halt_reason = f"Registry/state load failure: {e}"
+        return [error_audit]
 
     active_ids = [
         k for k, v in registry.get("experiments", {}).items()
