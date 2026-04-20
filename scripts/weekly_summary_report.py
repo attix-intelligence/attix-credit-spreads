@@ -28,6 +28,23 @@ load_dotenv(ROOT / ".env")
 
 from shared.database import get_trades
 
+# ─── Registry reset dates ────────────────────────────────────────────────────
+
+import json as _json
+
+def _get_reset_date(exp_id: str) -> Optional[str]:
+    """Return the latest reset date for an experiment, or None if never reset."""
+    try:
+        reg_path = ROOT / "experiments" / "registry.json"
+        reg = _json.loads(reg_path.read_text())
+        exp = reg.get("experiments", {}).get(exp_id, {})
+        history = exp.get("reset_history", [])
+        if history:
+            return max(h["date"] for h in history)
+    except Exception:
+        pass
+    return None
+
 # ─── Experiment registry (mirrors daily_pnl_report.py) ────────────────────────
 
 EXPERIMENTS = {
@@ -62,7 +79,7 @@ def _parse_date(s: str) -> Optional[date]:
 
 
 def _is_closed(status: str) -> bool:
-    return bool(status) and status.startswith("closed")
+    return bool(status) and status.startswith("closed") and status != "closed_reset"
 
 
 def _filter_by_week(trades: List[Dict], week_start: date, week_end: date) -> List[Dict]:
@@ -225,7 +242,8 @@ def build_weekly_report(
     all_metrics = {}
     for exp_id, cfg in EXPERIMENTS.items():
         try:
-            trades = get_trades(source="execution", path=cfg["db_path"])
+            reset_date = _get_reset_date(exp_id)
+            trades = get_trades(source="execution", path=cfg["db_path"], since=reset_date)
         except Exception as e:
             lines.append(f"<b>{exp_id}</b>: ⚠️ DB error — {e}\n")
             continue

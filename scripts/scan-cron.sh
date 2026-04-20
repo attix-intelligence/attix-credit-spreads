@@ -24,6 +24,20 @@ fi
 
 cd "$PROJECT_DIR"
 
+# ── Pre-flight: validate API keys ──────────────────────────────────────────────
+KEY_LOG="${LOG_DIR}/validate-keys.log"
+echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] Running key validation..." >> "$KEY_LOG"
+if ! /usr/bin/python3 scripts/validate_keys.py >> "$KEY_LOG" 2>&1; then
+  echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] CRITICAL: Key validation failed — aborting scans" >> "$KEY_LOG"
+  # Alert via telegram if notifier available
+  /usr/bin/python3 -c "
+from shared.notifier import send_alert
+send_alert('CRITICAL: validate_keys.py failed — scans aborted. Check $KEY_LOG')
+" 2>/dev/null || true
+  exit 1
+fi
+echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] Key validation passed" >> "$KEY_LOG"
+
 _run_scan() {
   local EXP="$1"
   local CONFIG="$2"

@@ -291,8 +291,15 @@ def get_trades(
     status: Optional[str] = None,
     source: Optional[str] = None,
     path: Optional[str] = None,
+    exclude_reset: bool = True,
+    since: Optional[str] = None,
 ) -> List[Dict[str, Any]]:
-    """Fetch trades with optional filters."""
+    """Fetch trades with optional filters.
+
+    Args:
+        exclude_reset: If True (default), exclude trades with status='closed_reset'.
+        since: If set (ISO date string), only return trades with entry_date >= since.
+    """
     conn = get_db(path)
     try:
         query = "SELECT * FROM trades WHERE 1=1"
@@ -303,6 +310,11 @@ def get_trades(
         if source:
             query += " AND source = ?"
             params.append(source)
+        if exclude_reset:
+            query += " AND status != 'closed_reset'"
+        if since:
+            query += " AND entry_date >= ?"
+            params.append(since)
         query += " ORDER BY created_at DESC"
         rows = conn.execute(query, params).fetchall()
         return [_row_to_trade(r) for r in rows]

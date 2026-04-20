@@ -271,6 +271,14 @@ def _week_start(ref: datetime) -> str:
     return monday.strftime("%Y-%m-%d")
 
 
+def _get_reset_date(exp: dict) -> Optional[str]:
+    """Return the latest reset date for an experiment, or None."""
+    history = exp.get("reset_history", [])
+    if history:
+        return max(h["date"] for h in history)
+    return None
+
+
 def _query_experiment(exp: dict, report_date: str) -> dict:
     """Extract all stats + trade data from one experiment DB."""
     exp_id    = exp["id"]
@@ -321,12 +329,19 @@ def _query_experiment(exp: dict, report_date: str) -> dict:
         conn.row_factory = sqlite3.Row
 
         # ── Closed trades (ordered for equity curve) ───────────────────────
+        # Filter out pre-reset trades if experiment has been reset
+        reset_date = _get_reset_date(exp)
         placeholders = ",".join("?" * len(_CLOSED_STATUSES))
+        date_filter = ""
+        query_params: tuple = _CLOSED_STATUSES
+        if reset_date:
+            date_filter = " AND entry_date >= ?"
+            query_params = _CLOSED_STATUSES + (reset_date,)
         closed_rows = conn.execute(
             f"SELECT id, pnl, strategy_type, exit_date, entry_date, ticker, "
             f"       short_strike, long_strike, contracts, credit, exit_reason "
-            f"FROM trades WHERE status IN ({placeholders}) ORDER BY exit_date ASC",
-            _CLOSED_STATUSES,
+            f"FROM trades WHERE status IN ({placeholders}){date_filter} ORDER BY exit_date ASC",
+            query_params,
         ).fetchall()
 
         pnls    = [float(r["pnl"] or 0) for r in closed_rows]
@@ -388,9 +403,9 @@ def _query_experiment(exp: dict, report_date: str) -> dict:
         recent_closed = conn.execute(
             f"SELECT id, pnl, strategy_type, exit_date, entry_date, ticker, "
             f"       short_strike, long_strike, contracts, credit, exit_reason, status "
-            f"FROM trades WHERE status IN ({placeholders}) "
+            f"FROM trades WHERE status IN ({placeholders}){date_filter} "
             f"ORDER BY exit_date DESC LIMIT 20",
-            _CLOSED_STATUSES,
+            query_params,
         ).fetchall()
 
         recent_trades = []

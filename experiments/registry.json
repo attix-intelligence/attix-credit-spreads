@@ -22,7 +22,15 @@
             "strategy_type": "iron_condor",
             "created_at": "2026-03-05T00:00:00+00:00",
             "updated_at": "2026-04-18T21:21:51.083040+00:00",
-            "last_started_at": "2026-03-15T00:00:00+00:00"
+            "last_started_at": "2026-03-15T00:00:00+00:00",
+            "reset_history": [
+                {
+                    "date": "2026-04-20",
+                    "old_account_id": "PA36XFVLG0WE",
+                    "new_account_id": "PA3ZSXZ5JNEM",
+                    "reason": "account_reset"
+                }
+            ]
         },
         "EXP-401": {
             "id": "EXP-401",
@@ -44,7 +52,15 @@
             "strategy_type": "straddle_strangle",
             "created_at": "2026-03-12T00:00:00+00:00",
             "updated_at": "2026-04-18T21:21:51.083040+00:00",
-            "last_started_at": "2026-03-15T00:00:00+00:00"
+            "last_started_at": "2026-03-15T00:00:00+00:00",
+            "reset_history": [
+                {
+                    "date": "2026-04-20",
+                    "old_account_id": "PA3Y2XDYB9I3",
+                    "new_account_id": "PA3IPY4E4KPA",
+                    "reason": "account_reset"
+                }
+            ]
         },
         "EXP-500": {
             "id": "EXP-500",
@@ -104,7 +120,15 @@
             "strategy_type": "ml_credit_spread",
             "created_at": "2026-03-22T00:00:00+00:00",
             "updated_at": "2026-04-18T21:21:51.083040+00:00",
-            "last_started_at": "2026-03-22T00:00:00+00:00"
+            "last_started_at": "2026-03-22T00:00:00+00:00",
+            "reset_history": [
+                {
+                    "date": "2026-04-20",
+                    "old_account_id": "PA3Z9PLVYUL5",
+                    "new_account_id": "PA3A6Y1QVHYI",
+                    "reason": "account_reset"
+                }
+            ]
         },
         "EXP-600": {
             "id": "EXP-600",
@@ -214,7 +238,15 @@
             "strategy_type": "leverage",
             "created_at": "2026-04-05T00:00:00+00:00",
             "updated_at": "2026-04-18T21:21:51.083040+00:00",
-            "last_started_at": "2026-04-06T00:00:00+00:00"
+            "last_started_at": "2026-04-06T00:00:00+00:00",
+            "reset_history": [
+                {
+                    "date": "2026-04-20",
+                    "old_account_id": "PA3YFVQCXTD6",
+                    "new_account_id": "PA3QCH3XD1K1",
+                    "reason": "account_reset"
+                }
+            ]
         },
         "EXP-031": {
             "id": "EXP-031",

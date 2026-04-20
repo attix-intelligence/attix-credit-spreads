@@ -29,6 +29,24 @@ load_dotenv(ROOT / ".env")
 
 from shared.database import get_trades
 
+# ─── Registry reset dates ────────────────────────────────────────────────────
+# Read from registry.json to determine the earliest valid trade date per experiment.
+
+import json as _json
+
+def _get_reset_date(exp_id: str) -> Optional[str]:
+    """Return the latest reset date for an experiment, or None if never reset."""
+    try:
+        reg_path = ROOT / "experiments" / "registry.json"
+        reg = _json.loads(reg_path.read_text())
+        exp = reg.get("experiments", {}).get(exp_id, {})
+        history = exp.get("reset_history", [])
+        if history:
+            return max(h["date"] for h in history)
+    except Exception:
+        pass
+    return None
+
 # ─── Backtest expectations ───────────────────────────────────────────────────
 # These are the "fair value" annual returns from the backtest after slippage.
 # Used to contextualise paper trading performance at this early stage.
@@ -56,7 +74,7 @@ TRADING_DAYS_PER_YEAR = 252
 # ─── Metrics calculation ──────────────────────────────────────────────────────
 
 def _is_closed(status: str) -> bool:
-    return status and status.startswith("closed")
+    return status and status.startswith("closed") and status != "closed_reset"
 
 
 def _is_win(trade: Dict) -> bool:
@@ -126,11 +144,15 @@ def compute_metrics(trades: List[Dict], account_size: float = 100_000) -> Dict:
 
 
 def load_experiment_metrics(exp_id: str, account_size: float = 100_000) -> Dict:
-    """Load trades from the experiment DB and compute metrics."""
+    """Load trades from the experiment DB and compute metrics.
+
+    Only includes trades opened after the most recent account reset date.
+    """
     cfg = EXPECTATIONS[exp_id]
     db_path = os.environ.get(f"PILOTAI_DB_PATH_{exp_id.replace('-', '_')}", cfg["db_path"])
+    reset_date = _get_reset_date(exp_id)
     try:
-        trades = get_trades(source="execution", path=db_path)
+        trades = get_trades(source="execution", path=db_path, since=reset_date)
         metrics = compute_metrics(trades, account_size=account_size)
     except Exception as e:
         metrics = {
