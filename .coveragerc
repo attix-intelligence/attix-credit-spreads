@@ -1,10 +1,10 @@
 [run]
-source = .
 omit =
     tests/*
     ml/models/*
     web/*
     .venv/*
+    compass/archive/*
     strategy/tradier_provider.py
     strategy/polygon_provider.py
     strategy/alpaca_provider.py
