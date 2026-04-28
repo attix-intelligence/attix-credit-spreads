@@ -253,25 +253,25 @@ def cmd_daily(args: argparse.Namespace) -> int:
                     open_positions=h.open_positions,
                     api_status="ok",
                 )
-                # Stamp last_health_check so the dashboard reflects this run.
-                try:
-                    _record_health_check(h.exp_id)
-                except Exception as _e:  # noqa: BLE001
-                    logging.warning("record_health_check failed for %s: %s", h.exp_id, _e)
             else:
                 db.record_snapshot(
                     h.exp_id,
                     api_status="401" if "401" in (h.api_error or "") else "error",
                 )
+            # Stamp last_health_check unconditionally so the dashboard reflects
+            # that sentinel attempted a health check on this experiment, even
+            # when the API failed (otherwise dead-keyed experiments stay
+            # "last check: never" forever — the exact bug this code path fixes).
+            try:
+                _record_health_check(h.exp_id)
+            except Exception:  # noqa: BLE001
+                logging.exception("record_health_check failed for %s", h.exp_id)
     else:
-        # No monitor: record bare snapshots for each active exp
+        # No monitor: we did NOT actually perform a health check, so do not
+        # stamp last_health_check here — the name implies an outcome.
         print("   (monitor module unavailable — recording minimal snapshots)")
         for exp_id in exp_ids:
             db.record_snapshot(exp_id, api_status="unknown")
-            try:
-                _record_health_check(exp_id)
-            except Exception as _e:  # noqa: BLE001
-                logging.warning("record_health_check failed for %s: %s", exp_id, _e)
 
     # Portfolio risk
     portfolio_risk = None
