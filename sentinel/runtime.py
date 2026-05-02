@@ -64,6 +64,13 @@ from typing import Any, Dict, List, Optional, Set
 
 import yaml
 
+from metrics import (
+    ELIGIBLE_CTE_NAME,
+    OPEN_CTE_NAME,
+    metrics_eligible_cte,
+    open_eligible_cte,
+)
+
 logger = logging.getLogger(__name__)
 
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -224,9 +231,11 @@ def compute_metrics(exp_id: str, window: int = WINDOW_SIZE) -> Optional[RuntimeM
     conn.execute("PRAGMA busy_timeout=5000")
 
     try:
-        # Total closed trades
+        # Total closed trades — metric-eligible only (excludes closed_pre_reset,
+        # backfill placeholders, etc. — see metrics/eligible_trades.py).
         total_row = conn.execute(
-            "SELECT COUNT(*) AS cnt FROM trades WHERE status LIKE 'closed%'"
+            metrics_eligible_cte()
+            + f"SELECT COUNT(*) AS cnt FROM {ELIGIBLE_CTE_NAME} WHERE status LIKE 'closed%'"
         ).fetchone()
         total_closed = total_row["cnt"] if total_row else 0
 
@@ -235,8 +244,9 @@ def compute_metrics(exp_id: str, window: int = WINDOW_SIZE) -> Optional[RuntimeM
 
         # Rolling window: last N closed trades by exit_date
         rows = conn.execute(
-            """
-            SELECT pnl, exit_date FROM trades
+            metrics_eligible_cte()
+            + f"""
+            SELECT pnl, exit_date FROM {ELIGIBLE_CTE_NAME}
             WHERE status LIKE 'closed%' AND pnl IS NOT NULL
             ORDER BY exit_date DESC
             LIMIT ?
@@ -275,7 +285,9 @@ def compute_metrics(exp_id: str, window: int = WINDOW_SIZE) -> Optional[RuntimeM
 
             # Get current equity from config account_size + total PnL
             total_pnl_row = conn.execute(
-                "SELECT SUM(pnl) AS total FROM trades WHERE status LIKE 'closed%' AND pnl IS NOT NULL"
+                metrics_eligible_cte()
+                + f"SELECT SUM(pnl) AS total FROM {ELIGIBLE_CTE_NAME} "
+                "WHERE status LIKE 'closed%' AND pnl IS NOT NULL"
             ).fetchone()
             total_pnl = float(total_pnl_row["total"]) if total_pnl_row and total_pnl_row["total"] else 0.0
 
@@ -730,7 +742,10 @@ def check_position_lifecycle(
     conn.execute("PRAGMA busy_timeout=5000")
 
     try:
-        # Fetch all non-closed trades
+        # Fetch all non-closed trades.
+        # noqa: raw-trades — Gate 9 lifecycle scan must see ALL non-closed rows
+        # (including unmanaged / pending_*) to detect stuck states. Filtering
+        # via metrics_eligible_cte would hide the very rows this Gate alerts on.
         rows = conn.execute("""
             SELECT id, status, ticker, short_strike, expiration,
                    created_at, updated_at
@@ -1028,15 +1043,18 @@ def check_trade_sizing(
     conn.execute("PRAGMA busy_timeout=5000")
 
     try:
+        # Sizing audit: only currently-open, non-orphan, non-excluded positions.
         if scan_start_time:
             rows = conn.execute(
-                "SELECT id, ticker, contracts FROM trades "
+                open_eligible_cte()
+                + f"SELECT id, ticker, contracts FROM {OPEN_CTE_NAME} "
                 "WHERE status = 'open' AND entry_date >= ?",
                 (scan_start_time,),
             ).fetchall()
         else:
             rows = conn.execute(
-                "SELECT id, ticker, contracts FROM trades WHERE status = 'open'"
+                open_eligible_cte()
+                + f"SELECT id, ticker, contracts FROM {OPEN_CTE_NAME} WHERE status = 'open'"
             ).fetchall()
 
         for row in rows:
@@ -1249,9 +1267,10 @@ def check_orphan_positions(
         # rows lack qty info, so they participate in orphan/ghost detection
         # but are excluded from qty_mismatch checks.
         try:
+            # Open-position metadata for OCC reconciliation (G7).
             meta_rows = conn.execute(
-                "SELECT metadata FROM trades "
-                "WHERE status IN ('open', 'pending_open', 'pending_close')"
+                open_eligible_cte()
+                + f"SELECT metadata FROM {OPEN_CTE_NAME}"
             ).fetchall()
             for r in meta_rows:
                 try:
@@ -1291,16 +1310,16 @@ def check_orphan_positions(
         result.orphans = sorted((alpaca_symbols - db_symbols) - mismatch_syms)
         ghost_symbols = (db_symbols - alpaca_symbols) - mismatch_syms
 
-        # Build ghost details from trade_legs
+        # Build ghost details from trade_legs (open-position scope only).
         if ghost_symbols:
             for sym in sorted(ghost_symbols):
                 try:
                     ghost_rows = conn.execute(
-                        "SELECT DISTINCT t.id, t.ticker, t.status "
-                        "FROM trades t "
+                        open_eligible_cte()
+                        + f"SELECT DISTINCT t.id, t.ticker, t.status "
+                        f"FROM {OPEN_CTE_NAME} t "
                         "JOIN trade_legs tl ON tl.trade_id = t.id "
-                        "WHERE t.status IN ('open', 'pending_open', 'pending_close') "
-                        "AND UPPER(tl.occ_symbol) = ?",
+                        "WHERE UPPER(tl.occ_symbol) = ?",
                         (sym,),
                     ).fetchall()
                     for gr in ghost_rows:
@@ -1321,6 +1340,10 @@ def check_orphan_positions(
         # live in the broker is critical: G7 detected it ≥1 day ago and
         # nobody resolved it. Emit a new critical alert each daily run
         # until the row is closed or superseded.
+        # noqa: raw-trades — G23 must inspect raw `unmanaged` rows; that
+        # status is excluded by both metrics_eligible_cte and open_eligible_cte
+        # (correctly — these rows are operational issues, not metric inputs)
+        # so this Gate has to bypass the helper.
         try:
             stale_rows = conn.execute(
                 "SELECT id, ticker, metadata, created_at "

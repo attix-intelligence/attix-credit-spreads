@@ -47,7 +47,9 @@ def tmp_db(tmp_path):
         entry_date TEXT, exit_date TEXT, exit_reason TEXT,
         pnl REAL, metadata JSON,
         created_at TEXT DEFAULT (datetime('now')),
-        updated_at TEXT DEFAULT (datetime('now'))
+        updated_at TEXT DEFAULT (datetime('now')),
+        excluded_from_metrics INTEGER DEFAULT 0,
+        exclusion_reason TEXT
     )""")
     conn.execute("""CREATE TABLE alerts (
         id TEXT PRIMARY KEY, ticker TEXT NOT NULL,
@@ -75,7 +77,10 @@ def tmp_db(tmp_path):
          1.20, 1, "2026-02-20", "2026-03-08T11:00:00", "profit_target", 60.0, "{}"),
     ]
     conn.executemany(
-        "INSERT INTO trades VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,datetime('now'),datetime('now'))",
+        "INSERT INTO trades (id, source, ticker, strategy_type, status, "
+        "short_strike, long_strike, expiration, credit, contracts, "
+        "entry_date, exit_date, exit_reason, pnl, metadata) "
+        "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
         trades,
     )
     conn.commit()
@@ -195,7 +200,9 @@ class TestGenerateHTML:
             status TEXT, short_strike REAL, long_strike REAL, expiration TEXT,
             credit REAL, contracts INTEGER, entry_date TEXT, exit_date TEXT,
             exit_reason TEXT, pnl REAL, metadata JSON,
-            created_at TEXT, updated_at TEXT)""")
+            created_at TEXT, updated_at TEXT,
+            excluded_from_metrics INTEGER DEFAULT 0,
+            exclusion_reason TEXT)""")
         conn.execute("""CREATE TABLE alerts (
             id TEXT PRIMARY KEY, ticker TEXT, data JSON, created_at TEXT)""")
         conn.execute("""CREATE TABLE regime_snapshots (

@@ -66,7 +66,9 @@ def _make_db(path: str) -> sqlite3.Connection:
             created_at TEXT,
             updated_at TEXT,
             strategy_type TEXT DEFAULT 'bull_put',
-            metadata TEXT
+            metadata TEXT,
+            excluded_from_metrics INTEGER DEFAULT 0,
+            exclusion_reason TEXT
         )
     """)
     conn.execute("""

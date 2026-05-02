@@ -67,6 +67,8 @@ from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
 
+from metrics import OPEN_CTE_NAME, open_eligible_cte
+
 logger = logging.getLogger(__name__)
 
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -399,12 +401,13 @@ def check_expired_positions(
 
     conn = _get_db(resolved_path)
     try:
+        # Expired-position scan: only live, non-orphan, non-excluded positions.
         rows = conn.execute(
-            """
+            open_eligible_cte()
+            + f"""
             SELECT id, ticker, status, expiration, strategy_type
-            FROM trades
-            WHERE status IN ('open', 'pending_open', 'pending_close')
-              AND expiration IS NOT NULL
+            FROM {OPEN_CTE_NAME}
+            WHERE expiration IS NOT NULL
               AND expiration != ''
             ORDER BY expiration ASC
             """
@@ -547,15 +550,16 @@ def check_position_concentration(
 
     conn = _get_db(resolved_path)
     try:
-        # Get all open positions (exclude orphan/unmanaged/synthetic)
+        # Concentration check: open + pending_open positions, not orphans.
+        # `pending_close` excluded here so positions queued for close don't
+        # count toward concentration (they're on the way out).
         rows = conn.execute(
-            """
+            open_eligible_cte()
+            + f"""
             SELECT id, ticker, strategy_type, expiration, contracts,
                    short_strike, long_strike, entry_date
-            FROM trades
+            FROM {OPEN_CTE_NAME}
             WHERE status IN ('open', 'pending_open')
-              AND id NOT LIKE 'orphan-%'
-              AND id NOT LIKE 'synthetic-%'
             """
         ).fetchall()
 
@@ -753,15 +757,13 @@ def check_orphans_v2(
 
     conn = _get_db(resolved_path)
     try:
-        # Get all open/pending trades from DB (real trades, not orphan records)
+        # OCC reconciliation against broker: all live positions, not orphans.
         rows = conn.execute(
-            """
+            open_eligible_cte()
+            + f"""
             SELECT id, ticker, strategy_type, short_strike, long_strike,
                    expiration, contracts, status
-            FROM trades
-            WHERE status IN ('open', 'pending_open', 'pending_close')
-              AND id NOT LIKE 'orphan-%'
-              AND id NOT LIKE 'synthetic-%'
+            FROM {OPEN_CTE_NAME}
             """
         ).fetchall()
 

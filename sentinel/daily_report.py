@@ -25,6 +25,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from metrics import ELIGIBLE_CTE_NAME, metrics_eligible_cte
+
 logger = logging.getLogger(__name__)
 
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -82,8 +84,11 @@ def _count_trades_today(exp_id: str) -> int:
 
         conn = sqlite3.connect(str(db_path))
         today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        # Daily trade count: count metric-eligible trades touched today.
         row = conn.execute(
-            "SELECT COUNT(*) FROM trades WHERE entry_date LIKE ? OR exit_date LIKE ?",
+            metrics_eligible_cte()
+            + f"SELECT COUNT(*) FROM {ELIGIBLE_CTE_NAME} "
+            "WHERE entry_date LIKE ? OR exit_date LIKE ?",
             (f"{today}%", f"{today}%"),
         ).fetchone()
         conn.close()

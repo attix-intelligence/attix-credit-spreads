@@ -54,7 +54,9 @@ def _make_db(tmp_path: Path) -> sqlite3.Connection:
             pnl REAL,
             metadata TEXT,
             created_at TEXT DEFAULT (datetime('now')),
-            updated_at TEXT DEFAULT (datetime('now'))
+            updated_at TEXT DEFAULT (datetime('now')),
+            excluded_from_metrics INTEGER DEFAULT 0,
+            exclusion_reason TEXT
         )
         """
     )

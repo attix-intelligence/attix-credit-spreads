@@ -74,6 +74,8 @@ from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
 
+from metrics import ELIGIBLE_CTE_NAME, metrics_eligible_cte
+
 logger = logging.getLogger(__name__)
 
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -152,10 +154,10 @@ def check_stop_loss_quality(
     try:
         cutoff = (datetime.now(timezone.utc) - timedelta(days=lookback_days)).isoformat()
 
-        rows = conn.execute("""
+        rows = conn.execute(metrics_eligible_cte() + f"""
             SELECT id, ticker, strategy_type, pnl, credit, contracts,
                    short_strike, long_strike, exit_date, metadata
-            FROM   trades
+            FROM   {ELIGIBLE_CTE_NAME}
             WHERE  exit_reason = 'stop_loss'
               AND  status LIKE 'closed%%'
               AND  pnl IS NOT NULL
@@ -334,9 +336,9 @@ def check_repeated_failures(
     try:
         cutoff = (datetime.now(timezone.utc) - timedelta(days=lookback_days)).isoformat()
 
-        rows = conn.execute("""
+        rows = conn.execute(metrics_eligible_cte() + f"""
             SELECT id, status, exit_reason, pnl, exit_date
-            FROM   trades
+            FROM   {ELIGIBLE_CTE_NAME}
             WHERE  status LIKE 'closed%%'
               AND  exit_date >= ?
             ORDER BY exit_date DESC
@@ -576,9 +578,12 @@ def check_market_calendar(
     try:
         cutoff = (datetime.now(timezone.utc) - timedelta(days=lookback_days)).isoformat()
 
-        rows = conn.execute("""
+        # Calendar check: every metric-eligible entry within the lookback.
+        # The deny-list already excludes failed_open / pending_* / etc., so the
+        # extra explicit `status NOT IN` is redundant — kept here for clarity.
+        rows = conn.execute(metrics_eligible_cte() + f"""
             SELECT id, ticker, entry_date
-            FROM   trades
+            FROM   {ELIGIBLE_CTE_NAME}
             WHERE  entry_date >= ?
               AND  status NOT IN ('failed_open', 'rejected', 'cancelled')
             ORDER BY entry_date DESC
@@ -706,11 +711,11 @@ def check_pnl_reconciliation(
     try:
         cutoff = (datetime.now(timezone.utc) - timedelta(days=lookback_days)).isoformat()
 
-        rows = conn.execute("""
+        rows = conn.execute(metrics_eligible_cte() + f"""
             SELECT id, ticker, strategy_type, status, pnl, credit,
                    contracts, short_strike, long_strike, exit_reason,
                    exit_date
-            FROM   trades
+            FROM   {ELIGIBLE_CTE_NAME}
             WHERE  status LIKE 'closed%%'
               AND  exit_date >= ?
             ORDER BY exit_date DESC

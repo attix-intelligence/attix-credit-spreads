@@ -14,6 +14,8 @@ from typing import Dict, List, Optional, Tuple
 
 import yaml
 
+from metrics import OPEN_CTE_NAME, open_eligible_cte
+
 logger = logging.getLogger(__name__)
 
 
@@ -129,13 +131,15 @@ def aggregate_portfolio_risk(
         try:
             conn = get_db(db_path)
             try:
+                # Cross-experiment exposure: open + pending_open, not orphans.
                 rows = conn.execute(
-                    """
+                    open_eligible_cte()
+                    + f"""
                     SELECT ticker,
                            COALESCE(strategy_type, type, '') AS strat,
                            COALESCE(contracts, 1)            AS contracts,
                            expiration
-                    FROM   trades
+                    FROM   {OPEN_CTE_NAME}
                     WHERE  status IN ('open', 'pending_open')
                     """
                 ).fetchall()

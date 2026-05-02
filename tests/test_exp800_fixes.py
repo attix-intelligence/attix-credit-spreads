@@ -55,7 +55,9 @@ def _create_exp800_db(path: str) -> sqlite3.Connection:
             exit_reason TEXT,
             source TEXT DEFAULT 'scanner',
             created_at TEXT DEFAULT (datetime('now')),
-            updated_at TEXT DEFAULT (datetime('now'))
+            updated_at TEXT DEFAULT (datetime('now')),
+            excluded_from_metrics INTEGER DEFAULT 0,
+            exclusion_reason TEXT
         )
     """)
     conn.commit()

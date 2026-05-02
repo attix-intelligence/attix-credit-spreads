@@ -22,6 +22,8 @@ import sqlite3
 from datetime import datetime, timezone
 from typing import List, Optional, Tuple
 
+from metrics import OPEN_CTE_NAME, open_eligible_cte
+
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
@@ -44,7 +46,7 @@ def check_position_limit_warning(
         return None
 
     row = conn.execute(
-        "SELECT COUNT(*) FROM trades WHERE status IN ('open','pending_open','pending_close')"
+        open_eligible_cte() + f"SELECT COUNT(*) FROM {OPEN_CTE_NAME}"
     ).fetchone()
     active_count = row[0] if row else 0
 
@@ -70,7 +72,8 @@ def check_stuck_pending_open(
         List of alert strings (one per stuck trade), empty list if none.
     """
     rows = conn.execute(
-        "SELECT id, ticker, created_at FROM trades "
+        open_eligible_cte()
+        + f"SELECT id, ticker, created_at FROM {OPEN_CTE_NAME} "
         "WHERE status = 'pending_open' "
         "AND created_at < datetime('now', ?)",
         (f"-{threshold_minutes} minutes",),
@@ -142,6 +145,9 @@ def check_zombie_records(
     Returns:
         List of alert strings (one per zombie), empty list if none.
     """
+    # noqa: raw-trades — RC#4 zombie detector specifically targets
+    # `synthetic-monitor-*` IDs, which open_eligible_cte excludes by design.
+    # Using the helper here would silence the very alert this function exists to raise.
     rows = conn.execute(
         "SELECT id, ticker FROM trades "
         "WHERE id LIKE 'synthetic-monitor-%' AND status = 'open'"
@@ -173,7 +179,8 @@ def check_expiration_concentration(
         return []
 
     rows = conn.execute(
-        "SELECT expiration, COUNT(*) as cnt FROM trades "
+        open_eligible_cte()
+        + f"SELECT expiration, COUNT(*) as cnt FROM {OPEN_CTE_NAME} "
         "WHERE status IN ('open','pending_open') "
         "GROUP BY expiration "
         "HAVING cnt >= ?",
