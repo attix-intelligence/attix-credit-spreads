@@ -326,13 +326,25 @@ def _infer_spreads(
 
 
 def apply_plan(conn: sqlite3.Connection, plan: Dict[str, Any]) -> Dict[str, int]:
-    """Insert spreads, close ghosts, update qty mismatches — atomic."""
+    """Insert spreads, close ghosts, update qty mismatches — atomic.
+
+    Also supersedes any matching `orphan_<OCC>` / `orphan-<OCC>` placeholder
+    rows (Sentinel Gate-7 inserts these with status='unmanaged' when an
+    untracked broker leg is first detected). Once reconcile inserts a real
+    spread covering that OCC, the placeholder must be transitioned to
+    `superseded` so Gate 23 stops re-alerting on it.
+    """
     today = date.today().isoformat()
     recovery_source = f"alpaca_backfill_{today}"
 
     inserted = 0
     closed = 0
     qty_updated = 0
+    orphans_superseded = 0
+
+    # Collect every OCC symbol newly inserted by this run so the placeholder
+    # supersede pass can find them in a single sweep.
+    new_occ_symbols: set = set()
 
     with conn:  # commits on success, rolls back on exception
         for sp in plan.get("spreads_inferred", []):
@@ -373,6 +385,8 @@ def apply_plan(conn: sqlite3.Connection, plan: Dict[str, Any]) -> Dict[str, int]
                 "VALUES (?, ?, ?, ?)",
                 (trade_id, long_leg_type, sp["long_strike"], sp["long_alpaca_sym"]),
             )
+            new_occ_symbols.add(str(sp["short_alpaca_sym"]).upper())
+            new_occ_symbols.add(str(sp["long_alpaca_sym"]).upper())
             inserted += 1
 
         seen_ghost_trades: set = set()
@@ -425,10 +439,46 @@ def apply_plan(conn: sqlite3.Connection, plan: Dict[str, Any]) -> Dict[str, int]
             )
             qty_updated += 1
 
+        # Supersede any Gate-7 orphan placeholder rows that this reconcile run
+        # has now properly covered with a real `open` spread. The placeholder
+        # id is `orphan-<OCC>` (legacy hyphen) or `orphan_<OCC>` (current
+        # underscore) — handle both. Without this, Gate 23 keeps re-alerting
+        # forever on the stale `unmanaged` rows.
+        if new_occ_symbols:
+            placeholders = conn.execute(
+                "SELECT id, metadata FROM trades "
+                "WHERE id LIKE 'orphan%' AND status = 'unmanaged'"
+            ).fetchall()
+            for ph in placeholders:
+                pid = ph["id"]
+                if pid.startswith("orphan-"):
+                    occ = pid[len("orphan-"):].upper()
+                elif pid.startswith("orphan_"):
+                    occ = pid[len("orphan_"):].upper()
+                else:
+                    continue
+                if occ not in new_occ_symbols:
+                    continue
+                try:
+                    meta = json.loads(ph["metadata"]) if ph["metadata"] else {}
+                    if not isinstance(meta, dict):
+                        meta = {}
+                except (TypeError, ValueError, json.JSONDecodeError):
+                    meta = {}
+                meta["superseded_by_reconcile"] = recovery_source
+                conn.execute(
+                    "UPDATE trades SET status = 'superseded', "
+                    "metadata = ?, updated_at = datetime('now') "
+                    "WHERE id = ?",
+                    (json.dumps(meta), pid),
+                )
+                orphans_superseded += 1
+
     return {
         "inserted_spreads": inserted,
         "closed_ghosts": closed,
         "qty_updated": qty_updated,
+        "orphans_superseded": orphans_superseded,
     }
 
 
