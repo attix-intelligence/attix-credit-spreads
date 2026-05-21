@@ -438,6 +438,18 @@ class CreditSpreadSystem:
                 logger.error("%s: regime=None with combo mode active — skipping all entries", ticker)
                 return []
 
+            # EXP-3303b — Per-Stream Selective Regime Gate.  Skip new entries
+            # for SPX-sensitive tickers (SPY, QQQ) when regime is in a gated
+            # state (transition / high_stress); leave sector ETFs untouched.
+            from shared.regime_gate import should_gate_for_regime
+            _gate_skip, _gate_reason = should_gate_for_regime(
+                regime=regime, ticker=ticker, config=self.config
+            )
+            if _gate_skip:
+                logger.info("%s: %s", ticker, _gate_reason)
+                metrics.inc('scans_skipped_regime_gate')
+                return []
+
             # VIX data for snapshot (already fetched for regime detector)
             vix_data = None
             try:
