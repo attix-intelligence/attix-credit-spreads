@@ -36,6 +36,8 @@ from apscheduler.triggers.cron import CronTrigger
 
 from scheduler.alerts import send_telegram
 from scheduler.api import app as fastapi_app
+import functools
+
 from scheduler.jobs import (
     job_circuit_breaker_check,
     job_data_freshness_check,
@@ -45,6 +47,7 @@ from scheduler.jobs import (
     job_monitor_poll,
     job_post_market,
     job_pre_market_check,
+    job_run_experiment,
     job_signal_generator,
     job_weekly_summary,
 )
@@ -136,16 +139,29 @@ def build_scheduler() -> BackgroundScheduler:
     )
 
     # ── Monitor poll: every 5 min 09:30-16:00 ET Mon-Fri ───────────────────
+    # Covers 09:30-09:55 (first half-hour) and 10:00-15:55 (full hours)
     scheduler.add_job(
         job_monitor_poll,
         CronTrigger(
             day_of_week="mon-fri",
-            hour="9-15",
+            hour="9",
             minute="30,35,40,45,50,55",
             timezone=ET,
         ),
-        id="monitor_poll_930_1555",
-        name="Position monitor poll (09:30-15:55)",
+        id="monitor_poll_930_955",
+        name="Position monitor poll (09:30-09:55)",
+        misfire_grace_time=60,
+    )
+    scheduler.add_job(
+        job_monitor_poll,
+        CronTrigger(
+            day_of_week="mon-fri",
+            hour="10-15",
+            minute="*/5",
+            timezone=ET,
+        ),
+        id="monitor_poll_1000_1555",
+        name="Position monitor poll (10:00-15:55)",
         misfire_grace_time=60,
     )
     scheduler.add_job(
@@ -205,6 +221,28 @@ def build_scheduler() -> BackgroundScheduler:
         name="Log rotation (30-day)",
         misfire_grace_time=3600,
     )
+
+    # ── Per-experiment scanners: 09:25 ET Mon-Fri ───────────────────────────
+    # Each runs main.py scheduler --config <config> [--env-file <env>] as subprocess.
+    _experiments = [
+        ("EXP-400",  "configs/paper_champion.yaml",  ".env.exp400"),
+        ("EXP-401",  "configs/paper_exp401.yaml",    ".env.exp401"),
+        ("EXP-503",  "configs/paper_exp503.yaml",    None),
+        ("EXP-600",  "configs/paper_exp600.yaml",    None),
+        ("EXP-800",  "configs/paper_exp800.yaml",    None),
+        ("EXP-1220", "configs/paper_exp1220.yaml",   None),
+        ("EXP-3309", "configs/paper_exp3309.yaml",   ".env.exp3309"),
+        ("EXP-3311", "configs/paper_exp3311.yaml",   ".env.exp3311"),
+    ]
+    for exp_id, config, env_file in _experiments:
+        job_id = f"exp_{exp_id.lower().replace('-', '_')}_scanner"
+        scheduler.add_job(
+            functools.partial(job_run_experiment, exp_id, config, env_file),
+            CronTrigger(day_of_week="mon-fri", hour=9, minute=25, timezone=ET),
+            id=job_id,
+            name=f"{exp_id} scanner",
+            misfire_grace_time=300,
+        )
 
     # ── Event listeners ─────────────────────────────────────────────────────
     scheduler.add_listener(on_job_error, EVENT_JOB_ERROR)

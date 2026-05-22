@@ -20,6 +20,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY --from=builder /install /usr/local
 COPY compass/    ./compass/
 COPY scheduler/  ./scheduler/
+COPY sentinel/   ./sentinel/
+COPY shared/     ./shared/
+COPY alerts/     ./alerts/
+COPY backtest/   ./backtest/
+COPY strategy/   ./strategy/
+COPY tracker/    ./tracker/
+COPY configs/    ./configs/
+COPY scripts/    ./scripts/
+COPY main.py utils.py ./
 
 RUN mkdir -p /data/logs /data/signals
 

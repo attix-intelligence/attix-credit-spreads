@@ -271,29 +271,22 @@ def job_signal_generator() -> None:
         )
 
         # ── EXP-2890 SEAM: Order submission with retry ─────────────────────
-        # Replace this block when the Signal->SpreadOrder bridge (EXP-2890) is built.
-        #
-        #   from compass.alpaca_connector import AlpacaConnector
-        #   connector = AlpacaConnector(paper_mode=True)
-        #   for stream_sig in [s for s in stream_sigs if s.get("action") == "OPEN"]:
-        #       for attempt in range(3):
-        #           try:
-        #               result = connector.submit_spread(stream_sig)
-        #               job_log("signal_generator", f"Order {stream_sig['stream']}: {result}")
-        #               break
-        #           except Exception as e:
-        #               wait = 2 ** attempt  # 2s, 4s, 8s
-        #               if attempt < 2:
-        #                   job_log("signal_generator", f"Alpaca retry {attempt+1}: {e}, waiting {wait}s")
-        #                   time.sleep(wait)
-        #               else:
-        #                   job_log("signal_generator", f"Alpaca FAILED after 3 attempts: {e}")
-        #                   send_telegram(f"[ORDER FAIL] {stream_sig['stream']} on {today_str}: {e}")
-
-        job_log(
-            "signal_generator",
-            "NOTE: EXP-2890 bridge not wired — signals on disk only, no Alpaca orders"
-        )
+        from compass.alpaca_connector import AlpacaConnector
+        connector = AlpacaConnector(paper_mode=True)
+        for stream_sig in [s for s in stream_sigs if isinstance(s, dict) and s.get("action") == "OPEN"]:
+            for attempt in range(3):
+                try:
+                    result = connector.submit_spread(stream_sig)
+                    job_log("signal_generator", f"Order {stream_sig['stream']}: {result}")
+                    break
+                except Exception as e:
+                    wait = 2 ** attempt  # 2s, 4s, 8s
+                    if attempt < 2:
+                        job_log("signal_generator", f"Alpaca retry {attempt+1}: {e}, waiting {wait}s")
+                        time.sleep(wait)
+                    else:
+                        job_log("signal_generator", f"Alpaca FAILED after 3 attempts: {e}")
+                        send_telegram(f"[ORDER FAIL] {stream_sig['stream']} on {today_str}: {e}")
 
         send_telegram(
             f"[SIGNAL GEN] {today_str}: {len(opens)} OPEN ({', '.join(opens) or 'none'}) "
@@ -631,3 +624,63 @@ def job_log_rotate() -> None:
             LOG.warning("log_rotate: failed to rotate %s: %s", log_file, e)
 
     LOG.info("log_rotate: rotated %d files to archive", rotated)
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# job_run_experiment — 09:25 ET Mon-Fri (per registered experiment)
+# ════════════════════════════════════════════════════════════════════════════
+
+def job_run_experiment(exp_id: str, config: str, env_file: Optional[str] = None) -> None:
+    """Run a single experiment scanner as a subprocess (main.py scheduler --config ...)."""
+    import subprocess
+    import sys
+
+    today_str = today_et().isoformat()
+    job_name = f"exp_{exp_id.lower().replace('-', '_')}"
+    job_log(job_name, f"=== {exp_id} scanner START for {today_str} ===")
+    start = datetime.utcnow()
+
+    # Build command
+    project_root = Path(__file__).resolve().parent.parent
+    cmd = [sys.executable, str(project_root / "main.py"), "scheduler", "--config", config]
+    if env_file:
+        env_file_path = project_root / env_file
+        if env_file_path.exists():
+            cmd += ["--env-file", str(env_file_path)]
+        else:
+            job_log(job_name, f"WARN: env_file {env_file} not found, using default env")
+
+    try:
+        result = subprocess.run(
+            cmd,
+            cwd=str(project_root),
+            capture_output=True,
+            text=True,
+            timeout=600,  # 10-minute timeout per experiment
+        )
+        elapsed = (datetime.utcnow() - start).total_seconds()
+
+        if result.stdout:
+            for line in result.stdout.splitlines()[-20:]:  # last 20 lines
+                job_log(job_name, f"  {line}")
+        if result.stderr:
+            for line in result.stderr.splitlines()[-10:]:
+                job_log(job_name, f"  STDERR: {line}")
+
+        if result.returncode == 0:
+            job_log(job_name, f"=== {exp_id} COMPLETE in {elapsed:.0f}s (rc=0) ===")
+        else:
+            job_log(job_name, f"=== {exp_id} FAILED in {elapsed:.0f}s (rc={result.returncode}) ===")
+            send_telegram(
+                f"[{exp_id}] Scanner failed on {today_str} (rc={result.returncode})\n"
+                f"Last stderr: {result.stderr[-500:] if result.stderr else 'none'}"
+            )
+    except subprocess.TimeoutExpired:
+        elapsed = (datetime.utcnow() - start).total_seconds()
+        job_log(job_name, f"TIMEOUT: {exp_id} scanner exceeded 600s")
+        send_telegram(f"[{exp_id}] Scanner TIMEOUT after {elapsed:.0f}s on {today_str}")
+    except Exception as e:
+        elapsed = (datetime.utcnow() - start).total_seconds()
+        tb = traceback.format_exc()
+        job_log(job_name, f"ERROR launching {exp_id}: {e}\n{tb}")
+        send_telegram(f"[{exp_id}] Scanner launch error on {today_str}: {e}")
