@@ -44,7 +44,7 @@
             "halted": false
         },
         "EXP-503": {
-            "status": "halted",
+            "status": "active",
             "paper_config": "configs/paper_exp503.yaml",
             "config_fingerprint": "b52e7f75f6267955d35502ca4bf2e36da463296f3d42adf1f78adc7fc84b2d2f",
             "account_id": "PA3Z9PLVYUL5",
@@ -83,7 +83,7 @@
             }
         },
         "EXP-800": {
-            "status": "halted",
+            "status": "active",
             "paper_config": "configs/paper_exp800.yaml",
             "config_fingerprint": "c9053f39b9a547e075ff9fe128ef80b18c18448304befe2e4a4257b559498b19",
             "account_id": "PA3QWQIZO09S",
