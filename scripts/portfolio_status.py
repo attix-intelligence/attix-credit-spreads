@@ -24,14 +24,12 @@ from datetime import date
 from pathlib import Path
 from typing import Dict, Optional, Union
 
-try:
-    import yaml
-except ImportError:
-    sys.exit("ERROR: PyYAML not installed. Run: pip install pyyaml")
-
 # ── Paths ──────────────────────────────────────────────────────────────────────
 ROOT = Path(__file__).resolve().parent.parent
-REGISTRY_PATH = ROOT / "experiments.yaml"
+sys.path.insert(0, str(ROOT))
+
+from experiments.manager import get_manager  # noqa: E402
+
 ALPACA_BASE = "https://paper-api.alpaca.markets"
 TIMEOUT = 15
 
@@ -54,16 +52,6 @@ def disable_color() -> None:
 
 
 # ── Registry ───────────────────────────────────────────────────────────────────
-def load_registry() -> Dict[str, dict]:
-    if not REGISTRY_PATH.exists():
-        sys.exit(f"ERROR: Registry not found: {REGISTRY_PATH}\n"
-                 f"       Create experiments.yaml at the project root.")
-    with open(REGISTRY_PATH) as f:
-        data = yaml.safe_load(f)
-    experiments = data.get("experiments")
-    if not experiments:
-        sys.exit("ERROR: experiments.yaml has no 'experiments' key.")
-    return experiments
 
 
 # ── Env file parsing ───────────────────────────────────────────────────────────
@@ -150,8 +138,8 @@ def state_label(cfg: dict, is_running: bool) -> str:
         return f"{C.RED}{C.BOLD}DOWN{C.NC} {C.DIM}(registry=active but tmux:{tmux!r} not found){C.NC}"
     elif status == "stopped" and is_running:
         return f"{C.YEL}{C.BOLD}RUNNING{C.NC} {C.DIM}(registry=stopped — update registry){C.NC}"
-    elif status == "archived":
-        return f"{C.DIM}ARCHIVED{C.NC}"
+    elif status == "retired":
+        return f"{C.DIM}RETIRED{C.NC}"
     else:
         return f"{C.DIM}STOPPED{C.NC}"
 
@@ -296,7 +284,7 @@ def main() -> int:
     if args.no_color:
         disable_color()
 
-    experiments = load_registry()
+    experiments = get_manager().all()
 
     # Filter
     if args.experiment:
@@ -316,14 +304,14 @@ def main() -> int:
     print(f"{C.BOLD}╔══════════════════════════════════════════════════════════╗{C.NC}")
     print(f"{C.BOLD}║  PilotAI Portfolio Dashboard  —  {now:<25}║{C.NC}")
     print(f"{C.BOLD}╚══════════════════════════════════════════════════════════╝{C.NC}")
-    print(f"  Registry: {REGISTRY_PATH}")
+    print(f"  Registry: experiments/registry.json")
 
     if args.summary:
         print_summary(experiments)
         return 0
 
-    # Sort: active first, then stopped, then archived
-    order = {"active": 0, "stopped": 1, "archived": 2}
+    # Sort: active first, then stopped, then retired
+    order = {"active": 0, "stopped": 1, "retired": 2}
     sorted_exps = sorted(
         list(experiments.items()),
         key=lambda kv: (order.get(kv[1].get("status", ""), 9), kv[0]),
