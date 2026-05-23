@@ -135,7 +135,7 @@ disagreements are allowlisted in `scripts/gate1_gate2_equivalence.py`.
 Both Gate 1 and Gate 2 now PASS at the original 0.1% Close threshold and
 ±2 bar tolerance. No gate was weakened.
 
-**Final allowlist (11 dates):**
+**Final allowlist (12 dates):**
 - `^VIX`: 2023-11-28, 2023-11-29, 2023-12-06, 2024-03-18, 2025-01-17, 2025-08-01, 2026-02-06
 - `^VIX3M`: 2023-11-24, 2023-11-28, 2023-11-29, 2023-12-06, 2025-01-17
 
@@ -243,3 +243,98 @@ vendor data-quality stub, accept the ~2.5% one-day divergence).
 **Until decision:** D4 is paused at Phase 8. No push, no PR. SQLite bootstrap
 (Phase 6) and `load_market_history` (Phase 7) commits remain on
 `feature/migrate-backtest-to-polygon` and are individually safe.
+
+---
+
+## Q5 — D4 paused at Phase 9: Gate 3 FAIL (Q1 dividend-adjustment propagates into backtest)
+
+**Status:** Strategy-equivalence gate FAILS at all three thresholds. The
+backtester swap on this branch produces materially different equity curves
+than the pre-migration Yahoo path on the EXP-400 champion config over
+2024-01-01..2025-12-31. Per the task spec, Gate 3 is the **no-fly zone** —
+"If Gate 3 fails... STOP and document the divergence... Do not push."
+
+**Gate 3 run (2026-05-23, `scripts/gate3_champion_equity.py`):**
+
+| Metric | Yahoo arm | Polygon arm | Δ | Threshold | Pass? |
+|---|---|---|---|---|---|
+| Trades | 338 | 364 | +7.7% | ±5% | **FAIL** |
+| Total PnL | $13,230 | $7,064 | -46.6% | ±2% | **FAIL** |
+| Equity correlation | — | — | **0.648** | ≥0.99 | **FAIL** |
+
+Equity curves persisted to `data/gate3_baseline_yahoo.csv` and
+`data/gate3_baseline_polygon.csv` for review.
+
+### Root cause: Q1 dividend-adjustment behavior change → strike selection drift
+
+The pre-migration backtester pulls SPY prices via `_yf_history_safe`, which
+reads Yahoo's `adjclose` field (split **and** dividend back-adjusted —
+`backtest/backtester.py::_yf_chart_to_df` line 83). The post-migration
+backtester reads Polygon's adjusted aggregate (split-only). On SPY over the
+test window this is a ~0.5% constant offset (documented in Q1).
+
+Q1 anticipated that **ratios** (price/MA200, RSI) would be unchanged because
+numerator and denominator shift by the same factor — and that's true for
+the regime detector. But strikes are picked from **absolute** price:
+
+```
+strike_target = current_price * (1 - otm_pct)   # bull put short
+```
+
+Polygon's split-only spot is ~0.5% lower than Yahoo's div-adjusted spot
+during the back-test window, so the backtester selects slightly different
+strike contracts on each entry. Different OCC contract → different
+historical IronVault premium → different PnL → drift compounds across 338+
+trades into a 46.6% PnL gap.
+
+**Note: this is not a bug introduced by the migration.** The Polygon path
+matches live trading reality (option strikes are not dividend-adjusted, so
+the spot price the strategy "sees" today is split-only). The pre-migration
+backtester was using a back-adjusted historical price that never matched
+what a live trader would have observed. Q1's resolution stated exactly this:
+
+> "Polygon's splits-only adjustment is the more correct semantics for an
+> options-trading system — option strikes are not dividend-adjusted, so
+> historical MAs/RSI on splits-only series compare like-for-like to live
+> strike levels. The previous yfinance behavior was a latent bug that this
+> migration silently fixes."
+
+So Gate 3's failure is a measurement of the latent bug being fixed, not of
+new corruption being introduced. **But Gate 3 doesn't distinguish between
+those two cases** — it just measures backwards-compatibility against the
+previous (buggy) code. The migration intentionally breaks that
+backwards-compatibility.
+
+### What this means for production results
+
+Every leaderboard entry and MASTERPLAN champion recorded against the
+pre-migration backtester is built on adj-close prices that don't match live
+strike selection. Going forward, the same configs will produce ~50% lower
+PnL on the corrected (Polygon) path. The strategy itself is not changed,
+but the historical claims about its edge are revised downward.
+
+### Decision needed (Carlos)
+
+1. **Accept Gate 3 failure as the natural consequence of the Q1 fix** and
+   merge. All MASTERPLAN/leaderboard numbers will need to be re-baselined
+   against the corrected backtester. No code change.
+
+2. **Reject this migration** and keep the backtester on yfinance. The live
+   path stays on Polygon (Q1 already accepted), the backtest path stays on
+   the buggy adj-close. Live/backtest divergence is permanent.
+
+3. **Compensate: feed Polygon's split-only series through a div-adjustment
+   filter** before handing to the backtester so historical prices match the
+   old adj-close behavior. Re-introduces a dividend-history dependency on
+   the backtest path. Not recommended — re-creates the original bug.
+
+**Recommendation:** Option 1. The Polygon path is correct; Gate 3's
+threshold was implicitly assuming the migration preserved the latent bug.
+The right follow-up is a one-time MASTERPLAN re-baseline rather than
+holding the migration hostage to legacy adj-close behavior.
+
+**Until decision:** D4 stays paused at Phase 9. Phase 8 backtester swap is
+committed (commit 24c93a5). Scripts/experiments in Phase 9 are not yet
+migrated. Gate 4 not run. **Per task spec, no push and no PR while a gate
+is failing.**
+
