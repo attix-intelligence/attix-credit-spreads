@@ -246,7 +246,25 @@ vendor data-quality stub, accept the ~2.5% one-day divergence).
 
 ---
 
-## Q5 — D4 paused at Phase 9: Gate 3 FAIL (Q1 dividend-adjustment propagates into backtest)
+## Q5 — Gate 3 strategy drift from Q1 div-adjust fix (RESOLVED)
+
+**RESOLUTION (2026-05-23, Carlos):** Accepted. The Polygon split-only path
+is the correct semantics for an options-trading system (Q1 resolution) and
+its propagation into the backtester is the latent-bug fix landing in
+historical results. Gate 3 thresholds were implicitly written assuming
+bit-for-bit backward compatibility with the previous adj-close behavior;
+that assumption is overridden by Q1. Re-baselining of MASTERPLAN /
+leaderboard / champion numbers against the corrected backtester is a
+post-migration follow-up — NOT a blocker for this PR.
+
+Migration continues: Phase 9 script/experiment migration + Phase 10 cleanup.
+Gate 3 artifacts (`data/gate3_baseline_yahoo.csv`,
+`data/gate3_baseline_polygon.csv`) and the `scripts/gate3_champion_equity.py`
+harness remain in the tree so the re-baseline workstream can re-use them.
+
+---
+
+## Q5 (original) — Gate 3 FAIL (Q1 dividend-adjustment propagates into backtest)
 
 **Status:** Strategy-equivalence gate FAILS at all three thresholds. The
 backtester swap on this branch produces materially different equity curves
