@@ -115,7 +115,9 @@ class OptionsAnalyzer:
     def _get_chain_yfinance(self, ticker: str) -> pd.DataFrame:
         """Get options chain via yfinance (delayed, estimated Greeks)."""
         try:
-            stock = self.data_cache.get_ticker_obj(ticker) if self.data_cache else yf.Ticker(ticker)
+            # data_cache no longer exposes get_ticker_obj after the Polygon migration;
+            # options chains use the yfinance fallback path directly.
+            stock = yf.Ticker(ticker)
             expirations = stock.options
 
             if not expirations:

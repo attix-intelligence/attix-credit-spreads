@@ -1,82 +1,149 @@
-"""Thread-safe TTL cache for yfinance data."""
+"""Thread-safe TTL cache for market data backed by Polygon.io.
+
+Historical migration: previously yfinance-backed. Polygon.io is now the
+single source for index and equity daily bars used by the live pipeline.
+Yahoo-style tickers (``^VIX``, ``^VIX3M`` …) are auto-translated to
+Polygon index tickers (``I:VIX``, ``I:VIX3M`` …) so existing callers do
+not need to change.
+
+Options chains and corporate calendars must NOT be fetched here — use
+``shared.iron_vault`` or ``strategy.polygon_provider`` directly.
+"""
+from __future__ import annotations
+
 import logging
+import os
 import threading
 import time
-from typing import List
+from typing import List, Optional
 
 import pandas as pd
-import yfinance as yf
 
 from shared.exceptions import DataFetchError
 from shared.metrics import metrics
 
 logger = logging.getLogger(__name__)
 
-# Mapping of period strings to approximate trading days
-_PERIOD_DAYS = {
-    '5d': 5,
-    '1mo': 21,
-    '3mo': 63,
-    '6mo': 126,
-    '1y': 252,
+# Yahoo-style → Polygon index ticker translation. Anything not in this map
+# is passed through unchanged (equities like SPY, TLT, …).
+_INDEX_TICKER_MAP = {
+    "^VIX":   "I:VIX",
+    "^VIX3M": "I:VIX3M",
+    "^VVIX":  "I:VVIX",
+    "^SKEW":  "I:SKEW",
+    "^GSPC":  "I:SPX",
+    "^DJI":   "I:DJI",
+    "^IXIC":  "I:NDX",
+    "^RUT":   "I:RUT",
 }
 
-class DataCache:
-    """Download each ticker's data once (1y period), slice to requested period."""
+# Mapping of period strings to approximate trading days.
+_PERIOD_DAYS = {
+    "5d":  5,
+    "1mo": 21,
+    "3mo": 63,
+    "6mo": 126,
+    "1y":  252,
+    "2y":  504,
+}
 
-    def __init__(self, ttl_seconds: int = 900):
+# Calendar days we fetch from Polygon. 2 years of trading-day coverage is
+# enough for any caller-requested period (longest is "2y" = 504 trading
+# days ≈ 730 calendar days).
+_FETCH_CALENDAR_DAYS = 760
+
+
+def _to_polygon_ticker(ticker: str) -> str:
+    """Translate Yahoo-style index tickers to Polygon equivalents."""
+    return _INDEX_TICKER_MAP.get(ticker.upper(), ticker.upper())
+
+
+class DataCache:
+    """In-memory TTL cache for Polygon daily-bar history.
+
+    Each ticker is fetched once for the full ``_FETCH_CALENDAR_DAYS``
+    window and cached. Callers requesting shorter periods get a slice
+    of the cached frame; no extra network calls.
+    """
+
+    def __init__(self, ttl_seconds: int = 900, api_key: Optional[str] = None):
         self._cache: dict = {}
         self._lock = threading.Lock()
         self._ttl = ttl_seconds
+        self._api_key = api_key or os.environ.get("POLYGON_API_KEY", "")
+        self._provider = None  # built lazily on first use
 
-    def get_history(self, ticker: str, period: str = '1y') -> pd.DataFrame:
-        """Get historical data, using cache if fresh.
+    # ------------------------------------------------------------------
+    # Provider
+    # ------------------------------------------------------------------
 
-        Always downloads the full 1y period and caches by ticker only.
-        Shorter periods are sliced locally to avoid redundant downloads.
+    def _get_provider(self):
+        """Lazily construct the PolygonProvider so unit tests that mock
+        ``DataCache.get_history`` never need a live key."""
+        if self._provider is None:
+            if not self._api_key:
+                raise DataFetchError(
+                    "POLYGON_API_KEY is not set — DataCache cannot fetch "
+                    "market data."
+                )
+            # Imported lazily to avoid a circular import at module load.
+            from strategy.polygon_provider import PolygonProvider
+            self._provider = PolygonProvider(api_key=self._api_key)
+        return self._provider
+
+    # ------------------------------------------------------------------
+    # Public API
+    # ------------------------------------------------------------------
+
+    def get_history(self, ticker: str, period: str = "1y") -> pd.DataFrame:
+        """Return cached daily bars for ``ticker`` over ``period``.
+
+        ``period`` accepts the same strings as the old yfinance-backed
+        cache (``"5d"``, ``"1mo"``, ``"3mo"``, ``"6mo"``, ``"1y"``,
+        ``"2y"``). The returned DataFrame has the same columns and
+        ``DatetimeIndex`` shape callers used to receive previously:
+        ``Open``, ``High``, ``Low``, ``Close``, ``Volume``.
         """
         key = ticker.upper()
-        cached = None
+
         with self._lock:
-            if key in self._cache:
-                data, ts = self._cache[key]
+            entry = self._cache.get(key)
+            if entry is not None:
+                data, ts = entry
                 if time.time() - ts < self._ttl:
-                    logger.debug(f"Cache hit for {key}")
-                    metrics.inc('cache_hits')
-                    cached = data
+                    metrics.inc("cache_hits")
+                    return self._slice_to_period(data, period).copy()
 
-        if cached is not None:
-            return self._slice_to_period(cached, period).copy()
+        metrics.inc("cache_misses")
 
-        metrics.inc('cache_misses')
-
-        # Download full 1y outside lock.
-        # Use Ticker.history() instead of yf.download() — the latter has a
-        # known thread-safety issue where concurrent calls can return data
-        # for the wrong ticker (caused the .47 same-price bug).
+        polygon_ticker = _to_polygon_ticker(ticker)
         try:
-            data = yf.Ticker(ticker).history(period='1y')
-            if hasattr(data.columns, 'nlevels') and data.columns.nlevels > 1:
-                # Find the level containing price names (e.g. 'Close'), not ticker names
-                for lvl in range(data.columns.nlevels):
-                    vals = data.columns.get_level_values(lvl)
-                    if 'Close' in vals:
-                        data.columns = vals
-                        break
-                else:
-                    data.columns = data.columns.get_level_values(0)
-                # Drop duplicate columns created by flattening
-                data = data.loc[:, ~data.columns.duplicated()]
-            with self._lock:
-                self._cache[key] = (data, time.time())
-            return self._slice_to_period(data, period).copy()
-        except Exception as e:
-            logger.error(f"Failed to download {ticker}: {e}", exc_info=True)
-            raise DataFetchError(f"Failed to download data for {ticker}: {e}") from e
+            data = self._get_provider().get_historical(
+                polygon_ticker, days=_FETCH_CALENDAR_DAYS,
+            )
+        except DataFetchError:
+            raise
+        except Exception as exc:
+            logger.error(
+                "Failed Polygon fetch for %s (%s): %s",
+                ticker, polygon_ticker, exc, exc_info=True,
+            )
+            raise DataFetchError(
+                f"Failed to download data for {ticker}: {exc}"
+            ) from exc
+
+        if data is None or data.empty:
+            raise DataFetchError(
+                f"Polygon returned no data for {ticker} ({polygon_ticker})"
+            )
+
+        with self._lock:
+            self._cache[key] = (data, time.time())
+        return self._slice_to_period(data, period).copy()
 
     @staticmethod
     def _slice_to_period(data: pd.DataFrame, period: str) -> pd.DataFrame:
-        """Slice a full-year DataFrame to the requested period."""
+        """Slice the cached full-window DataFrame to the requested period."""
         days = _PERIOD_DAYS.get(period)
         if days is None or days >= len(data):
             return data
@@ -91,19 +158,11 @@ class DataCache:
         for ticker in tickers:
             try:
                 self.get_history(ticker)
-                logger.info(f"Pre-warmed cache for {ticker}")
-            except Exception as e:
-                logger.warning(f"Pre-warm failed for {ticker}: {e}")
+                logger.info("Pre-warmed cache for %s", ticker)
+            except Exception as exc:
+                logger.warning("Pre-warm failed for %s: %s", ticker, exc)
 
-    def get_ticker_obj(self, ticker: str) -> yf.Ticker:
-        """Get a yfinance Ticker object (not cached, used for options chains)."""
-        try:
-            return yf.Ticker(ticker)
-        except Exception as e:
-            logger.error(f"Failed to create Ticker object for {ticker}: {e}", exc_info=True)
-            raise DataFetchError(f"Failed to create Ticker object for {ticker}: {e}") from e
-
-    def clear(self):
+    def clear(self) -> None:
         """Clear all cached data."""
         with self._lock:
             self._cache.clear()
