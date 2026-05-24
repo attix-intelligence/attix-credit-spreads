@@ -25,7 +25,6 @@ SAMPLE_REGISTRY = {
             "alpaca_account_id": "PA3ZSXZ5JNEM",
             "env_file": ".env.exp400",
             "config_path": "configs/paper_champion.yaml",
-            "tmux_session": "exp400",
             "backtest_baseline": {
                 "win_rate": 78.0, "avg_pnl": 525.0,
                 "avg_loss": 2100.0, "mc_worst_dd_pct": 41.5,
@@ -41,7 +40,6 @@ SAMPLE_REGISTRY = {
             "alpaca_account_id": "PA3IPY4E4KPA",
             "env_file": ".env.exp401",
             "config_path": "configs/paper_exp401.yaml",
-            "tmux_session": "exp401",
             "backtest_baseline": {
                 "win_rate": 72.0, "avg_pnl": 825.0,
                 "avg_loss": 2800.0, "mc_worst_dd_pct": 10.5,
@@ -56,7 +54,6 @@ SAMPLE_REGISTRY = {
             "alpaca_account_id": "PA3O14JAJHJ0",
             "env_file": ".env.exp600",
             "config_path": "configs/paper_exp600.yaml",
-            "tmux_session": "exp600",
         },
         "EXP-700": {
             "id": "EXP-700",
@@ -64,7 +61,6 @@ SAMPLE_REGISTRY = {
             "created_by": "charles",
             "status": "retired",
             "ticker": "SPY",
-            "tmux_session": "exp700",
         },
         "EXP-810-max": {
             "id": "EXP-810-max",
@@ -72,7 +68,6 @@ SAMPLE_REGISTRY = {
             "created_by": "maximus",
             "status": "completed",
             "ticker": "SPY",
-            "tmux_session": None,
         },
         "EXP-500": {
             "id": "EXP-500",
@@ -82,7 +77,6 @@ SAMPLE_REGISTRY = {
             "ticker": "SPY",
             "env_file": None,
             "config_path": None,
-            "tmux_session": "exp500",
         },
     },
 }
@@ -238,10 +232,6 @@ def test_env_file(mgr: ExperimentManager):
     assert mgr.env_file("EXP-NOPE") is None
 
 
-def test_tmux_session(mgr: ExperimentManager):
-    assert mgr.tmux_session("EXP-400") == "exp400"
-    assert mgr.tmux_session("EXP-810-max") is None
-    assert mgr.tmux_session("EXP-NOPE") is None
 
 
 def test_config_path(mgr: ExperimentManager):
@@ -361,8 +351,3 @@ def test_real_registry_baselines():
     assert bl["win_rate"] == 78.0
 
 
-def test_real_registry_tmux_sessions():
-    """tmux_sessions were populated in Phase 0."""
-    mgr = ExperimentManager()
-    assert mgr.tmux_session("EXP-400") == "exp400"
-    assert mgr.tmux_session("EXP-810-max") is None
