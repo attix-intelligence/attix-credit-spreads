@@ -63,14 +63,16 @@ def cmd_start(experiments: dict, target: str) -> None:
             continue
         # SECURITY AUDIT #5: use list args to prevent shell injection via
         # config_file/env_file values containing shell metacharacters.
-        config_path = Path(cfg.get("config_path", ""))
-        env_path    = Path(cfg.get("env_file", ""))
-        if not config_path.exists():
-            print(f"[{name}] config file not found: {config_path}")
+        cp = cfg.get("config_path") or ""
+        if not cp or not Path(cp).exists():
+            print(f"[{name}] config file not found: {cp!r}")
             continue
-        if not env_path.exists():
-            print(f"[{name}] env file not found: {env_path}")
+        ep = cfg.get("env_file") or ""
+        if not ep or not Path(ep).exists():
+            print(f"[{name}] env file not found: {ep!r}")
             continue
+        config_path = Path(cp)
+        env_path    = Path(ep)
         subprocess.run(
             [
                 "tmux", "new-session", "-d", "-s", session,
@@ -102,7 +104,8 @@ def cmd_status(experiments: dict, target: str) -> None:
     for name, cfg in _resolve_targets(experiments, target):
         session = cfg["tmux_session"]
         running = _tmux_session_exists(session)
-        db_exists = Path(cfg["db_path"]).exists()
+        db_path = cfg.get("db_path", "")
+        db_exists = bool(db_path) and Path(db_path).exists()
         status = "RUNNING" if running else "STOPPED"
         db_status = "exists" if db_exists else "missing"
         print(f"[{name}] {status}  (session: {session}, db: {db_status})")
@@ -129,7 +132,7 @@ def main():
     command = sys.argv[1]
     target = sys.argv[2] if len(sys.argv) > 2 else "all"
 
-    experiments = get_manager().all()
+    experiments = get_manager().live()
 
     commands = {
         "start": cmd_start,

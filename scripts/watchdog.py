@@ -251,37 +251,38 @@ def run_watchdog(project_dir: Optional[str] = None) -> Dict[str, Any]:
         env_file_abs = os.path.join(project_dir, env_file) if env_file else ""
         db_path_abs = os.path.join(project_dir, db_path) if db_path else ""
 
-        # 1. tmux session alive?
+        # 1. tmux session alive? (paused experiments: check only, no restart)
         try:
-            alive = tmux_session_alive(session_name)
-            exp_result["tmux_alive"] = alive
+            if status != "paused":
+                alive = tmux_session_alive(session_name)
+                exp_result["tmux_alive"] = alive
 
-            if not alive and session_name:
-                msg = f"🔴 <b>WATCHDOG: {exp_id} tmux session '{session_name}' is DEAD</b>"
-                logger.warning(msg)
+                if not alive and session_name:
+                    msg = f"🔴 <b>WATCHDOG: {exp_id} tmux session '{session_name}' is DEAD</b>"
+                    logger.warning(msg)
 
-                # Attempt restart
-                restarted = restart_tmux_session(
-                    session_name, project_dir, env_file, config_file, db_path,
-                )
-                exp_result["restarted"] = restarted
-
-                if restarted:
-                    restart_msg = (
-                        f"🔄 <b>WATCHDOG RESTART: {exp_id}</b>\n\n"
-                        f"Session <code>{session_name}</code> was dead — restarted automatically.\n"
-                        f"Config: <code>{config_file}</code>"
+                    # Attempt restart
+                    restarted = restart_tmux_session(
+                        session_name, project_dir, env_file, config_file, db_path,
                     )
-                    results["restarts"].append(exp_id)
-                    send_telegram_alert(restart_msg)
-                else:
-                    fail_msg = (
-                        f"🚨 <b>WATCHDOG FAILED TO RESTART: {exp_id}</b>\n\n"
-                        f"Session <code>{session_name}</code> is dead and auto-restart failed.\n"
-                        f"Manual intervention required!"
-                    )
-                    results["alerts"].append(f"{exp_id}: restart failed")
-                    send_telegram_alert(fail_msg)
+                    exp_result["restarted"] = restarted
+
+                    if restarted:
+                        restart_msg = (
+                            f"🔄 <b>WATCHDOG RESTART: {exp_id}</b>\n\n"
+                            f"Session <code>{session_name}</code> was dead — restarted automatically.\n"
+                            f"Config: <code>{config_file}</code>"
+                        )
+                        results["restarts"].append(exp_id)
+                        send_telegram_alert(restart_msg)
+                    else:
+                        fail_msg = (
+                            f"🚨 <b>WATCHDOG FAILED TO RESTART: {exp_id}</b>\n\n"
+                            f"Session <code>{session_name}</code> is dead and auto-restart failed.\n"
+                            f"Manual intervention required!"
+                        )
+                        results["alerts"].append(f"{exp_id}: restart failed")
+                        send_telegram_alert(fail_msg)
         except Exception as exc:
             exp_result["tmux_error"] = str(exc)
             logger.error("tmux check failed for %s: %s", exp_id, exc)
