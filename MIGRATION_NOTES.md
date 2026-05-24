@@ -129,3 +129,74 @@ MIGRATION_QUESTIONS.md. None affect the live alerts/scanner path.
    live-path holdout.
 3. **`strategy/options_analyzer.py`** (Q3) — still imports yfinance for
    the `_get_chain_yfinance` fallback. Outside the 5-scanner Phase 3 scope.
+
+---
+
+## Phases 6–10 — Backtest migration (D4)
+
+**Branch:** `feature/migrate-backtest-to-polygon`
+**Proposal:** [`BACKTEST_MIGRATION_PROPOSAL.md`](BACKTEST_MIGRATION_PROPOSAL.md)
+**Task spec:** [`MIGRATION_D4_BACKTEST_TASK.md`](MIGRATION_D4_BACKTEST_TASK.md)
+
+### Phase 6 — SQLite indices bootstrap (commit `c4fe61f`)
+One-time Yahoo bootstrap of ^VIX / ^VIX3M daily bars into
+`data/historical_indices.sqlite` covering 2019-06-01 → 2023-02-13 (the
+window where Polygon indices do not yet exist). Bootstrap script lives at
+`scripts/bootstrap_indices_sqlite.py`. After this, Yahoo is no longer
+needed for backtests.
+
+### Phase 7 — `load_market_history` + hybrid loader (commit `41032fb`)
+Created `backtest/market_history.py`:
+- Polygon for SPY/TLT/QQQ/IWM/sector ETFs (and indices ≥ 2023-02-14).
+- SQLite for indices < 2023-02-14.
+- Symbol normalization: `^VIX → I:VIX`, `^VIX3M → I:VIX3M`, `^GSPC → I:SPX`.
+- NYSE trading-calendar filter derived from SPY's Polygon aggregates —
+  drops Polygon's holiday-published VIX prints that Yahoo would not emit.
+- Single `PolygonClient` from `shared/polygon_client.py`.
+- 15 unit tests in `tests/test_market_history.py`, all passing.
+
+### Phase 8 — Backtester swap (commit `24c93a5`)
+`backtest/backtester.py` rewired: 3 call sites
+(`_get_historical_data`, `_build_iv_rank_series` × 2) now call
+`load_market_history`. Legacy `_yf_download_safe` / `_yf_history_safe`
+helpers retained (no callers in `backtest/`) for Gate 3's Yahoo-arm shim.
+
+### Phase 9 — Script & experiment migration (DEFERRED)
+Carlos directive 2026-05-23: Gate 3 fails because the Q1 fix (Polygon
+split-only adjustment is the correct semantics for an options system)
+propagates into historical strike selection. Re-baselining
+MASTERPLAN/leaderboard/champion numbers against the corrected backtester
+is a follow-up workstream, not a PR blocker. Phase 9 (bulk script
+migration) is held until that re-baseline lands, since rerunning ~90
+scripts on Polygon data only matters in the context of re-baselined
+expected results.
+
+### Phase 10 — Cleanup + lint (this commit)
+- Added `tests/test_no_new_yfinance_imports.py` with two checks:
+  - `test_no_new_yfinance_imports`: every yfinance importer must be on
+    the explicit transitional allowlist; new importers + stale entries
+    both fail the build.
+  - `test_backtest_module_is_yfinance_free`: hard-guard that `backtest/`
+    cannot regress.
+- Stamped `BACKTEST_MIGRATION_PROPOSAL.md` with "EXECUTED 2026-05-23" and
+  the per-phase status table.
+- This `MIGRATION_NOTES.md` section.
+
+### Gates
+
+| Gate | Threshold | Result |
+|---|---|---|
+| 1 — Polygon-era bar equivalence | max rel dev < 0.1%, bars ±2 | ✅ PASS w/ 12 documented vendor outliers (Q4) |
+| 2 — SQLite-era bar equivalence | bit-exact | ✅ PASS |
+| 3 — Champion equity correlation | ≥ 0.99 | ⚠ FAIL → accepted (Q5) as Q1-div-adjust propagation |
+| 4 — Full test suite | no new failures | ✅ PASS (3788 pass / 14 pre-existing fail) |
+
+### Follow-up workstream
+
+1. **Strategy re-baseline** — rerun MASTERPLAN champion + leaderboard on
+   the Polygon-backed backtester to establish new expected numbers.
+2. **Phase 9 bulk migration** — once re-baseline lands, migrate the ~90
+   files on `ALLOWED_YFINANCE_IMPORTERS` off Yahoo. Removing entries from
+   the allowlist is mechanical because the lint enforces it.
+3. **Remove yfinance from `requirements.txt`** — only after every entry
+   is off the allowlist.
