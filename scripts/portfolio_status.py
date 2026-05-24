@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-portfolio_status.py — PilotAI Paper Trading Dashboard
+portfolio_status.py — Attix Paper Trading Dashboard
 
 Reads experiments/registry.json, checks tmux session state, pings each
 Alpaca paper account, and prints a live status dashboard.
@@ -260,7 +260,7 @@ def print_summary(experiments: Dict[str, dict]) -> None:
 # ── Main ───────────────────────────────────────────────────────────────────────
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="PilotAI paper trading portfolio dashboard",
+        description="Attix paper trading portfolio dashboard",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument(
@@ -302,7 +302,7 @@ def main() -> int:
     now = datetime.now().strftime("%Y-%m-%d %H:%M %Z")
     print()
     print(f"{C.BOLD}╔══════════════════════════════════════════════════════════╗{C.NC}")
-    print(f"{C.BOLD}║  PilotAI Portfolio Dashboard  —  {now:<25}║{C.NC}")
+    print(f"{C.BOLD}║  Attix Portfolio Dashboard  —  {now:<25}║{C.NC}")
     print(f"{C.BOLD}╚══════════════════════════════════════════════════════════╝{C.NC}")
     print(f"  Registry: experiments/registry.json")
 

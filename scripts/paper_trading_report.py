@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Paper Trading Weekly Report — PilotAI Credit Spreads
+Paper Trading Weekly Report — Attix Credit Spreads
 =====================================================
 Generates a side-by-side HTML comparison of all live paper trading experiments.
 
@@ -812,7 +812,7 @@ def generate_html(all_stats: list[dict], report_date: str) -> str:
   <div class="header">
     <h1>Paper Trading Report</h1>
     <p class="subtitle">
-      <b>PilotAI Credit Spreads</b>
+      <b>Attix Credit Spreads</b>
       &bull; Week of {week_start}
       &bull; {total_exp} experiments live
       &bull; {exp_with_trades} with trades
@@ -898,7 +898,7 @@ def generate_html(all_stats: list[dict], report_date: str) -> str:
 
   <!-- ── Footer ── -->
   <div class="footer">
-    <span>PilotAI Credit Spreads &bull; Paper Trading Dashboard</span>
+    <span>Attix Credit Spreads &bull; Paper Trading Dashboard</span>
     <span>Generated {now_str}</span>
   </div>
 
@@ -912,7 +912,7 @@ def generate_html(all_stats: list[dict], report_date: str) -> str:
 # ---------------------------------------------------------------------------
 
 def main():
-    parser = argparse.ArgumentParser(description="PilotAI Paper Trading Weekly Report")
+    parser = argparse.ArgumentParser(description="Attix Paper Trading Weekly Report")
     parser.add_argument(
         "--output", default=str(DEFAULT_OUTPUT),
         help="Output HTML path (default: output/paper_trading_report.html)"

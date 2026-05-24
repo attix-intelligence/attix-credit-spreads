@@ -1,5 +1,5 @@
 """
-Shared SQLite database module for PilotAI.
+Shared SQLite database module for Attix.
 Single source of truth for trades, alerts, and regime snapshots.
 Uses WAL mode for concurrent read access from Python and Node.js.
 """
