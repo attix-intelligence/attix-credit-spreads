@@ -805,7 +805,7 @@
             "name": "Per-Stream Selective Regime Gate",
             "created_by": "maximus",
             "created_date": "2026-05-21",
-            "status": "configuring",
+            "status": "active",
             "ticker": "SPY",
             "account_id": "PA3ZLF9F1QNI",
             "live_since": null,
@@ -819,8 +819,8 @@
             "db_path": "data/pilotai_exp3303b.db",
             "strategy_type": "credit_spread_regime_gated",
             "created_at": "2026-05-21T18:56:25.729115+00:00",
-            "updated_at": "2026-05-21T18:56:25.729115+00:00",
-            "last_started_at": null,
+            "updated_at": "2026-05-24T15:13:59.463915+00:00",
+            "last_started_at": "2026-05-24T15:13:59.463933+00:00",
             "tmux_session": "exp3303b",
             "backtest_expectations": {
                 "avg_return": 247.9,
@@ -829,7 +829,8 @@
             },
             "backtest_baseline": {
                 "mc_worst_dd_pct": 10.455
-            }
+            },
+            "status_reason": "Railway deployment \u2014 Alpaca keys set, activating for paper trading"
         }
     }
 }
