@@ -249,7 +249,7 @@ def main() -> None:
     from experiments.manager import get_manager  # noqa: PLC0415
 
     logger.info("=" * 60)
-    logger.info("PilotAI Railway Worker starting")
+    logger.info("Attix Railway Worker starting")
     logger.info("PROJECT_DIR        = %s", PROJECT_DIR)
     logger.info("VOLUME_MOUNT       = %s", VOLUME_MOUNT or "(not set, using data/)")
     logger.info("DATA_DIR           = %s", DATA_DIR)

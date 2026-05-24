@@ -326,7 +326,7 @@ def run_check() -> Dict[str, Any]:
 
 def main() -> None:
     logger.info("=" * 60)
-    logger.info("PilotAI Railway Watchdog starting")
+    logger.info("Attix Railway Watchdog starting")
     logger.info("VOLUME_MOUNT  = %s", VOLUME_MOUNT or "(not set, using data/)")
     logger.info("CHECK_INTERVAL= %ds", CHECK_INTERVAL_SECS)
     logger.info("STATUS_FILE   = %s", STATUS_FILE)

@@ -415,7 +415,7 @@ def generate_daily_html(
     # ── Footer ─────────────────────────────────────────────────────────────
     parts.append(
         f'<hr class="section-divider">'
-        f'<div class="footer">Generated {now_str} &bull; 🛡️ SENTINEL v1.0 &bull; PilotAI</div>'
+        f'<div class="footer">Generated {now_str} &bull; 🛡️ SENTINEL v1.0 &bull; Attix</div>'
         f"</body></html>"
     )
 
@@ -588,7 +588,7 @@ def generate_history_html(
     # ── Footer ─────────────────────────────────────────────────────────────
     parts.append(
         f'<hr class="section-divider">'
-        f'<div class="footer">Generated {now_str} &bull; 🛡️ SENTINEL v1.0 &bull; PilotAI</div>'
+        f'<div class="footer">Generated {now_str} &bull; 🛡️ SENTINEL v1.0 &bull; Attix</div>'
         f"</body></html>"
     )
 

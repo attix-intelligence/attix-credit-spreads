@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-scripts/watchdog.py — Auto-restart watchdog for PilotAI experiments (INF-3).
+scripts/watchdog.py — Auto-restart watchdog for Attix experiments (INF-3).
 
 Checks:
   1. tmux session liveness for each active experiment
@@ -343,7 +343,7 @@ def run_watchdog(project_dir: Optional[str] = None) -> Dict[str, Any]:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="PilotAI watchdog — auto-restart & health checks")
+    parser = argparse.ArgumentParser(description="Attix watchdog — auto-restart & health checks")
     parser.add_argument("--project-dir", default=None, help="Project root (default: parent of scripts/)")
     parser.add_argument("--verbose", "-v", action="store_true")
     args = parser.parse_args()
