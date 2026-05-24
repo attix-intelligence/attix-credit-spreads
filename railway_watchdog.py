@@ -3,7 +3,7 @@
 railway_watchdog.py — Lightweight health monitor for Railway deployment.
 
 Adapted from scripts/watchdog.py for Railway's subprocess model:
-  - No tmux checks (processes are managed by railway_worker.py)
+  - Processes managed by railway_worker.py (Railway-native)
   - Checks: worker process status, heartbeat staleness, Alpaca API, DB recency
   - Sends Telegram alerts on issues
   - Emits JSON to stdout on every cycle (visible in Railway logs)

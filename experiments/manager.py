@@ -125,11 +125,6 @@ class ExperimentManager:
         exp = self.get(exp_id)
         return exp.get("env_file") if exp else None
 
-    def tmux_session(self, exp_id: str) -> str | None:
-        """Get tmux session name for an experiment."""
-        exp = self.get(exp_id)
-        return exp.get("tmux_session") if exp else None
-
     def config_path(self, exp_id: str) -> str | None:
         """Get config_path for an experiment."""
         exp = self.get(exp_id)
