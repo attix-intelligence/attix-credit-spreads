@@ -271,10 +271,13 @@ def main() -> None:
         e["id"]: ExperimentProcess(e) for e in active
     }
 
-    # Start all subprocesses with a small stagger so log lines don't collide
-    for p in procs.values():
+    # Start all subprocesses with stagger to avoid Polygon API 429 rate limits
+    # during simultaneous pre-warm. 9 experiments × ~10 tickers = ~90 requests.
+    STAGGER_SECS = 10
+    for i, p in enumerate(procs.values()):
         p.start()
-        time.sleep(2)
+        if i < len(procs) - 1:
+            time.sleep(STAGGER_SECS)
 
     write_status(procs)
 
