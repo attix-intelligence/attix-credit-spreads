@@ -316,7 +316,9 @@ def query_all_live(report_date: Optional[str] = None) -> List[dict]:
         if pushed and "experiments" in pushed:
             # Flatten nested sync format to match query_experiment output
             flattened = []
+            pushed_ids: set[str] = set()
             for exp in pushed["experiments"]:
+                pushed_ids.add(exp.get("id", ""))
                 stats = exp.get("stats", {})
                 flat = {
                     "id":          exp.get("id"),
@@ -345,6 +347,11 @@ def query_all_live(report_date: Optional[str] = None) -> List[dict]:
                     "alpaca_equity_history": exp.get("alpaca_equity_history") or [],
                 }
                 flattened.append(flat)
+            # Keep registry-live experiments that aren't in the pushed export
+            # so newly launched experiments still appear on the dashboard.
+            for r in results:
+                if r["id"] not in pushed_ids:
+                    flattened.append(r)
             results = flattened
     else:
         # We have local DBs — augment with alpaca data from pushed export if available
