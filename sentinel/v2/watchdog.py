@@ -473,6 +473,18 @@ def main() -> None:
     scheduler.start()
 
     active = _active_exp_ids()
+
+    # Re-baseline config fingerprints on startup so Gate 2 doesn't fire on
+    # every deploy due to stale digests in sentinel_state.json.
+    from sentinel.state import update_fingerprint
+    for exp_id in active:
+        try:
+            config_path = _resolve_config(exp_id)
+            update_fingerprint(exp_id, config_path)
+            LOG.info("watchdog: re-baselined fingerprint for %s (%s)", exp_id, config_path)
+        except Exception as exc:
+            LOG.warning("watchdog: could not re-baseline fingerprint for %s: %s", exp_id, exc)
+
     scan_jobs = [j for j in scheduler.get_jobs() if j.id.startswith("scan_")]
     LOG.info(
         "Sentinel v2 watchdog started — %d jobs scheduled, %d active experiments",
