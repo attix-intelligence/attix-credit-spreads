@@ -472,6 +472,42 @@ def main() -> None:
     scheduler = build_scheduler()
     scheduler.start()
 
+    # Auto-enroll any registry-active experiments missing from sentinel_state.json.
+    # This catches experiments that were activated before the atomic launcher existed
+    # or were enrolled outside the normal launch flow.
+    try:
+        from experiments.manager import get_manager
+        from experiments.registry import LIVE_STATUSES
+        from sentinel.state import load_state, save_state
+        mgr = get_manager()
+        mgr.reload()
+        live_exps = {e["id"]: e for e in mgr.live()}
+        state = load_state()
+        enrolled = set(state.get("experiments", {}).keys())
+        missing = set(live_exps.keys()) - enrolled
+        if missing:
+            from datetime import datetime, timezone
+            _now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+            _today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+            experiments = state.setdefault("experiments", {})
+            for exp_id in sorted(missing):
+                exp = live_exps[exp_id]
+                experiments[exp_id] = {
+                    "status": "active",
+                    "paper_config": exp.get("config_path"),
+                    "config_fingerprint": None,  # will be set by re-baseline below
+                    "account_id": exp.get("alpaca_account_id"),
+                    "live_since": exp.get("live_since") or _today,
+                    "enrolled_at": _now,
+                    "last_health_check": _now,
+                    "halt_reason": None,
+                    "halted": False,
+                }
+                LOG.info("watchdog: auto-enrolled %s from registry", exp_id)
+            save_state(state)
+    except Exception as exc:
+        LOG.warning("watchdog: auto-enroll from registry failed: %s", exc)
+
     active = _active_exp_ids()
 
     # Re-baseline config fingerprints on startup so Gate 2 doesn't fire on
