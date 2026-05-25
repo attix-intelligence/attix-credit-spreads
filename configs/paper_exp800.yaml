@@ -108,6 +108,7 @@ kelly:
 # ============================================================================
 risk:
   account_size: 100000       # starting capital (used for HWM bootstrap)
+  max_risk_per_trade: 9.0    # hard cap (matches max Kelly bull fraction)
   max_contracts: 25          # hard cap regardless of Kelly size
   max_positions: 10
 
