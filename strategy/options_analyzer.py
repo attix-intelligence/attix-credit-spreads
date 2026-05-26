@@ -68,14 +68,18 @@ class OptionsAnalyzer:
         Returns:
             DataFrame with options chain data
         """
+        # Try providers in order; fall through to yfinance if they return empty
         if self.tradier:
-            return self._get_chain_from_provider(self.tradier, "Tradier", ticker)
+            result = self._get_chain_from_provider(self.tradier, "Tradier", ticker)
+            if not result.empty:
+                return result
         if self.polygon:
-            return self._get_chain_from_provider(self.polygon, "Polygon", ticker)
-        raise RuntimeError(
-            f"No options provider configured for {ticker}. "
-            f"Set data.provider to 'tradier' or 'polygon' in config.yaml."
-        )
+            result = self._get_chain_from_provider(self.polygon, "Polygon", ticker)
+            if not result.empty:
+                return result
+        # Fallback: yfinance (free, no API key needed)
+        logger.info("Polygon/Tradier returned no data — falling back to yfinance for %s options", ticker)
+        return self._get_chain_yfinance(ticker)
 
     def _get_chain_from_provider(self, provider: DataProvider, provider_name: str, ticker: str) -> pd.DataFrame:
         """Get options chain from a provider (Tradier or Polygon).
@@ -110,6 +114,49 @@ class OptionsAnalyzer:
             return chain
         except Exception as e:
             logger.error(f"{provider_name} error for {ticker}: {e}", exc_info=True)
+            return pd.DataFrame()
+
+    def _get_chain_yfinance(self, ticker: str) -> pd.DataFrame:
+        """Fallback options chain via yfinance (free, no API key)."""
+        try:
+            import yfinance as yf
+            yticker = yf.Ticker(ticker)
+            expirations = yticker.options
+            if not expirations:
+                logger.warning("yfinance: no expirations for %s", ticker)
+                return pd.DataFrame()
+
+            # Get chains for nearest expirations within DTE window
+            all_rows = []
+            for exp in expirations[:6]:  # limit to 6 nearest expirations
+                try:
+                    chain = yticker.option_chain(exp)
+                    for side, contract_type in [(chain.puts, "put"), (chain.calls, "call")]:
+                        df = side.copy()
+                        df["expiration_date"] = exp
+                        df["contract_type"] = contract_type
+                        all_rows.append(df)
+                except Exception as e:
+                    logger.warning("yfinance: failed to get chain for %s exp %s: %s", ticker, exp, e)
+
+            if not all_rows:
+                return pd.DataFrame()
+
+            result = pd.concat(all_rows, ignore_index=True)
+            # Normalize column names to match what the rest of the system expects
+            rename_map = {
+                "impliedVolatility": "implied_volatility",
+                "lastPrice": "last_price",
+                "openInterest": "open_interest",
+            }
+            result.rename(columns={k: v for k, v in rename_map.items() if k in result.columns}, inplace=True)
+            logger.info("yfinance: got %d option rows for %s (%d expirations)", len(result), ticker, len(expirations[:6]))
+            return result
+        except ImportError:
+            logger.error("yfinance not installed — cannot get options chain")
+            return pd.DataFrame()
+        except Exception as e:
+            logger.error("yfinance options chain failed for %s: %s", ticker, e, exc_info=True)
             return pd.DataFrame()
 
     def _clean_options_data(self, df: pd.DataFrame) -> pd.DataFrame:
