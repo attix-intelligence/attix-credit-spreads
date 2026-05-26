@@ -750,7 +750,8 @@ def _render_exp_card(s: dict) -> str:
             # Alpaca's /v2/positions API returns numeric fields (qty, current_price,
             # market_value, unrealized_pl, unrealized_plpc) as STRINGS. Coerce to float
             # before any arithmetic/formatting.
-            _f = lambda v: float(v or 0)
+            def _f(v):
+                return float(v or 0)
             rows = []
             for p in positions:
                 side_cls = "pos-side-short" if p.get("side") == "short" else "pos-side-long"
