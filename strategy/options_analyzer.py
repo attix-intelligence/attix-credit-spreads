@@ -76,16 +76,7 @@ class OptionsAnalyzer:
         Returns:
             DataFrame with options chain data
         """
-        # Try providers in order: Tradier → Polygon → UW → yfinance
-        if self.tradier:
-            result = self._get_chain_from_provider(self.tradier, "Tradier", ticker)
-            if not result.empty:
-                return result
-        if self.polygon:
-            result = self._get_chain_from_provider(self.polygon, "Polygon", ticker)
-            if not result.empty:
-                return result
-        # Unusual Whales fallback
+        # Try providers in order: UW → Polygon → Tradier → yfinance
         if self._uw_client:
             try:
                 result = self._uw_client.get_options_chain(ticker)
@@ -94,6 +85,14 @@ class OptionsAnalyzer:
                     return result
             except Exception as e:
                 logger.warning("UW options chain failed for %s: %s", ticker, e)
+        if self.polygon:
+            result = self._get_chain_from_provider(self.polygon, "Polygon", ticker)
+            if not result.empty:
+                return result
+        if self.tradier:
+            result = self._get_chain_from_provider(self.tradier, "Tradier", ticker)
+            if not result.empty:
+                return result
         # Final fallback: yfinance (free, no API key needed)
         logger.info("All providers returned no data — falling back to yfinance for %s options", ticker)
         return self._get_chain_yfinance(ticker)
