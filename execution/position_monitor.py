@@ -1113,6 +1113,27 @@ class PositionMonitor:
     # Closing
     # ------------------------------------------------------------------
 
+    @staticmethod
+    def _compute_close_limit(pos: Dict) -> float:
+        """Compute a limit price (debit) for closing a credit spread.
+
+        Uses the current value if available, otherwise falls back to a
+        percentage of the original credit to ensure fills.
+        """
+        current_value = pos.get("current_value")
+        credit = pos.get("credit", 0) or 0
+
+        if current_value is not None and float(current_value) > 0:
+            # Add 10% buffer above current value for fill probability
+            return round(float(current_value) * 1.10, 2)
+
+        if credit > 0:
+            # Profit target close: use 50% of original credit as max debit
+            return round(float(credit) * 0.50, 2)
+
+        # Absolute fallback: $0.05 debit
+        return 0.05
+
     def _close_position(self, pos: Dict, reason: str) -> None:
         """Mark pending_close in DB, submit close order, store order_id for fill tracking."""
         ticker = pos.get("ticker", "")
@@ -1158,9 +1179,12 @@ class PositionMonitor:
                     option_type=opt_type,
                     side="buy",  # buy to close a short position
                     contracts=contracts,
-                    limit_price=None,
+                    limit_price=self._compute_close_limit(pos),
                 )
             else:
+                # Compute limit price for close: use current debit value or
+                # fall back to a small debit to ensure the order fills.
+                close_limit = self._compute_close_limit(pos)
                 result = self.alpaca.close_spread(
                     ticker=ticker,
                     short_strike=pos.get("short_strike"),
@@ -1168,7 +1192,7 @@ class PositionMonitor:
                     expiration=expiration_str,
                     spread_type=str(pos.get("strategy_type", pos.get("type", ""))),
                     contracts=contracts,
-                    limit_price=None,   # market order on exits
+                    limit_price=close_limit,
                 )
 
             if result.get("status") == "submitted":
