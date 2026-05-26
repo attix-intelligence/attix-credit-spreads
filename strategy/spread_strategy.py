@@ -249,7 +249,7 @@ class CreditSpreadStrategy:
             if rsi is None:
                 logger.warning("RSI missing from technical_signals — blocking bull entry")
                 return False
-            bullish = bullish and rsi < tech_params['rsi_overbought']
+            bullish = bullish and rsi < tech_params.get('rsi_overbought', 70)
 
         return bullish
 
@@ -283,7 +283,7 @@ class CreditSpreadStrategy:
             if rsi is None:
                 logger.warning("RSI missing from technical_signals — blocking bear entry")
                 return False
-            bearish = bearish and rsi > tech_params['rsi_oversold']
+            bearish = bearish and rsi > tech_params.get('rsi_oversold', 30)
 
         return bearish
 

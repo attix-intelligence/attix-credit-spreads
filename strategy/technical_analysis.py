@@ -89,8 +89,8 @@ class TechnicalAnalyzer:
         Returns:
             Dictionary with trend signals
         """
-        fast_period = self.tech_params['fast_ma']
-        slow_period = self.tech_params['slow_ma']
+        fast_period = self.tech_params.get('fast_ma', 20)
+        slow_period = self.tech_params.get('slow_ma', 50)
 
         close_series = self._get_close_series(price_data)
 
@@ -125,7 +125,7 @@ class TechnicalAnalyzer:
         Returns:
             Dictionary with RSI signals
         """
-        rsi_period = self.tech_params['rsi_period']
+        rsi_period = self.tech_params.get('rsi_period', 14)
         close_series = self._get_close_series(price_data)
 
         # Calculate RSI
@@ -136,8 +136,8 @@ class TechnicalAnalyzer:
         current_rsi = float(rsi.iloc[-1])
 
         # RSI conditions
-        oversold = current_rsi < self.tech_params['rsi_oversold']
-        overbought = current_rsi > self.tech_params['rsi_overbought']
+        oversold = current_rsi < self.tech_params.get('rsi_oversold', 30)
+        overbought = current_rsi > self.tech_params.get('rsi_overbought', 70)
 
         return {
             'rsi': round(current_rsi, 2),
