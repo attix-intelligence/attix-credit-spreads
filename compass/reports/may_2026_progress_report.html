@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Progress Report — May 2026 · Pilot AI Credit Spreads</title>
+<style>
+  :root {
+    --ink: #0f172a;
+    --sub: #475569;
+    --mut: #64748b;
+    --bg: #ffffff;
+    --panel: #f8fafc;
+    --border: #e2e8f0;
+    --grid: #f1f5f9;
+    --green: #16a34a;
+    --green-bg: #f0fdf4;
+    --red: #dc2626;
+    --red-bg: #fef2f2;
+    --amber: #ca8a04;
+    --amber-bg: #fefce8;
+    --blue: #2563eb;
+    --blue-bg: #eff6ff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    margin: 0 auto;
+    padding: 32px 48px;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.55;
+    max-width: 1200px;
+  }
+  h1 { font-size: 1.9rem; margin: 0 0 .3rem 0; color: var(--ink); letter-spacing: -0.02em; }
+  h2 { font-size: 1.25rem; margin: 2.2rem 0 .7rem 0; color: var(--ink); border-bottom: 2px solid var(--border); padding-bottom: .4rem; }
+  h3 { font-size: 1.02rem; margin: 1.4rem 0 .5rem 0; color: var(--sub); }
+  p { margin: .4rem 0; }
+  .meta { color: var(--mut); font-size: 0.88rem; margin-bottom: 1.4rem; }
+  .lead { font-size: 1.05rem; color: var(--sub); margin: 1rem 0 1.4rem 0; }
+
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin: 16px 0 8px 0; }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; text-align: center; }
+  .card .label { font-size: 0.66rem; color: var(--mut); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
+  .card .value { font-size: 1.38rem; font-weight: 700; margin-top: 4px; color: var(--ink); }
+  .card .sub { font-size: 0.72rem; color: var(--mut); margin-top: 2px; }
+  .card.green { background: var(--green-bg); border-color: #bbf7d0; }
+  .card.green .value { color: var(--green); }
+  .card.red { background: var(--red-bg); border-color: #fecaca; }
+  .card.red .value { color: var(--red); }
+  .card.amber { background: var(--amber-bg); border-color: #fde68a; }
+  .card.amber .value { color: var(--amber); }
+  .card.blue { background: var(--blue-bg); border-color: #bfdbfe; }
+  .card.blue .value { color: var(--blue); }
+
+  .headline { background: var(--green-bg); border-left: 5px solid var(--green); padding: 16px 20px; border-radius: 6px; margin: 16px 0; font-size: 1.02rem; }
+  .headline strong { color: var(--green); }
+  .headline.warn { background: var(--amber-bg); border-color: var(--amber); }
+  .headline.warn strong { color: var(--amber); }
+
+  .callout { border-left: 4px solid var(--blue); background: var(--blue-bg); padding: 12px 18px; border-radius: 4px; margin: 12px 0; font-size: 0.92rem; }
+  .callout.warn { border-color: var(--amber); background: var(--amber-bg); }
+  .callout.miss { border-color: var(--red); background: var(--red-bg); }
+  .callout.ok   { border-color: var(--green); background: var(--green-bg); }
+
+  table { width: 100%; border-collapse: collapse; font-size: 0.88rem; margin: 12px 0; }
+  th { background: var(--grid); padding: 9px 10px; text-align: right; font-size: 0.72rem; color: var(--mut); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; border-bottom: 2px solid var(--border); }
+  th:first-child { text-align: left; }
+  td { padding: 8px 10px; text-align: right; border-bottom: 1px solid var(--grid); }
+  td:first-child { text-align: left; }
+  tr:hover td { background: #fafbfc; }
+  .exp-id { font-family: "SF Mono", Consolas, monospace; font-size: 0.82rem; font-weight: 600; color: var(--ink); }
+  .verdict { font-size: 0.72rem; font-weight: 700; padding: 3px 8px; border-radius: 10px; text-transform: uppercase; letter-spacing: 0.03em; display: inline-block; }
+  .v-win   { background: var(--green-bg); color: var(--green); }
+  .v-miss  { background: var(--red-bg); color: var(--red); }
+  .v-marg  { background: var(--amber-bg); color: var(--amber); }
+  .v-infra { background: var(--blue-bg); color: var(--blue); }
+  .pos { color: var(--green); font-weight: 600; }
+  .neg { color: var(--red); font-weight: 600; }
+  code { background: var(--grid); padding: .08em .35em; border-radius: 3px; font-size: 0.92em; }
+
+  .path { border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; margin: 12px 0; background: var(--panel); }
+  .path h3 { margin: 0 0 .4em 0; color: var(--ink); font-size: 1.05rem; }
+  .path .meta-row { font-size: 0.78rem; color: var(--mut); margin-bottom: 8px; }
+  .path .meta-row .pri { display: inline-block; padding: 2px 8px; border-radius: 10px; background: var(--blue-bg); color: var(--blue); font-weight: 700; margin-right: 8px; }
+  .path .meta-row .pri.p1 { background: var(--green-bg); color: var(--green); }
+  .path .meta-row .pri.p2 { background: var(--blue-bg); color: var(--blue); }
+  .path .meta-row .pri.p3 { background: var(--amber-bg); color: var(--amber); }
+
+  .footer { color: var(--mut); font-size: 0.76rem; margin-top: 2.4rem; border-top: 1px solid var(--border); padding-top: 14px; }
+</style>
+</head>
+<body>
+
+<h1>Progress Report — Pilot AI Credit Spreads</h1>
+<p class="meta">
+  Report date: <strong>May 18, 2026</strong> ·
+  Window covered: April 21 – May 18, 2026 (Waves 12-16) ·
+  For: Carlos ·
+  Data policy: Rule Zero — IronVault SQLite + Yahoo Finance + FRED only; no synthetic series.
+</p>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<h2>1. Executive Summary</h2>
+
+<div class="headline">
+  <strong>Strategy validated, capacity blocked.</strong>
+  v8a cleared two independent robustness gauntlets in May: 60-fold rolling walk-forward (60/60 positive net Sharpe, pooled net Sharpe <strong>6.64</strong>, EXP-3230) and a 10K-path Monte Carlo across five stress regimes (EXP-3200). The SPY VRP edge survived into the post-DBG era (<span class="exp-id">EXP-3300</span> net Sharpe 4.26 in the 2023-25 sub-window vs 3.74 in 2020-22). <strong>However, every Wave 12 AUM-expansion experiment was killed</strong> (5/5: TLT spreads, TLT IV-RV, SOXX/XLK, overnight premium, sector momentum), and the 40-day Alpaca API key blocker continues to prevent paper-to-live validation, gating the next tranche step-up.
+</div>
+
+<div class="card-grid">
+  <div class="card green">
+    <div class="label">North Star Targets Met</div>
+    <div class="value">3 / 4</div>
+    <div class="sub">Sharpe · DD · CAGR met · AUM gap</div>
+  </div>
+  <div class="card green">
+    <div class="label">Pooled Net Sharpe (60-fold WF)</div>
+    <div class="value">6.64</div>
+    <div class="sub">EXP-3230 · target ≥ 6.0</div>
+  </div>
+  <div class="card green">
+    <div class="label">Worst-Fold Net Sharpe</div>
+    <div class="value">3.88</div>
+    <div class="sub">60/60 folds positive</div>
+  </div>
+  <div class="card green">
+    <div class="label">Worst-Fold Test Max DD</div>
+    <div class="value">11.98%</div>
+    <div class="sub">claim ≤ 12% holds (60/60)</div>
+  </div>
+  <div class="card red">
+    <div class="label">Wave 12 Experiments</div>
+    <div class="value">0 / 5</div>
+    <div class="sub">all killed (Apr 21 – May 16)</div>
+  </div>
+  <div class="card red">
+    <div class="label">Alpaca Key Blocker</div>
+    <div class="value">40 days</div>
+    <div class="sub">paper-to-live gated</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<h2>2. v8a Strategy Validation — Robustness Gauntlet</h2>
+
+<p class="lead">
+  v8a was validated along two independent axes this month: historical out-of-sample stability (EXP-3230) and forward-looking distributional stress (EXP-3200). A third lit-driven test (EXP-3300) confirmed the SPY edge persists into the era where Dew-Becker-Giglio (2025) and Heston-Todorov (2024) reported SPX VRP collapsed to zero.
+</p>
+
+<h3>2.1 EXP-3230 — Rolling Walk-Forward (60 folds, 1-month step)</h3>
+
+<table>
+  <thead><tr>
+    <th>Metric</th><th>Gross</th><th>Net</th><th>Min fold (60)</th><th>Median fold</th><th>p90 fold</th>
+  </tr></thead>
+  <tbody>
+    <tr><td>Pooled Sharpe</td><td>7.10</td><td><strong>6.64</strong></td><td>3.88</td><td>6.80</td><td>9.75</td></tr>
+    <tr><td>Pooled CAGR</td><td>288.2%</td><td>255.3%</td><td>81.6%</td><td>287.2%</td><td>452.3%</td></tr>
+    <tr><td>Pooled Max DD</td><td>9.58%</td><td>9.86%</td><td>1.00%</td><td>2.58%</td><td>7.14%</td></tr>
+    <tr><td>Pooled Calmar</td><td>30.1</td><td>25.9</td><td>—</td><td>—</td><td>—</td></tr>
+  </tbody>
+</table>
+
+<div class="callout ok">
+  <strong>No overfitting signal.</strong> Median train→test Sharpe gap is <strong>−0.74</strong> (test outperforms train); mean −0.27. Average pairwise stream correlation stays ≤ 0.04 across all 60 training windows — the 8-stream diversification structure does not collapse to a single factor as the data accumulates. Worst-year median (2022, Fed rate shock) net Sharpe was 5.79; worst single fold (52, 2025-02-25 → 2025-05-22, tariff-shock chop) was 3.88. <strong>No fold breached the 12% production DD claim</strong> (max test DD 11.98% in Q1 2022).
+</div>
+
+<h3>2.2 EXP-3200 — Monte Carlo Stress (10K paths × 5 scenarios)</h3>
+
+<table>
+  <thead><tr>
+    <th>Scenario</th><th>Mean DD (net)</th><th>p99 DD</th><th>Worst path</th><th>P(DD &gt; 12%) no CB</th><th>P(DD &gt; 12%) w/ CB</th>
+  </tr></thead>
+  <tbody>
+    <tr><td>baseline</td><td>7.52%</td><td>15.04%</td><td>24.71%</td><td class="pos">2.83%</td><td class="pos">1.33%</td></tr>
+    <tr><td>flash_crash (−10% SPY day)</td><td>7.55%</td><td>14.82%</td><td>23.60%</td><td class="pos">2.78%</td><td class="pos">1.39%</td></tr>
+    <tr><td>credit_freeze (corr → 1)</td><td>8.77%</td><td>17.49%</td><td>27.17%</td><td class="pos">7.63%</td><td class="pos">3.78%</td></tr>
+    <tr><td>grinding_dd (μ − 20%/yr)</td><td>32.68%</td><td>53.76%</td><td>66.94%</td><td class="neg">97.69%</td><td class="neg">77.06%</td></tr>
+    <tr><td>vol_explosion (Σ × 16)</td><td>47.12%</td><td>79.38%</td><td>93.80%</td><td class="neg">100.00%</td><td class="neg">96.13%</td></tr>
+  </tbody>
+</table>
+
+<div class="callout warn">
+  <strong>Honest disclosure.</strong> The 12% DD claim holds for baseline, flash-crash, and credit-freeze regimes (breach rate &lt; 8% without circuit breaker, &lt; 4% with). It does <em>not</em> hold for sustained grinding drawdowns or vol explosions — both tail scenarios push P(breach) to ≥ 97%. The 3% trailing-DD circuit breaker (EXP-2370) cuts moderate-stress breach rates by half but cannot eliminate extreme tails. This will be disclosed in the LP deck verbatim — see <code>research/ROBUSTNESS_VALIDATION.md</code> §5.2.
+</div>
+
+<h3>2.3 EXP-3300 — SPY/SPX VRP Disconnect (H1 of dealer-GEX research)</h3>
+
+<table>
+  <thead><tr><th>Test leg</th><th>Result</th><th>Pre-registered cutoff</th><th>Verdict</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>T1 — exp1220 SPY put-credit Sharpe, 2020-22 vs 2023-25</td>
+      <td>SR <strong>3.74 → 4.26</strong></td>
+      <td>SR_late &gt; 0 and |ΔSR| &lt; 1.5</td>
+      <td><span class="verdict v-win">PASS</span></td>
+    </tr>
+    <tr>
+      <td>T2a — SPY (IV − RV) &gt; 0, 2020-25</td>
+      <td>+1.09 vp, t = +5.90</td>
+      <td>one-sample t &gt; 2</td>
+      <td><span class="verdict v-win">PASS</span></td>
+    </tr>
+    <tr>
+      <td>T2b — SPY VRP &gt; SPX VRP (retail-disconnect)</td>
+      <td>SPY 1.09 vp vs SPX 3.42 vp · Welch t = −8.87</td>
+      <td>Welch t &gt; 2</td>
+      <td><span class="verdict v-miss">FAIL</span></td>
+    </tr>
+    <tr>
+      <td>T3 — |Δ SPY VRP| &lt; 2 vp early→late</td>
+      <td>−0.81 vp</td>
+      <td>stability</td>
+      <td><span class="verdict v-win">PASS</span></td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  <strong>Verdict:</strong> <code>H1_PARTIAL_SPY_VRP_POSITIVE</code>. The actionable headline — SPY put-credit-spread Sharpe <em>strengthened</em> from 3.74 (2020-22) to 4.26 (2023-25), so the v8a edge persists into the DBG-measurement era. The directional sub-claim (SPY VRP &gt; SPX VRP) is rejected on the proxy used (VIX is a model-free 30-day variance swap rate that prices the OTM put skew, while our SPY IV proxy is ATM-only — apples-vs-oranges). <strong>No code changes recommended for v8a.</strong>
+</div>
+
+<h3>2.4 Dealer-GEX Research Program (EXP-3280, EXP-3300)</h3>
+
+<p>The May literature survey (<code>research/DEALER_GEX_LITERATURE.md</code>, 15+ papers, 2020-2026) produced three pre-registered hypotheses. Results so far:</p>
+
+<table>
+  <thead><tr><th>Hypothesis</th><th>Anchor paper(s)</th><th>Test status</th><th>Action</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>H1: SPY VRP &gt; SPX VRP (retail disconnect)</td>
+      <td>arXiv 2512.17923 vs Dew-Becker-Giglio 2025</td>
+      <td><span class="verdict v-marg">PARTIAL</span> (EXP-3300)</td>
+      <td>SPY edge persists; directionality rejected on proxy</td>
+    </tr>
+    <tr>
+      <td>H2: Sector-ETF GEX predicts 5-day RV</td>
+      <td>Barbon-Buraschi 2020</td>
+      <td><span class="verdict v-miss">REJECTED (on proxy)</span> EXP-3280</td>
+      <td>IronVault OI is uniformly NULL — volume proxy used; gate impact below execution noise (Δ net SR +0.05)</td>
+    </tr>
+    <tr>
+      <td>H3: Overnight-only SPX PCS retains VRP</td>
+      <td>Terstegge 2025</td>
+      <td><span class="verdict v-infra">PENDING</span></td>
+      <td>Requires SPX 0-1 DTE intraday data not in IronVault</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<h2>3. Wave 12 AUM Capacity Expansion — 5/5 Killed</h2>
+
+<p class="lead">
+  Per <code>research/AUM_CAPACITY_RESEARCH.md</code>, AUM capacity is the sole structural gap in the North Star scorecard (3/4 met). Wave 12 ran five experiments to lift the ~$50M soft cap. <strong>All five were killed</strong> on real IronVault / Yahoo data with documented kill-criteria.
+</p>
+
+<table>
+  <thead><tr>
+    <th>Exp</th><th>Stream proposal</th><th>Result</th><th>Primary kill reason</th><th>9-stream net Sharpe vs base 4.99</th><th>Verdict</th>
+  </tr></thead>
+  <tbody>
+    <tr>
+      <td class="exp-id">EXP-2910</td>
+      <td>TLT put credit spreads (IronVault)</td>
+      <td>Trade SR 0.76 · 9.2 trades/yr · ρ = −0.02</td>
+      <td>Insufficient expiration frequency (weeklies absent from IronVault) + thin premium ($0.045 median credit)</td>
+      <td>4.94 (Δ −0.05)</td>
+      <td><span class="verdict v-miss">KILL</span></td>
+    </tr>
+    <tr>
+      <td class="exp-id">EXP-2920</td>
+      <td>TLT IV-RV arb via MOVE index</td>
+      <td>Best variant SR 0.26 across 5 approaches</td>
+      <td>Bond VRP real but not harvestable: structural rate regime change (ZIRP → 5%+) made long-TLT toxic; MOVE persistence breaks mean-reversion</td>
+      <td>—</td>
+      <td><span class="verdict v-miss">KILL</span></td>
+    </tr>
+    <tr>
+      <td class="exp-id">EXP-2930</td>
+      <td>SOXX / XLK put credit spreads</td>
+      <td>SOXX 27.5 trades/yr · XLK 13.9 trades/yr</td>
+      <td>SOXX ρ = 0.888 with QQQ; XLK ρ = 0.970 with QQQ + 2020-2023 data gap. Zero diversification — they ARE QQQ.</td>
+      <td>—</td>
+      <td><span class="verdict v-miss">KILL</span></td>
+    </tr>
+    <tr>
+      <td class="exp-id">EXP-2940</td>
+      <td>Overnight premium (MOC→MOO, SPY+QQQ)</td>
+      <td>Gross SR 0.959 (VIX-inverse), at 2 bps/leg slippage SR −0.022</td>
+      <td>Edge of 3.9 bps/day fully consumed by realistic MOO slippage; ρ = 0.577 with exp1220; DD −23%</td>
+      <td>—</td>
+      <td><span class="verdict v-miss">KILL</span></td>
+    </tr>
+    <tr>
+      <td class="exp-id">EXP-2950</td>
+      <td>Sector momentum rotation (11 SPDRs)</td>
+      <td>Best WF SR 0.57 (long-top-3) · LS variants all negative</td>
+      <td>Sector momentum has decayed post-2018 (cited in lit); long-only doesn't beat SPY buy-and-hold (0.59)</td>
+      <td>4.74 (Δ −0.25)</td>
+      <td><span class="verdict v-miss">KILL</span></td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="callout warn">
+  <strong>Pattern recognition.</strong> Every Wave 12 candidate failed for one of three reasons: (a) insufficient option-chain frequency in IronVault (TLT, XLK), (b) high correlation with existing equity streams (SOXX 0.89 / XLK 0.97 with QQQ; overnight 0.58 with exp1220), or (c) execution-fragile edges that the academic literature already flagged as marginal post-cost (overnight premium per Lou-Polk-Skouras 2019; sector momentum post-2018 decay). The diagnostic signal is that <em>capacity without alpha is worthless</em> — every killed stream had ample capacity but failed Sharpe/correlation gates.
+</div>
+
+<h3>3.1 What the Wave 12 data DID confirm (filed for future use)</h3>
+
+<ul>
+  <li><strong>TLT correlation (ρ = −0.02 with portfolio).</strong> Confirmed best diversifier among IronVault-covered tickers. Currently unusable for put credit spreads but the correlation slot remains open if a higher-Sharpe TLT variant emerges (e.g., weekly expirations via Polygon).</li>
+  <li><strong>MOVE-VIX correlation (ρ = 0.13 same-day, zero lead/lag).</strong> Confirmed bond vol and equity vol are largely orthogonal factors, but MOVE has no predictive power for VIX at any horizon 1-20 days.</li>
+  <li><strong>Sector momentum ρ = 0.02 with v8a.</strong> Confirmed factor-timing and vol-premium harvesting are orthogonal alpha sources — useful if a higher-Sharpe momentum variant surfaces.</li>
+  <li><strong>QQQ overnight Sharpe 0.93 gross.</strong> Real signal, but tradeable only at sub-1 bps/leg execution costs — possible in a sized SPY-futures wrapper, not in ETFs at $100M+ AUM.</li>
+</ul>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<h2>4. Operational Blocker — 40-Day Alpaca API Key Stall</h2>
+
+<div class="headline warn">
+  <strong>Paper-to-live validation has been gated for 40 days</strong> awaiting reissued Alpaca API credentials. The signal driver (<code>compass/scripts/generate_daily_signals.py</code>, 8-stream signal registry) is production-ready; the paper trading engine, risk consolidator, and order router are wired. The blocker is purely credential availability for the brokerage connector.
+</div>
+
+<h3>4.1 Impact</h3>
+
+<table>
+  <thead><tr><th>Workstream</th><th>Status</th><th>Direct impact of blocker</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>Tranche-1 paper-to-live gate G2</td>
+      <td><span class="verdict v-miss">BLOCKED</span></td>
+      <td>Live Sharpe must hold in [5.1, 6.9] for 4 weeks before tranche step-up — clock cannot start</td>
+    </tr>
+    <tr>
+      <td>EXP-2570 cost-rate empirical recalibration</td>
+      <td><span class="verdict v-miss">BLOCKED</span></td>
+      <td>890.3 bps/yr drag is from a model, not measured fills — actual slippage may differ</td>
+    </tr>
+    <tr>
+      <td>EXP-2470 ExecOpt stack live validation</td>
+      <td><span class="verdict v-miss">BLOCKED</span></td>
+      <td>Per-window spread×/slip×/fill-rate factors are backtested, not live-measured</td>
+    </tr>
+    <tr>
+      <td>Backtest / research pipeline (8 streams, EXP-32xx series)</td>
+      <td><span class="verdict v-win">UNAFFECTED</span></td>
+      <td>IronVault + Yahoo data path is offline; research progress unhindered (this report is the evidence)</td>
+    </tr>
+    <tr>
+      <td>Robustness validation (EXP-3200 / 3230 / 3300)</td>
+      <td><span class="verdict v-win">COMPLETE</span></td>
+      <td>LP-ready evidence package compiled in <code>research/ROBUSTNESS_VALIDATION.md</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>4.2 What we did instead during the 40-day window</h3>
+
+<ul>
+  <li><strong>Compiled the LP robustness package</strong> (<code>research/ROBUSTNESS_VALIDATION.md</code>, 20 KB, EXP-3260) — 60-fold WF + 5-scenario MC + survival analysis + honest tail disclosure.</li>
+  <li><strong>Ran the full Wave 12 AUM expansion</strong> (5 experiments, 5 kills, all documented).</li>
+  <li><strong>Surveyed and pre-registered the dealer-GEX hypothesis stack</strong> (15+ papers, 3 hypotheses, 2 already tested).</li>
+  <li><strong>Tested SPY edge persistence into the post-DBG era</strong> (EXP-3300, PASS on the persistence leg).</li>
+  <li><strong>Compiled the May 2026 literature survey</strong> (<code>compass/reports/exp3300_literature_review_may2026.md</code>, 5 frontier papers from Fouhy 2026, arXiv 2510.03236, arXiv 2410.15195, and two others) which became the four-pathway roadmap below.</li>
+</ul>
+
+<div class="callout">
+  <strong>Net assessment.</strong> The 40-day delay has not compromised the research pipeline. It has compromised the calendar for live validation, which is on the critical path for the LP tranche-step-up decision. Recommend treating this as a P1 operational unblock for the next two weeks.
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<h2>5. Next Steps — Four Pathways from the May Literature Survey</h2>
+
+<p class="lead">
+  The May literature survey closed with four explicit pre-registered experiments (<span class="exp-id">EXP-3301 – EXP-3304</span>) covering the highest-leverage signal-extraction and regime-detection gaps in v8a. These are the proposed Wave 13-14 experiments, ordered by leverage and execution risk.
+</p>
+
+<div class="path">
+  <h3>Pathway 1 — Hierarchical-ML VRP signal layer (EXP-3301)</h3>
+  <div class="meta-row">
+    <span class="pri p1">P1 · highest leverage</span>
+    Anchor: Fouhy 2026 (SSRN 6570380) ·
+    Streams affected: exp1220, qqq_cs ·
+    Estimated effort: 1-2 weeks ·
+    Data: existing IronVault + Yahoo (no new subscriptions)
+  </div>
+  <p>
+    Replace the v8a percentile-gate on exp1220 and qqq_cs with a 2-stage stacked model: (a) HAR-RV forecasting head; (b) calibration head trained on realised <em>strategy P&amp;L</em>, not RV-MSE. The calibration step closes the standard "better RV forecast ≠ better P&amp;L" gap. Pre-register: must clear pooled net Sharpe ≥ 6.64 (current EXP-3230 baseline) with weight-drift L1 ≤ 0.20 vs baseline weights.
+  </p>
+</div>
+
+<div class="path">
+  <h3>Pathway 2 — Forecast-disagreement sizing (EXP-3302)</h3>
+  <div class="meta-row">
+    <span class="pri p2">P2</span>
+    Anchor: Fouhy 2026 + ensemble disagreement literature ·
+    Streams affected: exp1220, qqq_cs, xlf_cs, xli_cs ·
+    Estimated effort: 1 week (builds on EXP-3301 infrastructure) ·
+    Data: existing
+  </div>
+  <p>
+    Train two heterogeneous models (tree + recurrent NN) on the same RV target; gate sizing on cross-model disagreement (high disagreement → reduce size). Conceptually a tail-detection layer that should complement the EXP-2370 trailing-DD circuit breaker. Pre-register: must reduce MC-grinding_dd P(DD&gt;12%) below 80% (from 97.69%) without degrading baseline net Sharpe by more than 0.30.
+  </p>
+</div>
+
+<div class="path">
+  <h3>Pathway 3 — VVIX + skew regime-detection upgrade (EXP-3303)</h3>
+  <div class="meta-row">
+    <span class="pri p2">P2</span>
+    Anchor: arXiv 2510.03236 (Oct 2025) ·
+    Streams affected: all 8 (regime tagger) ·
+    Estimated effort: 1 week ·
+    Data: VVIX (Yahoo / CBOE), SPX 25Δ skew (derivable from IronVault)
+  </div>
+  <p>
+    Add VVIX-3M term-structure spread and SPX 25Δ put/call IV-skew to the v8a regime-detection feature set. The cited paper documents 1-3 day faster regime-transition detection than VIX-threshold rules. Pre-register: must shrink the regime-transition drawdown documented in EXP-2630 by ≥ 30% on the worst-fold test windows of EXP-3230 (folds 13 — 2022Q1 — and 52 — 2025-Q1 tariff chop).
+  </p>
+</div>
+
+<div class="path">
+  <h3>Pathway 4 — Continuous regime-conditional sizing (EXP-3304)</h3>
+  <div class="meta-row">
+    <span class="pri p3">P3 · highest execution risk</span>
+    Anchor: arXiv 2510.03236 HMM extension ·
+    Streams affected: all 8 (sizing layer) ·
+    Estimated effort: 2-3 weeks ·
+    Data: existing
+  </div>
+  <p>
+    Replace binary regime gating with continuous scaling — stream weights become a function of HMM regime-probability output trained per stream. Pre-register: must preserve worst-fold net Sharpe ≥ 3.88 (current EXP-3230 floor) and worst-fold test DD ≤ 11.98% (current EXP-3230 ceiling). Higher execution risk than P1-P3 because it touches the sizing layer that risk-parity already controls; sequence after P1-P3.
+  </p>
+</div>
+
+<h3>5.1 Recommended Wave 13 sequencing</h3>
+
+<table>
+  <thead><tr><th>Week</th><th>Action</th><th>Owner</th><th>Gate / Outcome</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>Week 1 (immediate)</td>
+      <td><strong>Unblock Alpaca API key</strong> — escalate vendor ticket; in parallel scope IBKR / Tradier as backup brokerage connector</td>
+      <td>Carlos + ops</td>
+      <td>Credential issued OR backup connector spec'd</td>
+    </tr>
+    <tr>
+      <td>Week 1-2</td>
+      <td>Kick off <span class="exp-id">EXP-3301</span> (Pathway 1) — hierarchical ML signal layer prototype on exp1220</td>
+      <td>Research</td>
+      <td>Prototype matches baseline within ±0.2 Sharpe before extending</td>
+    </tr>
+    <tr>
+      <td>Week 2-3</td>
+      <td>Begin <span class="exp-id">EXP-3303</span> (Pathway 3) — VVIX + skew feature add</td>
+      <td>Research</td>
+      <td>OOS check on EXP-3230 worst-fold windows</td>
+    </tr>
+    <tr>
+      <td>Week 3-4</td>
+      <td>Once Alpaca unblocked: start G2 paper-to-live 4-week observation window</td>
+      <td>Research + ops</td>
+      <td>Live net Sharpe in [5.1, 6.9] for 4 weeks → tranche step-up</td>
+    </tr>
+    <tr>
+      <td>Week 4+</td>
+      <td>Conditional on EXP-3301 success: <span class="exp-id">EXP-3302</span> (disagreement sizing)</td>
+      <td>Research</td>
+      <td>P(grinding-DD breach) target</td>
+    </tr>
+    <tr>
+      <td>Week 5+</td>
+      <td>Conditional on EXP-3303 success: <span class="exp-id">EXP-3304</span> (continuous regime sizing)</td>
+      <td>Research</td>
+      <td>Sharpe / DD floor preservation</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>5.2 Capacity expansion — what's NOT in Wave 13</h3>
+
+<p>
+  After 5/5 Wave 12 kills, no further capacity experiments are proposed for Wave 13 from existing data sources. The remaining capacity unlock paths require external dependencies:
+</p>
+
+<ul>
+  <li><strong>Polygon Options ($199/mo)</strong> — unlocks IWM (76K puts/day, the deepest IronVault gap), DIA, EEM. Per AUM_CAPACITY_RESEARCH §4.4, IWM alone could lift soft cap toward $500M. Recommend approving after EXP-3301 ships, so we have a clean baseline to measure against.</li>
+  <li><strong>CBOE OI feed</strong> — unblocks H2 retest with real open interest (IronVault OI is uniformly NULL, forcing volume proxy that EXP-3280 documents as a data-driven false-negative driver).</li>
+  <li><strong>Futures account</strong> — would enable VIX-futures term-structure stream (estimated +$500M capacity). Larger operational lift; sequence after Polygon.</li>
+</ul>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<h2>6. Honest Risks &amp; Caveats (LP-ready disclosure)</h2>
+
+<ol>
+  <li><strong>Tail-regime DD breaches.</strong> EXP-3200 documents that the 12% DD claim fails under sustained grinding-drift (P=97.69% no CB / 77.06% w/ CB) and vol-explosion (P=100% / 96.13%) regimes. These are the two regimes the 3% trailing-DD circuit breaker partially but not fully mitigates. Disclosed verbatim in <code>research/ROBUSTNESS_VALIDATION.md</code> §5.2.</li>
+  <li><strong>Pre-2020 history not in IronVault.</strong> All walk-forward and stress work runs on 2020-2025 (1,566 trading days). 2008 GFC, 2011 Euro crisis, 2018 Volmageddon use β-propagated equity returns (EXP-2640), not real chains.</li>
+  <li><strong>MVN distributional assumption in EXP-3200.</strong> No Student-t, no jump-diffusion. True tails likely thicker than reported; <code>vol_explosion</code> Σ×16 is a parametric stand-in, not an empirical tail.</li>
+  <li><strong>H2 (sector GEX) reject is on a volume proxy, not true OI.</strong> IronVault open_interest is uniformly NULL across all tickers. Volume substitution biases the test toward the heaviest-traded names (SPY OTM puts swamp the gamma weighting). The H2 question remains scientifically open pending real OI data.</li>
+  <li><strong>Drag rate is modeled, not measured.</strong> 890.3 bps/yr from EXP-2570 is from the Alpaca commission-free + EXP-2470 ExecOpt stack model. Live fills (blocked by API key) will be the empirical recalibration. Material divergence is unlikely given execution-stack components are calibrated, but it is a residual unknown.</li>
+</ol>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<h2>7. Sources &amp; Reproducibility</h2>
+
+<table>
+  <thead><tr><th>Section</th><th>Source artifact</th><th>Type</th></tr></thead>
+  <tbody>
+    <tr><td>§2.1 Rolling WF</td><td><code>compass/reports/exp3230_rolling_walkforward.json/.html</code></td><td>JSON + HTML</td></tr>
+    <tr><td>§2.2 Monte Carlo</td><td><code>compass/reports/exp3200_monte_carlo_stress.json/.html</code></td><td>JSON + HTML</td></tr>
+    <tr><td>§2.1 + 2.2 LP package</td><td><code>research/ROBUSTNESS_VALIDATION.md</code></td><td>Markdown</td></tr>
+    <tr><td>§2.3 SPY/SPX disconnect</td><td><code>compass/reports/exp3300_spy_spx_disconnect.json/.html</code></td><td>JSON + HTML</td></tr>
+    <tr><td>§2.4 GEX research</td><td><code>research/DEALER_GEX_LITERATURE.md</code> · <code>compass/reports/exp3280_sector_gex_gate.json</code></td><td>Markdown + JSON</td></tr>
+    <tr><td>§3 Wave 12 kills</td><td><code>experiments/EXP-2910 — 2950_*.md</code> (5 files)</td><td>Markdown</td></tr>
+    <tr><td>§3 AUM thesis</td><td><code>research/AUM_CAPACITY_RESEARCH.md</code></td><td>Markdown</td></tr>
+    <tr><td>§5 Four pathways</td><td><code>compass/reports/exp3300_literature_review_may2026.md</code></td><td>Markdown</td></tr>
+    <tr><td>Underlying data</td><td><code>data/options_cache.db</code> (IronVault) · <code>compass/cache/exp2080_streams.pkl</code> · <code>exp2250_qqq_trades.pkl</code></td><td>SQLite + pickle</td></tr>
+    <tr><td>Drag rate</td><td>EXP-2570 (890.3 bps/yr)</td><td>Reference</td></tr>
+  </tbody>
+</table>
+
+<div class="footer">
+  Rule Zero enforced: all numbers in this report are pulled from real IronVault, Yahoo Finance, or FRED data — no synthetic option chains, no fabricated returns. The MVN simulation in EXP-3200 is calibrated to the real v8a cube's per-stream μ, σ, and SPY-β.<br>
+  Past results — including simulated results from EXP-3200 — are not indicative of future performance. This is not an offer to sell securities.<br>
+  Generated 2026-05-18 · <code>compass/reports/may_2026_progress_report.html</code>
+</div>
+
+</body>
+</html>

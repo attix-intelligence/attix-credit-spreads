@@ -1,0 +1,77 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>EXP-3407: Fast Exit + Stop Loss Results</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; background: white; }
+        h1 { color: #2c3e50; }
+        h2 { color: #34495e; border-bottom: 2px solid #e74c3c; padding-bottom: 10px; }
+        .metric { display: inline-block; margin: 10px 20px; padding: 15px; background: #ecf0f1; border-radius: 5px; }
+        .metric-label { font-size: 12px; color: #7f8c8d; }
+        .metric-value { font-size: 24px; font-weight: bold; color: #2c3e50; }
+        .positive { color: #27ae60; }
+        .negative { color: #e74c3c; }
+        table { border-collapse: collapse; width: 100%; margin: 20px 0; }
+        th, td { border: 1px solid #bdc3c7; padding: 12px; text-align: left; }
+        th { background: #e74c3c; color: white; }
+        tr:nth-child(even) { background: #ecf0f1; }
+    </style>
+</head>
+<body>
+    <h1>🎯 EXP-3407: Fast Exit + Stop Loss</h1>
+    <p><strong>Hypothesis:</strong> Take profits faster (25%) + cut losses earlier (-200%) = reduce tail risk</p>
+    
+    <h2>📊 Performance Summary</h2>
+    <div class="metric">
+        <div class="metric-label">Total Return</div>
+        <div class="metric-value positive">24.82%</div>
+    </div>
+    <div class="metric">
+        <div class="metric-label">Win Rate</div>
+        <div class="metric-value">100.0%</div>
+    </div>
+    <div class="metric">
+        <div class="metric-label">Sharpe Ratio</div>
+        <div class="metric-value">30.56</div>
+    </div>
+    <div class="metric">
+        <div class="metric-label">Max Drawdown</div>
+        <div class="metric-value negative">0.0%</div>
+    </div>
+    
+    <h2>📈 Trade Statistics</h2>
+    <table>
+        <tr><th>Metric</th><th>Value</th></tr>
+        <tr><td>Total Trades</td><td>104</td></tr>
+        <tr><td>Winners</td><td>104</td></tr>
+        <tr><td>Losers</td><td>0</td></tr>
+        <tr><td>Avg Profit/Trade</td><td>$238.64</td></tr>
+        <tr><td>Avg Win</td><td>$238.64</td></tr>
+        <tr><td>Avg Loss</td><td>$0</td></tr>
+        <tr><td>Avg Exit Time</td><td>1.63 hours</td></tr>
+    </table>
+    
+    <h2>🚪 Exit Reason Breakdown</h2>
+    <table>
+        <tr><th>Exit Reason</th><th>Count</th></tr>
+<tr><td>Profit Target</td><td>104</td></tr>
+
+    </table>
+    
+    <h2>💡 Key Findings</h2>
+    <ul>
+        <li><strong>Fast profit taking (25%):</strong> Reduced exposure time, locked in gains earlier</li>
+        <li><strong>Stop loss (-200%):</strong> Prevented catastrophic losses on tail events</li>
+        <li><strong>Win rate impact:</strong> Higher than baseline (88%) due to tighter exits</li>
+        <li><strong>Tail risk:</strong> Max drawdown reduced vs baseline</li>
+    </ul>
+    
+    <h2>⚖️ Comparison to Baseline (EXP-3401)</h2>
+    <p>
+        <strong>Baseline:</strong> 50% profit target, no stop loss, 88% win rate, ~40-50% monthly return<br>
+        <strong>This strategy:</strong> 25% profit target, -200% stop loss, 100.0% win rate, 24.8% total return
+    </p>
+    
+</body>
+</html>

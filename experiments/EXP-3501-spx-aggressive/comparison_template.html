@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EXP-3500 vs EXP-3501 Comparison | Path A Pillar 2 Analysis</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: white;
+            color: #1a1a1a;
+            line-height: 1.6;
+            padding: 40px 20px;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 { color: #0066cc; margin-bottom: 10px; font-size: 32px; }
+        h2 { color: #333; margin: 30px 0 15px; font-size: 24px; border-bottom: 2px solid #0066cc; padding-bottom: 8px; }
+        h3 { color: #555; margin: 20px 0 10px; font-size: 18px; }
+        .header { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px; border-left: 4px solid #0066cc; }
+        .header p { margin: 5px 0; color: #555; }
+        .comparison-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
+        .metric-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #ddd;
+        }
+        .metric-card.winner { border-left-color: #28a745; background: #f0fff4; }
+        .metric-card.loser { border-left-color: #dc3545; background: #fff5f5; }
+        .metric-card h3 { margin-top: 0; font-size: 16px; text-transform: uppercase; color: #666; }
+        .metric-value { font-size: 32px; font-weight: bold; margin: 10px 0; }
+        .metric-value.green { color: #28a745; }
+        .metric-value.red { color: #dc3545; }
+        .metric-label { font-size: 14px; color: #666; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; background: white; }
+        th { background: #0066cc; color: white; padding: 12px; text-align: left; font-weight: 600; }
+        td { padding: 12px; border-bottom: 1px solid #e0e0e0; }
+        tr:hover { background: #f8f9fa; }
+        .badge { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: bold; }
+        .badge.winner { background: #28a745; color: white; }
+        .badge.miss { background: #dc3545; color: white; }
+        .badge.promising { background: #ffc107; color: #333; }
+        .recommendation {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #2196f3;
+            margin: 30px 0;
+        }
+        .recommendation h3 { margin-top: 0; color: #1976d2; }
+        ul { margin: 10px 0 10px 25px; }
+        li { margin: 5px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚔️ EXP-3500 vs EXP-3501: Delta Showdown</h1>
+            <p><strong>Objective:</strong> Identify the optimal strategy for Path A Pillar 2 (40% allocation)</p>
+            <p><strong>Goal:</strong> $100K → $10M in 24 months | 30-50% monthly returns | Sharpe >2.0</p>
+            <p><strong>Data:</strong> CBOE Athena SPX 0DTE (Rule Zero compliant)</p>
+        </div>
+
+        <h2>Strategy Comparison</h2>
+        <table>
+            <tr>
+                <th>Parameter</th>
+                <th>EXP-3500 (Baseline)</th>
+                <th>EXP-3501 (Aggressive)</th>
+            </tr>
+            <tr>
+                <td><strong>Short Delta</strong></td>
+                <td>30Δ (conservative)</td>
+                <td><strong>20Δ (aggressive)</strong></td>
+            </tr>
+            <tr>
+                <td><strong>Expected Premium</strong></td>
+                <td>Lower (further OTM)</td>
+                <td><strong>Higher (closer to ATM)</strong></td>
+            </tr>
+            <tr>
+                <td><strong>Expected Win Rate</strong></td>
+                <td><strong>Higher (~75-80%)</strong></td>
+                <td>Lower (~65-75%)</td>
+            </tr>
+            <tr>
+                <td><strong>Risk Profile</strong></td>
+                <td>Lower risk</td>
+                <td><strong>Higher risk</strong></td>
+            </tr>
+            <tr>
+                <td><strong>Target</strong></td>
+                <td>Steady income</td>
+                <td><strong>Maximum returns</strong></td>
+            </tr>
+        </table>
+
+        <h2>Performance Metrics</h2>
+        <div class="comparison-grid">
+            <div class="metric-card" id="exp3500-monthly">
+                <h3>EXP-3500: Avg Monthly Return</h3>
+                <div class="metric-value" id="3500-monthly-value">--</div>
+                <div class="metric-label">Target: 30-50%</div>
+            </div>
+            <div class="metric-card" id="exp3501-monthly">
+                <h3>EXP-3501: Avg Monthly Return</h3>
+                <div class="metric-value" id="3501-monthly-value">--</div>
+                <div class="metric-label">Target: 30-50%</div>
+            </div>
+        </div>
+
+        <div class="comparison-grid">
+            <div class="metric-card" id="exp3500-sharpe">
+                <h3>EXP-3500: Sharpe Ratio</h3>
+                <div class="metric-value" id="3500-sharpe-value">--</div>
+                <div class="metric-label">Target: >2.0</div>
+            </div>
+            <div class="metric-card" id="exp3501-sharpe">
+                <h3>EXP-3501: Sharpe Ratio</h3>
+                <div class="metric-value" id="3501-sharpe-value">--</div>
+                <div class="metric-label">Target: >2.0</div>
+            </div>
+        </div>
+
+        <h2>Detailed Comparison</h2>
+        <table>
+            <tr>
+                <th>Metric</th>
+                <th>EXP-3500 (30Δ)</th>
+                <th>EXP-3501 (20Δ)</th>
+                <th>Winner</th>
+            </tr>
+            <tr>
+                <td>Total Trades</td>
+                <td id="3500-trades">--</td>
+                <td id="3501-trades">--</td>
+                <td id="winner-trades">--</td>
+            </tr>
+            <tr>
+                <td>Win Rate</td>
+                <td id="3500-winrate">--</td>
+                <td id="3501-winrate">--</td>
+                <td id="winner-winrate">--</td>
+            </tr>
+            <tr>
+                <td>Avg Profit/Trade</td>
+                <td id="3500-avgprofit">--</td>
+                <td id="3501-avgprofit">--</td>
+                <td id="winner-avgprofit">--</td>
+            </tr>
+            <tr>
+                <td>Total Return</td>
+                <td id="3500-return">--</td>
+                <td id="3501-return">--</td>
+                <td id="winner-return">--</td>
+            </tr>
+            <tr>
+                <td>Avg Monthly Return</td>
+                <td id="3500-monthly">--</td>
+                <td id="3501-monthly">--</td>
+                <td id="winner-monthly">--</td>
+            </tr>
+            <tr>
+                <td>Sharpe Ratio</td>
+                <td id="3500-sharpe">--</td>
+                <td id="3501-sharpe">--</td>
+                <td id="winner-sharpe">--</td>
+            </tr>
+            <tr>
+                <td>Max Drawdown</td>
+                <td id="3500-dd">--</td>
+                <td id="3501-dd">--</td>
+                <td id="winner-dd">--</td>
+            </tr>
+            <tr>
+                <td>Final Equity</td>
+                <td id="3500-equity">--</td>
+                <td id="3501-equity">--</td>
+                <td id="winner-equity">--</td>
+            </tr>
+        </table>
+
+        <div class="recommendation" id="recommendation">
+            <h3>🎯 Deployment Recommendation</h3>
+            <p><strong>Winner:</strong> <span id="rec-winner">TBD</span></p>
+            <p><strong>Rationale:</strong></p>
+            <ul id="rec-rationale">
+                <li>Analysis pending...</li>
+            </ul>
+            <p><strong>Next Steps:</strong></p>
+            <ul id="rec-nextsteps">
+                <li>Wait for backtest completion</li>
+            </ul>
+        </div>
+
+        <h2>Notes</h2>
+        <ul>
+            <li><strong>Fill Model:</strong> Midpoint (more realistic than worst-case bid/ask)</li>
+            <li><strong>Liquidity Filter:</strong> bid ≥ $0.05, ask ≥ $0.10</li>
+            <li><strong>Entry:</strong> 10:00 AM ET (better liquidity)</li>
+            <li><strong>Exit:</strong> 50% profit target OR 3:00 PM ET OR -200% stop loss</li>
+            <li><strong>Period:</strong> 2021-2024 (4 years of 0DTE data)</li>
+            <li><strong>Capital:</strong> $100,000 starting</li>
+        </ul>
+    </div>
+
+    <script>
+        // Placeholder for dynamic data injection
+        // Will be populated from backtest results
+    </script>
+</body>
+</html>

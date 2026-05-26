@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<title>EXP-3280 — Sector dealer-GEX gate for v8a</title>
+<style>
+body{font-family:-apple-system,sans-serif;max-width:1280px;margin:0 auto;padding:28px;background:#fff;color:#1e293b;}
+h1{font-size:1.7em;color:#0f172a;}
+h2{margin-top:2em;border-bottom:2px solid #e2e8f0;padding-bottom:8px;color:#334155;}
+.muted{color:#64748b;font-size:0.85em;}
+.caveat{background:#fef3c7;border:2px solid #f59e0b;border-radius:8px;padding:16px;margin:16px 0;font-size:0.9rem;line-height:1.55;}
+.caveat strong{color:#92400e;}
+.sources{background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:14px;font-size:0.84rem;line-height:1.6;}
+.verdict{background:#fff;border:2px solid #dc2626;border-radius:8px;padding:18px;margin:18px 0;}
+.verdict .badge{display:inline-block;padding:5px 14px;border-radius:14px;color:#fff;background:#dc2626;font-weight:700;font-size:0.86rem;}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:0.85em;}
+th{background:#f1f5f9;padding:8px 9px;text-align:right;border-bottom:2px solid #cbd5e1;font-size:0.7em;text-transform:uppercase;}
+th:first-child{text-align:left;}
+td{padding:7px 9px;text-align:right;border-bottom:1px solid #e2e8f0;}
+td:first-child{text-align:left;font-weight:600;color:#475569;}
+.kv{display:grid;grid-template-columns:repeat(2,1fr);gap:6px 18px;font-size:0.9em;margin:10px 0;}
+.kv b{color:#475569;}
+</style></head><body>
+
+<h1>EXP-3280 — Sector dealer-GEX proxy + gate for v8a</h1>
+<p class="muted">Tests H2 from
+<code>research/DEALER_GEX_LITERATURE.md</code>: sector-ETF dealer GEX
+materially more negative than SPX-proxy and predicts forward 5-day
+realised vol. Builds a daily gamma-weighted flow-imbalance proxy
+from IronVault per-contract volume (OI history unavailable in cache).
+2026-05-16 15:22</p>
+
+<div class="caveat">
+<strong>⚠ DATA-LIMITATION PROXY.</strong> IronVault
+<code>option_daily.open_interest</code> is uniformly NULL across
+XLF / XLI / SPY (verified 2026-05). yfinance returns OI for
+current snapshot only; CBOE DataShop free sample requires manual
+download. We substitute IronVault per-contract DAILY VOLUME for
+OI, applying GPP-style sign rule + BS gamma weighting. This is a
+<em>flow</em> proxy not a <em>stock</em> proxy. The dealer-pressure
+mechanism is signed the same way under both definitions, so a
+directional test remains valid, but effect sizes will be noisier
+than under true OI. Conclusions stating "validated" must be
+re-checked against true OI history (~$50 CBOE DataShop annual).
+</div>
+
+<div class="sources">
+<strong>Rule Zero.</strong> Real IronVault per-contract daily volume
+(2022-01-01..2025-12-31); ATM filter ±15%
+of spot, DTE ≤ 90, vol ≥ 10. BS gamma
+with σ = 30d realized vol of underlier. Yahoo
+spot + ^VIX series. v8a cube from EXP-2600 (real IronVault + Yahoo);
+walk-forward LW @ target_vol = 0.18.
+</div>
+
+<div class="verdict">
+<span class="badge">H2_REJECTED_ON_THIS_PROXY</span>
+<div class="kv" style="margin-top:14px">
+<div><b>H2(a) sector GEX &lt; SPY</b></div>
+<div>FAIL</div>
+<div><b>H2(b) β &gt; 0, t &gt; 2 (panel reg.)</b></div>
+<div>FAIL</div>
+<div><b>Gate lifts v8a gross SR</b></div>
+<div>YES
+(Δ gross +0.051, Δ net +0.050,
+Δ DD -0.02%)</div>
+</div>
+</div>
+
+<h2>1. Proxy GEX summary by ticker</h2>
+<p class="muted">GEX_norm = gamma-weighted volume imbalance ∈ [−1, +1].
+Negative values = put-flow dominant (dealers absorbing → more short
+gamma). Positive = call-flow dominant.</p>
+<table>
+<thead><tr>
+<th>Ticker</th><th>n</th><th>Mean</th><th>p10</th><th>p50</th><th>p90</th>
+<th>Avg call vol</th><th>Avg put vol</th>
+</tr></thead>
+<tbody><tr><td>XLF</td><td>1009</td><td>-0.3347</td><td>-0.853</td><td>-0.434</td><td>+0.370</td><td>41,806</td><td>46,527</td></tr><tr><td>XLI</td><td>1009</td><td>-0.3744</td><td>-0.926</td><td>-0.553</td><td>+0.517</td><td>19,479</td><td>27,046</td></tr><tr><td>SPY</td><td>1009</td><td>-0.5359</td><td>-0.760</td><td>-0.595</td><td>-0.226</td><td>891,086</td><td>1,382,185</td></tr></tbody>
+</table>
+
+<h2>2. H2(a) — Two-sample test: sector vs SPY benchmark</h2>
+<p class="muted">Welch t-test, one-sided H₁: mean(sector) − mean(SPY)
+&lt; 0. Significance threshold p₁ &lt; 0.05.</p>
+<table>
+<thead><tr>
+<th>Comparison</th><th>mean A</th><th>mean B</th><th>Δ (A−B)</th>
+<th>t-stat</th><th>p₁ (less)</th><th>n</th>
+</tr></thead>
+<tbody><tr><td>XLF − SPY</td><td>-0.3347</td><td>-0.5359</td><td style='color:#dc2626;font-weight:700'>+0.2013</td><td>+12.30</td><td>1.0000</td><td>n_a=1009, n_b=1009</td></tr><tr><td>XLI − SPY</td><td>-0.3744</td><td>-0.5359</td><td style='color:#dc2626;font-weight:700'>+0.1615</td><td>+8.69</td><td>1.0000</td><td>n_a=1009, n_b=1009</td></tr></tbody>
+</table>
+
+<h2>3. H2(b) — Panel regression</h2>
+<p class="muted">RV<sub>t,t+5</sub> = α + β·1{GEX<sub>t</sub> ≤ 10th pctile}
++ γ·VIX<sub>t</sub> + ε, pooled XLF + XLI, HC0 robust SEs.</p>
+
+<table>
+<thead><tr><th>Coef</th><th>Estimate</th><th>SE (HC0)</th><th>t-stat</th><th>p (2-sided)</th></tr></thead>
+<tbody>
+<tr><td>α (intercept)</td><td>-0.0486</td><td>0.0090</td>
+<td>-5.41</td><td>0.0000</td></tr>
+<tr><td>β · 1{GEX ≤ p10}</td>
+<td style='color:#dc2626;font-weight:700'>+0.0018</td>
+<td>0.0062</td>
+<td style='color:#dc2626;font-weight:700'>+0.29</td>
+<td>0.7700</td></tr>
+<tr><td>γ · VIX</td><td>+0.0107</td><td>0.0005</td>
+<td>+21.26</td><td>0.0000</td></tr>
+</tbody>
+</table>
+<p class="muted">n = 2016 (XLF 1008,
+XLI 1008). One-sided p for β > 0:
+<strong>0.3850</strong>.
+Decision: <strong>H2 not confirmed at α=0.025 one-sided</strong>.</p>
+
+<h2>4. v8a gating backtest</h2>
+<table>
+<thead><tr>
+<th>Variant</th><th>Gross SR</th><th>Gross CAGR</th><th>Max DD</th>
+<th>Net SR</th><th>Net CAGR</th>
+</tr></thead>
+<tbody>
+<tr><td>baseline</td>
+<td>6.830</td><td>284.4%</td><td>10.29%</td>
+<td>6.386</td><td>251.8%</td></tr>
+<tr><td>gated (xlf/xli)</td>
+<td>6.881</td><td>286.5%</td><td>10.28%</td>
+<td>6.436</td><td>253.8%</td></tr>
+<tr style="font-weight:700;background:#f8fafc">
+<td>Δ</td>
+<td>+0.051</td>
+<td>+2.2%</td>
+<td>-0.02%</td>
+<td>+0.050</td>
+<td>+2.0%</td>
+</tr>
+</tbody>
+</table>
+<p class="muted">Gate factor: 0× when GEX<sub>t-1</sub> ≤ trailing 10th pctile
+(skip entry); 1.5× when ≥ 90th pctile (upsize); 1.0× otherwise.
+Trailing percentile uses 252d rolling window with 63d min — no
+look-ahead. Days flattened:
+XLF 12, XLI 6.
+Days upsized:
+XLF 16, XLI 9.</p>
+
+<h2>5. Production recommendation</h2>
+<p class="muted">If H2(b) and gate-backtest agree (full validation),
+add GEX gate to the v8a production sizing layer for XLF/XLI streams.
+If H2 validates statistically but gate adds no net SR, the signal
+is real but already priced into LW risk-parity weights — consider
+using it for off-cycle de-risking only (don't change cube). If H2
+fails on this volume proxy, defer the decision until OI history is
+available; the volume proxy is intrinsically noisier than OI so a
+null result is weaker evidence against H2 than a properly-powered
+OI test would be.</p>
+
+<p style="margin-top:3em;color:#94a3b8;font-size:0.78em;text-align:center">
+compass/exp3280_sector_gex_gate.py · Rule Zero · IronVault volume + Yahoo
+</p>
+</body></html>

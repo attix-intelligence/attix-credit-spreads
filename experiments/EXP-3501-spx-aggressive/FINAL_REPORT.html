@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>EXP-3501: SPX 0DTE 20Δ Aggressive - Final Report</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 20px;
+            color: #333;
+            background: #fff;
+        }
+        h1 {
+            color: #d32f2f;
+            border-bottom: 3px solid #d32f2f;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #1976d2;
+            margin-top: 40px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 8px;
+        }
+        h3 {
+            color: #388e3c;
+            margin-top: 30px;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #f5f5f5;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background-color: #fafafa;
+        }
+        code {
+            background-color: #f5f5f5;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        pre code {
+            background: none;
+            padding: 0;
+        }
+        blockquote {
+            border-left: 4px solid #1976d2;
+            margin: 20px 0;
+            padding-left: 20px;
+            color: #666;
+        }
+        .metric-good { color: #388e3c; font-weight: bold; }
+        .metric-bad { color: #d32f2f; font-weight: bold; }
+        .metric-warning { color: #f57c00; font-weight: bold; }
+        hr {
+            border: none;
+            border-top: 2px solid #eee;
+            margin: 40px 0;
+        }
+    </style>
+</head>
+<body>
+<h1>EXP-3501: SPX 0DTE 20Δ Aggressive - FINAL REPORT</h1>
+<p><strong>Date:</strong> 2026-05-26<br />
+<strong>Status:</strong> ❌ REJECTED — Strategy Failed Backtest<br />
+<strong>Assigned:</strong> CC2 Subagent → Maximus  </p>
+<hr />
+<h2>Executive Summary</h2>
+<p><strong>The 20Δ aggressive strategy FAILS backtesting.</strong></p>
+<ul>
+<li><strong>Total return:</strong> -25.5% over 3.8 years (-6.7% annualized)</li>
+<li><strong>Win rate:</strong> 62.2% (decent)</li>
+<li><strong>Win/Loss ratio:</strong> 0.49 (avg loss 2X avg win — <strong>fatal flaw</strong>)</li>
+<li><strong>Max drawdown:</strong> -57% (catastrophic)</li>
+<li><strong>Sharpe ratio:</strong> -1.35 (terrible risk-adjusted returns)</li>
+</ul>
+<p><strong>Verdict:</strong> Moving strikes closer (30Δ→20Δ) <strong>increases premium but MORE than doubles losses</strong>. Not viable for Path A.</p>
+<hr />
+<h2>North Star Context</h2>
+<p><strong>Path A:</strong> $100K → $10M in 24 months<br />
+<strong>Pillar 2:</strong> 40% allocation ($40K)<br />
+<strong>Target:</strong> 30-50% monthly returns  </p>
+<p><strong>20Δ was the PRIMARY candidate</strong> for aggressive premium collection. Results show it's <strong>too aggressive</strong> — losses wipe out wins.</p>
+<hr />
+<h2>Methodology</h2>
+<h3>Infrastructure Fix</h3>
+<p>Previous subagent hit infrastructure blocker (Athena queries = 20+ hour runtime). </p>
+<p><strong>Solution:</strong> Built <code>backtest_local_v2.py</code> that reads local CSV files directly.
+- Runtime: <strong>5 seconds</strong> (vs 20+ hours)
+- Clean, simple code
+- Reusable for future experiments</p>
+<h3>Data Coverage</h3>
+<p><strong>CBOE data:</strong> 48 months from 2021-2025, but sparse coverage<br />
+<strong>Trading days:</strong> 613 potential (Mon/Wed/Fri)<br />
+<strong>Executed trades:</strong> 37 (6% execution rate)  </p>
+<p><strong>Why so few?</strong> Many months missing data files (e.g., 2021-05, 2022-01, 2023-04).</p>
+<h3>Parameters</h3>
+<ul>
+<li><strong>Ticker:</strong> SPX 0DTE</li>
+<li><strong>Entry:</strong> 10:00 AM ET (Mon/Wed/Fri)</li>
+<li><strong>Exit:</strong> 15:00 PM ET same day</li>
+<li><strong>Strikes:</strong> 20Δ put, 20Δ call (aggressive, closer to ATM)</li>
+<li><strong>Wing width:</strong> $50</li>
+<li><strong>Contracts:</strong> 10 per trade</li>
+<li><strong>Capital:</strong> $100K</li>
+<li><strong>Fill:</strong> Midpoint (realistic)</li>
+<li><strong>Liquidity:</strong> bid ≥ $0.05, ask ≥ $0.10</li>
+</ul>
+<hr />
+<h2>Results</h2>
+<h3>Performance Metrics</h3>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Value</th>
+<th>Target</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Total trades</strong></td>
+<td>37</td>
+<td>—</td>
+<td>⚠️ Low (data gaps)</td>
+</tr>
+<tr>
+<td><strong>Win rate</strong></td>
+<td>62.2%</td>
+<td>&gt;70%</td>
+<td>❌ Below</td>
+</tr>
+<tr>
+<td><strong>Total return</strong></td>
+<td>-25.5%</td>
+<td>—</td>
+<td>❌ Loss</td>
+</tr>
+<tr>
+<td><strong>Annualized return</strong></td>
+<td>-6.7%</td>
+<td>&gt;20%/mo</td>
+<td>❌ Negative</td>
+</tr>
+<tr>
+<td><strong>Avg win</strong></td>
+<td>$4,741</td>
+<td>—</td>
+<td>✅ Good</td>
+</tr>
+<tr>
+<td><strong>Avg loss</strong></td>
+<td>$-9,611</td>
+<td>—</td>
+<td>❌ <strong>2X avg win</strong></td>
+</tr>
+<tr>
+<td><strong>Win/Loss ratio</strong></td>
+<td>0.49</td>
+<td>&gt;1.0</td>
+<td>❌ Fatal</td>
+</tr>
+<tr>
+<td><strong>Max drawdown</strong></td>
+<td>-57%</td>
+<td>&lt;25%</td>
+<td>❌ Catastrophic</td>
+</tr>
+<tr>
+<td><strong>Sharpe ratio</strong></td>
+<td>-1.35</td>
+<td>&gt;2.0</td>
+<td>❌ Terrible</td>
+</tr>
+<tr>
+<td><strong>Avg monthly return</strong></td>
+<td>-0.69%</td>
+<td>&gt;20%</td>
+<td>❌ Negative</td>
+</tr>
+</tbody>
+</table>
+<h3>Trade-by-Trade Analysis</h3>
+<p><strong>First 5 trades:</strong>
+1. 2021-02-01: -$8,125 (-103% of credit) — <strong>blown out</strong>
+2. (Trades 2-4 had zero or small P&amp;L)
+3. (Pattern: small wins eaten by occasional large losses)</p>
+<p><strong>Root cause:</strong> 20Δ strikes are <strong>too close to ATM</strong>. When market moves against us:
+- Short strikes go ITM quickly
+- Losses are large (approaching max loss)
+- Small wins don't compensate</p>
+<hr />
+<h2>Comparison to 30Δ Baseline (EXP-3500)</h2>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>30Δ Baseline</th>
+<th>20Δ Aggressive</th>
+<th>Difference</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Premium/trade</strong></td>
+<td>Lower</td>
+<td><strong>Higher</strong></td>
+<td>👍 More credit</td>
+</tr>
+<tr>
+<td><strong>Win rate</strong></td>
+<td>Higher (~75%)</td>
+<td>62%</td>
+<td>👎 Lower</td>
+</tr>
+<tr>
+<td><strong>Avg loss</strong></td>
+<td>Smaller</td>
+<td><strong>2X bigger</strong></td>
+<td>👎👎 Fatal</td>
+</tr>
+<tr>
+<td><strong>Max DD</strong></td>
+<td>—</td>
+<td>-57%</td>
+<td>👎👎 Worse</td>
+</tr>
+<tr>
+<td><strong>Sharpe</strong></td>
+<td>—</td>
+<td>-1.35</td>
+<td>👎 Worse</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Conclusion:</strong> Extra premium from 20Δ does NOT justify the extra risk.</p>
+<hr />
+<h2>Why It Failed</h2>
+<h3>1. <strong>Risk/Reward Imbalance</strong></h3>
+<ul>
+<li>Avg win: $4,741</li>
+<li>Avg loss: $-9,611</li>
+<li><strong>Loss is 2X win</strong> — unsustainable</li>
+</ul>
+<h3>2. <strong>Strikes Too Close to ATM</strong></h3>
+<ul>
+<li>20Δ ≈ 55-60% ITM probability</li>
+<li>Small market moves → large losses</li>
+<li>Wins are frequent but small; losses are rare but devastating</li>
+</ul>
+<h3>3. <strong>No Exit Management</strong></h3>
+<ul>
+<li>Strategy holds until 3 PM regardless of P&amp;L</li>
+<li>No profit target or stop loss enforced</li>
+<li>Lets losers run to max loss</li>
+</ul>
+<h3>4. <strong>Data Limitations</strong></h3>
+<ul>
+<li>Only 37 trades over 3.8 years</li>
+<li>May not capture full range of market conditions</li>
+<li>But the losses are clear enough to reject</li>
+</ul>
+<hr />
+<h2>Lessons Learned</h2>
+<ol>
+<li>
+<p><strong>More premium ≠ better strategy</strong><br />
+   Closer strikes collect more credit but blow up harder.</p>
+</li>
+<li>
+<p><strong>Win rate alone is misleading</strong><br />
+   62% win rate sounds good, but 2X loss size kills it.</p>
+</li>
+<li>
+<p><strong>Exit management is critical</strong><br />
+   Need stop losses to prevent -100%+ losses.</p>
+</li>
+<li>
+<p><strong>30Δ is the sweet spot</strong><br />
+   Far enough OTM to avoid frequent losses, close enough to collect decent premium.</p>
+</li>
+</ol>
+<hr />
+<h2>Recommendations</h2>
+<h3>Immediate</h3>
+<ol>
+<li>
+<p><strong>❌ REJECT 20Δ for Path A Pillar 2</strong><br />
+   Do not deploy this strategy with real capital.</p>
+</li>
+<li>
+<p><strong>✅ Stick with 30Δ baseline (EXP-3500)</strong><br />
+   Or test even wider strikes (40Δ, 50Δ) for more safety.</p>
+</li>
+<li>
+<p><strong>Add exit rules</strong>  </p>
+</li>
+<li>Profit target: 50% of credit</li>
+<li>Stop loss: -150% of credit (not -200%)</li>
+<li>Intraday monitoring (not just 3 PM close)</li>
+</ol>
+<h3>Future Experiments</h3>
+<ol>
+<li>
+<p><strong>EXP-3502: 20Δ with Tight Stops</strong><br />
+   Test if aggressive exit management can salvage 20Δ.</p>
+</li>
+<li>
+<p><strong>EXP-3505: 15Δ "Ultra-Aggressive"</strong><br />
+   Test even closer strikes to see where the breaking point is.</p>
+</li>
+<li>
+<p><strong>EXP-3506: Dynamic Delta Sizing</strong><br />
+   Wider strikes in high-VIX, tighter in low-VIX.</p>
+</li>
+</ol>
+<hr />
+<h2>Infrastructure Wins</h2>
+<h3>✅ Local Data Provider</h3>
+<ul>
+<li><strong>Built:</strong> <code>backtest_local_v2.py</code> — reads CSV files instead of Athena</li>
+<li><strong>Speed:</strong> 5 seconds (vs 20+ hours)</li>
+<li><strong>Reusable:</strong> Can be used for all future SPX 0DTE backtests</li>
+<li><strong>Clean code:</strong> 330 lines, well-documented</li>
+</ul>
+<h3>Next Step</h3>
+<p>Convert this into a reusable module:</p>
+<pre><code class="language-python">from backtest.local_data_provider import LocalCBOEDataProvider
+provider = LocalCBOEDataProvider(ticker='SPX', option_type='0dte')
+data = provider.get_day_data(date, entry_time, exit_time)
+</code></pre>
+<p>This will make ALL future experiments 1000X faster.</p>
+<hr />
+<h2>Files Delivered</h2>
+<ol>
+<li><strong><code>backtest_local_v2.py</code></strong> — Working local backtest script</li>
+<li><strong><code>results/exp3501_local_results.csv</code></strong> — Trade-by-trade results</li>
+<li><strong><code>FINAL_REPORT.md</code></strong> — This document</li>
+</ol>
+<hr />
+<h2>Conclusion</h2>
+<p><strong>EXP-3501 (20Δ Aggressive) is REJECTED.</strong></p>
+<p>Moving from 30Δ to 20Δ strikes:
+- ✅ Increases premium per trade
+- ❌ Cuts win rate (75% → 62%)
+- ❌ <strong>DOUBLES average loss size</strong> (fatal flaw)
+- ❌ Creates -57% max drawdown</p>
+<p><strong>Path A should NOT use 20Δ.</strong> Stick with 30Δ or test wider strikes for more safety.</p>
+<hr />
+<p><strong>Next Steps for Main Agent:</strong>
+1. Review this report
+2. Decide: test tighter stops (EXP-3502) or abandon 20Δ entirely?
+3. Consider EXP-3506 (dynamic delta sizing) as a smarter approach</p>
+<p><strong>Status:</strong> Mission complete. Returning to main agent.</p>
+</body>
+</html>

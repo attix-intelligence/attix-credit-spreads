@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<title>EXP-3303b — Per-stream regime gate</title>
+<style>
+body{font-family:-apple-system,sans-serif;max-width:1280px;margin:0 auto;padding:28px;background:#fff;color:#1e293b;}
+h1{font-size:1.7em;color:#0f172a;}
+h2{margin-top:2em;border-bottom:2px solid #e2e8f0;padding-bottom:8px;color:#334155;}
+.muted{color:#64748b;font-size:0.85em;}
+.caveat{background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:14px;margin:16px 0;font-size:0.9rem;line-height:1.55;}
+.sources{background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:14px;font-size:0.84rem;line-height:1.6;}
+.verdict{background:#fff;border:2px solid #dc2626;border-radius:8px;padding:18px;margin:18px 0;}
+.verdict .badge{display:inline-block;padding:5px 14px;border-radius:14px;color:#fff;background:#dc2626;font-weight:700;font-size:0.86rem;}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:0.85em;}
+th{background:#f1f5f9;padding:8px 9px;text-align:right;border-bottom:2px solid #cbd5e1;font-size:0.7em;text-transform:uppercase;}
+th:first-child{text-align:left;}
+td{padding:7px 9px;text-align:right;border-bottom:1px solid #e2e8f0;}
+td:first-child{text-align:left;font-weight:600;color:#475569;}
+tr.best{background:#ecfdf5;font-weight:600;}
+.kv{display:grid;grid-template-columns:repeat(2,1fr);gap:6px 18px;font-size:0.9em;margin:10px 0;}
+.kv b{color:#475569;}
+</style></head><body>
+
+<h1>EXP-3303b — Per-stream selective regime gate (v8a)</h1>
+<p class="muted">Gate active only on exp1220, qqq_cs —
+the two SPX-VRP-sensitive streams from EXP-3151. Other 6 streams
+unchanged. 2026-05-09 10:14</p>
+
+<div class="sources">
+<strong>Rule Zero.</strong> Same v8a cube and composite stress score as
+EXP-3303 (real IronVault + Yahoo). Walk-forward LW risk-parity unchanged
+from EXP-2600; per-stream leverage matrix L applied to the OOS test
+slice only (training data unmodified, so LW weights match baseline
+exactly). Gate uses composite_stress[t-1] (no look-ahead).
+</div>
+
+<div class="verdict">
+<span class="badge">NO_LIFT</span>
+<div class="kv" style="margin-top:14px">
+<div><b>Δ gross Sharpe</b></div><div>-0.052</div>
+<div><b>Δ net Sharpe</b></div><div>-0.052</div>
+<div><b>Δ max DD</b></div><div>+0.00%</div>
+<div><b>Δ transition ΣDD</b></div><div>+0.58%
+(-0.9% rel.)</div>
+<div><b>Best config</b></div>
+<div>θ = 2.5, gate_leverage = 0.50</div>
+<div><b>Baseline gross / best gross</b></div>
+<div>6.830 / 6.778</div>
+<div><b>vs EXP-3303 portfolio gate</b></div>
+<div>per-stream Δ gross SR -0.052
+vs portfolio gate -0.042</div>
+</div>
+</div>
+
+<h2>1. Gate sweep</h2>
+<table>
+<thead><tr>
+<th>θ</th><th>gate lev</th>
+<th>Gross SR</th><th>Net SR</th><th>Net CAGR</th><th>Max DD</th>
+<th>Σ trans DD</th>
+<th>exp1220 gated</th><th>qqq_cs gated</th><th># events</th>
+</tr></thead>
+<tbody><tr class=''><td>1.0</td><td>0.00</td><td>6.488</td><td>6.036</td><td>+221.3%</td><td>10.29%</td><td>201.87%</td><td>18.97%</td><td>18.97%</td><td>92</td></tr><tr class=''><td>1.0</td><td>0.30</td><td>6.620</td><td>6.169</td><td>+230.2%</td><td>10.29%</td><td>200.82%</td><td>18.97%</td><td>18.97%</td><td>92</td></tr><tr class=''><td>1.0</td><td>0.50</td><td>6.695</td><td>6.244</td><td>+236.3%</td><td>10.29%</td><td>201.97%</td><td>18.97%</td><td>18.97%</td><td>92</td></tr><tr class=''><td>1.5</td><td>0.00</td><td>6.609</td><td>6.164</td><td>+235.5%</td><td>10.29%</td><td>138.05%</td><td>10.48%</td><td>10.48%</td><td>61</td></tr><tr class=''><td>1.5</td><td>0.30</td><td>6.689</td><td>6.243</td><td>+240.4%</td><td>10.29%</td><td>134.22%</td><td>10.48%</td><td>10.48%</td><td>61</td></tr><tr class=''><td>1.5</td><td>0.50</td><td>6.736</td><td>6.290</td><td>+243.6%</td><td>10.29%</td><td>133.18%</td><td>10.48%</td><td>10.48%</td><td>61</td></tr><tr class=''><td>2.0</td><td>0.00</td><td>6.671</td><td>6.226</td><td>+239.2%</td><td>10.29%</td><td>88.94%</td><td>6.27%</td><td>6.27%</td><td>39</td></tr><tr class=''><td>2.0</td><td>0.30</td><td>6.726</td><td>6.280</td><td>+242.9%</td><td>10.29%</td><td>87.81%</td><td>6.27%</td><td>6.27%</td><td>39</td></tr><tr class=''><td>2.0</td><td>0.50</td><td>6.759</td><td>6.314</td><td>+245.4%</td><td>10.29%</td><td>87.57%</td><td>6.27%</td><td>6.27%</td><td>39</td></tr><tr class=''><td>2.5</td><td>0.00</td><td>6.718</td><td>6.274</td><td>+244.0%</td><td>10.29%</td><td>63.47%</td><td>4.05%</td><td>4.05%</td><td>30</td></tr><tr class=''><td>2.5</td><td>0.30</td><td>6.755</td><td>6.311</td><td>+246.3%</td><td>10.29%</td><td>63.12%</td><td>4.05%</td><td>4.05%</td><td>30</td></tr><tr class='best'><td>2.5</td><td>0.50</td><td>6.778</td><td>6.334</td><td>+247.9%</td><td>10.29%</td><td>62.89%</td><td>4.05%</td><td>4.05%</td><td>30</td></tr></tbody>
+</table>
+<p class="muted">"gated" % is fraction of OOS days where that stream's
+leverage was reduced. The other 6 streams are always at full leverage.</p>
+
+<h2>2. Per-stream gated-day count (best config)</h2>
+<table>
+<thead><tr>
+<th>Stream</th><th>Gated</th><th>Days reduced</th><th>Days fully off</th><th>% of OOS</th>
+</tr></thead>
+<tbody><tr><td>exp1220</td><td>YES</td><td>51</td><td>0</td><td>4.05%</td></tr><tr><td>v5_hedge</td><td>no</td><td>0</td><td>0</td><td>0.00%</td></tr><tr><td>gld_cal</td><td>no</td><td>0</td><td>0</td><td>0.00%</td></tr><tr><td>slv_cal</td><td>no</td><td>0</td><td>0</td><td>0.00%</td></tr><tr><td>cross_vol</td><td>no</td><td>0</td><td>0</td><td>0.00%</td></tr><tr><td>xlf_cs</td><td>no</td><td>0</td><td>0</td><td>0.00%</td></tr><tr><td>xli_cs</td><td>no</td><td>0</td><td>0</td><td>0.00%</td></tr><tr><td>qqq_cs</td><td>YES</td><td>51</td><td>0</td><td>4.05%</td></tr></tbody>
+</table>
+
+<h2>3. Top-10 transition events (best gate vs baseline)</h2>
+<table>
+<thead><tr>
+<th>Up-cross date</th><th>composite</th>
+<th>baseline post-DD</th><th>gated post-DD</th><th>Δ</th>
+</tr></thead>
+<tbody><tr><td>2025-04-04</td><td>4.60</td><td>10.29%</td><td>10.29%</td><td style='color:#64748b;font-weight:700'>+0.00%</td></tr><tr><td>2024-12-18</td><td>4.32</td><td>5.61%</td><td>5.61%</td><td style='color:#64748b;font-weight:700'>+0.00%</td></tr><tr><td>2023-02-21</td><td>3.72</td><td>4.94%</td><td>4.94%</td><td style='color:#64748b;font-weight:700'>-0.00%</td></tr><tr><td>2023-03-09</td><td>2.58</td><td>4.94%</td><td>4.94%</td><td style='color:#64748b;font-weight:700'>-0.00%</td></tr><tr><td>2022-09-23</td><td>2.55</td><td>4.66%</td><td>4.66%</td><td style='color:#64748b;font-weight:700'>+0.00%</td></tr><tr><td>2022-09-29</td><td>2.84</td><td>4.66%</td><td>4.66%</td><td style='color:#64748b;font-weight:700'>+0.00%</td></tr><tr><td>2021-05-12</td><td>4.00</td><td>2.44%</td><td>2.70%</td><td style='color:#dc2626;font-weight:700'>+0.26%</td></tr><tr><td>2021-06-16</td><td>2.71</td><td>2.18%</td><td>2.18%</td><td style='color:#64748b;font-weight:700'>+0.00%</td></tr><tr><td>2024-08-01</td><td>2.60</td><td>2.13%</td><td>2.09%</td><td style='color:#16a34a;font-weight:700'>-0.03%</td></tr><tr><td>2024-09-03</td><td>2.71</td><td>2.13%</td><td>2.09%</td><td style='color:#16a34a;font-weight:700'>-0.03%</td></tr></tbody>
+</table>
+
+<p style="margin-top:3em;color:#94a3b8;font-size:0.78em;text-align:center">
+compass/exp3303b_per_stream_gate.py · Rule Zero · real Yahoo + IronVault data
+</p>
+</body></html>

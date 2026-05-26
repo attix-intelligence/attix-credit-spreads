@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<title>EXP-3309 — Liquidity-Weighted Entry Timing</title>
+<style>
+body{font-family:-apple-system,sans-serif;max-width:1280px;margin:0 auto;padding:28px;background:#fff;color:#1e293b;}
+h1{font-size:1.7em;color:#0f172a;}
+h2{margin-top:2em;border-bottom:2px solid #e2e8f0;padding-bottom:8px;color:#334155;}
+.muted{color:#64748b;font-size:0.85em;}
+.caveat{background:#fef3c7;border:2px solid #f59e0b;border-radius:8px;padding:16px;margin:16px 0;font-size:0.9rem;line-height:1.55;}
+.caveat strong{color:#92400e;}
+.sources{background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:14px;font-size:0.84rem;line-height:1.6;}
+.verdict{background:#fff;border:2px solid #16a34a;border-radius:8px;padding:18px;margin:18px 0;}
+.verdict .badge{display:inline-block;padding:5px 14px;border-radius:14px;color:#fff;background:#16a34a;font-weight:700;font-size:0.86rem;}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:0.85em;}
+th{background:#f1f5f9;padding:8px 9px;text-align:right;border-bottom:2px solid #cbd5e1;font-size:0.7em;text-transform:uppercase;}
+th:first-child{text-align:left;}
+td{padding:7px 9px;text-align:right;border-bottom:1px solid #e2e8f0;}
+td:first-child{text-align:left;font-weight:600;color:#475569;}
+td.note{text-align:left;font-weight:400;color:#64748b;font-size:0.9em;}
+tr.best{background:#ecfdf5;font-weight:600;}
+.kv{display:grid;grid-template-columns:repeat(2,1fr);gap:6px 18px;font-size:0.9em;margin:10px 0;}
+.kv b{color:#475569;}
+</style></head><body>
+
+<h1>EXP-3309 — Liquidity-weighted entry timing</h1>
+<p class="muted">Decompose EXP-2420 round-trip cost into per-leg
+entry + exit, sweep entry-window timing (open / mid / pre-close),
+hold exit at pre-close (production EXP-2470 default). Identify
+whether moving entries from the open into the pre-close window
+delivers material net-Sharpe savings on v8a.
+2026-05-09 12:17</p>
+
+<div class="sources">
+<strong>Rule Zero.</strong> Round-trip $ baseline pulled from
+EXP-2420 (real IronVault p25 spreads + Yahoo 90d ADV at 3× leverage):
+bid-ask $4,175, slippage
+$9,756, commission
+$8,273. Per-leg costs = round-trip / 2.
+v8a anchor: gross SR 6.83, gross CAGR
+284.4% (EXP-2600 8-stream LW @ target_vol=0.18),
+implied ann vol 19.71%.
+</div>
+
+<div class="caveat">
+<strong>⚠ SCENARIO ANALYSIS, not measured fills.</strong> Per-window
+timing factors (spread×, slippage×, fill_rate) are documented
+coefficients from the intraday-liquidity literature (Chordia-Roll-
+Subrahmanyam; EXP-2470 method note on ~2× pre-close ADV; Doshi-
+Patel-Singal 2025 for option order flow) — they are NOT measured
+from a per-minute IronVault tape (we do not currently ingest minute
+bars). The conclusion below is therefore an estimate. To verify,
+run a 1-month live paper trade with split-entry routing through
+Alpaca and capture fill timestamps.
+</div>
+
+<div class="verdict">
+<span class="badge">MATERIAL_LIFT</span>
+<div class="kv" style="margin-top:14px">
+<div><b>Best entry policy</b></div>
+<div>D: Pre-close entry / Pre-close exit (proposed)</div>
+<div><b>Best net Sharpe</b></div>
+<div>5.879 (Δ vs gross
+-0.951)</div>
+<div><b>Δ net SR vs no patient stack</b></div>
+<div>+0.348</div>
+<div><b>Δ net SR vs EXP-2470 implicit (open entry)</b></div>
+<div>+0.174</div>
+<div><b>Best total drag</b></div>
+<div>1875 bps
+($18,749/yr on $100K)</div>
+<div><b>Best fill rate</b></div>
+<div>98%</div>
+</div>
+</div>
+
+<h2>1. Per-window timing factors (documented)</h2>
+<table>
+<thead><tr>
+<th>Window</th><th>spread×</th><th>slippage×</th>
+<th>fill rate</th><th>note</th>
+</tr></thead>
+<tbody><tr><td>Open auction (9:30-10:00)</td><td>1.30</td><td>1.22</td><td>0.85</td><td class='note'>Wider spreads + ~67% of midday option ADV. Chordia-Roll-Subrahmanyam intraday liquidity patterns, confirmed in Doshi-Patel-Singal 2025 for option order flow.</td></tr><tr><td>Mid-day (10:00-15:00)</td><td>1.00</td><td>1.00</td><td>0.92</td><td class='note'>Baseline reference window. EXP-2420 cost model is calibrated against IronVault daily summaries (close-of-day NBBO proxy), aligning with midday liquidity.</td></tr><tr><td>Pre-close (15:30-16:00)</td><td>0.85</td><td>0.71</td><td>0.98</td><td class='note'>~2× midday option ADV (EXP-2470 method note); spread compresses ~15%; √-impact 1/√2 ≈ 0.71. Closing auction provides near-deterministic fills.</td></tr></tbody>
+</table>
+
+<h2>2. Scenario sweep — entry × exit policy</h2>
+<p class="muted">Per-leg cost split 50/50 from EXP-2420 round-trip
+baseline; timing factors applied per leg. Opportunity cost = missed
+trades × per-trade gross PnL (avg
+$942/trade across
+302 trades/yr).</p>
+<table>
+<thead><tr>
+<th>Scenario</th>
+<th>BA entry $</th><th>BA exit $</th>
+<th>Slip entry $</th><th>Slip exit $</th>
+<th>Fill</th><th>Opp. cost</th>
+<th>Total $</th><th>Drag bps</th>
+<th>Net SR</th><th>Δ vs gross</th>
+</tr></thead>
+<tbody><tr class=''><td>A: Open entry / Open exit (no patient stack)</td><td>$2,714</td><td>$2,714</td><td>$5,951</td><td>$5,951</td><td>85%</td><td>$0</td><td>$25,604</td><td>2560</td><td><strong>5.531</strong></td><td>-1.299</td></tr><tr class=''><td>B: Open entry / Pre-close exit (EXP-2470 stack-B implicit)</td><td>$2,714</td><td>$1,775</td><td>$5,951</td><td>$3,464</td><td>85%</td><td>$0</td><td>$22,177</td><td>2218</td><td><strong>5.705</strong></td><td>-1.125</td></tr><tr class=''><td>C: Mid-day entry / Pre-close exit (control)</td><td>$2,088</td><td>$1,775</td><td>$4,878</td><td>$3,464</td><td>92%</td><td>$0</td><td>$20,477</td><td>2048</td><td><strong>5.791</strong></td><td>-1.039</td></tr><tr class='best'><td>D: Pre-close entry / Pre-close exit (proposed)</td><td>$1,775</td><td>$1,775</td><td>$3,464</td><td>$3,464</td><td>98%</td><td>$0</td><td>$18,749</td><td>1875</td><td><strong>5.879</strong></td><td>-0.951</td></tr></tbody>
+</table>
+
+<h2>3. Reading the result</h2>
+<ul>
+<li><strong>Pre-close entry saves ~939
+on bid-ask</strong> (94 bps)
+and <strong>~2488
+on slippage</strong>
+(249 bps)
+per round-trip relative to open entry, holding exit fixed at pre-close.</li>
+<li><strong>Fill rate is informational, not a drag line.</strong>
+At 85% mid-limit fill the unfilled 15% retries as market orders at the
+open-window spread — which is exactly the cost the open spread×
+factor already represents. Adding a separate "missed PnL"
+opportunity cost would double-count.</li>
+<li><strong>Net Sharpe lift vs EXP-2470 baseline:
++0.174.</strong>
+EXP-2470 stack-B already captured the slippage half of pre-close
+savings on the exit leg; pre-close ENTRY harvests the remaining
+~half on the entry leg. The marginal savings are real but small
+relative to overall drag.</li>
+</ul>
+
+<h2>4. Production recommendation</h2>
+<p class="muted">If the $942 per-trade
+PnL figure holds in live trading, scenario D (D: Pre-close entry / Pre-close exit (proposed))
+is strictly dominant on this cost model. The two operational
+considerations not captured here:</p>
+<ol>
+<li><strong>Signal staleness.</strong> Many of v8a's streams generate
+signals from morning IV / open prices; deferring entry by ~6 hours
+introduces signal decay we have not measured. EXP-2470 method-B
+implicitly assumes signal freshness loss is small.</li>
+<li><strong>Adverse-selection in the closing auction.</strong>
+Closing-auction order flow is increasingly dominated by passive
+indexing rebalances, which are not noisy fills — but on rare
+event days (FOMC, NFP) the closing print has crossed-spread
+slippage that this scenario model does not capture.</li>
+</ol>
+
+<p style="margin-top:3em;color:#94a3b8;font-size:0.78em;text-align:center">
+compass/exp3309_liquidity_weighted_entry.py · Rule Zero · anchored to EXP-2420 IronVault + Yahoo
+</p>
+</body></html>

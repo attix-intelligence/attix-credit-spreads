@@ -1,0 +1,241 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>EXP-3505: SPX 1-3 DTE Iron Condor Comparison</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 20px;
+            background: white;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #34495e;
+            margin-top: 30px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: right;
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .metric {
+            text-align: left;
+            font-weight: bold;
+        }
+        .winner {
+            background-color: #d5f4e6 !important;
+            font-weight: bold;
+        }
+        .loser {
+            background-color: #fadbd8 !important;
+        }
+        .summary {
+            background-color: #eaf2f8;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .success {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        .failure {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>EXP-3505: SPX 1-3 DTE Iron Condor Backtest Results</h1>
+    
+    <div class="summary">
+        <h2>Objective</h2>
+        <p><strong>Test if 1-3 DTE avoids 0DTE gamma explosion while maintaining profitability</strong></p>
+        <p>0DTE failed with -25% to -107% returns. These longer DTEs should provide:</p>
+        <ul>
+            <li>More time for mean reversion</li>
+            <li>Lower gamma risk (less explosive moves)</li>
+            <li>Better liquidity</li>
+        </ul>
+        <p><strong>Success Criteria:</strong></p>
+        <ul>
+            <li>✅ Positive returns (unlike 0DTE)</li>
+            <li>✅ Sharpe > 1.5</li>
+            <li>✅ Win rate > 70%</li>
+            <li>✅ Monthly return > 15%</li>
+        </ul>
+    </div>
+    
+    <h2>Performance Comparison</h2>
+    <table>
+        <tr>
+            <th class="metric">Metric</th>
+            <th>1 DTE<br>(Daily)</th>
+            <th>2 DTE<br>(Every Other Day)</th>
+            <th>3 DTE<br>(3-Day Hold)</th>
+        </tr>
+
+        <tr>
+            <td class="metric">Total Trades</td>
+            <td class="loser">21</td>
+            <td class="">7</td>
+            <td class="winner">4</td>
+        </tr>
+
+        <tr>
+            <td class="metric">Win Rate</td>
+            <td class="winner">42.9%</td>
+            <td class="winner">42.9%</td>
+            <td class="loser">25.0%</td>
+        </tr>
+
+        <tr>
+            <td class="metric">Total Return</td>
+            <td class="loser">-17.6%</td>
+            <td class="winner">-5.1%</td>
+            <td class="">-7.3%</td>
+        </tr>
+
+        <tr>
+            <td class="metric">Annual Return</td>
+            <td class="loser">-9.2%</td>
+            <td class="winner">-2.6%</td>
+            <td class="">-3.7%</td>
+        </tr>
+
+        <tr>
+            <td class="metric">Avg Monthly Return</td>
+            <td class="">-1.4%</td>
+            <td class="winner">-0.7%</td>
+            <td class="loser">-1.8%</td>
+        </tr>
+
+        <tr>
+            <td class="metric">Avg Trade P&L</td>
+            <td class="">-836</td>
+            <td class="winner">-734</td>
+            <td class="loser">-1,814</td>
+        </tr>
+
+        <tr>
+            <td class="metric">Avg Win</td>
+            <td class="loser">1,236</td>
+            <td class="">1,495</td>
+            <td class="winner">1,840</td>
+        </tr>
+
+        <tr>
+            <td class="metric">Avg Loss</td>
+            <td class="loser">-2,390</td>
+            <td class="">-2,405</td>
+            <td class="winner">-3,032</td>
+        </tr>
+
+        <tr>
+            <td class="metric">Max Drawdown</td>
+            <td class="winner">-18.1%</td>
+            <td class="loser">-5.9%</td>
+            <td class="">-6.0%</td>
+        </tr>
+
+        <tr>
+            <td class="metric">Sharpe Ratio</td>
+            <td class="loser">-2.82</td>
+            <td class="winner">-1.13</td>
+            <td class="">-2.57</td>
+        </tr>
+
+        <tr>
+            <td class="metric">Trades/Year</td>
+            <td class="loser">11</td>
+            <td class="">4</td>
+            <td class="winner">2</td>
+        </tr>
+
+    </table>
+    
+    <h2>Winner Analysis</h2>
+    <div class="summary">
+
+        <h3>🏆 Winner: 2 DTE</h3>
+        <ul>
+            <li><strong>Annual Return:</strong> -2.6%</li>
+            <li><strong>Sharpe Ratio:</strong> -1.13</li>
+            <li><strong>Win Rate:</strong> 42.9%</li>
+            <li><strong>Avg Monthly Return:</strong> -0.7%</li>
+        </ul>
+        
+        <h3>Success Criteria Assessment</h3>
+        <ul>
+            <li>❌ Positive returns</li>
+            <li>❌ Sharpe > 1.5</li>
+            <li>❌ Win rate > 70%</li>
+            <li>❌ Monthly return > 15%</li>
+
+        </ul>
+        
+        <h3>Path A Fit</h3>
+
+        <p class="failure">
+            <strong>❌ PATH A REJECTED</strong><br>
+            All 1-3 DTE variants failed to produce positive returns.
+            Must explore other strategies (spreads, different underliers, or different timeframes).
+        </p>
+
+    </div>
+    
+    <h2>Strategy Details</h2>
+    <table>
+        <tr>
+            <th class="metric">Strategy</th>
+            <th>Entry</th>
+            <th>Exit</th>
+            <th>Strikes</th>
+            <th>Frequency</th>
+        </tr>
+        <tr>
+            <td class="metric">1 DTE</td>
+            <td>9:45 AM daily</td>
+            <td>Next day at open</td>
+            <td>25Δ put/call</td>
+            <td>Daily (~250/year)</td>
+        </tr>
+        <tr>
+            <td class="metric">2 DTE</td>
+            <td>9:45 AM every other day</td>
+            <td>2 days later</td>
+            <td>25Δ put/call</td>
+            <td>3×/week (~125/year)</td>
+        </tr>
+        <tr>
+            <td class="metric">3 DTE</td>
+            <td>Mon/Wed 9:45 AM</td>
+            <td>Thu/Mon</td>
+            <td>30Δ put/call</td>
+            <td>2×/week (~100/year)</td>
+        </tr>
+    </table>
+    
+    <p><em>Report generated: 2026-05-26 10:48:51 UTC</em></p>
+</body>
+</html>

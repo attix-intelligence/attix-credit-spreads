@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>EXP-3310 — Explosive Returns Pathways: Feasibility Study</title>
+<style>
+  :root {
+    --ink: #14171a;
+    --muted: #5b6470;
+    --rule: #e2e5ea;
+    --good: #1b7a3a;
+    --warn: #b56a00;
+    --bad:  #b3261e;
+    --bg-soft: #f7f8fa;
+    --accent: #1d4ed8;
+  }
+  html, body { background:#ffffff; color:var(--ink); }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.55;
+    max-width: 1080px;
+    margin: 32px auto;
+    padding: 0 28px;
+    font-size: 15px;
+  }
+  h1 { font-size: 26px; margin: 0 0 6px; }
+  h2 { font-size: 20px; margin-top: 36px; border-bottom: 1px solid var(--rule); padding-bottom: 6px; }
+  h3 { font-size: 16px; margin-top: 22px; color: var(--ink); }
+  h4 { font-size: 14px; margin-top: 16px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+  p, li { color: var(--ink); }
+  .meta { color: var(--muted); font-size: 13px; margin-bottom: 24px; }
+  .callout {
+    background: var(--bg-soft);
+    border-left: 3px solid var(--accent);
+    padding: 12px 16px;
+    margin: 18px 0;
+    font-size: 14px;
+  }
+  .callout.warn { border-left-color: var(--warn); }
+  .callout.bad  { border-left-color: var(--bad); }
+  .callout.good { border-left-color: var(--good); }
+  table {
+    width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13.5px;
+  }
+  th, td {
+    text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--rule); vertical-align: top;
+  }
+  th { background: var(--bg-soft); font-weight: 600; color: var(--ink); }
+  tr.baseline td { background: #fbfcfe; font-weight: 600; }
+  .pill {
+    display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600;
+  }
+  .pill.good { background:#e7f4ec; color: var(--good); }
+  .pill.warn { background:#fdf1de; color: var(--warn); }
+  .pill.bad  { background:#fbe4e2; color: var(--bad); }
+  code { background: var(--bg-soft); padding: 1px 5px; border-radius: 3px; font-size: 13px; }
+  .footnote { color: var(--muted); font-size: 13px; }
+  .checklist { padding-left: 20px; }
+  .checklist li { margin: 4px 0; }
+  hr { border: none; border-top: 1px solid var(--rule); margin: 36px 0; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .card {
+    border: 1px solid var(--rule); border-radius: 6px; padding: 14px 16px; background: #fff;
+  }
+  .card h3 { margin-top: 0; }
+</style>
+</head>
+<body>
+
+<h1>EXP-3310 — Explosive Returns Pathways: Feasibility Study</h1>
+<div class="meta">
+  2026-05-19 · Maximus research agent · Feasibility scoping only — <strong>no backtests run</strong>
+</div>
+
+<div class="callout warn">
+  <strong>Rule Zero notice.</strong> Every numerical range below is sourced from public literature,
+  exchange data, and practitioner reports. They are guidance ranges, not promises. Each pathway lists
+  a data-sourcing checklist that must be completed before any backtest is permitted.
+</div>
+
+<h2>TL;DR</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Pathway</th>
+      <th>Realistic net CAGR ($100K)</th>
+      <th>Max DD risk</th>
+      <th>Capacity</th>
+      <th>Sharpe (lit. ranges)</th>
+      <th>Verdict vs v8a</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr class="baseline">
+      <td>v8a baseline</td>
+      <td>118%</td>
+      <td>5.1%</td>
+      <td>~$50M</td>
+      <td>6.39</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td>1. Solana on-chain arb / MEV</td>
+      <td>30 – 100%</td>
+      <td><span class="pill bad">30 – 80%</span></td>
+      <td>$1 – 5M working capital</td>
+      <td>0.5 – 2.5</td>
+      <td>Higher gross, far worse risk-adjusted; operationally brittle</td>
+    </tr>
+    <tr>
+      <td>2. Crypto basis / funding arb</td>
+      <td>15 – 35%</td>
+      <td><span class="pill warn">15 – 50%</span></td>
+      <td>$50 – 500M per venue</td>
+      <td>1.5 – 3.5</td>
+      <td>Lower mean return; counterparty tail is unhedgeable</td>
+    </tr>
+    <tr>
+      <td>3. 0DTE SPX short gamma</td>
+      <td>20 – 50%</td>
+      <td><span class="pill warn">20 – 80%</span></td>
+      <td>$100M – $1B</td>
+      <td>0.8 – 1.8</td>
+      <td>Lower Sharpe than v8a, larger tails; complementary, not replacement</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  <strong>Bottom line.</strong> None of these pathways dominates v8a on a Sharpe basis at our capital
+  scale. The only candidate worth a Rule-Zero-compliant feasibility experiment is
+  <strong>Pathway 2 (basis/funding)</strong>: clean data, exchange API access, structural edge.
+  Pathways 1 and 3 are documented for completeness but <strong>deprioritized</strong>.
+</div>
+
+<p class="footnote">
+  The framing of "100 – 10,000%+ in days/weeks" is inconsistent with the empirical literature for
+  any strategy that is also durable at $100K – $1M scale. Strategies that have historically produced
+  such returns (2020 – 2021 Solana memecoin MEV, GME options gamma squeeze) are episodic,
+  non-repeatable, and selection-biased in survivor reports.
+</p>
+
+<hr />
+
+<h2>Pathway 1 — Solana On-Chain Arbitrage / MEV</h2>
+
+<h3>Theoretical edge</h3>
+<ul>
+  <li><strong>Triangular DEX arbitrage</strong> across Raydium / Orca / Meteora / Lifinity. Edge source: order-flow imbalance + AMM curve fragmentation.</li>
+  <li><strong>Sandwich / JIT liquidity</strong> on Jupiter aggregator routes. Edge: latency advantage and mempool visibility.</li>
+  <li><strong>CEX – DEX latency arbitrage</strong>: Binance/Coinbase spot vs Solana DEX pools. Edge: market segmentation.</li>
+</ul>
+<p>Underlying microstructure: <strong>bid-ask spread capture</strong>, not statistical edge. Edge per opportunity is small (1 – 30 bps), high-frequency.</p>
+
+<h3>Realistic annual return</h3>
+<table>
+  <thead><tr><th>Capital</th><th>Realistic net CAGR</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>$10K</td><td>50 – 200%</td><td>Below institutional searcher minimum; priority fees consume 30 – 60% of gross</td></tr>
+    <tr><td>$100K</td><td>30 – 100%</td><td>Mid-tier searchers; Jito tippers compress edge</td></tr>
+    <tr><td>$1M</td><td>10 – 40%</td><td>Top-searcher tier; Jito MEV revenue across all searchers ~$300M/yr — capturing &gt;0.5% solo is rare</td></tr>
+  </tbody>
+</table>
+<p class="footnote">Sources: Eigenphi MEV dashboards, Jito searcher leaderboards, Flashbots research (Ethereum analogue), Frontier Research 2024 Solana MEV report.</p>
+
+<h3>Max drawdown risk</h3>
+<ul>
+  <li><strong>Smart contract exploit</strong> on a pool used in route: 100% loss of capital parked in that pool (Cypher, Mango Markets 2022 – 2023).</li>
+  <li><strong>Rug pulls</strong> on niche pools used for multi-hop routes.</li>
+  <li><strong>Toxic flow</strong>: a faster bot can flip gross negative within hours.</li>
+  <li><strong>Bridge exploits</strong> if cross-chain (Wormhole, Nomad, Multichain — ~$1B combined losses).</li>
+  <li><strong>Realistic max DD</strong>: 30 – 80% over any 12 months for a small operator. Public reporting hides this via survivor bias.</li>
+</ul>
+
+<h3>AUM capacity</h3>
+<ul>
+  <li><strong>Hard ceiling ~$5M working capital</strong> for a single operator on Solana DEX arb. Above this, available arb sizes (pool depth $50K – $500K) become a small share of capital.</li>
+  <li>$5M – $50M possible only by building a competing searcher operation against incumbents (Jito-Solana validators, BloXroute, Manifold) with multi-year R&D leads.</li>
+</ul>
+
+<h3>Infrastructure</h3>
+<ul>
+  <li>Dedicated Solana RPC: Helius / QuickNode / Triton ($1K – $5K/mo dedicated, $20K+/mo co-located).</li>
+  <li>Jito-Solana validator or Block Engine bundle relay access (revenue-share or ~$1M+ SOL stake to run validator).</li>
+  <li>Rust searcher bot: 6 – 12 months engineering for a competitive bot.</li>
+  <li>Capital float ~$50K – $200K across pools and CEX hot wallets.</li>
+  <li>Redundant geographic deployment + 24/7 on-call.</li>
+</ul>
+
+<h3>Regulatory and operational risks</h3>
+<ul>
+  <li>OFAC/SDN counterparty screening required; failure = sanctions exposure.</li>
+  <li>MEV ethics / PR risk; growing protocol-level mitigations (e.g., Jupiter shielded mode).</li>
+  <li>IRS: every arb cycle is a taxable event in the US; thousands per day = bookkeeping problem.</li>
+  <li>Bank de-risking of crypto-active accounts.</li>
+  <li>No customer recourse if exchange or bridge fails (FTX precedent).</li>
+</ul>
+
+<h3>Rule Zero data sourcing checklist</h3>
+<ol class="checklist">
+  <li>Eigenphi / Flashbots historical MEV dataset (Solana): priority fee, gross, net per opportunity.</li>
+  <li>Jito bundle submission history (public via Jito API).</li>
+  <li>Raydium / Orca / Meteora pool history (indexable via Helius archive RPC).</li>
+  <li>Reconstruct realistic <em>competitive</em> fill rates (not theoretical opportunity counts) — this is the killer assumption most retail MEV backtests get wrong.</li>
+</ol>
+
+<div class="callout bad">
+  <strong>Verdict.</strong> Higher gross plausible at $10K. Risk-adjusted return is far worse than v8a (Sharpe 0.5 – 2.5 vs 6.39).
+  Drawdown includes a total-loss tail (smart contract exploit). <strong>Recommend: do not pursue.</strong>
+</div>
+
+<hr />
+
+<h2>Pathway 2 — Crypto Volatility / Basis Arbitrage</h2>
+
+<p>Sub-strategies: perp-spot funding arb · CEX – DEX basis · term-structure basis (Deribit dated vs perp) · realized-vs-implied vol on Deribit DVOL.</p>
+
+<h3>Theoretical edge</h3>
+<p><strong>Structural, not speculative.</strong> Funding rate is the clearing mechanism for derivatives demand. When perps trade premium (most bull regimes), funding is positive → cash-and-carry short perp + long spot. Historical BTC/ETH perp funding has averaged <strong>10 – 30% APR</strong> in 2021 – 2024 (Glassnode, Binance Futures, Coinglass).</p>
+<p>Edge is persistent because it reflects retail leverage demand, which is unlikely to vanish.</p>
+
+<h3>Realistic annual return</h3>
+<table>
+  <thead><tr><th>Capital</th><th>Realistic net CAGR</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>$10K</td><td>15 – 40%</td><td>Constrained by minimum trade sizes and fee drag</td></tr>
+    <tr><td>$100K</td><td>15 – 35%</td><td>Institutional tiers unlock at $100K+ (50 – 80% fee reduction)</td></tr>
+    <tr><td>$1M</td><td>10 – 25%</td><td>Meaningful share of OI on tier-2 venues; needs venue diversification</td></tr>
+  </tbody>
+</table>
+<p>Sharpe historical (Galaxy Digital, 21Shares, Amberdata): <strong>1.5 – 3.5</strong> for delta-neutral basis books 2021 – 2024 — below v8a's 6.39.</p>
+
+<h3>Max drawdown risk</h3>
+<ul>
+  <li><strong>Exchange counterparty failure</strong>: FTX (Nov 2022), Mt. Gox, BitMEX OFAC settlement (2020). <strong>Unhedgeable.</strong></li>
+  <li>Liquidation cascades on perp side during fast moves.</li>
+  <li>Stablecoin depeg: USDC to $0.87 in March 2023 (SVB exposure); USDT multiple <$0.95 events.</li>
+  <li>Regulatory shutdown: Binance US, Kraken (SEC, Feb 2023), Coinbase (SEC suit, Jun 2023).</li>
+  <li><strong>Realistic max DD</strong>: 15 – 30% normal; <strong>50 – 100% tail</strong> on venue failure.</li>
+</ul>
+
+<h3>AUM capacity</h3>
+<ul>
+  <li>Per-venue: $50M – $500M depending on OI / ADV. Top-3 venues each absorb $200M+.</li>
+  <li>Aggregate $1B+ plausible across 5+ venues with redundancy.</li>
+  <li>Edge has compressed from 25%+ APR in 2021 bull to single digits in chop — <strong>regime-dependent</strong>.</li>
+</ul>
+
+<h3>Infrastructure</h3>
+<ul>
+  <li>API access to 3 – 5 venues (Binance, Bybit, OKX, Deribit, Hyperliquid).</li>
+  <li>CCXT or direct WebSocket (~2 – 4 weeks engineering).</li>
+  <li>Cross-margin collateral manager (critical, non-trivial).</li>
+  <li>KYC / institutional onboarding 2 – 8 weeks per venue; $100K – $1M for institutional tiers.</li>
+  <li>No co-location required; latency matters only for liquidation defense.</li>
+</ul>
+
+<h3>Regulatory and operational risks</h3>
+<ul>
+  <li>US persons restricted from offshore perp venues (CFTC enforcement on BitMEX, Binance). US fund must use Coinbase Derivatives, CME, or Kraken Futures — significantly worse funding terms.</li>
+  <li>CFTC vs SEC perp classification unsettled.</li>
+  <li>Tax: funding receipts = ordinary income (not 1256 60/40 like v8a).</li>
+  <li>Stablecoin issuer regulatory exposure (Circle, Tether).</li>
+  <li>SEC custody rule applies if any portion represents customer assets.</li>
+</ul>
+
+<h3>Rule Zero data sourcing checklist</h3>
+<ol class="checklist">
+  <li>Binance Futures funding rate history (free API, 8-hourly back to 2019).</li>
+  <li>Coinglass aggregator for cross-venue funding (free tier sufficient).</li>
+  <li>Deribit DVOL and option chain (free CSV back to 2020).</li>
+  <li>Glassnode on-chain stablecoin metrics for liquidity context.</li>
+  <li>Realistic execution model: taker fees (4 – 6 bps), maker rebates (-1 to -2 bps), 8h funding ticks, stablecoin transfer latency.</li>
+</ol>
+
+<div class="callout warn">
+  <strong>Verdict.</strong> The only pathway with a structural edge, clean data, and tractable infra cost.
+  Realistic 15 – 25% net CAGR at $100K – $1M with Sharpe 1.5 – 3.0 — inferior to v8a on risk-adjusted basis
+  but potentially uncorrelated. Counterparty tail is the dominant risk and is not insurable.
+  <strong>Recommend</strong>: small Rule-Zero feasibility experiment using free Binance funding history. Cap research budget at one cycle.
+</div>
+
+<hr />
+
+<h2>Pathway 3 — 0DTE SPX Options (Short Gamma)</h2>
+
+<h3>Theoretical edge</h3>
+<p>Variance risk premium concentrated in last 0 – 1 day to expiry. Vasquez et al. (2025, SSRN 5113405): 0DTE SPX volume ~59% of total SPX. Dim, Eraker, Vilkov (2023, SSRN 4692190): market-maker net gamma on 0DTE is positive and dampens realized vol. Terstegge (2025): residual VRP after the 2010s decline materializes overnight on SPX puts; intraday 0DTE has a smaller but high-frequency premium.</p>
+<p>Edge type: <strong>volatility premium harvesting</strong>, not bid-ask spread capture.</p>
+
+<h3>Realistic annual return</h3>
+<table>
+  <thead><tr><th>Capital</th><th>Realistic net CAGR</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>$10K</td><td>10 – 30%</td><td>PDT rule; assignment risk; small wing structures</td></tr>
+    <tr><td>$100K</td><td>20 – 50%</td><td>Iron condors / broken-wing flies; lit Sharpe 0.8 – 1.5</td></tr>
+    <tr><td>$1M</td><td>15 – 35%</td><td>Tail-dominated; portfolio margin needed; one bad day can erase a quarter</td></tr>
+  </tbody>
+</table>
+<p class="footnote">Sources: TastyTrade research (2023 – 2024), CBOE 0DTE papers, Bondarenko-Bernardi (2024) intraday VRP, ORATS practitioner data.</p>
+
+<h3>Max drawdown risk</h3>
+<ul>
+  <li><strong>Aug 5, 2024 SPX -3% intraday</strong>: 0DTE short-vol books lost 15 – 40% in a single session (ORATS / practitioner postmortems).</li>
+  <li><strong>Feb 5, 2018 (VIXmageddon)</strong>: XIV terminated, LJM Preservation -80%+ in one day. Not 0DTE but the closest short-vol analog.</li>
+  <li><strong>OptionSellers.com (Nov 2018)</strong>: short naked strangles wiped accounts to negative balances. Recurring failure mode for unhedged short-gamma.</li>
+  <li><strong>Realistic max DD</strong>: 20 – 40% in defined-risk wing structures; <strong>50 – 80%+</strong> tail without proper wings.</li>
+</ul>
+
+<h3>AUM capacity</h3>
+<ul>
+  <li>Very large: 0DTE SPX notional &gt;$500B daily (CBOE 2024). Capacity $100M – $1B at retail-style sizing.</li>
+  <li>Edge has not visibly decayed through 2025 — Vasquez et al. show customer flow is two-sided, preserving VRP residual.</li>
+</ul>
+
+<h3>Infrastructure</h3>
+<ul>
+  <li>Lowest of the three. IBKR Pro / TastyTrade / Schwab with portfolio margin ($200K minimum at most PB).</li>
+  <li>OPRA top-of-book ($200 – $1500/mo); CBOE LiveVol if backtest stack required (~$3K/mo).</li>
+  <li>No co-location, no private RPC, no custody concerns.</li>
+  <li>Position sizing engine with hard wing-width caps as % of NAV is critical.</li>
+</ul>
+
+<h3>Regulatory and operational risks</h3>
+<ul>
+  <li>CBOE-listed, SEC + FINRA oversight, 1256 60/40 tax treatment (favorable).</li>
+  <li>FINRA 2024 – 2025 reports flagged retail 0DTE losses; future rule changes possible (margin, PDT, suitability).</li>
+  <li>No novel regulatory risk beyond what we already manage.</li>
+  <li>Operational risk is execution-quality driven, not custody/counterparty.</li>
+</ul>
+
+<h3>Rule Zero data sourcing checklist</h3>
+<ol class="checklist">
+  <li>Verify IronVault <code>options_cache.db</code> SPX coverage at 0DTE; if absent, source from CBOE LiveVol or ORATS.</li>
+  <li>Realistic fill model: 0DTE bid-ask wider in % than 28-DTE; measure effective vs quoted (Muravyev-Pearson 2020 methodology).</li>
+  <li>Backtest must include Feb 2018, March 2020, Aug 2024 for tail calibration.</li>
+</ol>
+
+<div class="callout warn">
+  <strong>Verdict.</strong> Lowest infra barrier, well-regulated, tax-advantaged. But Sharpe is structurally lower
+  than v8a (0.8 – 1.5 vs 6.39) and tail is worse (Aug 2024 precedent). <strong>Recommend</strong>: medium-priority feasibility
+  candidate as a <em>complementary</em> stream — never replacement. Note: v8a already harvests VRP via 28 – 7 DTE SPY; the
+  diversification benefit of adding 0 – 1 DTE SPX must be measured, not assumed.
+</div>
+
+<hr />
+
+<h2>Side-by-side comparison vs v8a</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Dimension</th>
+      <th>v8a (current)</th>
+      <th>Pathway 1 (Solana MEV)</th>
+      <th>Pathway 2 (Crypto basis)</th>
+      <th>Pathway 3 (0DTE SPX)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>Net CAGR ($100K)</td><td>118%</td><td>30 – 100%</td><td>15 – 35%</td><td>20 – 50%</td></tr>
+    <tr><td>Sharpe (lit/backtest)</td><td>6.39</td><td>0.5 – 2.5</td><td>1.5 – 3.5</td><td>0.8 – 1.8</td></tr>
+    <tr><td>Max DD (realized / tail)</td><td>5.1% / ~12% stress</td><td>30 – 80% (tail=total loss)</td><td>15 – 30% / 50 – 100% tail</td><td>20 – 40% / 50 – 80% tail</td></tr>
+    <tr><td>Edge type</td><td>Volatility risk premium</td><td>Bid-ask spread capture</td><td>Structural funding demand</td><td>Volatility risk premium</td></tr>
+    <tr><td>Capacity</td><td>~$50M (SLV-bottlenecked)</td><td>$1 – 5M working capital</td><td>$50 – 500M / venue</td><td>$100M – $1B</td></tr>
+    <tr><td>Infra cost</td><td>Existing (Alpaca + Polygon)</td><td>$50K – $500K + 6 – 12 mo eng</td><td>$10K – $50K + 2 – 4 mo eng</td><td>Existing (broker upgrade)</td></tr>
+    <tr><td>Reg / op risk</td><td><span class="pill good">Low</span> US-listed</td><td><span class="pill bad">Very high</span></td><td><span class="pill warn">High</span></td><td><span class="pill good">Low</span> CBOE-listed</td></tr>
+    <tr><td>Counterparty tail</td><td>Negligible (cleared)</td><td>Total (exploit/rug)</td><td>Total (exchange failure)</td><td>Negligible (cleared)</td></tr>
+    <tr><td>Rule-Zero data ready?</td><td>Yes (IronVault)</td><td>No (Eigenphi/Jito needed)</td><td>Mostly (Binance + Coinglass)</td><td>Partial (verify SPX 0DTE coverage)</td></tr>
+  </tbody>
+</table>
+
+<h2>Recommendation</h2>
+
+<div class="grid">
+  <div class="card">
+    <h3>Pathway 1</h3>
+    <p><span class="pill bad">Do not pursue</span></p>
+    <p>Risk-adjusted return materially worse than v8a; infrastructure cost prohibitive at our scale; tail risk operationally toxic. Public success stories heavily survivor-biased.</p>
+  </div>
+  <div class="card">
+    <h3>Pathway 2</h3>
+    <p><span class="pill warn">Single feasibility experiment</span></p>
+    <p>Use free Binance funding history. Validate ≥10% net CAGR with Sharpe ≥1.5 after realistic fees. If yes, consider $50K – $100K satellite later — <strong>never replace v8a</strong>.</p>
+  </div>
+  <div class="card">
+    <h3>Pathway 3</h3>
+    <p><span class="pill warn">Cheap to test if data exists</span></p>
+    <p>Most natural extension of our competence. Empirical question: does it add <em>independent</em> return on top of v8a's 28 – 7 DTE SPY? Cheap if IronVault has SPX 0DTE; else ~$3K data spend.</p>
+  </div>
+</div>
+
+<div class="callout good" style="margin-top: 24px;">
+  <strong>Headline finding.</strong> v8a's 6.39 Sharpe / 118% CAGR / 5.1% DD is not casually beaten by any of the three pathways.
+  The "explosive returns in days/weeks" framing is largely survivorship bias of crypto cycles and viral options trades; the
+  durable, replicable strategies in each space have Sharpe well below v8a.
+  <br/><br/>
+  The most reliable way to add explosive expected return is <em>not</em> to swap to a worse-Sharpe strategy — it is to
+  <strong>lever v8a within its drawdown budget</strong>. At 5.1% max DD, there is room for additional vol-targeting beyond
+  current overlays. That belongs in a separate experiment (EXP-3320 candidate), not in chasing crypto.
+</div>
+
+<h2>Honesty disclosures</h2>
+<ul>
+  <li><strong>Zero backtests were run.</strong> Every return range, Sharpe estimate, and capacity number is sourced from cited literature, exchange data, or practitioner reports. Treat as order-of-magnitude guidance.</li>
+  <li><strong>Survivor bias is severe</strong> in Pathways 1 and 2 — public reports of successful operators are not representative.</li>
+  <li><strong>None of these strategies has been tested against IronVault data</strong> as required by Rule Zero. Any "run a feasibility experiment" recommendation assumes the data-sourcing checklist is completed first.</li>
+</ul>
+
+</body>
+</html>

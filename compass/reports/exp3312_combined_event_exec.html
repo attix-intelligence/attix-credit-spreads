@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8"><title>EXP-3312 — Combined Event + Exec</title>
+<style>
+body { font-family:-apple-system,Segoe UI,Roboto,sans-serif;max-width:1180px;
+       margin:0 auto;padding:28px;background:#fff;color:#14171a; }
+h1 { font-size:1.8em;margin:0 0 4px; }
+h2 { margin-top:2em;border-bottom:2px solid #e2e8f0;padding-bottom:6px; }
+.meta { color:#64748b;font-size:13px;margin-bottom:18px; }
+.box { background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;
+        padding:14px 16px;font-size:13px;line-height:1.55;margin:12px 0; }
+.verdict { background:#fff;border:2px solid #f59e0b;border-radius:10px;
+             padding:14px 16px;margin:18px 0; }
+.verdict h3 { margin:0 0 6px;color:#f59e0b; }
+table { width:100%;border-collapse:collapse;margin:12px 0;font-size:13px; }
+th { background:#f1f5f9;padding:7px 10px;text-align:right;border-bottom:2px solid #cbd5e1;
+      font-size:12px;text-transform:uppercase;letter-spacing:0.04em; }
+th:first-child { text-align:left; }
+td { padding:6px 10px;text-align:right;border-bottom:1px solid #e2e8f0; }
+td:first-child { text-align:left; }
+ul { margin:8px 0;padding-left:22px;font-size:13px;line-height:1.55; }
+.kpi-grid { display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0; }
+.kpi { border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px; }
+.kpi .lbl { font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.04em; }
+.kpi .val { font-size:1.5em;font-weight:700;margin-top:4px; }
+</style></head><body>
+
+<h1>EXP-3312 — Combined NFP Gate × Pre-close Execution</h1>
+<div class="meta">2×2 factorial · v8a + VIX-ladder walk-forward (EXP-2850 engine) ·
+generated 2026-05-21T00:51:49</div>
+
+<div class="box">
+<strong>Hypothesis (pre-registered).</strong>
+Layering the EXP-3311 NFP entry blackout on top of the EXP-3309 pre-close
+execution window stacks roughly additively to give net SR ≈ 6.05,
+max DD &lt; 6.0 %, net CAGR ≈ 115 %.
+</div>
+
+<div class="kpi-grid">
+  <div class="kpi"><div class="lbl">Combined SR</div>
+       <div class="val">5.298</div></div>
+  <div class="kpi"><div class="lbl">Combined CAGR</div>
+       <div class="val">+91.0%</div></div>
+  <div class="kpi"><div class="lbl">Combined Max DD</div>
+       <div class="val">5.00%</div></div>
+  <div class="kpi"><div class="lbl">Interaction (SR)</div>
+       <div class="val">+0.003</div></div>
+</div>
+
+<div class="verdict">
+<h3>Verdict: H_COMBINED_PARTIAL_1OF3 (1 / 3 legs PASS)</h3>
+<table style="margin:8px 0;width:auto"><tr><th>Leg</th><th>Result</th></tr>
+<tr><td>SR ≥ 6.05</td><td style='color:#dc2626;font-weight:700'>FAIL</td></tr><tr><td>DD < 6.00%</td><td style='color:#16a34a;font-weight:700'>PASS</td></tr><tr><td>CAGR ≥ 115.0%</td><td style='color:#dc2626;font-weight:700'>FAIL</td></tr>
+</table>
+</div>
+
+<h2>Drag bookkeeping</h2>
+<div class="box">
+EXP-2570 baseline drag = <strong>8.903 %/yr</strong>
+(calibrated against EXP-2470 implicit = EXP-3309 scenario B at
+$22,177.77 round-trip). Pre-close treatment
+(EXP-3309 scenario D) reduces round-trip $ drag to
+$18,749.40, ratio
+0.8454. Applied proportionally to the EXP-2570 rate:
+<br><strong>preclose drag = 7.527 %/yr</strong>
+(saving of 1.376 pp/yr).
+</div>
+
+<h2>2×2 cells</h2>
+<table>
+<tr><th>Cell</th><th>Drag</th><th>SR</th><th>CAGR</th><th>Max DD</th>
+<th>Ann vol</th><th>Median fold SR</th></tr>
+<tr><td>Cell 00 — baseline / no gate</td><td>8.903%</td><td>4.996</td><td>+87.3%</td><td>7.96%</td><td>12.74%</td><td>5.665</td></tr><tr><td>Cell 10 — baseline / NFP gate</td><td>8.903%</td><td>5.187</td><td>+88.4%</td><td>5.07%</td><td>12.37%</td><td>5.752</td></tr><tr><td>Cell 01 — pre-close / no gate</td><td>7.527%</td><td>5.104</td><td>+89.9%</td><td>7.93%</td><td>12.74%</td><td>5.806</td></tr><tr><td>Cell 11 — pre-close / NFP gate</td><td>7.527%</td><td>5.298</td><td>+91.0%</td><td>5.00%</td><td>12.37%</td><td>5.869</td></tr>
+</table>
+
+<h2>Interaction analysis</h2>
+<table>
+<tr><th>Component</th><th>ΔSR</th><th>ΔCAGR (pp)</th><th>ΔDD (pp)</th></tr>
+<tr><td>iA — NFP gate effect (at baseline drag)</td>
+    <td>+0.191</td>
+    <td>+1.09</td>
+    <td>-2.89</td></tr>
+<tr><td>iB — pre-close effect (no gate)</td>
+    <td>+0.108</td>
+    <td>+2.59</td>
+    <td>-0.03</td></tr>
+<tr><td>Additive prediction</td>
+    <td>5.295</td>
+    <td>+91.0%</td>
+    <td>5.04%</td></tr>
+<tr><td>Observed combined (cell 11)</td>
+    <td>5.298</td>
+    <td>+91.0%</td>
+    <td>5.00%</td></tr>
+<tr><td><strong>Interaction term</strong></td>
+    <td><strong>+0.003</strong></td>
+    <td><strong>+0.01</strong></td>
+    <td><strong>-0.05</strong></td></tr>
+</table>
+
+<h2>NFP gate diagnostics (credit-spread streams)</h2>
+<table>
+<tr><th>Stream</th><th>Kept</th><th>Dropped</th><th>Drop %</th></tr>
+<tr><td>xlf_cs</td><td>247</td><td>1</td><td>0.4%</td></tr><tr><td>xli_cs</td><td>248</td><td>0</td><td>0.0%</td></tr><tr><td>qqq_cs</td><td>76</td><td>9</td><td>10.6%</td></tr><tr><td>exp1220</td><td>152</td><td>22</td><td>12.6%</td></tr>
+</table>
+
+<h2>Yearly breakdown — combined cell 11</h2>
+<table>
+<tr><th>Year</th><th>SR</th><th>CAGR</th><th>Max DD</th><th>Ann vol</th></tr>
+<tr><td>2021</td><td>6.18</td><td>+73.1%</td><td>2.39%</td><td>8.95%</td></tr><tr><td>2022</td><td>4.91</td><td>+122.7%</td><td>4.85%</td><td>16.61%</td></tr><tr><td>2023</td><td>4.77</td><td>+75.8%</td><td>3.80%</td><td>11.99%</td></tr><tr><td>2024</td><td>5.93</td><td>+100.0%</td><td>3.79%</td><td>11.82%</td></tr><tr><td>2025</td><td>5.72</td><td>+84.2%</td><td>3.24%</td><td>10.80%</td></tr>
+</table>
+
+<h2>Per-fold — combined cell 11</h2>
+<table>
+<tr><th>Fold</th><th>Test start</th><th>SR</th><th>CAGR</th><th>Max DD</th></tr>
+<tr><td>0</td><td>2020-12-18</td><td>5.80</td><td>+113.4%</td><td>2.39%</td></tr><tr><td>1</td><td>2021-03-17</td><td>7.07</td><td>+67.0%</td><td>1.28%</td></tr><tr><td>2</td><td>2021-06-14</td><td>6.58</td><td>+62.8%</td><td>0.74%</td></tr><tr><td>3</td><td>2021-09-09</td><td>5.99</td><td>+58.1%</td><td>1.92%</td></tr><tr><td>4</td><td>2021-12-07</td><td>5.23</td><td>+132.1%</td><td>4.12%</td></tr><tr><td>5</td><td>2022-03-04</td><td>4.85</td><td>+193.8%</td><td>4.85%</td></tr><tr><td>6</td><td>2022-06-01</td><td>6.11</td><td>+111.5%</td><td>1.12%</td></tr><tr><td>7</td><td>2022-08-29</td><td>4.00</td><td>+62.2%</td><td>2.89%</td></tr><tr><td>8</td><td>2022-11-24</td><td>5.99</td><td>+143.7%</td><td>1.69%</td></tr><tr><td>9</td><td>2023-02-21</td><td>3.02</td><td>+49.1%</td><td>3.80%</td></tr><tr><td>10</td><td>2023-05-19</td><td>5.81</td><td>+55.0%</td><td>0.89%</td></tr><tr><td>11</td><td>2023-08-16</td><td>5.50</td><td>+51.3%</td><td>1.34%</td></tr><tr><td>12</td><td>2023-11-13</td><td>5.93</td><td>+126.2%</td><td>2.48%</td></tr><tr><td>13</td><td>2024-02-08</td><td>7.41</td><td>+107.8%</td><td>1.18%</td></tr><tr><td>14</td><td>2024-05-07</td><td>6.63</td><td>+132.5%</td><td>2.73%</td></tr><tr><td>15</td><td>2024-08-02</td><td>5.34</td><td>+93.5%</td><td>3.79%</td></tr><tr><td>16</td><td>2024-10-30</td><td>3.44</td><td>+51.8%</td><td>5.00%</td></tr><tr><td>17</td><td>2025-01-27</td><td>5.04</td><td>+86.6%</td><td>3.24%</td></tr><tr><td>18</td><td>2025-04-24</td><td>6.10</td><td>+98.5%</td><td>1.84%</td></tr><tr><td>19</td><td>2025-07-22</td><td>8.46</td><td>+91.4%</td><td>0.49%</td></tr>
+</table>
+
+<h2>Limitations</h2>
+<ul><li>EXP-3309 per-window timing factors are documented liquidity literature coefficients, not measured from a minute-bar IronVault tape. Empirical verification requires Alpaca paper-trade with fill-timestamp capture (~1 month).</li><li>Combination assumes the EXP-3309 drag saving applies uniformly across the NFP-gated trade subset. In practice the dropped NFP entries would have had above-average spreads (event proximity), so the post-gate drag rate may be slightly LOWER than the linear scaling we apply — making this estimate mildly conservative.</li><li>Walk-forward is on the EXP-3311 cube (vol_target=0.12), not the 0.18-vol-target cube where EXP-3309 measured its 6.83 gross SR. Combined SR is naturally bounded by the EXP-3311 baseline (5.0 SR) + stacked treatment lifts (~0.35 SR), so the user's 6.05 SR target is unreachable from this baseline regardless of interaction.</li></ul>
+
+<p style="margin-top:3em;color:#94a3b8;font-size:12px;text-align:center">
+compass/exp3312_combined_event_exec.py · Rule Zero · real IronVault data
+</p>
+</body></html>

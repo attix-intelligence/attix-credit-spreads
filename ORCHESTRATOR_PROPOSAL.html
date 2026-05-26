@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>/home/node/.openclaw/workspace/pilotai-credit-spreads/ORCHESTRATOR_PROPOSAL</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #ffffff;
+            color: #333;
+        }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 10px; }
+        h2 { color: #34495e; margin-top: 30px; border-bottom: 2px solid #ecf0f1; padding-bottom: 8px; }
+        h3 { color: #7f8c8d; }
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: "Monaco", "Menlo", "Consolas", monospace;
+            font-size: 0.9em;
+        }
+        pre {
+            background: #f8f8f8;
+            border: 1px solid #ddd;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            overflow-x: auto;
+            border-radius: 4px;
+        }
+        pre code {
+            background: none;
+            padding: 0;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+            font-weight: 600;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        blockquote {
+            border-left: 4px solid #3498db;
+            padding-left: 20px;
+            margin: 20px 0;
+            color: #666;
+            font-style: italic;
+        }
+        a { color: #3498db; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .toc { background: #f8f9fa; padding: 20px; border-radius: 6px; margin: 20px 0; }
+    </style>
+</head>
+<body>
+<h1 id="orchestrator_proposalmd">ORCHESTRATOR_PROPOSAL.md</h1>
+<p><strong>Project:</strong> Live-Trading Orchestrator (mission-control layer)
+<strong>Author:</strong> CC1
+<strong>Date:</strong> 2026-05-22
+<strong>Status:</strong> DRAFT — pending Carlos approval
+<strong>Repo path:</strong> <code>pilotai-credit-spreads/compass/orchestrator/</code> (new package)</p>
+<hr />
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+<p>Today the live pipeline is two pieces glued by a JSON file:</p>
+<div class="codehilite"><pre><span></span><code><span class="n">exp2690_signal_generators</span><span class="w">  </span><span class="err">──</span><span class="n">json</span><span class="err">──▶</span><span class="w">  </span><span class="n">exp2830_paper_signal_generator</span><span class="w">  </span><span class="err">──▶</span><span class="w">  </span><span class="n">alpaca_connector</span>
+<span class="w">   </span><span class="p">(</span><span class="n">per</span><span class="o">-</span><span class="n">stream</span><span class="w"> </span><span class="n">intent</span><span class="p">)</span><span class="w">                  </span><span class="p">(</span><span class="n">daily</span><span class="w"> </span><span class="mi">09</span><span class="p">:</span><span class="mi">25</span><span class="w"> </span><span class="n">ET</span><span class="w"> </span><span class="n">cron</span><span class="p">)</span><span class="w">              </span><span class="p">(</span><span class="n">broker</span><span class="w"> </span><span class="n">glue</span><span class="p">)</span>
+</code></pre></div>
+
+<p>The CC1 audit (2026-05-22) found that the <strong>glue is thin and silently
+permissive</strong>: degenerate proxy signals (<code>cross_vol_signals</code> uses uniform
+VIX/100 IV), parameter drift between backtest and production (e.g.
+<code>exp1220_signals</code> emits Δ=0.30 while the EXP-1220 backtest targets
+5%-OTM ≈ Δ-0.15 to -0.20), and a single-leg fallback in
+<code>alpaca_connector.submit_spread</code> that can leave a naked short put live
+if the broker rejects the multi-leg request.</p>
+<p>The <strong>orchestrator</strong> is the deliberate seam between <em>intent</em> (signal
+generators) and <em>execution</em> (broker). It owns three responsibilities:</p>
+<ol>
+<li><strong>entry_gate</strong> — filters intent against macro/regime/event blackouts
+   that backtests assume.</li>
+<li><strong>position_sizer</strong> — turns intent into a sized order
+   (risk-per-trade × portfolio-risk × correlation-adjusted).</li>
+<li><strong>order_router</strong> — composes broker-safe orders, enforces all-or-
+   nothing semantics for spreads, and reconciles fills.</li>
+</ol>
+<p>Everything between EXP-2690 and the Alpaca API funnels through these
+three modules. There is no other path to the broker in live mode.</p>
+<hr />
+<h2 id="2-problem-statement">2. Problem Statement</h2>
+<h3 id="21-the-backtest-live-gap">2.1 The backtest → live gap</h3>
+<p>Each backtested sleeve assumes pre-conditions that the production loop
+doesn't currently check:</p>
+<table>
+<thead>
+<tr>
+<th>Sleeve</th>
+<th>Backtest assumption</th>
+<th>Currently enforced live?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>EXP-1220 (SPY)</td>
+<td>VIX≤40, no entry within 28d of expiry, 5%-OTM strike</td>
+<td>VIX gate ✅ · strike ❌ (uses Δ=0.30)</td>
+</tr>
+<tr>
+<td>EXP-2160 (XLF/XLI)</td>
+<td>Δ-0.30 short / Δ-0.15 long</td>
+<td>❌ (uses Δ-0.20 / Δ-0.10)</td>
+</tr>
+<tr>
+<td>EXP-2240 (QQQ)</td>
+<td>5%-OTM, $5-wide</td>
+<td>❌ (uses Δ-0.25)</td>
+</tr>
+<tr>
+<td>EXP-1770 (GLD/SLV)</td>
+<td>Futures execution (CL=F/NG=F/GC=F/SI=F)</td>
+<td>❌ Alpaca paper has no futures</td>
+</tr>
+<tr>
+<td>EXP-2020 (cross-vol)</td>
+<td>Per-ticker BS-inverted IV from IronVault</td>
+<td>❌ Uses VIX/100 uniform proxy</td>
+</tr>
+<tr>
+<td>Crisis Alpha v5</td>
+<td>13-asset weekly rebalance, stress-gated</td>
+<td>Universe ambiguity; gate ✅</td>
+</tr>
+</tbody>
+</table>
+<p>The orchestrator centralises <strong>canonical parameters per sleeve</strong> so the
+live system trades the strategy that was actually validated.</p>
+<h3 id="22-order-execution-risk">2.2 Order-execution risk</h3>
+<p><code>alpaca_connector.submit_spread</code> (alpaca_connector.py:497) falls back
+to independent single-leg orders if <code>MultilegOrderRequest</code> is
+unavailable. With no per-leg limit and no atomic guarantee, a partial
+fill leaves a naked short put. Today this is logged at INFO. The
+orchestrator's <code>order_router</code> makes the fallback <strong>explicit, opt-in,
+and bounded</strong>: either submit as a true multi-leg, or refuse and
+generate an exception, never legged.</p>
+<h3 id="23-cross-cutting-concerns">2.3 Cross-cutting concerns</h3>
+<ul>
+<li><strong>Event blackouts</strong> (NFP, FOMC, CPI, OPEX) — backtests skip these
+  via VIX/term-structure proxies; live should know the actual calendar.</li>
+<li><strong>Portfolio risk envelope</strong> — each sleeve sizes itself in isolation;
+  no enforcement of total-portfolio gross exposure or sleeve
+  correlation.</li>
+<li><strong>Reconciliation</strong> — <code>daily_pnl</code> silently understates anchors when
+  the equity log is short (alpaca_connector.py:664).</li>
+<li><strong>Stream attribution</strong> — <code>_STREAM_TICKER_MAP</code> collides on shared
+  tickers (e.g. SPY appears in EXP-1220, cross-vol, v5_hedge).</li>
+</ul>
+<hr />
+<h2 id="3-architecture">3. Architecture</h2>
+<h3 id="31-component-diagram">3.1 Component diagram</h3>
+<div class="codehilite"><pre><span></span><code><span class="err">┌──────────────────────────────────────────────────────────────────────┐</span>
+<span class="err">│</span><span class="w"> </span><span class="n">DAILY</span><span class="w"> </span><span class="n">CRON</span><span class="w">  </span><span class="p">(</span><span class="mi">09</span><span class="err">:</span><span class="mi">25</span><span class="w"> </span><span class="n">ET</span><span class="w"> </span><span class="err">—</span><span class="w"> </span><span class="n">pre</span><span class="o">-</span><span class="k">open</span><span class="p">)</span><span class="w">                                    </span><span class="err">│</span>
+<span class="err">│</span><span class="w">   </span><span class="n">compass</span><span class="o">/</span><span class="n">scripts</span><span class="o">/</span><span class="n">run_orchestrator</span><span class="p">.</span><span class="n">py</span><span class="w">  </span><span class="p">(</span><span class="n">replaces</span><span class="w"> </span><span class="n">exp2830</span><span class="w"> </span><span class="n">driver</span><span class="p">)</span><span class="w">     </span><span class="err">│</span>
+<span class="err">└──────────────────────────────────┬───────────────────────────────────┘</span>
+<span class="w">                                   </span><span class="err">│</span>
+<span class="w">                                   </span><span class="err">▼</span>
+<span class="err">┌──────────────────────────────────────────────────────────────────────┐</span>
+<span class="err">│</span><span class="w"> </span><span class="nf">EXP</span><span class="o">-</span><span class="mi">2690</span><span class="w">  </span><span class="n">GENERATE_ALL_SIGNALS</span><span class="p">(</span><span class="nc">date</span><span class="p">)</span><span class="w">                                 </span><span class="err">│</span>
+<span class="err">│</span><span class="w">   </span><span class="n">raw</span><span class="w"> </span><span class="nl">intent</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="n">{stream, ticker, action, delta, dte, width, ...}, …</span><span class="o">]</span><span class="w">  </span><span class="err">│</span>
+<span class="err">└──────────────────────────────────┬───────────────────────────────────┘</span>
+<span class="w">                                   </span><span class="err">│</span><span class="w"> </span><span class="n">List</span><span class="o">[</span><span class="n">SignalIntent</span><span class="o">]</span>
+<span class="w">                                   </span><span class="err">▼</span>
+<span class="err">┌──────────────────────────────────────────────────────────────────────┐</span>
+<span class="err">│</span><span class="w"> </span><span class="n">ORCHESTRATOR</span><span class="w">                                                         </span><span class="err">│</span>
+<span class="err">│</span><span class="w">   </span><span class="err">┌────────────────┐</span><span class="w">  </span><span class="err">┌─────────────────┐</span><span class="w">  </span><span class="err">┌────────────────────┐</span><span class="w">   </span><span class="err">│</span>
+<span class="err">│</span><span class="w">   </span><span class="err">│</span><span class="w"> </span><span class="n">entry_gate</span><span class="w">     </span><span class="err">│─▶│</span><span class="w"> </span><span class="n">position_sizer</span><span class="w">  </span><span class="err">│─▶│</span><span class="w"> </span><span class="n">order_router</span><span class="w">       </span><span class="err">│</span><span class="w">   </span><span class="err">│</span>
+<span class="err">│</span><span class="w">   </span><span class="err">│</span><span class="w"> </span><span class="n">macro</span><span class="o">+</span><span class="n">regime</span><span class="o">+</span><span class="w">  </span><span class="err">│</span><span class="w">  </span><span class="err">│</span><span class="w"> </span><span class="n">risk</span><span class="o">-</span><span class="n">per</span><span class="o">-</span><span class="n">trade</span><span class="w">  </span><span class="err">│</span><span class="w">  </span><span class="err">│</span><span class="w"> </span><span class="n">broker</span><span class="o">-</span><span class="n">safe</span><span class="w"> </span><span class="n">orders</span><span class="w"> </span><span class="err">│</span><span class="w">   </span><span class="err">│</span>
+<span class="err">│</span><span class="w">   </span><span class="err">│</span><span class="w"> </span><span class="n">event</span><span class="w"> </span><span class="n">blackout</span><span class="w"> </span><span class="err">│</span><span class="w">  </span><span class="err">│</span><span class="w"> </span><span class="n">portfolio</span><span class="w"> </span><span class="n">cap</span><span class="w">   </span><span class="err">│</span><span class="w">  </span><span class="err">│</span><span class="w"> </span><span class="k">atomic</span><span class="w"> </span><span class="n">multi</span><span class="o">-</span><span class="n">leg</span><span class="w">   </span><span class="err">│</span><span class="w">   </span><span class="err">│</span>
+<span class="err">│</span><span class="w">   </span><span class="err">│</span><span class="w"> </span><span class="n">canonical</span><span class="o">-</span><span class="w">     </span><span class="err">│</span><span class="w">  </span><span class="err">│</span><span class="w"> </span><span class="n">correlation</span><span class="w">     </span><span class="err">│</span><span class="w">  </span><span class="err">│</span><span class="w"> </span><span class="n">idempotent</span><span class="w">         </span><span class="err">│</span><span class="w">   </span><span class="err">│</span>
+<span class="err">│</span><span class="w">   </span><span class="err">│</span><span class="w"> </span><span class="n">param</span><span class="w"> </span><span class="k">check</span><span class="w">    </span><span class="err">│</span><span class="w">  </span><span class="err">│</span><span class="w"> </span><span class="n">scaling</span><span class="w">         </span><span class="err">│</span><span class="w">  </span><span class="err">│</span><span class="w"> </span><span class="n">reconcile</span><span class="w">          </span><span class="err">│</span><span class="w">   </span><span class="err">│</span>
+<span class="err">│</span><span class="w">   </span><span class="err">└────────────────┘</span><span class="w">  </span><span class="err">└─────────────────┘</span><span class="w">  </span><span class="err">└────────────────────┘</span><span class="w">   </span><span class="err">│</span>
+<span class="err">│</span><span class="w">           </span><span class="err">│</span><span class="w">                    </span><span class="err">│</span><span class="w">                     </span><span class="err">│</span><span class="w">              </span><span class="err">│</span>
+<span class="err">│</span><span class="w">           </span><span class="err">▼</span><span class="w">                    </span><span class="err">▼</span><span class="w">                     </span><span class="err">▼</span><span class="w">              </span><span class="err">│</span>
+<span class="err">│</span><span class="w">        </span><span class="n">gated</span><span class="p">.</span><span class="n">jsonl</span><span class="w">         </span><span class="n">sized</span><span class="p">.</span><span class="n">jsonl</span><span class="w">           </span><span class="n">orders</span><span class="p">.</span><span class="n">jsonl</span><span class="w">       </span><span class="err">│</span>
+<span class="err">└──────────────────────────────────┬───────────────────────────────────┘</span>
+<span class="w">                                   </span><span class="err">│</span><span class="w"> </span><span class="n">List</span><span class="o">[</span><span class="n">SpreadOrder</span><span class="o">]</span>
+<span class="w">                                   </span><span class="err">▼</span>
+<span class="err">┌──────────────────────────────────────────────────────────────────────┐</span>
+<span class="err">│</span><span class="w"> </span><span class="n">alpaca_connector</span><span class="p">.</span><span class="n">submit_spread</span><span class="p">()</span><span class="w">                                     </span><span class="err">│</span>
+<span class="err">│</span><span class="w">   </span><span class="p">(</span><span class="n">existing</span><span class="w"> </span><span class="k">module</span><span class="w"> </span><span class="err">—</span><span class="w"> </span><span class="k">no</span><span class="w"> </span><span class="n">changes</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">surface</span><span class="p">)</span><span class="w">                   </span><span class="err">│</span>
+<span class="err">└──────────────────────────────────────────────────────────────────────┘</span>
+</code></pre></div>
+
+<h3 id="32-data-flow-contracts">3.2 Data flow contracts</h3>
+<p>The orchestrator never mutates the upstream signal dict — each stage
+emits a <strong>new</strong> dataclass with a strict superset of fields:</p>
+<div class="codehilite"><pre><span></span><code>SignalIntent       (from EXP-2690, unchanged)
+   ├─ entry_gate ─▶  GatedSignal       (+ gate_status, gate_reasons[])
+   ├─ position_sizer ─▶ SizedOrder     (+ contracts, dollar_risk, port_weight)
+   └─ order_router ─▶  SpreadOrder     (+ legs[], net_credit, client_order_id)
+</code></pre></div>
+
+<p>This makes every stage diffable, testable in isolation, and replayable
+from the JSONL audit logs.</p>
+<h3 id="33-filesystem-layout">3.3 Filesystem layout</h3>
+<div class="codehilite"><pre><span></span><code><span class="nx">compass</span><span class="o">/</span><span class="nx">orchestrator</span><span class="o">/</span>
+<span class="err">├──</span><span class="w"> </span><span class="nx">__init__</span><span class="p">.</span><span class="nx">py</span>
+<span class="err">├──</span><span class="w"> </span><span class="nx">types</span><span class="p">.</span><span class="nx">py</span><span class="w">              </span><span class="err">#</span><span class="w"> </span><span class="nx">SignalIntent</span><span class="p">,</span><span class="w"> </span><span class="nx">GatedSignal</span><span class="p">,</span><span class="w"> </span><span class="nx">SizedOrder</span>
+<span class="err">├──</span><span class="w"> </span><span class="nx">entry_gate</span><span class="p">.</span><span class="nx">py</span><span class="w">         </span><span class="err">#</span><span class="w"> </span><span class="err">§</span><span class="w"> </span><span class="m m-Double">4.1</span>
+<span class="err">├──</span><span class="w"> </span><span class="nx">position_sizer</span><span class="p">.</span><span class="nx">py</span><span class="w">     </span><span class="err">#</span><span class="w"> </span><span class="err">§</span><span class="w"> </span><span class="m m-Double">4.2</span>
+<span class="err">├──</span><span class="w"> </span><span class="nx">order_router</span><span class="p">.</span><span class="nx">py</span><span class="w">       </span><span class="err">#</span><span class="w"> </span><span class="err">§</span><span class="w"> </span><span class="m m-Double">4.3</span>
+<span class="err">├──</span><span class="w"> </span><span class="nx">calendars</span><span class="p">.</span><span class="nx">py</span><span class="w">          </span><span class="err">#</span><span class="w"> </span><span class="nx">FOMC</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nx">NFP</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nx">CPI</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nx">OPEX</span><span class="w"> </span><span class="nx">dates</span>
+<span class="err">├──</span><span class="w"> </span><span class="nx">canonical_params</span><span class="p">.</span><span class="nx">py</span><span class="w">   </span><span class="err">#</span><span class="w"> </span><span class="nx">per</span><span class="o">-</span><span class="nx">sleeve</span><span class="w"> </span><span class="nx">frozen</span><span class="w"> </span><span class="nx">parameters</span><span class="w"> </span><span class="p">(</span><span class="nx">the</span><span class="w"> </span><span class="nx">single</span><span class="w"> </span><span class="nx">source</span><span class="w"> </span><span class="nx">of</span><span class="w"> </span><span class="nx">truth</span><span class="p">)</span>
+<span class="err">├──</span><span class="w"> </span><span class="nx">portfolio_state</span><span class="p">.</span><span class="nx">py</span><span class="w">    </span><span class="err">#</span><span class="w"> </span><span class="nx">current</span><span class="w"> </span><span class="nx">positions</span><span class="p">,</span><span class="w"> </span><span class="nx">sleeve</span><span class="w"> </span><span class="nx">weights</span><span class="p">,</span><span class="w"> </span><span class="nx">gross</span><span class="o">/</span><span class="nx">net</span><span class="w"> </span><span class="nx">exposure</span>
+<span class="err">├──</span><span class="w"> </span><span class="nx">pipeline</span><span class="p">.</span><span class="nx">py</span><span class="w">           </span><span class="err">#</span><span class="w"> </span><span class="nx">end</span><span class="o">-</span><span class="nx">to</span><span class="o">-</span><span class="nx">end</span><span class="w"> </span><span class="nx">orchestration</span><span class="p">;</span><span class="w"> </span><span class="nx">CLI</span><span class="w"> </span><span class="nx">entry</span>
+<span class="err">└──</span><span class="w"> </span><span class="nx">tests</span><span class="o">/</span>
+<span class="w">    </span><span class="err">├──</span><span class="w"> </span><span class="nx">test_entry_gate</span><span class="p">.</span><span class="nx">py</span>
+<span class="w">    </span><span class="err">├──</span><span class="w"> </span><span class="nx">test_position_sizer</span><span class="p">.</span><span class="nx">py</span>
+<span class="w">    </span><span class="err">├──</span><span class="w"> </span><span class="nx">test_order_router</span><span class="p">.</span><span class="nx">py</span>
+<span class="w">    </span><span class="err">└──</span><span class="w"> </span><span class="nx">test_pipeline_e2e</span><span class="p">.</span><span class="nx">py</span>
+
+<span class="nx">compass</span><span class="o">/</span><span class="nx">scripts</span><span class="o">/</span>
+<span class="err">└──</span><span class="w"> </span><span class="nx">run_orchestrator</span><span class="p">.</span><span class="nx">py</span><span class="w">   </span><span class="err">#</span><span class="w"> </span><span class="nx">cron</span><span class="w"> </span><span class="nx">entry</span><span class="p">;</span><span class="w"> </span><span class="nx">calls</span><span class="w"> </span><span class="nx">pipeline</span><span class="p">.</span><span class="nx">run</span><span class="p">(</span><span class="nx">date</span><span class="p">,</span><span class="w"> </span><span class="nx">mode</span><span class="p">)</span>
+</code></pre></div>
+
+<hr />
+<h2 id="4-the-three-modules">4. The three modules</h2>
+<h3 id="41-entry_gate">4.1 <code>entry_gate</code></h3>
+<p><strong>Purpose:</strong> every backtested precondition the live signal generator
+doesn't (or can't) check.</p>
+<p><strong>Inputs:</strong>
+- <code>List[SignalIntent]</code> from EXP-2690
+- <code>PortfolioState</code> snapshot (open positions, last fill timestamps)
+- Today's date (UTC + ET-localised)</p>
+<p><strong>Output:</strong>
+- <code>List[GatedSignal]</code> — every intent gets a <code>gate_status</code> in
+  <code>{ALLOW, BLOCK, DEGRADE}</code> and a list of human-readable reasons.</p>
+<p><strong>Gates (in evaluation order):</strong></p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Gate</th>
+<th>Source of truth</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Market open today</td>
+<td>Alpaca clock + holiday calendar</td>
+<td>BLOCK if closed</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Already open in this sleeve</td>
+<td>PortfolioState</td>
+<td>BLOCK new entry; allow HOLD/CLOSE</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Canonical-param check</td>
+<td><code>canonical_params.py</code></td>
+<td>BLOCK if Δ/DTE/width drift from backtest &gt; tolerance</td>
+</tr>
+<tr>
+<td>4</td>
+<td>FOMC blackout</td>
+<td>Fed meeting calendar</td>
+<td>BLOCK new entries on FOMC day + 1</td>
+</tr>
+<tr>
+<td>5</td>
+<td>NFP blackout</td>
+<td>BLS NFP release calendar</td>
+<td>BLOCK new entries on first Friday of month</td>
+</tr>
+<tr>
+<td>6</td>
+<td>CPI blackout</td>
+<td>BLS CPI release calendar</td>
+<td>DEGRADE confidence × 0.5</td>
+</tr>
+<tr>
+<td>7</td>
+<td>OPEX week</td>
+<td>Third Friday of month</td>
+<td>DEGRADE confidence × 0.7 for monthly cycles</td>
+</tr>
+<tr>
+<td>8</td>
+<td>VIX &gt; 40</td>
+<td>Yahoo <code>^VIX</code> (cached)</td>
+<td>BLOCK new entries (matches EXP-1220 backtest)</td>
+</tr>
+<tr>
+<td>9</td>
+<td>VIX term inversion</td>
+<td><code>^VIX</code> vs <code>^VIX3M</code></td>
+<td>BLOCK if <code>^VIX &gt; ^VIX3M</code> (matches V+F overlay)</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Sleeve correlation cap</td>
+<td><code>PortfolioState.correlation_matrix</code></td>
+<td>DEGRADE if adding sleeve would push port corr &gt; 0.6</td>
+</tr>
+<tr>
+<td>11</td>
+<td>Stale data</td>
+<td><code>signal.date</code> vs <code>now()</code></td>
+<td>BLOCK if older than 24h</td>
+</tr>
+<tr>
+<td>12</td>
+<td>Untradeable instrument</td>
+<td>Broker capability table</td>
+<td>BLOCK GLD/SLV calendar futures legs on Alpaca paper</td>
+</tr>
+</tbody>
+</table>
+<p>Gates 4–6 use a <strong>vetted calendar</strong> committed to the repo (not a live
+API call), regenerated quarterly. Eliminates a live-dependency on a
+flaky data source.</p>
+<p><strong>Canonical-param check (gate 3) is the H1/M1 fix:</strong></p>
+<div class="codehilite"><pre><span></span><code>canonical_params[&quot;exp1220&quot;] = {
+    &quot;structure&quot;: &quot;put_credit_spread&quot;,
+    &quot;otm_pct&quot;: 0.05,          # 5% OTM short
+    &quot;width&quot;: 5.0,
+    &quot;dte_target&quot;: 28,
+    &quot;profit_target&quot;: 0.50,
+    &quot;stop_mult&quot;: 2.0,
+    &quot;min_spacing_days&quot;: 10,
+    &quot;risk_per_trade_pct&quot;: 0.03,
+    &quot;max_contracts&quot;: 4,
+    &quot;vix_block&quot;: 40.0,
+}
+</code></pre></div>
+
+<p>If <code>signal.delta</code> or <code>signal.dte</code> deviates from this canonical record
+by more than configured tolerance, the gate emits BLOCK with reason
+<code>"param_drift: signal.delta=0.30 ≠ canonical otm_pct→0.18"</code>. This
+forces upstream EXP-2690 fixes rather than silently trading the wrong
+strike.</p>
+<h3 id="42-position_sizer">4.2 <code>position_sizer</code></h3>
+<p><strong>Purpose:</strong> turn a gated <em>intent</em> into a <em>number of contracts</em> that
+respects per-sleeve risk, portfolio risk envelope, and correlation
+adjustments.</p>
+<p><strong>Inputs:</strong>
+- <code>List[GatedSignal]</code> (only those with <code>gate_status=ALLOW</code> or <code>DEGRADE</code>)
+- <code>PortfolioState</code> (current equity, cash, existing dollar-at-risk)
+- Live option chain snapshot from <code>alpaca_connector.get_chain(...)</code>
+  for the candidate expiration</p>
+<p><strong>Output:</strong>
+- <code>List[SizedOrder]</code> with <code>contracts</code>, <code>short_strike</code>, <code>long_strike</code>,
+  <code>expected_credit</code>, <code>max_loss_dollars</code>, <code>port_weight_consumed</code></p>
+<p><strong>Sizing rules (applied in order):</strong></p>
+<ol>
+<li><strong>Per-sleeve risk-per-trade</strong>:
+   <code>risk_$ = equity × sleeve.risk_per_trade_pct × confidence</code></li>
+<li><strong>Contracts from max-loss</strong>:
+   <code>contracts = floor(risk_$ / (max_loss_per_spread × 100))</code></li>
+<li><strong>Per-sleeve contract cap</strong>:
+   <code>contracts = min(contracts, sleeve.max_contracts)</code></li>
+<li><strong>Liquidity cap</strong>: <code>contracts ≤ 0.05 × min(short_oi, long_oi)</code></li>
+<li><strong>Portfolio gross cap</strong>:
+   <code>total_dollar_risk ≤ equity × PORT_RISK_CAP_PCT (default 0.20)</code></li>
+<li><strong>Correlation scale</strong>:
+   If new sleeve's expected correlation to existing book &gt; 0.5,
+   scale <code>contracts × correlation_penalty(ρ)</code> per Markowitz haircut.</li>
+<li><strong>Minimum size floor</strong>: if final contracts &lt; 1, drop the order.</li>
+</ol>
+<p>The sizer <strong>never</strong> picks strikes — it consumes the strikes that
+EXP-2690 expressed as intent (delta or OTM-pct target), looks them up
+on the live chain, and reports back the actual strikes/credits.</p>
+<p><strong>Why we need this layer at all:</strong> today each sleeve sizes itself in
+isolation. Two correlated sleeves can both fully load risk-per-trade
+on the same day, doubling exposure. Position sizer enforces the
+portfolio-level invariant.</p>
+<h3 id="43-order_router">4.3 <code>order_router</code></h3>
+<p><strong>Purpose:</strong> convert <code>SizedOrder</code> → broker-safe <code>SpreadOrder</code>,
+submit, monitor, reconcile.</p>
+<p><strong>Inputs:</strong> <code>List[SizedOrder]</code>, <code>AlpacaConnector</code> handle
+<strong>Output:</strong> <code>List[SpreadOrder]</code> with broker IDs + final status</p>
+<p><strong>Responsibilities:</strong></p>
+<ol>
+<li><strong>OCC symbol construction</strong> — already in
+   <code>alpaca_connector.build_occ_symbol</code>; orchestrator just wires it.</li>
+<li><strong>Multi-leg atomicity</strong> — <em>prefer</em> <code>MultilegOrderRequest</code>. If
+   unavailable, refuse the order with status <code>REJECTED_NO_MLEG</code>.
+   <strong>Never</strong> silently leg into the spread. (H2 fix.)</li>
+<li><strong>Limit-price construction</strong> — convert sleeve's
+   <code>expected_credit</code> into a net-credit limit at
+   <code>max(0.05, expected_credit × 0.90)</code> (10% slippage tolerance) to
+   avoid market orders entirely.</li>
+<li><strong>Idempotency</strong> — every order gets a <code>client_order_id</code> of
+   <code>{date}-{stream}-{ticker}-{exp}-{short_K}-{long_K}</code> so a re-run
+   on the same calendar day is a no-op.</li>
+<li><strong>TIF</strong>: <code>DAY</code> by default. Cancelled at 15:55 ET by a paired
+   <code>cleanup_orders</code> invocation.</li>
+<li><strong>Submission window</strong> — orchestrator refuses to send between
+   09:30:00 and 09:32:00 ET (opening-rotation noise) and between
+   15:58:00 and 16:00:00 ET (closing imbalance). Configurable.</li>
+<li><strong>Reconciliation</strong> — after submission, call
+   <code>alpaca_connector.reconcile(intended)</code> and emit a structured
+   diff. Discrepancies (<code>MISSING</code>, <code>ORPHAN</code>, <code>UNDER</code>, <code>OVER</code>) are
+   surfaced to the operator log; nothing auto-heals.</li>
+</ol>
+<p><strong>Equity execution path</strong> (Crisis Alpha v5):
+The v5 sleeve outputs per-ticker weights, not options. The router
+has a parallel path that produces <code>MarketOrderRequest</code> /
+<code>LimitOrderRequest</code> for equities, sized to a target dollar weight.</p>
+<p><strong>Untradeable instruments</strong> (GLD/SLV futures legs):
+The router consults the broker-capability table. Futures legs on
+Alpaca paper resolve to BLOCKED with reason
+<code>broker_unsupported: GC=F not tradable on Alpaca paper</code>. This makes
+the M4 issue visible instead of silent.</p>
+<hr />
+<h2 id="5-integration-with-existing-code">5. Integration with existing code</h2>
+<h3 id="51-what-we-change">5.1 What we change</h3>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>compass/orchestrator/</code></td>
+<td><strong>NEW</strong> package, all logic lives here</td>
+</tr>
+<tr>
+<td><code>compass/scripts/run_orchestrator.py</code></td>
+<td><strong>NEW</strong> cron entry</td>
+</tr>
+<tr>
+<td><code>compass/exp2830_paper_signal_generator.py</code></td>
+<td><strong>DEPRECATED</strong> — kept for one release as <code>--legacy</code> mode for diff comparison; deleted in v2</td>
+</tr>
+<tr>
+<td><code>compass/exp2690_signal_generators.py</code></td>
+<td><strong>READ-ONLY</strong> — orchestrator consumes its output verbatim</td>
+</tr>
+<tr>
+<td><code>compass/alpaca_connector.py</code></td>
+<td><strong>READ-ONLY</strong> for v1 — fixes H2 (no silent legging) ride in the router, not the connector. Connector cleanups (L8/L9/L11) ship as a separate PR.</td>
+</tr>
+<tr>
+<td><code>main.py</code></td>
+<td><strong>UNCHANGED</strong> — legacy <code>CreditSpreadSystem</code> (alerts path) is orthogonal. Orchestrator is a new code path opted in via cron.</td>
+</tr>
+<tr>
+<td><code>compass/risk_gate.py</code></td>
+<td><strong>AUDITED</strong> — anything we can reuse, we import; do not duplicate logic.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="52-what-we-read-from-upstream">5.2 What we read from upstream</h3>
+<p>The orchestrator imports:</p>
+<ul>
+<li><code>compass.exp2690_signal_generators.generate_all_signals(date)</code>
+  → <code>List[Dict]</code> (the schema documented in EXP-2690 header)</li>
+<li><code>compass.alpaca_connector.AlpacaConnector</code> (no subclassing — pure
+  composition)</li>
+<li><code>compass.exp2600_north_star_v8.PORTFOLIO_WEIGHTS</code> for the sleeve
+  weights baseline</li>
+</ul>
+<h3 id="53-what-we-dont-touch">5.3 What we don't touch</h3>
+<ul>
+<li>No changes to any <code>exp2160</code>, <code>exp2240</code>, <code>exp1770</code>, <code>exp2020</code>,
+  <code>crisis_alpha_v5</code> business logic. They keep emitting their current
+  intent through EXP-2690.</li>
+<li><code>IronVault</code> and <code>data/options_cache.db</code> are read-only inputs.</li>
+<li>Rule Zero is preserved end-to-end: no synthetic chain, no
+  fabricated quote. Every IV lookup goes through Alpaca's live
+  chain endpoint at execution time.</li>
+</ul>
+<hr />
+<h2 id="6-daily-run-lifecycle">6. Daily run lifecycle</h2>
+<h3 id="61-pre-market-0925-et">6.1 Pre-market (09:25 ET)</h3>
+<div class="codehilite"><pre><span></span><code><span class="mf">1.</span><span class="w"> </span><span class="n">cron</span><span class="w"> </span><span class="n">triggers</span><span class="w"> </span><span class="n">run_orchestrator</span><span class="o">.</span><span class="n">py</span><span class="w"> </span><span class="o">--</span><span class="n">mode</span><span class="o">=</span><span class="n">paper</span>
+<span class="mf">2.</span><span class="w"> </span><span class="n">pipeline</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">date</span><span class="o">=</span><span class="n">today</span><span class="p">,</span><span class="w"> </span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;paper&quot;</span><span class="p">):</span>
+<span class="w">   </span><span class="n">a</span><span class="o">.</span><span class="w"> </span><span class="n">signals</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">exp2690</span><span class="o">.</span><span class="n">generate_all_signals</span><span class="p">(</span><span class="n">today</span><span class="p">)</span>
+<span class="w">   </span><span class="n">b</span><span class="o">.</span><span class="w"> </span><span class="n">portfolio</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">PortfolioState</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">alpaca_connector</span><span class="p">)</span>
+<span class="w">   </span><span class="n">c</span><span class="o">.</span><span class="w"> </span><span class="n">gated</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="n">entry_gate</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">signals</span><span class="p">,</span><span class="w"> </span><span class="n">portfolio</span><span class="p">,</span><span class="w"> </span><span class="n">today</span><span class="p">)</span>
+<span class="w">   </span><span class="n">d</span><span class="o">.</span><span class="w"> </span><span class="n">sized</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="n">position_sizer</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">gated</span><span class="p">,</span><span class="w"> </span><span class="n">portfolio</span><span class="p">,</span><span class="w"> </span><span class="n">chain_fetcher</span><span class="p">)</span>
+<span class="w">   </span><span class="n">e</span><span class="o">.</span><span class="w"> </span><span class="n">orders</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">order_router</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="n">sized</span><span class="p">,</span><span class="w"> </span><span class="n">alpaca_connector</span><span class="p">)</span>
+<span class="w">   </span><span class="n">f</span><span class="o">.</span><span class="w"> </span><span class="n">write</span><span class="w"> </span><span class="n">JSONL</span><span class="w"> </span><span class="n">audit</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">each</span><span class="w"> </span><span class="n">stage</span>
+<span class="w">   </span><span class="n">g</span><span class="o">.</span><span class="w"> </span><span class="n">emit</span><span class="w"> </span><span class="n">summary</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">operator</span><span class="w"> </span><span class="nb">log</span><span class="w"> </span><span class="p">(</span><span class="ow">and</span><span class="w"> </span><span class="n">Telegram</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">configured</span><span class="p">)</span>
+<span class="mf">3.</span><span class="w"> </span><span class="n">Exit</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">all</span><span class="w"> </span><span class="n">stages</span><span class="w"> </span><span class="n">completed</span><span class="w"> </span><span class="p">(</span><span class="n">regardless</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">business</span><span class="w"> </span><span class="n">outcome</span><span class="p">)</span>
+<span class="mf">4.</span><span class="w"> </span><span class="n">Exit</span><span class="w"> </span><span class="n">non</span><span class="o">-</span><span class="n">zero</span><span class="w"> </span><span class="n">ONLY</span><span class="w"> </span><span class="n">on</span><span class="w"> </span><span class="n">hard</span><span class="w"> </span><span class="n">failure</span><span class="w"> </span><span class="p">(</span><span class="n">auth</span><span class="p">,</span><span class="w"> </span><span class="n">network</span><span class="p">,</span><span class="w"> </span><span class="n">schema</span><span class="p">)</span>
+</code></pre></div>
+
+<h3 id="62-intra-day">6.2 Intra-day</h3>
+<p>The orchestrator is <strong>not</strong> a daemon. It runs once at 09:25 ET. A
+separate, smaller cron at 15:55 ET runs
+<code>run_orchestrator.py --mode=cleanup</code> which:
+- Cancels unfilled DAY orders.
+- Snapshots Alpaca positions to the equity log.
+- Computes daily P&amp;L via <code>alpaca_connector.daily_pnl</code>.</p>
+<p>Optional: a 12:00 ET <code>--mode=reconcile</code> checks for orphan positions
+mid-day.</p>
+<h3 id="63-modes">6.3 Modes</h3>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>paper</code></td>
+<td>Submits to Alpaca paper (default)</td>
+</tr>
+<tr>
+<td><code>live</code></td>
+<td>Submits to Alpaca live — requires <code>--confirm-live</code> flag <em>and</em> <code>ALPACA_PAPER=false</code> <em>and</em> an operator-signed config token</td>
+</tr>
+<tr>
+<td><code>dry-run</code></td>
+<td>Runs the pipeline; writes JSONL audit; never calls <code>submit_spread</code></td>
+</tr>
+<tr>
+<td><code>replay</code></td>
+<td>Reads a historical JSONL audit and re-evaluates without broker calls (for regression tests)</td>
+</tr>
+<tr>
+<td><code>cleanup</code></td>
+<td>EOD: cancel + snapshot equity</td>
+</tr>
+<tr>
+<td><code>reconcile</code></td>
+<td>Diff intended vs broker; alert on mismatch</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="7-dependencies">7. Dependencies</h2>
+<h3 id="71-new-runtime-dependencies">7.1 New runtime dependencies</h3>
+<table>
+<thead>
+<tr>
+<th>Package</th>
+<th>Purpose</th>
+<th>Version</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>pandas_market_calendars</code></td>
+<td>NYSE holiday calendar</td>
+<td>≥ 4.0</td>
+</tr>
+<tr>
+<td><code>python-dateutil</code></td>
+<td>Already present</td>
+<td>≥ 2.8</td>
+</tr>
+</tbody>
+</table>
+<p>Everything else (Alpaca, yfinance, scipy, pandas, numpy) is already
+in the environment.</p>
+<h3 id="72-new-environment-variables">7.2 New environment variables</h3>
+<table>
+<thead>
+<tr>
+<th>Var</th>
+<th>Default</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ORCHESTRATOR_MODE</code></td>
+<td><code>paper</code></td>
+<td>Default mode if <code>--mode</code> unset</td>
+</tr>
+<tr>
+<td><code>ORCHESTRATOR_PORT_RISK_CAP_PCT</code></td>
+<td><code>0.20</code></td>
+<td>Global dollar-at-risk cap</td>
+</tr>
+<tr>
+<td><code>ORCHESTRATOR_AUDIT_DIR</code></td>
+<td><code>compass/logs/orchestrator/</code></td>
+<td>JSONL output</td>
+</tr>
+<tr>
+<td><code>ORCHESTRATOR_CONFIRM_LIVE_TOKEN</code></td>
+<td>unset</td>
+<td>Required for <code>--mode=live</code></td>
+</tr>
+</tbody>
+</table>
+<p>Existing Alpaca / IronVault credentials are unchanged.</p>
+<h3 id="73-api-requirements">7.3 API requirements</h3>
+<ul>
+<li><strong>Alpaca paper API</strong> (existing) — multi-leg options endpoint:
+  <code>POST /v2/orders</code> with <code>order_class=mleg</code>. Already used by
+  <code>alpaca_connector.submit_spread</code>.</li>
+<li><strong>Alpaca chain endpoint</strong> — <code>GET /v1beta1/options/snapshots/{ticker}</code>
+  for live strike → bid/ask. Currently unused; we'll add a thin
+  wrapper in <code>alpaca_connector.get_chain(ticker, expiration)</code> as a
+  side-PR (kept ≤ 50 LOC, no behaviour change to existing methods).</li>
+<li><strong>Yahoo</strong> (existing) — <code>^VIX</code>, <code>^VIX3M</code>, ticker spot. Read-only.</li>
+</ul>
+<h3 id="74-configuration-files">7.4 Configuration files</h3>
+<ul>
+<li><code>compass/orchestrator/canonical_params.yaml</code> — frozen sleeve
+  parameters. PR review required to change.</li>
+<li><code>compass/orchestrator/calendars/fomc_2026.csv</code>,
+  <code>nfp_2026.csv</code>, <code>cpi_2026.csv</code> — vetted event dates.</li>
+<li><code>compass/orchestrator/broker_capability.yaml</code> — what each broker
+  can trade.</li>
+</ul>
+<hr />
+<h2 id="8-testing-plan">8. Testing plan</h2>
+<h3 id="81-unit-tests-mandatory-100-line-coverage-on-entry_gate-position_sizer">8.1 Unit tests (mandatory, 100% line coverage on <code>entry_gate</code>, <code>position_sizer</code>)</h3>
+<ul>
+<li><strong>entry_gate</strong>: one test per gate. Property-based tests for the
+  param-drift comparator (Hypothesis).</li>
+<li><strong>position_sizer</strong>: golden-master tests against hand-computed
+  contract counts for each of the 8 sleeves at $50k / $100k / $1M
+  capital tiers, with and without correlation penalty.</li>
+<li><strong>order_router</strong>: mock <code>AlpacaConnector</code>. Tests for:</li>
+<li>MLEG present → submits MLEG.</li>
+<li>MLEG ImportError → returns <code>REJECTED_NO_MLEG</code>, no legged orders.</li>
+<li>Duplicate <code>client_order_id</code> → no double-submit.</li>
+<li>Submission outside the trading window → REJECTED.</li>
+</ul>
+<h3 id="82-integration-tests">8.2 Integration tests</h3>
+<ul>
+<li>Replay one full backtested day (e.g. 2024-03-15) through the
+  pipeline against a sandboxed <code>AlpacaConnector</code> that records calls.
+  Assert that emitted <code>SpreadOrder</code> set matches a golden manifest.</li>
+<li>Run the EXP-1220 backtest in <code>replay</code> mode for 2020–2025 and
+  confirm the orchestrator's gated signal count matches what the
+  backtest accepted, within a documented tolerance (events that
+  exist in the live calendar but not in the backtest's heuristic
+  proxies).</li>
+</ul>
+<h3 id="83-soak-test">8.3 Soak test</h3>
+<ul>
+<li>5 trading days against Alpaca <strong>paper</strong> in <code>paper</code> mode with the
+  audit log + reconciliation diff inspected manually each morning.</li>
+<li>Acceptance: zero orphan positions, zero MLEG fallback events, all
+  intended sizes match within ±1 contract.</li>
+</ul>
+<h3 id="84-failure-mode-tests">8.4 Failure-mode tests</h3>
+<ul>
+<li>Kill broker mid-submission → no half-spreads in audit log.</li>
+<li>Inject <code>^VIX</code> data outage → orchestrator BLOCKs all VIX-gated
+  sleeves, doesn't crash.</li>
+<li>Empty calendar file → fail closed (BLOCK everything, alert).</li>
+</ul>
+<hr />
+<h2 id="9-rollout-phases">9. Rollout phases</h2>
+<h3 id="phase-0-specification-freeze-current">Phase 0 — Specification freeze (current)</h3>
+<ul>
+<li>This document accepted by Carlos.</li>
+<li><code>canonical_params.yaml</code> reviewed against each sleeve's backtest.</li>
+<li>CC1 audit issues mapped to either "fixed by orchestrator" or
+  "deferred / separate PR".</li>
+</ul>
+<h3 id="phase-1-skeleton-unit-tests">Phase 1 — Skeleton + unit tests</h3>
+<ul>
+<li>Land <code>compass/orchestrator/</code> package with empty modules and full
+  type signatures.</li>
+<li>Land <code>canonical_params.yaml</code> and the calendar CSVs.</li>
+<li>All unit tests written, all gates implemented as pure functions.</li>
+<li><code>--mode=dry-run</code> runs end-to-end against a recorded EXP-2690
+  output. No broker calls.</li>
+</ul>
+<h3 id="phase-2-paper-integration">Phase 2 — Paper integration</h3>
+<ul>
+<li><code>--mode=paper</code> enabled. Cron at 09:25 ET runs the orchestrator
+  alongside the legacy <code>exp2830</code> driver (parallel mode).</li>
+<li>A nightly diff script compares the two outputs; discrepancies
+  surface as warnings, not failures.</li>
+<li><code>exp2830</code> remains the source of truth for actual order
+  submission during this phase.</li>
+</ul>
+<h3 id="phase-3-cutover">Phase 3 — Cutover</h3>
+<ul>
+<li>After two consecutive weeks of zero unexplained diffs, flip the
+  cron to call <code>run_orchestrator.py</code> instead of <code>exp2830</code>.</li>
+<li><code>exp2830</code> is renamed <code>exp2830_legacy.py</code> and retained for one
+  release as a replay benchmark.</li>
+</ul>
+<h3 id="phase-4-live-paper-real-money-carlos-approval-required">Phase 4 — Live (paper → real money) — <em>Carlos approval required</em></h3>
+<ul>
+<li><code>--mode=live</code> enabled only after Phase 3 has logged ≥ 60 days
+  of clean paper runs.</li>
+<li>Live cutover starts at 10% of the model-portfolio sizing.</li>
+<li>Sizing ramp is governed by a <code>LIVE_RAMP_PCT</code> env var that
+  starts at 0.10 and increases on a weekly review cadence.</li>
+</ul>
+<h3 id="phase-5-steady-state">Phase 5 — Steady state</h3>
+<ul>
+<li><code>exp2830_legacy.py</code> deleted.</li>
+<li>Audit logs retained 5 years.</li>
+<li>Quarterly review of canonical parameters and calendars.</li>
+</ul>
+<hr />
+<h2 id="10-risk-register">10. Risk register</h2>
+<table>
+<thead>
+<tr>
+<th>Risk</th>
+<th style="text-align: right;">Likelihood</th>
+<th style="text-align: right;">Impact</th>
+<th>Mitigation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MLEG endpoint quietly changes</td>
+<td style="text-align: right;">Low</td>
+<td style="text-align: right;">High</td>
+<td>Health check on connector startup; refuse fallback (H2 fix)</td>
+</tr>
+<tr>
+<td>Calendar CSV stale (missed FOMC)</td>
+<td style="text-align: right;">Med</td>
+<td style="text-align: right;">High</td>
+<td>Quarterly regen; gate fails closed if file &gt; 100 days old</td>
+</tr>
+<tr>
+<td>Live chain endpoint outage</td>
+<td style="text-align: right;">Med</td>
+<td style="text-align: right;">Med</td>
+<td>Sizer falls back to last cached chain ≤ 60 min old; else BLOCK</td>
+</tr>
+<tr>
+<td>Idempotent <code>client_order_id</code> collision</td>
+<td style="text-align: right;">Low</td>
+<td style="text-align: right;">Med</td>
+<td>Include expiry + strikes; entropy nonce on collision</td>
+</tr>
+<tr>
+<td>Orchestrator clock skew</td>
+<td style="text-align: right;">Low</td>
+<td style="text-align: right;">Med</td>
+<td>NTP check at startup; abort if drift &gt; 5s</td>
+</tr>
+<tr>
+<td>Over-fitted canonical params</td>
+<td style="text-align: right;">Med</td>
+<td style="text-align: right;">Low</td>
+<td>Params are frozen <em>snapshots</em> of the backtest; changes require PR + Carlos signoff</td>
+</tr>
+<tr>
+<td>Operator runs <code>--mode=live</code> by mistake</td>
+<td style="text-align: right;">Low</td>
+<td style="text-align: right;">High</td>
+<td>Requires three conditions: flag + env var + signed token</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="11-open-questions-for-carlos">11. Open questions for Carlos</h2>
+<ol>
+<li><strong>Portfolio-risk cap</strong> — is 20% gross dollar-at-risk the right
+   default, or do we want it equity-tier-dependent (e.g. 30% under
+   $250k, 15% above)?</li>
+<li><strong>Live ramp</strong> — start at 10% and weekly review, or smaller initial
+   tranche?</li>
+<li><strong>Correlation scaling</strong> — should we use realised correlation from
+   the prior 60 trading days, or the static backtest correlation
+   matrix from EXP-2600 (north_star_v8)?</li>
+<li><strong>Calendar source</strong> — committed CSVs (cheap, manual quarterly
+   refresh) or a paid FRED/Bloomberg calendar API (live, costs)?</li>
+<li><strong><code>generate_today_signals</code> upstream fixes</strong> — the orchestrator
+   <em>catches</em> the param-drift problem but doesn't <em>fix</em> the upstream
+   generator. Do we want a parallel PR to align EXP-2690 with
+   <code>canonical_params.yaml</code>, or accept that the orchestrator is the
+   source of truth and EXP-2690 becomes purely advisory?</li>
+</ol>
+<hr />
+<h2 id="12-appendix-a-interface-schemas">12. Appendix A — Interface schemas</h2>
+<div class="codehilite"><pre><span></span><code><span class="c1"># compass/orchestrator/types.py</span>
+
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SignalIntent</span><span class="p">:</span>
+    <span class="n">stream</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">date</span><span class="p">:</span> <span class="nb">str</span>            <span class="c1"># YYYY-MM-DD</span>
+    <span class="n">ticker</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">action</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;OPEN&quot;</span><span class="p">,</span> <span class="s2">&quot;HOLD&quot;</span><span class="p">,</span> <span class="s2">&quot;BLOCKED&quot;</span><span class="p">,</span> <span class="s2">&quot;NONE&quot;</span><span class="p">,</span> <span class="s2">&quot;ERROR&quot;</span><span class="p">]</span>
+    <span class="n">direction</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="n">delta</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span>
+    <span class="n">dte</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
+    <span class="n">width</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span>
+    <span class="n">weight</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">confidence</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">notes</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">legs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">GatedSignal</span><span class="p">:</span>
+    <span class="n">intent</span><span class="p">:</span> <span class="n">SignalIntent</span>
+    <span class="n">gate_status</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;ALLOW&quot;</span><span class="p">,</span> <span class="s2">&quot;BLOCK&quot;</span><span class="p">,</span> <span class="s2">&quot;DEGRADE&quot;</span><span class="p">]</span>
+    <span class="n">gate_reasons</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="n">confidence_adj</span><span class="p">:</span> <span class="nb">float</span>           <span class="c1"># multiplier applied by DEGRADE gates</span>
+
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SizedOrder</span><span class="p">:</span>
+    <span class="n">gated</span><span class="p">:</span> <span class="n">GatedSignal</span>
+    <span class="n">contracts</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">short_strike</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">long_strike</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">expected_credit</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">max_loss_dollars</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">port_weight_consumed</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">expiration</span><span class="p">:</span> <span class="nb">str</span>
+
+<span class="c1"># alpaca_connector.SpreadOrder already exists; we re-use it.</span>
+</code></pre></div>
+
+<h2 id="13-appendix-b-audit-jsonl-schema">13. Appendix B — Audit JSONL schema</h2>
+<p>Each pipeline stage appends one JSON object per signal to its log:</p>
+<div class="codehilite"><pre><span></span><code>compass/logs/orchestrator/2026-05-22/
+├── 01_intent.jsonl       # raw EXP-2690 output
+├── 02_gated.jsonl        # post-entry_gate
+├── 03_sized.jsonl        # post-position_sizer
+├── 04_orders.jsonl       # post-router (broker IDs attached)
+└── 05_reconcile.jsonl    # post-fill diff
+</code></pre></div>
+
+<p>Each line is the corresponding dataclass serialised with
+<code>dataclasses.asdict()</code> + ISO timestamps. The JSONL format makes
+replay and diff trivial.</p>
+<hr />
+<h2 id="14-approval">14. Approval</h2>
+<ul>
+<li>[ ] Carlos — proposal approved as written</li>
+<li>[ ] Carlos — Section 11 open questions answered</li>
+<li>[ ] CC1 — Phase 1 skeleton + tests landed</li>
+<li>[ ] CC1 — Phase 2 parallel paper run started</li>
+<li>[ ] Carlos — Phase 3 cutover authorised</li>
+<li>[ ] Carlos — Phase 4 live cutover authorised (separate signoff)</li>
+</ul>
+<hr />
+<p><em>End of proposal. Companion document: <code>ORCHESTRATOR_EXPLAINED.md</code>
+(conceptual, non-technical reader).</em></p>
+</body>
+</html>

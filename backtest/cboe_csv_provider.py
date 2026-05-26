@@ -60,6 +60,9 @@ class CBOECSVProvider:
                 df['timestamp'] = pd.to_datetime(df['timestamp'])
                 df['date'] = df['timestamp'].dt.date
                 
+                # Normalize option_type to lowercase ('call'/'put')
+                df['option_type'] = df['option_type'].str.lower().replace({'c': 'call', 'p': 'put'})
+                
                 # Store by month
                 month_key = csv_file.stem.replace('.csv', '')  # e.g., "2023-02"
                 self._cache[month_key] = df
@@ -88,16 +91,30 @@ class CBOECSVProvider:
         if date_data.empty:
             return None
         
-        # Use CBOE's underlying_price column directly (verified 100% valid)
+        # Try underlying_price column first
         underlying_prices = date_data['underlying_price'].dropna()
-        
         if not underlying_prices.empty:
-            # Get most recent non-zero price
             valid_prices = underlying_prices[underlying_prices > 0]
             if not valid_prices.empty:
                 underlying = float(valid_prices.iloc[-1])
                 logger.debug(f"Got underlying for {date}: ${underlying:.2f}")
                 return underlying
+        
+        # Fallback: derive from deep ITM call prices
+        # For deep ITM calls: underlying ≈ strike + bid_close
+        calls = date_data[date_data['option_type'] == 'call'].copy()
+        if not calls.empty:
+            # Get calls with valid bid_close prices
+            calls = calls[calls['bid_close'] > 0].copy()
+            if not calls.empty:
+                # Calculate implied underlying from each ITM call
+                calls['implied_underlying'] = calls['strike'] + calls['bid_close']
+                # Use median of deep ITM calls (strike < 2000 typically deep ITM for SPX)
+                deep_itm = calls[calls['strike'] < 2000]
+                if not deep_itm.empty:
+                    underlying = float(deep_itm['implied_underlying'].median())
+                    logger.debug(f"Derived underlying for {date}: ${underlying:.2f} from deep ITM calls")
+                    return underlying
         
         logger.warning(f"Could not get underlying price for {date}")
         return None
@@ -340,3 +357,66 @@ class CBOECSVProvider:
             'long_close': long_bid,
             'spread_value': spread_value,
         }
+    
+    def get_options_chain(self, ticker: str, date: str, dte: int) -> Optional[pd.DataFrame]:
+        """
+        Get full options chain for a specific DTE.
+        
+        Returns DataFrame with columns:
+        - strike
+        - option_type ('put' or 'call')
+        - delta
+        - bid
+        - ask
+        - iv
+        """
+        df = self._get_month_data(date)
+        if df is None:
+            return None
+        
+        # Parse date
+        date_obj = pd.to_datetime(date).date()
+        
+        # Filter to this date
+        date_data = df[df['date'] == date_obj].copy()
+        if date_data.empty:
+            return None
+        
+        # Calculate target expiration date
+        target_exp = date_obj + pd.Timedelta(days=dte)
+        
+        # Convert expiration column to date objects for comparison
+        date_data = date_data.copy()
+        date_data['expiration_date'] = pd.to_datetime(date_data['expiration']).dt.date
+        
+        # Calculate DTE for each row
+        date_data['dte_calc'] = date_data['expiration_date'].apply(lambda exp: (exp - date_obj).days)
+        
+        # Filter to options matching target DTE (exact match)
+        chain = date_data[date_data['dte_calc'] == dte].copy()
+        
+        if chain.empty:
+            return None
+        
+        # Select and rename columns for standard interface
+        result = chain[[
+            'strike',
+            'option_type',
+            'delta',
+            'bid_close',
+            'ask_close',
+            'iv'
+        ]].copy()
+        
+        # Rename to match expected interface
+        result = result.rename(columns={
+            'bid_close': 'bid',
+            'ask_close': 'ask'
+        })
+        
+        # Clean up NaN and zero values
+        result['bid'] = result['bid'].fillna(0)
+        result['ask'] = result['ask'].fillna(0)
+        result['delta'] = result['delta'].fillna(0)
+        
+        return result

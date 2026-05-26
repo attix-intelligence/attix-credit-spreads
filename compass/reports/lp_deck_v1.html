@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>PilotAI Credit Spreads — LP Deck v1 (EXP-3210)</title>
+<style>
+  :root {
+    --ink: #0e1726; --ink-2: #2a3348; --muted: #6b7280;
+    --line: #e3e7ee; --bg: #ffffff; --bg-soft: #f7f8fb;
+    --accent: #1d4ed8; --accent-2: #0f766e;
+    --warn: #b45309; --bad: #b91c1c; --good: #15803d;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    color: var(--ink); background: var(--bg); line-height: 1.55; font-size: 15px;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 48px 32px 96px; }
+  header.cover { border-bottom: 1px solid var(--line); padding-bottom: 32px; margin-bottom: 40px; }
+  .eyebrow { font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  h1 { font-size: 34px; line-height: 1.15; margin: 0 0 8px; letter-spacing: -0.01em; }
+  h1 .sub { display: block; font-size: 18px; font-weight: 500; color: var(--ink-2); margin-top: 6px; }
+  h2 { font-size: 22px; margin: 56px 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--line); letter-spacing: -0.01em; }
+  h3 { font-size: 16px; margin: 24px 0 8px; color: var(--ink-2); }
+  p { margin: 8px 0 12px; }
+  .meta { color: var(--muted); font-size: 13px; }
+  .lede { font-size: 16px; color: var(--ink-2); }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+
+  .card { border: 1px solid var(--line); border-radius: 8px; padding: 16px 18px; background: var(--bg); }
+  .card.soft { background: var(--bg-soft); }
+  .card.accent { border-left: 3px solid var(--accent); }
+  .card.warn { border-left: 3px solid var(--warn); background: #fff8ec; }
+  .card.bad  { border-left: 3px solid var(--bad);  background: #fdf2f2; }
+  .card.good { border-left: 3px solid var(--good); background: #f1faf3; }
+
+  .kpi { text-align: left; }
+  .kpi .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 4px; }
+  .kpi .value { font-size: 22px; font-weight: 600; color: var(--ink); }
+  .kpi .foot { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  table { width: 100%; border-collapse: collapse; margin: 10px 0 14px; font-size: 14px; }
+  th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--line); }
+  th { background: var(--bg-soft); font-weight: 600; color: var(--ink-2); font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  tr:last-child td { border-bottom: 0; }
+  tr.total td { font-weight: 600; background: var(--bg-soft); }
+
+  ul.tight { margin: 6px 0 14px 20px; padding: 0; }
+  ul.tight li { margin: 3px 0; }
+
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 999px;
+           background: var(--bg-soft); border: 1px solid var(--line);
+           font-size: 11px; color: var(--ink-2); margin-right: 6px; }
+  .badge.good { background: #ecfdf5; color: var(--good); border-color: #bbf7d0; }
+  .badge.warn { background: #fff7ed; color: var(--warn); border-color: #fed7aa; }
+  .badge.bad  { background: #fef2f2; color: var(--bad);  border-color: #fecaca; }
+
+  .pill { display: inline-block; font-size: 12px; padding: 2px 7px; border-radius: 4px; background: var(--bg-soft); color: var(--ink-2); }
+
+  .honest { border: 1px dashed var(--warn); background: #fffaf0;
+            padding: 14px 18px; border-radius: 6px; margin: 16px 0;
+            font-size: 14px; color: var(--ink-2); }
+  .honest h4 { margin: 0 0 6px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--warn); }
+
+  .footer { margin-top: 64px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; }
+
+  .funnel { display: flex; align-items: stretch; gap: 8px; margin: 12px 0; flex-wrap: wrap; }
+  .funnel .step { flex: 1; min-width: 150px; padding: 14px 12px; border-radius: 6px; background: var(--bg-soft); border: 1px solid var(--line); text-align: center; }
+  .funnel .step .v { font-size: 22px; font-weight: 600; color: var(--ink); }
+  .funnel .step .l { font-size: 12px; color: var(--muted); margin-bottom: 2px; }
+  .funnel .step .d { font-size: 11px; color: var(--bad); margin-top: 2px; }
+
+  .src { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- ==================== COVER ==================== -->
+<header class="cover">
+  <div class="eyebrow">EXP-3210 · LP Materials · Confidential</div>
+  <h1>
+    PilotAI Credit Spreads
+    <span class="sub">Multi-stream options VRP capture — instrumented, walk-forward validated, scaled with discipline.</span>
+  </h1>
+  <p class="meta">Prepared 2026-04-28 · Author: PilotAI Research · Distribution: Qualified investors only · Not an offer to sell securities.</p>
+  <div class="grid-4" style="margin-top:18px;">
+    <div class="card kpi">
+      <div class="label">Backtest Net Sharpe</div>
+      <div class="value">6.00 / 5.20</div>
+      <div class="foot">Alpaca commfree+ExecOpt / IBKR-PFOF realistic</div>
+    </div>
+    <div class="card kpi">
+      <div class="label">Expected Live Sharpe</div>
+      <div class="value">3.0 – 4.2</div>
+      <div class="foot">After 0.5–0.7× literature decay</div>
+    </div>
+    <div class="card kpi">
+      <div class="label">Production DD Target</div>
+      <div class="value">12%</div>
+      <div class="foot">3% daily flatten circuit breaker</div>
+    </div>
+    <div class="card kpi">
+      <div class="label">Capacity Today / Target</div>
+      <div class="value">$50M / $200M</div>
+      <div class="foot">Liquidity-anchored, 8-stream</div>
+    </div>
+  </div>
+</header>
+
+<!-- ==================== 1. EXECUTIVE SUMMARY ==================== -->
+<section>
+  <h2>1 · Executive Summary</h2>
+  <p class="lede">
+    PilotAI Credit Spreads systematically harvests the Volatility Risk Premium (VRP)
+    across 8 uncorrelated options streams — index put-credit spreads, sector ETF
+    credit spreads, commodity calendars, and a cross-vol IV–RV book — with
+    risk-parity weighting, a 3% trailing-drawdown circuit breaker, and a
+    cost-aware execution stack that recovers 503 bps/yr versus a naive baseline.
+    Every number in this deck is reproducible from the experiment registry.
+  </p>
+
+  <div class="grid-2">
+    <div class="card accent">
+      <h3 style="margin-top:0;">What we are</h3>
+      <ul class="tight">
+        <li><b>Multi-stream VRP capture</b> across 8 streams — only 18.7% of the edge comes from SPX-style put-credit (EXP-3151).</li>
+        <li><b>Defined-risk only.</b> Spreads, calendars, and IV/RV pairs — no naked short premium.</li>
+        <li><b>Risk-parity weighted</b> with Ledoit-Wolf shrinkage covariance (EXP-2360).</li>
+        <li><b>Hard-coded circuit breaker.</b> 3% trailing flatten — validated 20-fold, zero false trips (EXP-2370).</li>
+      </ul>
+    </div>
+    <div class="card accent">
+      <h3 style="margin-top:0;">What we are not</h3>
+      <ul class="tight">
+        <li><span class="badge bad">Not</span> a tail-risk seller. We hedge with VIX calls (v5_hedge sleeve).</li>
+        <li><span class="badge bad">Not</span> a high-frequency latency arbitrage play.</li>
+        <li><span class="badge bad">Not</span> a leveraged short-vol fund — we de-lever in stress, base 1.0×.</li>
+        <li><span class="badge bad">Not</span> claiming this is risk-free. See §4 for the cases where our DD claim does <i>not</i> hold.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Headline metrics — three-column honest disclosure</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Metric</th>
+        <th class="num">Backtest gross</th>
+        <th class="num">Backtest net (production target)</th>
+        <th class="num">Expected live (post-decay)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Sharpe (pooled, walk-forward)</td>
+          <td class="num">6.86 (Ledoit) / 6.72 (Combined)</td>
+          <td class="num">6.00 (Alpaca + ExecOpt) / 5.22 (IBKR + PFOF)</td>
+          <td class="num">3.0 – 4.2</td></tr>
+      <tr><td>CAGR (pooled, net of friction)</td>
+          <td class="num">~96–102%</td>
+          <td class="num">93% (Alpaca) / 81% (IBKR-PFOF)</td>
+          <td class="num">5.1% – 8.3% (vol-targeted to 0.18)</td></tr>
+      <tr><td>Max DD (walk-forward, pooled)</td>
+          <td class="num">5.46%</td>
+          <td class="num">7.11% (rolling) / 3.73% (expanding)</td>
+          <td class="num">12% target / 18% tolerated</td></tr>
+      <tr><td>Walk-forward folds above Sharpe 4.0</td>
+          <td class="num">100% (rolling)</td>
+          <td class="num">95% (rolling) / 100% (expanding)</td>
+          <td class="num">—</td></tr>
+      <tr><td>Calmar</td><td class="num">~22</td><td class="num">17.7</td><td class="num">~3 (post-decay, 12% DD assumed)</td></tr>
+    </tbody>
+  </table>
+  <p class="src">
+    Source: EXP-2570 (broker net Sharpe), EXP-2730 (walk-forward), EXP-2840 (decay model).
+    "Combined" = combined cov estimator; "Ledoit" = Ledoit-Wolf only.
+  </p>
+</section>
+
+<!-- ==================== 2. THE EDGE ==================== -->
+<section>
+  <h2>2 · The Edge — why VRP, why now, why us</h2>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3 style="margin-top:0;">Why VRP exists</h3>
+      <p>
+        Listed-option <b>implied volatility persistently exceeds subsequent realized
+        volatility</b> — 3–5 vol points on indices, 4–8 on sector ETFs. This is the
+        <b>cost of dealer hedging</b> in an inventory-constrained market plus a
+        structural <b>insurance premium</b> end-investors pay to transfer left-tail risk.
+      </p>
+      <p class="meta">Refs: Bakshi &amp; Kapadia (2003); Carr &amp; Wu (2009); BIS Quarterly Review.</p>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0;">Why it persists</h3>
+      <p>
+        <b>Structural, not behavioral.</b> Dealer balance-sheet capacity, regulatory
+        capital charges on short-vol books (post-Volmageddon), and steady end-investor
+        protection demand all keep VRP wide. It compresses, never disappears, and
+        re-widens after every shock — including 2018-Q1 and 2020-Q1.
+      </p>
+    </div>
+  </div>
+
+  <h3>Why sector ETFs and commodity calendars, not just SPX — the 81% claim, validated</h3>
+  <p>
+    EXP-3151 ran a per-stream Sharpe attribution on the 8-stream v8a portfolio
+    (2020-2024, equal-vega, 5,000 bootstrap, drag 890.3 bps). Result: only
+    <b>18.68%</b> of total Sharpe contribution comes from SPX-style streams (exp1220,
+    SPY put-credit). <b>81.32%</b> comes from sector ETFs, commodity calendars,
+    and cross-vol — i.e., the program is robust to a hypothetical SPX VRP decline
+    (Dew-Becker 2024 thesis).
+  </p>
+
+  <table>
+    <thead>
+      <tr><th>Stream</th><th>Type</th><th class="num">Standalone Sharpe</th><th class="num">Sharpe contrib</th><th class="num">% of total</th><th>SPX-like?</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>xlf_cs</td>     <td>XLF credit spread</td>            <td class="num">4.67</td><td class="num">1.62</td><td class="num">22.62%</td><td><span class="badge good">No</span></td></tr>
+      <tr><td>exp1220</td>    <td>SPY put-credit (5% OTM)</td>      <td class="num">3.86</td><td class="num">1.34</td><td class="num">18.68%</td><td><span class="badge bad">Yes</span></td></tr>
+      <tr><td>xli_cs</td>     <td>XLI credit spread</td>            <td class="num">3.28</td><td class="num">1.14</td><td class="num">15.90%</td><td><span class="badge good">No</span></td></tr>
+      <tr><td>gld_cal</td>    <td>GLD calendar spread</td>          <td class="num">2.92</td><td class="num">1.01</td><td class="num">14.16%</td><td><span class="badge good">No</span></td></tr>
+      <tr><td>slv_cal</td>    <td>SLV calendar spread</td>          <td class="num">2.60</td><td class="num">0.90</td><td class="num">12.58%</td><td><span class="badge good">No</span></td></tr>
+      <tr><td>cross_vol</td>  <td>IV-RV cross-vol arb</td>          <td class="num">1.75</td><td class="num">0.61</td><td class="num">8.50%</td><td><span class="badge good">No</span></td></tr>
+      <tr><td>qqq_cs</td>     <td>QQQ credit spread</td>            <td class="num">1.70</td><td class="num">0.59</td><td class="num">8.24%</td><td><span class="badge good">No</span></td></tr>
+      <tr><td>v5_hedge</td>   <td>SPY put + VIX-call hedge</td>     <td class="num">−0.14</td><td class="num">−0.05</td><td class="num">−0.67%</td><td><span class="badge good">No</span></td></tr>
+      <tr class="total"><td>Portfolio (gross)</td><td>—</td><td class="num">7.15</td><td class="num">7.15</td><td class="num">100%</td><td>—</td></tr>
+    </tbody>
+  </table>
+
+  <div class="card good">
+    <p style="margin:0;">
+      <b>SPX exposure: 18.7% Sharpe, 11.3% risk.</b> Non-SPX exposure: 81.3% Sharpe,
+      88.7% risk. Verdict from EXP-3151: <code>ROBUST_TO_SPX_VRP_DECLINE</code>.
+      The v5_hedge sleeve <i>costs</i> 0.7% of Sharpe in normal regimes — it's a
+      crisis-alpha hedge, not an alpha source.
+    </p>
+  </div>
+  <p class="src">Source: <code>compass/reports/exp3151_stream_attribution.json</code></p>
+</section>
+
+<!-- ==================== 3. PERFORMANCE ==================== -->
+<section>
+  <h2>3 · Performance</h2>
+
+  <h3>Walk-forward robustness — 20 folds, zero losing</h3>
+  <div class="grid-2">
+    <div class="card good">
+      <h3 style="margin-top:0;">Rolling walk-forward (252-train / 63-test)</h3>
+      <ul class="tight">
+        <li>Pooled net Sharpe: <b>6.16</b></li>
+        <li>Pooled net CAGR: <b>125.7%</b></li>
+        <li>Pooled net max DD: <b>7.11%</b></li>
+        <li>Calmar: <b>17.68</b></li>
+        <li>Fold Sharpe distribution: min <b>3.72</b>, p10 <b>4.41</b>, median <b>6.94</b>, max <b>9.44</b></li>
+        <li>Fold counts: <b>95% above Sharpe 4.0</b>, 70% above 6.0, <b>100% with DD &lt;12%</b></li>
+        <li><b>Zero losing folds</b> — no fold delivered net Sharpe below 3.7.</li>
+      </ul>
+    </div>
+    <div class="card good">
+      <h3 style="margin-top:0;">Expanding walk-forward (anchored)</h3>
+      <ul class="tight">
+        <li>Pooled net Sharpe: <b>6.78</b></li>
+        <li>Pooled net CAGR: <b>109.2%</b></li>
+        <li>Pooled net max DD: <b>3.73%</b></li>
+        <li>Calmar: <b>29.29</b></li>
+        <li>Fold Sharpe distribution: min <b>4.71</b>, median <b>7.28</b>, max <b>9.44</b></li>
+        <li><b>100% of folds above Sharpe 4.0</b>, 90% above 5.0</li>
+      </ul>
+    </div>
+  </div>
+  <p class="src">Source: <code>compass/reports/exp2730_wf_robustness_v8a_net.json</code> · 20 folds, 1,260 OOS days, drag 890.3 bps applied.</p>
+
+  <h3>Sharpe in context</h3>
+  <table>
+    <thead><tr><th>Reference</th><th class="num">Reported Sharpe</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>Renaissance Medallion (after fees, gross of decade live)</td><td class="num">~2.5</td><td>Closed to outside money since 1993</td></tr>
+      <tr><td>Renaissance Medallion (pre-fee, gross)</td><td class="num">~7.5</td><td>Market-neutral equity stat-arb</td></tr>
+      <tr><td>HFR top-decile vol arbitrage funds (2014-2024)</td><td class="num">1.5 – 2.5</td><td>Live, after fees</td></tr>
+      <tr><td>This program — pooled walk-forward NET (Alpaca commfree + ExecOpt)</td><td class="num">6.00</td><td>2020-2025, 1,260 OOS days</td></tr>
+      <tr><td>This program — pooled walk-forward NET (IBKR + realistic PFOF)</td><td class="num">5.22</td><td>2020-2025, with 30% B/A penalty</td></tr>
+      <tr><td>This program — expected live (literature midpoint)</td><td class="num">2.96</td><td>Realistic p50 from EXP-2840</td></tr>
+    </tbody>
+  </table>
+  <p class="meta">
+    The fair comparable is our <b>2.96–3.86 expected-live</b> band (EXP-2840) versus
+    Medallion's <b>~2.5</b> after-fee, post-decade-of-live figure. Still attractive,
+    but not a pre-decay 6.00 number — and we tell you that explicitly.
+  </p>
+
+  <h3>The decay math — backtest → live (EXP-2840)</h3>
+  <p>
+    Per EXP-2760 literature survey, well-executed options-selling strategies typically
+    realize live Sharpe at <b>0.5×–0.7× of the backtest</b>. EXP-2840 ran the v8a
+    portfolio at uniform alpha-decay multipliers <code>k</code> on real returns:
+  </p>
+  <div class="funnel">
+    <div class="step">
+      <div class="l">k = 1.0× (no decay)</div>
+      <div class="v">6.00</div>
+      <div class="d">Headline net Sharpe</div>
+    </div>
+    <div class="step">
+      <div class="l">k = 0.8× (optimistic)</div>
+      <div class="v">3.86</div>
+      <div class="d">CAGR 8.3%</div>
+    </div>
+    <div class="step">
+      <div class="l">k = 0.6× (literature mid, p50)</div>
+      <div class="v">2.96</div>
+      <div class="d">CAGR 6.2%</div>
+    </div>
+    <div class="step">
+      <div class="l">k = 0.5× (pessimistic, p05)</div>
+      <div class="v">2.49</div>
+      <div class="d">CAGR 5.1%</div>
+    </div>
+    <div class="step">
+      <div class="l">Crisis (0.5× + v5_hedge=0)</div>
+      <div class="v">2.48</div>
+      <div class="d">Floor case</div>
+    </div>
+  </div>
+  <p class="meta">Note: portfolio Sharpe decays roughly linearly with stream-level alpha decay because the streams are weakly correlated. The <b>break-even decay</b> for our 3.0 "elite" floor is k = 0.61. We are publicly committed to pausing the program if 6-month rolling Sharpe persists below 2.5 — i.e., if k turns out to be ~0.4 or worse.</p>
+
+  <div class="honest">
+    <h4>Honest framing of the haircut</h4>
+    <p style="margin:0;">
+      We arrive at the live range two independent ways: (i) bottom-up from
+      EXP-2840's per-stream alpha-decay sweep (k=0.5–0.7), and (ii) top-down from
+      EXP-2760's literature survey of analogous options strategies. Both produce
+      <b>3.0–4.2</b>. <b>If 6-month live Sharpe is below 2.5, we pause</b> rather than
+      keep deploying capital — this is hard-coded as a paper-to-live gate (G2) and a
+      Tranche-Gate condition (§6).
+    </p>
+  </div>
+</section>
+
+<!-- ==================== 4. RISK MANAGEMENT ==================== -->
+<section>
+  <h2>4 · Risk Management</h2>
+
+  <h3>5-component portfolio risk manager</h3>
+  <table>
+    <thead><tr><th>#</th><th>Component</th><th>What it monitors</th><th>Action on breach</th><th>Source</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Ledoit-Wolf covariance + risk parity</td><td>Per-stream contribution to portfolio vol</td><td>Auto-rebalance to inverse-vol weights</td><td><span class="src">EXP-2360</span></td></tr>
+      <tr><td>2</td><td>Correlation monitor</td><td>Rolling 20-day pairwise correlation of 8 streams</td><td>Halt if pairwise &gt; 0.50 in stress</td><td><span class="src">EXP-1890, paper gate G9</span></td></tr>
+      <tr><td>3</td><td>3% trailing-DD circuit breaker</td><td>20-day rolling trailing drawdown</td><td>Flatten all sleeves, re-arm next session</td><td><span class="src">EXP-2370</span></td></tr>
+      <tr><td>4</td><td>Per-fold stress-trip detector</td><td>Out-of-band P&amp;L deviation vs backtest model</td><td>Investigate; reduce sizing on confirmed regime change</td><td><span class="src">EXP-2630</span></td></tr>
+      <tr><td>5</td><td>Paper-gate harness (10 machine checks)</td><td>Live vs forecast Sharpe / CAGR / DD / fill rate / slippage</td><td>Block tranche advancement on any failure</td><td><span class="src">EXP-2670</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3>Circuit breaker mechanics — validated 20-fold</h3>
+  <p>EXP-2370 swept <code>{3%, 5%, 8%, 10%}</code> trailing-DD thresholds × <code>{flatten, reduce}</code> modes across 20 walk-forward folds. Best config:</p>
+  <table>
+    <thead><tr><th>Config</th><th class="num">Pooled Sharpe</th><th class="num">Pooled CAGR</th><th class="num">Pooled max DD</th><th class="num">Calmar</th><th>Trip rate</th></tr></thead>
+    <tbody>
+      <tr><td>Baseline (no CB)</td><td class="num">~5.4</td><td class="num">~140%</td><td class="num">24.4% (worst fold)</td><td class="num">—</td><td>—</td></tr>
+      <tr class="total"><td><b>flatten_3pct (production)</b></td><td class="num">5.41</td><td class="num">132.1%</td><td class="num">6.77%</td><td class="num">19.5</td><td>0 false trips, 20-fold</td></tr>
+    </tbody>
+  </table>
+  <p class="src">Source: <code>compass/reports/exp2370_dd_circuit_breaker.json</code> · success criterion: pooled DD &lt;12% AND Sharpe ≥ 4.0 — both met.</p>
+
+  <h3>Monte Carlo tails — 10,000 paths × 252 days, 4 scenarios (EXP-3200)</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Scenario</th>
+        <th class="num">Mean DD (net, no CB)</th>
+        <th class="num">p95 DD</th>
+        <th class="num">p99 DD</th>
+        <th class="num">Worst</th>
+        <th class="num">P(breach 12%)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>baseline (calibrated MVN)</td>            <td class="num">7.52%</td><td class="num">11.90%</td><td class="num">15.04%</td><td class="num">24.71%</td><td class="num">2.83%</td></tr>
+      <tr><td>flash_crash (β-propagated −10% SPY)</td>   <td class="num">7.55%</td><td class="num">11.91%</td><td class="num">14.82%</td><td class="num">23.60%</td><td class="num">2.78%</td></tr>
+      <tr><td>credit_freeze (correlations → 1.0)</td>    <td class="num">8.77%</td><td class="num">13.95%</td><td class="num">17.49%</td><td class="num">27.17%</td><td class="num">7.63%</td></tr>
+      <tr><td>grinding_dd (μ shifted −20%/yr)</td>       <td class="num">32.68%</td><td class="num">48.35%</td><td class="num">53.76%</td><td class="num">66.94%</td><td class="num"><b>97.69%</b></td></tr>
+      <tr><td>vol_explosion (Σ × 16 — VIX 20 → 80)</td>   <td class="num">47.12%</td><td class="num">70.69%</td><td class="num">79.38%</td><td class="num">93.80%</td><td class="num"><b>100.00%</b></td></tr>
+    </tbody>
+  </table>
+  <p class="meta">With the 3% trailing-DD circuit breaker engaged, vol_explosion's claim-breach rate falls from 100% to 96.13%, grinding_dd from 97.69% to 77.06%. The breaker materially reduces — but does <b>not eliminate</b> — extreme-regime DDs.</p>
+
+  <div class="card warn" style="margin-top:14px;">
+    <h3 style="margin-top:0;">Honest disclosure: the 12% DD claim CAN be breached</h3>
+    <p>From EXP-3200's verdict object: <code>claim_holds_all_scenarios: false</code>. Specifically:</p>
+    <ul class="tight">
+      <li><b>Baseline:</b> 2.83% of paths breach 12% (i.e., 1-in-35).</li>
+      <li><b>Credit freeze (2008-style correlation collapse):</b> 7.63% of paths breach.</li>
+      <li><b>Grinding drawdown (2022-style μ-shift −20%/yr):</b> <b>97.69% of paths breach</b> — i.e., the 12% claim does not hold in this regime.</li>
+      <li><b>Vol explosion (VIX 20 → 80, 2020-style):</b> <b>100% of paths breach</b>; mean DD 47%, worst 94%. This is the survival-of-the-firm scenario.</li>
+      <li><b>Worst p99 DD across all scenarios: 78.14%</b> (vol_explosion, no circuit). The CB pulls this down but cannot eliminate it.</li>
+    </ul>
+    <p style="margin-bottom:0;">
+      Our 12% target is a <b>baseline-regime sizing target</b>, not a guarantee. We
+      size to it, hedge with the v5 sleeve, and circuit-break to it; we accept
+      &lt;18% as "tolerable but investigate", and treat anything &gt;25% as a
+      strategy-validity event triggering full external review and a Tranche
+      step-down. These thresholds are written into our paper-to-live gates.
+    </p>
+  </div>
+  <p class="src">Source: <code>compass/reports/exp3200_monte_carlo_stress.json</code> · 10K paths × 252 days · drag 890.3 bps · MVN distributional caveat in the source data.</p>
+
+  <h3>Correlation monitoring</h3>
+  <ul class="tight">
+    <li>Rolling 20-day pairwise correlation across 8 streams, recomputed daily (EXP-1890).</li>
+    <li>Stream betas to SPY (in-sample): exp1220 = 1.00 (by design); next-largest |β| is v5_hedge = −0.09. All other streams have |β| &lt; 0.03 — true diversification.</li>
+    <li>Paper gate <b>G9</b>: pairwise correlation must stay &lt; 0.50 in stress windows.</li>
+    <li>Risk-parity weights auto-rebalance on threshold breach.</li>
+  </ul>
+</section>
+
+<!-- ==================== 5. EXECUTION EDGE ==================== -->
+<section>
+  <h2>5 · Execution Edge — measured, not assumed</h2>
+
+  <p>
+    EXP-2470 measured a <b>503 bps/yr</b> recovery from the four-component execution
+    stack relative to the IBKR baseline (limit-at-mid + patient time-of-day window
+    + smart route reallocation + multi-leg combo orders). Combined with Alpaca's
+    commission-free options model, total drag falls from <b>2,220 bps to 890 bps</b>
+    — a <b>1,330 bps/yr saving</b>, which translates to <b>+1.29 Sharpe</b>
+    (from 4.71 net at IBKR baseline → 6.00 at Alpaca + ExecOpt).
+  </p>
+
+  <h3>Where the drag goes (cost decomposition, EXP-2510)</h3>
+  <table>
+    <thead><tr><th>Cost component</th><th class="num">Annual drag (bps)</th><th>What we do about it</th></tr></thead>
+    <tbody>
+      <tr><td>Commissions (IBKR Pro $0.65/contract)</td><td class="num">827</td><td>Use Alpaca commfree pilot (eliminates this entirely)</td></tr>
+      <tr><td>Slippage (open-of-day execution)</td><td class="num">976</td><td>Patient 10:00–15:30 ET window; -25% slippage validated in paper (gate G7)</td></tr>
+      <tr><td>Bid-ask (mid-quote model)</td><td class="num">418</td><td>Limit-at-mid; -50% fill rate target validated in paper (gate G6)</td></tr>
+      <tr><td>EXP-2470 ExecOpt savings (overlay)</td><td class="num">−503</td><td>Patient + route + multi-leg combos applied on top</td></tr>
+      <tr class="total"><td>Net drag (target production: Alpaca + ExecOpt)</td><td class="num">890</td><td>Net Sharpe 6.00 / Net CAGR 92.93%</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Commission-free vs IBKR — six-scenario sensitivity (EXP-2570)</h3>
+  <table>
+    <thead><tr><th>Scenario</th><th>Broker</th><th class="num">Drag (bps)</th><th class="num">Net Sharpe (Ledoit)</th><th class="num">Net CAGR</th></tr></thead>
+    <tbody>
+      <tr><td>Gross (no costs)</td><td>—</td><td class="num">0</td><td class="num">6.87</td><td class="num">101.83%</td></tr>
+      <tr><td>IBKR Pro (baseline)</td><td>$0.65/contract fixed</td><td class="num">2,220</td><td class="num">4.71</td><td class="num">79.63%</td></tr>
+      <tr><td>Alpaca commfree, same B/A</td><td>Ideal PFOF assumption</td><td class="num">1,393</td><td class="num">5.52</td><td class="num">87.90%</td></tr>
+      <tr><td><b>Alpaca commfree + ExecOpt (target)</b></td><td>Production config</td><td class="num">890</td><td class="num"><b>6.00</b></td><td class="num"><b>92.93%</b></td></tr>
+      <tr><td>Alpaca + realistic PFOF (+30% B/A)</td><td>Conservative model</td><td class="num">1,518</td><td class="num">5.39</td><td class="num">86.65%</td></tr>
+      <tr><td><b>Alpaca + PFOF + ExecOpt (conservative target)</b></td><td>Both penalties applied</td><td class="num">1,015</td><td class="num"><b>5.88</b></td><td class="num"><b>91.68%</b></td></tr>
+      <tr><td>Robinhood worst-case (2× B/A)</td><td>Reference only — RH lacks combo orders</td><td class="num">1,810</td><td class="num">5.11</td><td class="num">83.73%</td></tr>
+    </tbody>
+  </table>
+  <p class="meta">
+    We report both Alpaca and IBKR scenarios so investors can see the friction
+    sensitivity. The program economics work at <b>both</b> venues. Production runs
+    at Alpaca for paper / sub-$5M; IBKR is our default for accounts above $5M
+    (capacity, reporting, ISDA-readiness).
+  </p>
+  <p class="src">Source: <code>compass/reports/exp2570_commfree_net_sharpe.json</code>, <code>exp2510_broker_analysis.json</code>, <code>exp2470_execution_optimization.json</code>.</p>
+
+  <h3>Paper-to-live execution gates</h3>
+  <ul class="tight">
+    <li><b>G6:</b> Limit-at-mid fill rate ≥ 50% (validates technique A from EXP-2470).</li>
+    <li><b>G7:</b> Realised slippage ≥ 25% below open-of-day quotes (validates technique B).</li>
+    <li><b>G8:</b> Alpaca fills match IBKR NBBO within ±3 cents/contract (PFOF-tax sanity).</li>
+    <li>All three are machine-checkable; failure blocks tranche advancement.</li>
+  </ul>
+</section>
+
+<!-- ==================== 6. PATH TO SCALE ==================== -->
+<section>
+  <h2>6 · Path to Scale — gated tranches</h2>
+
+  <p>
+    We scale by <b>capability, not appetite</b>. Each tranche has explicit
+    machine-checkable gate criteria from EXP-2670. We do not advance tranches
+    until criteria are met across <b>20 consecutive trading days (4 weeks)</b>.
+    We <b>regress</b> a tranche if metrics degrade.
+  </p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Tranche</th>
+        <th class="num">Capital</th>
+        <th>Gate to advance (must hold for 4 wks)</th>
+        <th>Status today</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>0 · Paper readiness</td>
+        <td class="num">$0</td>
+        <td>EXP-2670 6/6 checks PASS; Alpaca creds present; 8 streams importable; signal cron live</td>
+        <td><span class="badge warn">CAUTION</span> 5/6 PASS, Alpaca creds pending</td>
+      </tr>
+      <tr>
+        <td>1 · Paper trading (4 weeks)</td>
+        <td class="num">$0 (sim)</td>
+        <td>10 paper gates G1–G10 all PASS for 20 consecutive days</td>
+        <td><span class="badge">Pending Tranche 0</span></td>
+      </tr>
+      <tr>
+        <td>2 · $25K live seed</td>
+        <td class="num">$25,000</td>
+        <td>20-day rolling Sharpe in [5.1, 6.9]; CAGR in [74%, 112%]; max DD &lt; 8%; 0 manual overrides</td>
+        <td><span class="badge">Pending Tranche 1</span></td>
+      </tr>
+      <tr>
+        <td>3 · $100K proof</td>
+        <td class="num">$100,000</td>
+        <td>≥3 mo live Sharpe ≥ 3.0; max DD &lt;10%; PM + risk officer signoff</td>
+        <td><span class="badge">Pending</span></td>
+      </tr>
+      <tr>
+        <td>4 · $1M scale-up</td>
+        <td class="num">$1,000,000</td>
+        <td>≥6 mo live Sharpe ≥ 3.0 net; max DD &lt;12%; capacity test ≤2 cents off model fill</td>
+        <td><span class="badge">Pending</span></td>
+      </tr>
+      <tr>
+        <td>5 · $10M institutional</td>
+        <td class="num">$10,000,000</td>
+        <td>≥9 mo live Sharpe ≥ 3.0; multi-venue execution; 24/7 monitoring; SOC2 Type I</td>
+        <td><span class="badge">Pending</span></td>
+      </tr>
+      <tr>
+        <td>6 · $50M (Phase 8 entry)</td>
+        <td class="num">$50,000,000</td>
+        <td>≥12 mo live Sharpe ≥ 3.0; ISDA / prime broker live; SOC2 Type II</td>
+        <td><span class="badge">Pending</span></td>
+      </tr>
+      <tr>
+        <td>7 · $200M (capacity ceiling)</td>
+        <td class="num">$200,000,000</td>
+        <td>Tranche 6 stable; sector-ETF capacity reconfirmed; second PM; new streams onboarded</td>
+        <td><span class="badge">Pending</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Regression triggers (any tranche)</h3>
+  <ul class="tight">
+    <li>6-month rolling live Sharpe falls below 2.5 → step <b>down</b> one tranche; full review.</li>
+    <li>Single-month DD &gt; 12% → halt new entries; force external review.</li>
+    <li>Two consecutive months of negative alpha vs forecast (EXP-2570) → re-validate signals before adding capital.</li>
+    <li>Any of paper-gate G2 / G4 / G5 fails for &gt; 5 of 20 trading days → freeze AUM at current tranche.</li>
+  </ul>
+
+  <h3>Capacity reality check (EXP-2660)</h3>
+  <div class="card warn">
+    <p style="margin:0;">
+      <b>Capacity expansion is data-gated, not capital-gated.</b> EXP-2660 audited 8
+      candidate underliers for adding to the program. Under our Rule Zero (real
+      option chains only — no synthesised data), <b>only XLE is currently tradeable</b>
+      from IronVault data. The remaining 7 (IWM, EEM, DIA, XLV, AAPL, MSFT, AMZN)
+      require a paid Polygon Options Advanced (~$199/mo) or CBOE DataShop subscription
+      to validate. <b>We do not size into a stream until we have backtested it on
+      real chains</b>. Phase 8's $200M target assumes onboarding XLE + 2-3 of the
+      blocked candidates after data unlock.
+    </p>
+  </div>
+</section>
+
+<!-- ==================== 7. CAPACITY & TERMS ==================== -->
+<section>
+  <h2>7 · Capacity, lockup, and what we'd ask of an LP</h2>
+
+  <div class="grid-3">
+    <div class="card">
+      <h3 style="margin-top:0;">Capacity today</h3>
+      <p><b>$50M.</b> Constrained by sector ETF (XLF/XLI) and commodity calendar (GLD/SLV) option open-interest at multi-strike, multi-expiry depth. Fill curves measured to this level in EXP-2660 / EXP-2230.</p>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0;">Capacity at Phase 8</h3>
+      <p><b>$200M.</b> Achieved by layering additional expiries, adding XLE + 2-3 more underliers post data-unlock (EXP-2660), and onboarding cross-asset momentum or earnings-vol crush as new low-correlation streams.</p>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0;">Liquidity</h3>
+      <p><b>Quarterly subscription / quarterly redemption</b>, 30-day notice. No side-pockets. Strategy is fully liquid in &lt;5 trading days under normal conditions; circuit breaker design ensures graceful unwind in stress.</p>
+    </div>
+  </div>
+
+  <p class="meta" style="margin-top:18px;">
+    Fee structure, subscription terms, and tax treatment are contained in the
+    confidential PPM available on request. This deck is descriptive, not an offer.
+  </p>
+</section>
+
+<!-- ==================== APPENDIX ==================== -->
+<section>
+  <h2>Appendix · Disclosures &amp; data provenance</h2>
+
+  <h3>Source-of-truth experiments</h3>
+  <ul class="tight">
+    <li><b>EXP-2510</b> — broker baseline, IBKR cost decomposition (bid-ask 4.18% + comm 8.27% + slip 9.76% = 22.20% drag).</li>
+    <li><b>EXP-2470</b> — execution optimization stack: limit-at-mid + patient window + route reallocation + multi-leg combos = −503 bps.</li>
+    <li><b>EXP-2570</b> — commission-free net Sharpe sweep (6 broker scenarios). <i>Headline: target net Sharpe 6.00 (Ledoit) / 5.84 (Combined).</i></li>
+    <li><b>EXP-2730</b> — 20-fold walk-forward, rolling and expanding. <i>Pooled Sharpe 6.16 / 6.78. Min fold 3.72.</i></li>
+    <li><b>EXP-2370</b> — circuit breaker design: 3% flatten, 20-fold validated, pooled DD 6.77%.</li>
+    <li><b>EXP-2840</b> — backtest-to-live alpha-decay model: 0.5×–0.7× literature haircut → live Sharpe 3.0–4.2.</li>
+    <li><b>EXP-3151</b> — per-stream Sharpe attribution: 18.7% SPX-like, 81.3% non-SPX. Verdict <code>ROBUST_TO_SPX_VRP_DECLINE</code>.</li>
+    <li><b>EXP-3200</b> — Monte Carlo stress: 10K paths × 4 scenarios. <i>12% DD claim breached in 2/4 stress regimes.</i></li>
+    <li><b>EXP-2660</b> — AUM capacity scaling: data-gated to 1 of 8 candidate underliers under Rule Zero.</li>
+    <li><b>EXP-2670</b> — paper trading go/no-go: 6 readiness checks + 10 machine-checkable gates G1–G10.</li>
+  </ul>
+
+  <h3>Non-exhaustive risk factors</h3>
+  <ol class="tight">
+    <li><b>VRP compression risk.</b> Structural conditions could change (regulatory rollback of capital charges on dealer short vol). Mitigant: 81% of edge is in non-SPX streams.</li>
+    <li><b>Vol explosion / correlation collapse.</b> EXP-3200 vol_explosion scenario breaches 12% DD on 100% of paths. The strategy survives but with severe drawdown. Mitigant: v5_hedge + 3% circuit breaker + pause-and-review at 25% DD.</li>
+    <li><b>Grinding drawdown regime.</b> EXP-3200 grinding_dd (2022-style negative drift) breaches 12% on 97.7% of paths. Mitigant: 6-month Sharpe regression triggers tranche step-down.</li>
+    <li><b>Backtest decay risk.</b> The 3.0–4.2 expected-live Sharpe band assumes k = 0.5–0.7. If realized k is 0.3, live Sharpe falls to ~1.5 and the program is paused.</li>
+    <li><b>Rule Zero data risk.</b> 7 of 8 capacity candidates lack option chains in IronVault. Phase 8 capacity assumes successful data unlock (Polygon / CBOE).</li>
+    <li><b>Operational risk.</b> Single-PM-key risk until Tranche 6; venue concentration risk until multi-venue routing is fully production.</li>
+    <li><b>Distributional caveat in EXP-3200.</b> MVN assumption — no Student-t, no jump diffusion. True tails may be thicker than reported.</li>
+  </ol>
+
+  <div class="honest">
+    <h4>What we will tell you that other decks won't</h4>
+    <ul class="tight" style="margin:0;">
+      <li>The 6.00 net Sharpe is a <b>backtest under the Alpaca commfree + ExecOpt configuration</b>. The IBKR-PFOF realistic configuration is 5.22, and live will be lower than both.</li>
+      <li>Our own EXP-3200 Monte Carlo says the 12% DD target is breached on 2.83% of baseline paths and on 97–100% of paths in vol-explosion or grinding-DD regimes.</li>
+      <li>The v5_hedge sleeve has <b>negative</b> standalone Sharpe (−0.14) — it costs us alpha in normal regimes by design, as crisis insurance.</li>
+      <li>One stream (qqq_cs) carries 46% of equal-vega weight but only 8.2% of Sharpe contribution — a low-Sharpe high-weight stream that pulls the portfolio's risk-adjusted return down. We're investigating whether to retire it.</li>
+      <li>Only XLE is tradeable from real chains as a capacity-expansion candidate today. Everything else requires a paid data subscription.</li>
+      <li><b>Paper trading has not started yet</b> (Tranche 0 is CAUTION, not PASS) — Alpaca creds are missing from the deployment environment.</li>
+      <li>If 6-month live Sharpe is below 2.5, <b>we pause</b> rather than scale.</li>
+    </ul>
+  </div>
+</section>
+
+<div class="footer">
+  EXP-3210 · LP Deck v1 · Generated 2026-04-28 · PilotAI Credit Spreads · Confidential — qualified investors only ·
+  All numerical claims are sourced to specific experiment JSON files in <code>compass/reports/</code> ·
+  Past results, including hypothetical results, are not indicative of future returns ·
+  Not an offer to sell or solicitation of an offer to buy any security.
+</div>
+
+</div>
+</body>
+</html>

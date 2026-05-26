@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>/home/node/.openclaw/workspace/pilotai-credit-spreads/ORCHESTRATOR_EXPLAINED</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #ffffff;
+            color: #333;
+        }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 10px; }
+        h2 { color: #34495e; margin-top: 30px; border-bottom: 2px solid #ecf0f1; padding-bottom: 8px; }
+        h3 { color: #7f8c8d; }
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: "Monaco", "Menlo", "Consolas", monospace;
+            font-size: 0.9em;
+        }
+        pre {
+            background: #f8f8f8;
+            border: 1px solid #ddd;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            overflow-x: auto;
+            border-radius: 4px;
+        }
+        pre code {
+            background: none;
+            padding: 0;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+            font-weight: 600;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        blockquote {
+            border-left: 4px solid #3498db;
+            padding-left: 20px;
+            margin: 20px 0;
+            color: #666;
+            font-style: italic;
+        }
+        a { color: #3498db; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .toc { background: #f8f9fa; padding: 20px; border-radius: 6px; margin: 20px 0; }
+    </style>
+</head>
+<body>
+<h1 id="orchestrator_explainedmd">ORCHESTRATOR_EXPLAINED.md</h1>
+<p><strong>Companion to:</strong> <code>ORCHESTRATOR_PROPOSAL.md</code>
+<strong>Audience:</strong> Carlos and anyone who wants the <em>why</em> and <em>what</em>, not the <em>how</em>.
+<strong>Style:</strong> Conceptual. No code. Plain English.</p>
+<hr />
+<h2 id="1-what-the-orchestrator-is">1. What the Orchestrator Is</h2>
+<p>The orchestrator is the <strong>mission-control layer</strong> that sits between our strategy research and the live broker.</p>
+<p>Right now, our system has three pieces that work in isolation:</p>
+<ol>
+<li><strong>Strategies</strong> (<code>exp1220</code>, <code>exp2160</code>, <code>exp2240</code>, <code>exp1770</code>, <code>exp2020</code>, <code>crisis_alpha_v5</code>) — they research the edge and tell us <em>what</em> to trade.</li>
+<li><strong>Signal registry</strong> (<code>exp2690</code>) — collects all strategies into one place and produces a daily list of intended trades.</li>
+<li><strong>Broker connector</strong> (<code>alpaca_connector</code>) — knows how to talk to Alpaca and submit orders.</li>
+</ol>
+<p>What's missing is the piece in the middle that asks the hard questions every professional trading desk asks before money leaves the building:</p>
+<ul>
+<li>Should we trade <em>today</em>, given what's happening in the market?</li>
+<li>How large should each position actually be, given the rest of the book?</li>
+<li>In what order, at what time of day, and through which order type should these go to the broker?</li>
+<li>If something fails mid-execution, what do we do?</li>
+</ul>
+<p>That's the orchestrator. It is the <strong>single decision-maker that turns research signals into real, sized, risk-checked orders</strong> — and the single source of truth for what the live book is supposed to look like at any moment.</p>
+<blockquote>
+<p>Analogy: the strategies are the analysts pitching ideas. The signal registry is the morning meeting where ideas get collected. The orchestrator is the <strong>head trader</strong> who decides which ideas actually get traded today, in what size, and at what time. The broker connector is the <strong>execution trader</strong> at the desk.</p>
+</blockquote>
+<hr />
+<h2 id="2-why-we-need-it-the-backtest-live-gap">2. Why We Need It (The Backtest → Live Gap)</h2>
+<p>Every algorithmic trading shop discovers the same uncomfortable truth: <strong>backtested edge is not the same as live edge</strong>, and most of the gap lives in operational decisions that the backtest silently assumed away.</p>
+<p>Here is the gap, concretely, for our system:</p>
+<h3 id="21-the-backtest-assumes-we-always-trade">2.1 The backtest assumes we always trade</h3>
+<p>When EXP-1220 backtests SPY put credit spreads, it opens a new spread on the same day every month and never asks "is this a bad day to be opening short premium?" Live, we know the answer is sometimes <em>yes</em> — FOMC press conferences, NFP mornings, CPI surprises, government shutdowns. The backtest had no opinion. Live, we need one.</p>
+<h3 id="22-the-backtest-assumes-parameters-dont-drift">2.2 The backtest assumes parameters don't drift</h3>
+<p>EXP-1220 was backtested at a <strong>5%-OTM strike</strong>, but the live signal generator in EXP-2690 picks strikes by <strong>0.30 delta</strong>. Those are not the same trade. On a calm day they're close. On a high-vol day, a 0.30-delta strike can be 8% OTM and a different position entirely. The orchestrator is the place where we <em>freeze</em> the canonical parameter for each sleeve and refuse to send anything that drifted.</p>
+<h3 id="23-the-backtest-sizes-positions-independently">2.3 The backtest sizes positions independently</h3>
+<p>Each strategy backtest computes its own position size against its own capital allocation. But in the live book, EXP-1220, EXP-2160, EXP-2240, and EXP-2020 <em>all</em> have short-vega exposure to the broad market. If they all fire on the same day, our actual short-vega is roughly four times what any one backtest thinks. The orchestrator is the place where correlated risk gets netted and a single portfolio-level sizing decision happens.</p>
+<h3 id="24-the-backtest-doesnt-have-partial-fills">2.4 The backtest doesn't have partial fills</h3>
+<p>Backtests assume both legs of a credit spread fill at the mid. Live, one leg fills and the other doesn't, and suddenly we are short a naked put. The current alpaca connector has a fallback path that submits the two legs as independent market orders if the multi-leg request fails — that's a critical risk we can never accept in production. The orchestrator is the place where the rule is enforced: <strong>a spread fills as a spread, or it does not fill at all.</strong></p>
+<h3 id="25-the-backtest-has-perfect-data">2.5 The backtest has perfect data</h3>
+<p>The backtest reads option prices from IronVault's curated cache. Live, IronVault might be stale, the upstream feed might be late, or yfinance might return a NaN for SPY's spot. The orchestrator is the place where stale data blocks an order rather than allowing a bad fill.</p>
+<h3 id="26-nobody-owns-the-book">2.6 Nobody owns the book</h3>
+<p>Today, if we ask "what positions does the system intend to be holding right now, and why?" we have to reconstruct the answer from JSON files, JSONL audit logs, and the broker's open positions. There is no canonical answer. The orchestrator is the place where the book has one owner and one ledger.</p>
+<p><strong>Summary:</strong> without an orchestrator, every strategy is implicitly assuming a competent human trader sits behind it making all the operational calls. We do not have that human at 09:25 ET five days a week. We need the orchestrator to <em>be</em> that human.</p>
+<hr />
+<h2 id="3-how-it-works-conceptual-flow">3. How It Works (Conceptual Flow)</h2>
+<p>The orchestrator runs as a pipeline with four stages. Each stage takes the output of the previous one and adds information or filters things out.</p>
+<h3 id="stage-1-intent">Stage 1 — Intent</h3>
+<p>The signal registry (EXP-2690) hands the orchestrator a list of <strong>intents</strong>: "I, EXP-1220, want to open a SPY put credit spread expiring 2026-06-19, short the 540 strike, long the 535 strike, 1 contract." Each intent is tagged with its sleeve name and its canonical parameters.</p>
+<p>The orchestrator does not yet care whether the trade is a good idea today. It just collects the wish list.</p>
+<h3 id="stage-2-entry-gate-filtering">Stage 2 — Entry Gate (Filtering)</h3>
+<p>The entry gate runs each intent through a series of <strong>filters</strong>. Each filter has the power to <strong>block</strong> an intent, with a reason. Blocked intents are logged but not sent forward.</p>
+<p>The filters answer the operational questions a human trader would ask:</p>
+<ul>
+<li><strong>Market open?</strong> Don't trade if it's a holiday, an early close that we've already passed, or outside RTH.</li>
+<li><strong>Sleeve already on?</strong> If EXP-1220 already has its SPY spread on for the month, don't open another.</li>
+<li><strong>Did the parameters drift?</strong> If the intent says "0.30 delta" but the canonical parameter is "5% OTM," block it. We trade what we backtested.</li>
+<li><strong>Macro event today?</strong> FOMC announcement at 14:00? Block short-premium openings the morning of. CPI release at 08:30? Don't open at 09:25.</li>
+<li><strong>Earnings event?</strong> For single-name strategies, block if the underlying reports today.</li>
+<li><strong>Vol regime?</strong> VIX &gt; 40, or the VIX term structure inverted? Most of our short-premium sleeves stand down.</li>
+<li><strong>Correlation?</strong> If the proposed trade would push our portfolio short-vega beyond a budget, block the lowest-priority intent.</li>
+<li><strong>Data fresh?</strong> If the option chain we'd price against is more than N minutes stale, block.</li>
+<li><strong>Underlying tradeable?</strong> If IronVault has zero contracts for the underlying (the historical issue with IWM and IBIT), block early with a clear reason rather than failing at the broker.</li>
+</ul>
+<p>What survives the gate is a <strong>gated signal</strong>: an intent the orchestrator has affirmatively said "yes, today, for this sleeve" to.</p>
+<h3 id="stage-3-position-sizing">Stage 3 — Position Sizing</h3>
+<p>The sizer takes each gated signal and answers: <strong>how many contracts?</strong></p>
+<p>It does this in three steps:</p>
+<ol>
+<li><strong>Per-trade risk</strong> — what dollar loss are we willing to take on this single spread if it goes to max loss? That's a fraction of equity, sized by the sleeve's allocation.</li>
+<li><strong>Portfolio overlay</strong> — given everything else already in the book (and everything else <em>about</em> to enter the book today), do we need to scale down? Two sleeves both want short-vega; the second gets a smaller fill.</li>
+<li><strong>Correlation cap</strong> — if adding this position would push a correlated exposure over its budget (e.g. total short-vega notional, total notional in financials, total margin used), the size shrinks until it fits.</li>
+</ol>
+<p>The output is a <strong>sized order</strong>: same trade idea, but with a final contract count that respects portfolio-level reality.</p>
+<h3 id="stage-4-order-routing">Stage 4 — Order Routing</h3>
+<p>The router takes the sized orders and decides <strong>when</strong> and <strong>how</strong> to send them.</p>
+<ul>
+<li><strong>When:</strong> spread openings go in shortly after the open once liquidity has settled (typically a configurable delay past 09:30 ET, default 09:35–09:45). Closings and rolls go in a pre-close window (default 15:30–15:45 ET) to avoid the last-minute liquidity cliff.</li>
+<li><strong>How:</strong> every multi-leg trade goes as a <strong>single atomic multi-leg order</strong>. If Alpaca rejects it, the router does <strong>not</strong> fall back to legging in. It logs the rejection, marks the order failed, and moves on. We accept missing a trade; we do not accept being naked on a leg.</li>
+<li><strong>Reconciliation:</strong> after every send, the router waits for fill confirmation and updates the portfolio ledger. If fills don't reconcile against intent, the system halts new sends and flags for review.</li>
+</ul>
+<h3 id="stage-5-audit">Stage 5 — Audit</h3>
+<p>Every stage writes a JSONL line: the intent received, the filters passed/blocked, the size decided, the order submitted, the fill received. The audit log is the <strong>single replayable record</strong> of what happened and why. If a trade looks wrong tomorrow, we can reconstruct exactly which gate let it through and which sizer decision produced the contract count.</p>
+<hr />
+<h2 id="4-examples-how-this-looks-in-practice">4. Examples — How This Looks in Practice</h2>
+<p>Below are three concrete scenarios using strategies that already exist in our system.</p>
+<h3 id="example-1-nfp-morning-blackout-exp-1220">Example 1 — NFP Morning Blackout (EXP-1220)</h3>
+<p>It's the first Friday of the month. NFP prints at 08:30 ET. The actual print is +60K vs. consensus +180K — a big miss. SPY gaps down 1.2% pre-market. VIX jumps from 15 to 22.</p>
+<p>At 09:25 ET, EXP-1220 generates its intent: "open SPY put credit spread, expiry 30 DTE, short 5%-OTM." On a normal day this is exactly what we'd run with.</p>
+<p>The entry gate fires:</p>
+<ul>
+<li><strong>NFP filter:</strong> today is an NFP Friday. Short-premium openings are blocked in the 09:25–10:30 ET window. The gate writes a <code>blocked: nfp_morning_blackout</code> line to the audit log.</li>
+<li>The intent never reaches the sizer or router.</li>
+</ul>
+<p>At 10:30 ET (or whenever the post-NFP cooling window expires, depending on configuration), the orchestrator can re-evaluate. If the desk's rule says "NFP days are skipped entirely for EXP-1220," the intent stays blocked for the day and we wait for next month.</p>
+<p><strong>Why this matters:</strong> the backtest opens this trade on NFP day and pretends it's fine. Live, that's a coin flip on a gap. The orchestrator enforces what the backtest didn't model.</p>
+<h3 id="example-2-vix-regime-gate-exp-2160-exp-2020">Example 2 — VIX Regime Gate (EXP-2160 + EXP-2020)</h3>
+<p>It's a Tuesday in late October. The market has been selling off for two weeks. VIX closes at 38 and opens at 41. The VIX term structure is inverted (front month above back month).</p>
+<p>EXP-2160 wants to open XLF and XLI put credit spreads. EXP-2020 wants to open a cross-vol arb pair (long SPY vol vs. short XLF vol).</p>
+<p>The entry gate fires:</p>
+<ul>
+<li><strong>VIX &gt; 40 filter:</strong> all short-premium openings blocked. EXP-2160's two intents drop out.</li>
+<li><strong>Term-structure filter:</strong> with the curve inverted, EXP-2020's "long-vol" leg is now structurally cheap and the "short-vol" leg is structurally expensive — the arb's edge inverts. The gate has a sleeve-specific rule: EXP-2020 stands down when the term structure inverts. Both legs drop.</li>
+<li><strong>Existing positions:</strong> the orchestrator does <strong>not</strong> automatically close existing positions just because the regime changed. That's a different decision (managed by stop rules at the strategy level). The gate only governs <em>new openings</em>.</li>
+</ul>
+<p><strong>Why this matters:</strong> the orchestrator is the single place where regime is consulted. Without it, three different strategies would each separately decide (or fail to decide) whether to trade. With it, the regime rule is uniform, auditable, and lives in one place.</p>
+<h3 id="example-3-pre-close-cleanup-exp-2240">Example 3 — Pre-Close Cleanup (EXP-2240)</h3>
+<p>It's a Thursday. EXP-2240's QQQ put credit spread, opened 28 days ago at 28 DTE, expires tomorrow. It has decayed to near-zero. Strategy rules say: close on T-1.</p>
+<p>The signal registry generates a <strong>closing intent</strong> at 09:25 ET: "close QQQ put credit spread, expiry tomorrow, 1 contract, buy-to-close."</p>
+<p>The entry gate processes this differently than an opening:</p>
+<ul>
+<li><strong>Macro/event filters:</strong> mostly skipped — closing a near-worthless spread is operationally cheaper than carrying it through expiry, regardless of macro.</li>
+<li><strong>Stale data filter:</strong> still applies. We won't close into a frozen book.</li>
+</ul>
+<p>The order router now decides timing:</p>
+<ul>
+<li><strong>Closings go in the pre-close window</strong>, not at open. Default routing: hold the closing intent, fire it at 15:30 ET when liquidity has returned. (Configurable per-sleeve.)</li>
+<li>The order goes as a single multi-leg buy-to-close. If it doesn't fill by 15:55 ET, the router escalates: log the failure, flag for review, do <strong>not</strong> leave one leg open and one closed.</li>
+</ul>
+<p><strong>Why this matters:</strong> closing at 09:30 ET when the book is thin and the spread is worth $0.05 mid is a great way to pay $0.15 in slippage. Closing at 15:30 ET costs less. The orchestrator owns this timing decision so each strategy doesn't have to.</p>
+<hr />
+<h2 id="5-general-technical-picture-no-code">5. General Technical Picture (No Code)</h2>
+<h3 id="51-where-it-lives">5.1 Where it lives</h3>
+<p>The orchestrator is a new Python package alongside the existing strategy code. It does not modify the strategies. It does not modify the alpaca connector. It sits <em>between</em> them and replaces the thin glue (<code>exp2830_paper_signal_generator.py</code>) that currently does almost none of this work.</p>
+<h3 id="52-how-it-runs">5.2 How it runs</h3>
+<p>Two modes:</p>
+<ul>
+<li><strong>Cron mode</strong> — runs once per trading day at 09:25 ET (pre-market). Generates the day's plan, gates it, sizes it, and queues the orders.</li>
+<li><strong>Live mode</strong> — a long-running process during market hours that submits the queued orders at their scheduled times, listens for fills, and updates the portfolio ledger.</li>
+</ul>
+<p>Both modes share the same code and the same audit log.</p>
+<h3 id="53-what-it-depends-on">5.3 What it depends on</h3>
+<ul>
+<li><strong>IronVault</strong> for option pricing (Rule Zero — no synthetic data, ever).</li>
+<li><strong>yfinance</strong> for spot prices (already used).</li>
+<li><strong>A calendar service</strong> for macro events (FOMC, NFP, CPI, OPEX, holidays). This is new — currently a CSV maintained by us, with the option to swap in an automated feed later.</li>
+<li><strong>The Alpaca paper API</strong> for order submission and fills (already used).</li>
+</ul>
+<p>No new external services. No new vendors. The orchestrator is mostly a careful re-organization of decision logic that already lives ad-hoc across the codebase, plus a small set of new filters.</p>
+<h3 id="54-what-it-produces">5.4 What it produces</h3>
+<ul>
+<li><strong>Order submissions</strong> to Alpaca paper (later: live).</li>
+<li><strong>A daily plan file</strong> showing every intent received, every block, every sizing decision, every order submitted, every fill — in one place, one timestamp-sorted log.</li>
+<li><strong>A portfolio state file</strong> showing what the system thinks the book looks like, refreshed after every fill, reconciled against the broker on a schedule.</li>
+</ul>
+<h3 id="55-how-it-gets-safer-over-time">5.5 How it gets safer over time</h3>
+<p>The orchestrator's gates are <strong>conservative by default</strong>. The first version will block more than necessary — that's intentional. As we accumulate live experience and audit data, we tune the gates downward. The audit log is what makes that tuning possible: every block is logged with its reason, so we can ask "of all the trades the FOMC filter blocked in 2026, how many would have been profitable?" and decide whether the filter is too tight.</p>
+<h3 id="56-what-it-explicitly-does-not-do">5.6 What it explicitly does <em>not</em> do</h3>
+<ul>
+<li>It does not generate signals. Strategies do that.</li>
+<li>It does not invent prices. IronVault does that.</li>
+<li>It does not make discretionary calls. Every decision is rule-based and parametrized.</li>
+<li>It does not bypass the broker's risk checks. It adds checks; it never removes them.</li>
+<li>It does not silently leg into multi-leg orders. If atomic submission fails, the trade fails. Period.</li>
+</ul>
+<hr />
+<h2 id="6-rollout-in-plain-english">6. Rollout in Plain English</h2>
+<p>We will not flip a switch and route real signals through this on day one. The rollout has five phases:</p>
+<ol>
+<li>
+<p><strong>Skeleton + tests.</strong> Build the package, write the filters, sizer, router, calendars. Test against synthetic and historical scenarios. No paper trades flow through it yet.</p>
+</li>
+<li>
+<p><strong>Parallel paper run.</strong> Run the orchestrator alongside the existing paper signal generator for a full month. Both produce daily plans. We compare them line by line. Where they disagree, we ask whether the orchestrator's block was correct.</p>
+</li>
+<li>
+<p><strong>Cutover.</strong> The orchestrator becomes the source of truth for paper. The old <code>exp2830_paper_signal_generator.py</code> is deprecated and removed.</p>
+</li>
+<li>
+<p><strong>Live with ramp.</strong> Switch from paper to live with a small fraction of intended size (e.g. 25%). Watch for two to four weeks. Ramp up if everything looks clean.</p>
+</li>
+<li>
+<p><strong>Steady state.</strong> Full size. Gates tuned based on accumulated data. New strategies (and new gates) are added through the same framework.</p>
+</li>
+</ol>
+<p>At every phase, the audit log is the receipt. If a regulator, an auditor, or Carlos asks "why did we make trade X on day Y?", the JSONL audit answers it deterministically.</p>
+<hr />
+<h2 id="7-the-one-sentence-version">7. The One-Sentence Version</h2>
+<blockquote>
+<p>The orchestrator is the head trader the system doesn't have yet: it takes the strategies' wish list, asks "is today a good day, in the right size, with the right execution?", and refuses to leave a leg naked.</p>
+</blockquote>
+<hr />
+<h2 id="8-what-we-need-from-carlos-to-start-building">8. What We Need From Carlos to Start Building</h2>
+<p>Five decisions, no more:</p>
+<ol>
+<li><strong>Macro blackout policy</strong> — which events (FOMC / NFP / CPI / OPEX) block which sleeves, and for what window? Default proposal in <code>ORCHESTRATOR_PROPOSAL.md</code> §6.</li>
+<li><strong>VIX regime thresholds</strong> — what VIX level fully blocks short-premium openings? Default proposal: 40.</li>
+<li><strong>Correlation budgets</strong> — what total short-vega notional are we willing to carry? Default proposal: scaled to current EXP-2600 v8a allocation.</li>
+<li><strong>Closing window</strong> — pre-close cutoff for rolls and closes? Default proposal: 15:30 ET.</li>
+<li><strong>Live ramp size</strong> — fraction of intended size at first live trade? Default proposal: 25%.</li>
+</ol>
+<p>Approve those (or amend them) and the build can start.</p>
+<hr />
+<p><strong>End of explanation. Technical spec lives in <code>ORCHESTRATOR_PROPOSAL.md</code>.</strong></p>
+</body>
+</html>

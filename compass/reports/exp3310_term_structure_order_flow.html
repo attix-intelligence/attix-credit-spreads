@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<title>EXP-3310 — TS + Order-Flow Alpha</title>
+<style>
+body{font-family:-apple-system,sans-serif;max-width:1280px;margin:0 auto;padding:28px;background:#fff;color:#1e293b;}
+h1{font-size:1.7em;color:#0f172a;}
+h2{margin-top:2em;border-bottom:2px solid #e2e8f0;padding-bottom:8px;color:#334155;}
+.muted{color:#64748b;font-size:0.85em;}
+.caveat{background:#fef3c7;border:2px solid #f59e0b;border-radius:8px;padding:16px;margin:16px 0;font-size:0.9rem;line-height:1.55;}
+.caveat strong{color:#92400e;}
+.sources{background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:14px;font-size:0.84rem;line-height:1.6;}
+.verdict{background:#fff;border:2px solid #dc2626;border-radius:8px;padding:18px;margin:18px 0;}
+.verdict .badge{display:inline-block;padding:5px 14px;border-radius:14px;color:#fff;background:#dc2626;font-weight:700;font-size:0.86rem;}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:0.85em;}
+th{background:#f1f5f9;padding:8px 9px;text-align:right;border-bottom:2px solid #cbd5e1;font-size:0.7em;text-transform:uppercase;}
+th:first-child{text-align:left;}
+td{padding:7px 9px;text-align:right;border-bottom:1px solid #e2e8f0;}
+td:first-child{text-align:left;font-weight:600;color:#475569;}
+tr.best{background:#ecfdf5;font-weight:600;}
+.kv{display:grid;grid-template-columns:repeat(2,1fr);gap:6px 18px;font-size:0.9em;margin:10px 0;}
+.kv b{color:#475569;}
+</style></head><body>
+
+<h1>EXP-3310 — VIX term structure + order-flow alpha</h1>
+<p class="muted">Spec: literature review §EXP-3310. Combines VIX
+term-structure slope with options order-flow imbalance proxy. Tests
+both as entry filter and as standalone alpha stream on v8a.
+2026-05-09 11:19</p>
+
+<div class="caveat">
+<strong>⚠ PROXY SUBSTITUTION.</strong> Direct CBOE put/call volume
+tickers (^CPC, ^CPCE, ^CPCI) all return Yahoo 404 as of May 2026.
+We substitute <code>^SKEW</code> as a tail-bias proxy for P-C IV
+skew (CBOE's published OTM-put vs OTM-call standardised pricing) and
+<code>ΔVIX/VIX</code> as a panic-flow proxy for intraday vol-jump
+pressure. These are documented surrogates — not direct P/C volume —
+so this experiment SHOULD be re-run with true P/C imbalance data
+once a feed is available (IBKR, CBOE DataShop, polygon.io).
+</div>
+
+<div class="sources">
+<strong>Rule Zero.</strong> v8a cube from EXP-2600 (real IronVault +
+Yahoo). Features ^VIX / ^VIX3M / ^SKEW fetched live from Yahoo. SPY
+fetched live from Yahoo for standalone-stream timing trade. All gate /
+sizing decisions use α[t-1] (no look-ahead). Walk-forward LW
+risk-parity, target_vol = 0.18; net SR includes
+EXP-2570 890.3 bps drag.
+</div>
+
+<div class="verdict">
+<span class="badge">NEGATIVE</span>
+<div class="kv" style="margin-top:14px">
+<div><b>Best Δ gross Sharpe</b></div>
+<div>-0.137 (mode: filter)</div>
+<div><b>Mode 1 (filter) Δ gross SR</b></div>
+<div>-0.137</div>
+<div><b>Mode 2 (standalone) Δ gross SR</b></div>
+<div>-0.998</div>
+<div><b>Standalone Sharpe</b></div>
+<div>0.218</div>
+<div><b>Standalone max |ρ| to streams</b></div>
+<div>0.266</div>
+<div><b>Baseline gross SR</b></div><div>6.830</div>
+</div>
+</div>
+
+<h2>1. Mode 1 — Entry filter sweep</h2>
+<p class="muted">Gate leverage when α[t-1] &lt; θ<sub>low</sub>. Best
+row highlighted: max net SR among configs with DD ≤ baseline
+10.29%.</p>
+<table>
+<thead><tr>
+<th>θ<sub>low</sub></th><th>gate lev</th>
+<th>Gross SR</th><th>Net SR</th><th>Net CAGR</th><th>Max DD</th>
+<th>Days gated</th>
+</tr></thead>
+<tbody><tr class=''><td>-0.5</td><td>0.00</td><td>5.649</td><td>5.139</td><td>+141.0%</td><td>8.25%</td><td>26.27%</td></tr><tr class=''><td>-0.5</td><td>0.30</td><td>6.285</td><td>5.777</td><td>+170.3%</td><td>8.25%</td><td>26.27%</td></tr><tr class=''><td>-0.5</td><td>0.50</td><td>6.571</td><td>6.074</td><td>+191.6%</td><td>8.25%</td><td>26.27%</td></tr><tr class=''><td>-1.0</td><td>0.00</td><td>6.171</td><td>5.691</td><td>+182.0%</td><td>8.25%</td><td>13.18%</td></tr><tr class=''><td>-1.0</td><td>0.30</td><td>6.526</td><td>6.047</td><td>+201.6%</td><td>8.25%</td><td>13.18%</td></tr><tr class=''><td>-1.0</td><td>0.50</td><td>6.687</td><td>6.213</td><td>+215.2%</td><td>8.25%</td><td>13.18%</td></tr><tr class=''><td>-1.5</td><td>0.00</td><td>6.379</td><td>5.920</td><td>+208.5%</td><td>8.25%</td><td>7.62%</td></tr><tr class=''><td>-1.5</td><td>0.30</td><td>6.589</td><td>6.129</td><td>+221.0%</td><td>8.25%</td><td>7.62%</td></tr><tr class='best'><td>-1.5</td><td>0.50</td><td>6.693</td><td>6.236</td><td>+229.6%</td><td>8.25%</td><td>7.62%</td></tr></tbody>
+</table>
+
+<h2>2. Mode 2 — Standalone alpha stream</h2>
+<p class="muted">Standalone synthesis: signal[t] = sign(α[t-1]) when
+|α[t-1]| &gt; 0.5, else 0;
+return = signal · SPY log-return; rescaled to
+10% annualised vol.</p>
+
+<div class="kv">
+<div><b>Standalone Sharpe</b></div>
+<div>0.218</div>
+<div><b>Standalone CAGR</b></div>
+<div>+1.82%</div>
+<div><b>Standalone vol</b></div>
+<div>11.15%</div>
+<div><b>Standalone max DD</b></div>
+<div>15.45%</div>
+<div><b>9-stream gross SR</b></div>
+<div>5.832
+(Δ -0.998)</div>
+<div><b>9-stream net SR</b></div>
+<div>5.414
+(Δ -0.972)</div>
+<div><b>9-stream CAGR</b></div>
+<div>+237.48%
+(Δ -46.88%)</div>
+<div><b>9-stream max DD</b></div>
+<div>13.54%
+(Δ +3.25%)</div>
+</div>
+
+<h3>2a. Correlation of standalone return to v8a streams</h3>
+<table>
+<thead><tr><th>Stream</th><th>ρ</th></tr></thead>
+<tbody><tr><td>exp1220</td><td style='color:#16a34a;font-weight:700'>+0.0663</td></tr><tr><td>v5_hedge</td><td style='color:#16a34a;font-weight:700'>-0.2657</td></tr><tr><td>gld_cal</td><td style='color:#16a34a;font-weight:700'>+0.0312</td></tr><tr><td>slv_cal</td><td style='color:#16a34a;font-weight:700'>+0.0186</td></tr><tr><td>cross_vol</td><td style='color:#16a34a;font-weight:700'>-0.0356</td></tr><tr><td>xlf_cs</td><td style='color:#16a34a;font-weight:700'>+0.0035</td></tr><tr><td>xli_cs</td><td style='color:#16a34a;font-weight:700'>-0.0216</td></tr><tr><td>qqq_cs</td><td style='color:#16a34a;font-weight:700'>-0.0227</td></tr></tbody>
+</table>
+<p class="muted">|ρ| &gt; 0.5 red, 0.3-0.5 amber, &lt; 0.3 green —
+signals near-orthogonality is desirable for portfolio addition.</p>
+
+<h2>3. Composite alpha distribution</h2>
+<table>
+<thead><tr><th>Stat</th><th>Value</th></tr></thead>
+<tbody>
+<tr><td>n observations</td><td>1193</td></tr>
+<tr><td>p05</td><td>-2.019</td></tr>
+<tr><td>p50</td><td>0.045</td></tr>
+<tr><td>p95</td><td>1.423</td></tr>
+<tr><td>min</td><td>-5.989</td></tr>
+<tr><td>max</td><td>2.912</td></tr>
+</tbody>
+</table>
+
+<p style="margin-top:3em;color:#94a3b8;font-size:0.78em;text-align:center">
+compass/exp3310_term_structure_order_flow.py · Rule Zero · real Yahoo + IronVault data
+</p>
+</body></html>
