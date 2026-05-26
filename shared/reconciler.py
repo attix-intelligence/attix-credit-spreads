@@ -1164,6 +1164,8 @@ class PositionReconciler:
         This handles the common case where the DB was lost during a redeploy
         and the reconciler created records but couldn't determine credit/PnL.
         """
+        from shared.database import get_trades, upsert_trade
+
         inv_trades = get_trades(status="needs_investigation", source="execution", path=self.db_path)
         if not inv_trades:
             return
