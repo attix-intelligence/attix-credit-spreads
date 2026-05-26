@@ -91,7 +91,7 @@ strategy:
 # ============================================================================
 risk:
   account_size: 100000
-  max_risk_per_trade: 8.5
+  max_risk_per_trade: 10.0
   sizing_mode: flat
   compound: false
   min_contracts: 1
@@ -104,7 +104,7 @@ risk:
   stop_loss_pct_of_width: 90
   momentum_filter_pct: 2.0
   portfolio_risk:
-    max_portfolio_risk_pct: 40
+    max_portfolio_risk_pct: 45
     max_single_ticker_pct: 40
     max_same_expiration: 4
   drawdown_cb_pct: 40

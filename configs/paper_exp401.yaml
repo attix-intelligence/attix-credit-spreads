@@ -125,7 +125,7 @@ risk:
 
   # Contract limits
   min_contracts: 1
-  max_contracts: 25
+  max_contracts: 30
 
   # Position limits
   max_positions: 12
@@ -149,7 +149,7 @@ risk:
 
   # Portfolio-level risk limits
   portfolio_risk:
-    max_portfolio_risk_pct: 40
+    max_portfolio_risk_pct: 50
     max_single_ticker_pct: 40
     max_same_expiration: 4
 
