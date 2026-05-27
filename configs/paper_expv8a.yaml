@@ -19,8 +19,8 @@
 
 # --- Paper trading safety flags ---
 paper_mode: true          # SAFETY: blocks live API URLs when true
-db_path: "data/pilotai_exp400.db"  # Isolated DB per experiment
-experiment_id: "EXP-400"  # Prefix for Telegram alerts
+db_path: "data/pilotai_expv8a.db"  # Isolated DB per experiment
+experiment_id: "EXP-V8A"  # Prefix for Telegram alerts
 created_by: "maximus"     # Attribution: experiment creator
 
 # Tickers
@@ -156,9 +156,9 @@ alerts:
   output_json: true
   output_text: true
   output_csv: true
-  json_file: "alerts_champion.json"
-  text_file: "alerts_champion.txt"
-  csv_file: "alerts_champion.csv"
+  json_file: "alerts_expv8a.json"
+  text_file: "alerts_expv8a.txt"
+  csv_file: "alerts_expv8a.csv"
 
   telegram:
     enabled: true
@@ -170,7 +170,7 @@ alerts:
 # ============================================================================
 logging:
   level: "INFO"
-  file: "logs/paper_champion.log"
+  file: "logs/paper_expv8a.log"
   console: true
 
 # ============================================================================
