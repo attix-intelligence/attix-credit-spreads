@@ -824,6 +824,45 @@ class AlpacaProvider:
             logger.error("Single-leg close order failed: %s", e, exc_info=True)
             return {"status": "error", "message": str(e)}
 
+    def sell_to_close_by_occ_symbol(self, occ_symbol: str, contracts: int, limit_price: float) -> Dict:
+        """Submit a sell-to-close limit order for a long option using its raw OCC symbol.
+
+        Used by orphan-detection to close untracked long positions without needing
+        to reconstruct ticker/strike/expiration from the DB.
+
+        Args:
+            occ_symbol: Full OCC symbol string as returned by Alpaca (e.g. 'SPY260320C00500000').
+            contracts: Number of contracts to sell (positive integer).
+            limit_price: Limit price for the sell order.
+        """
+        client_id = f"orphan-close-{uuid.uuid4().hex[:8]}"
+        logger.info(
+            "Selling to close orphan long: %s x%d @ %.2f (client_id=%s)",
+            occ_symbol, contracts, limit_price, client_id,
+        )
+        try:
+            order_req = LimitOrderRequest(
+                symbol=occ_symbol,
+                qty=contracts,
+                side=OrderSide.SELL,
+                time_in_force=TimeInForce.DAY,
+                limit_price=round(limit_price, 2),
+                client_order_id=client_id,
+                position_intent=PositionIntent.SELL_TO_CLOSE,
+            )
+            order = self._circuit_breaker.call(self.client.submit_order, order_req)
+            logger.info(
+                "Orphan long close order submitted: %s status=%s", order.id, order.status
+            )
+            return {
+                "status": "submitted",
+                "order_id": str(order.id),
+                "order_status": str(order.status),
+            }
+        except Exception as e:
+            logger.error("Orphan long close order failed for %s: %s", occ_symbol, e, exc_info=True)
+            return {"status": "error", "message": str(e)}
+
     def cancel_order(self, order_id: str) -> bool:
         """Cancel an open order."""
         try:

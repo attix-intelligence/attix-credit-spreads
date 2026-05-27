@@ -233,6 +233,12 @@ class PositionMonitor:
         self._last_eod_date: Optional[str] = None
         self._last_morning_date: Optional[str] = None
 
+        # When True, orphan long positions are automatically sold-to-close at current price.
+        # Set to False to disable auto-close and only log/alert.
+        self.auto_close_orphan_longs: bool = bool(
+            config.get("risk", {}).get("auto_close_orphan_longs", True)
+        )
+
         # Strategy registry — maps strategy_name → strategy instance for manage_position()
         self._strategy_registry: Dict[str, object] = {}
         self._exit_snapshot_cache = None
@@ -1643,8 +1649,55 @@ class PositionMonitor:
                     )
                 continue
 
-            # Long hedge legs (positive qty) belong to an untracked spread — skip
+            # Long positions (positive qty): untracked orphan long — warn and auto-close
             if qty >= 0:
+                current_price_str = str(pos_data.get("current_price", "0"))
+                try:
+                    current_price = float(current_price_str)
+                except (ValueError, TypeError):
+                    current_price = 0.0
+
+                logger.warning(
+                    "PositionMonitor: ORPHAN LONG POSITION %s qty=%s current_price=%s — "
+                    "no DB record found. %s",
+                    symbol, qty_str, current_price_str,
+                    "Auto-closing." if self.auto_close_orphan_longs else "auto_close_orphan_longs disabled — manual intervention required.",
+                )
+
+                try:
+                    notify_api_failure(
+                        error_msg=f"Orphan long option {symbol} qty={qty_str} — {'auto-closing' if self.auto_close_orphan_longs else 'manual close required'}",
+                        context="orphan_long_auto_close",
+                    )
+                except Exception as alert_err:
+                    logger.error(
+                        "PositionMonitor: Telegram alert failed for orphan long %s: %s", symbol, alert_err
+                    )
+
+                if self.auto_close_orphan_longs and current_price > 0:
+                    try:
+                        contracts = max(1, int(abs(qty)))
+                        result = self.alpaca.sell_to_close_by_occ_symbol(
+                            occ_symbol=symbol,
+                            contracts=contracts,
+                            limit_price=current_price,
+                        )
+                        if result.get("status") == "submitted":
+                            logger.warning(
+                                "PositionMonitor: orphan long %s sell-to-close order submitted: %s",
+                                symbol, result.get("order_id"),
+                            )
+                        else:
+                            logger.error(
+                                "PositionMonitor: orphan long %s sell-to-close failed: %s",
+                                symbol, result.get("message"),
+                            )
+                    except Exception as close_err:
+                        logger.error(
+                            "PositionMonitor: error submitting sell-to-close for orphan long %s: %s",
+                            symbol, close_err,
+                        )
+
                 continue
 
             # RC4: Short orphan with no recovery candidate — alert only, do NOT create
