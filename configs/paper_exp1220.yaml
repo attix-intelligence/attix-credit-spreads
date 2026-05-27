@@ -100,7 +100,7 @@ risk:
   account_size: 100000
 
   # 3× leverage: 5% risk per trade (accounts for macro/VIX scaling)
-  max_risk_per_trade: 5.5
+  max_risk_per_trade: 9.35
 
   # Sizing: flat
   sizing_mode: flat
@@ -127,7 +127,7 @@ risk:
 
   # Portfolio-level risk limits
   portfolio_risk:
-    max_portfolio_risk_pct: 28   # Hard cap for 3× leverage (accounts for scaling)
+    max_portfolio_risk_pct: 31   # Hard cap for 3× leverage (accounts for scaling)
     max_single_ticker_pct: 25
     max_same_expiration: 3
 

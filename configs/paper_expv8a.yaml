@@ -100,8 +100,8 @@ strategy:
 risk:
   account_size: 100000
 
-  # Credit spread: 8.5% risk per trade (from champion.json)
-  max_risk_per_trade: 17.0
+  # Credit spread: 3.9× leverage (8.5% baseline × 3.9 = 33.15%)
+  max_risk_per_trade: 33.15
 
   # Sizing: flat (fixed % of starting capital — not compound)
   sizing_mode: flat
@@ -127,7 +127,7 @@ risk:
 
   # Portfolio-level risk limits
   portfolio_risk:
-    max_portfolio_risk_pct: 80
+    max_portfolio_risk_pct: 90
     max_single_ticker_pct: 40
     max_same_expiration: 4
 
@@ -193,3 +193,4 @@ backtest:
   score_threshold: 25
   generate_reports: true
   report_dir: "output/backtest_reports"
+

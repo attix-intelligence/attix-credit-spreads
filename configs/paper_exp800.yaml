@@ -108,7 +108,7 @@ kelly:
 # ============================================================================
 risk:
   account_size: 100000       # starting capital (used for HWM bootstrap)
-  max_risk_per_trade: 12.0    # hard cap (matches max Kelly bull fraction)
+  max_risk_per_trade: 17.0    # hard cap (matches max Kelly bull fraction)
   max_contracts: 30          # hard cap regardless of Kelly size
   max_positions: 10
 
@@ -118,6 +118,9 @@ risk:
   min_credit_pct: 5          # minimum credit as % of spread width
 
   vix_max_entry: 40          # block entries above VIX 40
+
+  portfolio_risk:
+    max_portfolio_risk_pct: 60
 
 # ============================================================================
 # Alpaca Paper Trading
