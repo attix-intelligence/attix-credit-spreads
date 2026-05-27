@@ -30,13 +30,8 @@ def _render_watchdog_banner() -> str:
     status = _watchdog_status
 
     if not status:
-        # No data yet — show yellow "not checked in" banner
-        return _watchdog_banner_html(
-            color="yellow",
-            icon="⚠️",
-            message="Watchdog has not checked in yet",
-            last_check_iso=None,
-        )
+        # No data yet — watchdog hasn't checked in, not a problem
+        return ""
 
     last_check_iso: str | None = status.get("last_check")
     overall = status.get("overall", "unknown")
@@ -80,13 +75,8 @@ def _render_watchdog_banner() -> str:
             minutes_ago=minutes_ago,
         )
 
-    return _watchdog_banner_html(
-        color="green",
-        icon="🟢",
-        message="All systems operational",
-        last_check_iso=last_check_iso,
-        minutes_ago=minutes_ago,
-    )
+    # Everything is healthy — hide the banner
+    return ""
 
 
 def _watchdog_banner_html(
