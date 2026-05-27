@@ -807,7 +807,26 @@ def _render_exp_card(s: dict) -> str:
             err_msg = "Alpaca account unavailable"
         else:
             err_msg = "No Alpaca credentials configured"
-        alpaca_detail = f'<div class="no-alpaca">{err_msg}</div>'
+        # Diagnostic hint (set by data.query_all_live): surface WHY the block is
+        # empty without exposing it as visible text. The category rides along in a
+        # data-* attribute, the hover title, and an HTML comment so an empty card
+        # is diagnosable from page source / devtools in seconds — no log dig needed.
+        diag = s.get("alpaca_diag") or ("exception" if alp_error else "no-data")
+        _DIAG_HINTS = {
+            "keys-missing": "no ALPACA_API_KEY_EXP* env vars configured (or all empty)",
+            "cache-empty":  "keys present but live fetch returned no equity (empty cache / no positions)",
+            "exception":    "live fetch raised or returned an error (see server logs)",
+            "no-data":      "no live, pushed, or worker-portfolio Alpaca data available",
+        }
+        diag_hint = _DIAG_HINTS.get(diag, diag)
+        ediag = _html.escape(str(diag))
+        ehint = _html.escape(diag_hint)
+        alpaca_detail = (
+            f'<div class="no-alpaca" data-alpaca-diag="{ediag}" title="{ehint}">'
+            f'{err_msg}'
+            f'<!-- alpaca-diag={ediag}: {ehint} -->'
+            f'</div>'
+        )
         pos_section = ""
 
     # SECURITY AUDIT #7: escape all registry-sourced values before inserting into HTML.

@@ -390,8 +390,11 @@ def query_all_live(report_date: Optional[str] = None) -> List[dict]:
                     r["alpaca_equity_history"] = pushed_exp.get("alpaca_equity_history") or []
 
     # --- Live Alpaca data (overrides pushed alpaca block when available) -----
+    live_discovered = 0   # how many experiments have ALPACA_API_KEY_EXP* env keys
+    live_injected = 0     # how many got usable (error-free) live data merged in
     try:
         from . import alpaca_live
+        live_discovered = len(alpaca_live.discover_experiment_keys())
         live = alpaca_live.get_all_live_alpaca()
         if live:
             for r in results:
@@ -404,9 +407,17 @@ def query_all_live(report_date: Optional[str] = None) -> List[dict]:
                     r["alpaca_equity_history"] = existing_history
                     # Update open_count to reflect live positions count
                     r["open_count"] = len(alpaca_data.get("positions") or [])
-            logger.info("[data] Live Alpaca data injected for %d experiments", len(live))
+                    live_injected += 1
     except Exception as exc:
         logger.warning("[data] Live Alpaca fetch failed, using cached/pushed data: %s", exc)
+
+    # Always log how many experiments had keys vs. actually got data so an empty
+    # dashboard is diagnosable from a single log line.
+    live_skipped = max(live_discovered - live_injected, 0)
+    logger.info(
+        "[data] live alpaca: discovered=%d injected=%d skipped=%d",
+        live_discovered, live_injected, live_skipped,
+    )
 
     # --- Worker-pushed portfolio fallback ------------------------------------
     # For experiments where live Alpaca keys aren't available in the dashboard
@@ -423,6 +434,23 @@ def query_all_live(report_date: Optional[str] = None) -> List[dict]:
                     r["alpaca"] = json.loads(portfolio_path.read_text())
                 except Exception:
                     pass
+
+    # --- Diagnostic hint: WHY is Alpaca data empty? (rendered server-side) ----
+    # After every fallback has run, classify each experiment still lacking live
+    # equity so the HTML can surface a precise reason instead of always blaming
+    # "credentials". Categories: keys-missing | exception | cache-empty | no-data.
+    for r in results:
+        alp = r.get("alpaca")
+        if alp and alp.get("equity") is not None and not alp.get("error"):
+            continue  # has usable data — no diagnostic needed
+        if alp and alp.get("error"):
+            r["alpaca_diag"] = "exception"
+        elif live_discovered == 0:
+            r["alpaca_diag"] = "keys-missing"
+        elif alp is None:
+            r["alpaca_diag"] = "no-data"
+        else:
+            r["alpaca_diag"] = "cache-empty"
 
     return results
 
