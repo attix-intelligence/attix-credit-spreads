@@ -233,6 +233,10 @@ def get_all_live_alpaca() -> dict[str, dict]:
     """
     all_keys = discover_experiment_keys()
     if not all_keys:
+        logger.warning(
+            "[alpaca_live] no ALPACA_API_KEY_EXP* env vars found (or all empty) — "
+            "no live Alpaca data will be available"
+        )
         return {}
 
     results: dict[str, dict] = {}
@@ -257,6 +261,14 @@ def get_all_live_alpaca() -> dict[str, dict]:
                     data = future.result()
                     _cache[norm] = (time.time(), data)
                     results[norm] = data
+                    # fetch_live_data() never raises — it returns a dict with the
+                    # "error" field populated. Surface that here so the exp_id and
+                    # the underlying error are visible at the aggregation layer.
+                    if data.get("error"):
+                        logger.warning(
+                            "[alpaca_live] %s fetch returned error: %s",
+                            norm, data["error"],
+                        )
                 except Exception as exc:
                     logger.error("[alpaca_live] %s fetch failed: %s", norm, exc)
 
