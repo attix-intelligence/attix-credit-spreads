@@ -1,0 +1,395 @@
+# MSR signal-backfill universe
+#
+# Tickers for which we reconstruct momentum_z + flow_z + sentiment_z from
+# CBOE Athena historical option candles (see compass/signals/athena_provider.py).
+#
+# Composition
+# -----------
+# * 25 ETFs   — the full vehicle set referenced by strategies/msr_etf_map.yaml,
+#               so every theme that maps to a vehicle has signal coverage.
+# * 30 stocks — large-cap, highly liquid names spanning the major sectors
+#               (mega-cap tech / financials / healthcare / industrials /
+#               energy / consumer / comms). These give the LLM
+#               categorizer concrete tickers to anchor a theme on — they
+#               are NOT necessarily executed (execution still goes through
+#               the ETF vehicle map, with basket fallback).
+#
+# Field semantics
+# ---------------
+# * ticker         — uppercase symbol; must match CBOE Athena `symbol` column.
+# * kind           — "etf" | "stock". Used by the LLM categorizer to weight
+#                    whether a theme is sector-level or single-name.
+# * sector         — coarse GICS-style sector. Free text; consumed only by
+#                    the LLM and by validation reports.
+# * industry       — sub-sector / industry label (free text).
+# * market_cap_bn  — APPROXIMATE market cap in $B as a rough size hint for
+#                    the LLM. Not used for fills, not used for sizing, not
+#                    used for liquidity gates. Tag is "approx_2025" so that
+#                    future readers know this is a static label, not a
+#                    point-in-time market cap series.
+#
+# Rule Zero
+# ---------
+# * market_cap_bn is a static rough tag, NEVER referenced inside any signal
+#   computation. Signals come exclusively from Athena option candles +
+#   stock daily bars (see compass/signals/athena_provider.py).
+# * No look-ahead: the universe is static across the backfill window. Adding
+#   or removing tickers requires a re-run from the affected date forward.
+
+meta:
+  schema_version: 1
+  market_cap_tag: approx_2025
+  notes: >
+    Universe is intentionally small (~55 names) to bound Athena scan cost.
+    Expansion requires re-running the backfill for new tickers across the
+    full date range.
+
+# -- ETFs (vehicles + index proxies) ------------------------------------------
+etfs:
+  - ticker: SPY
+    kind: etf
+    sector: index
+    industry: us_large_cap
+    market_cap_bn: null   # ETF — AUM not market cap
+  - ticker: QQQ
+    kind: etf
+    sector: index
+    industry: us_large_cap_growth
+    market_cap_bn: null
+  - ticker: IWM
+    kind: etf
+    sector: index
+    industry: us_small_cap
+    market_cap_bn: null
+  - ticker: IWD
+    kind: etf
+    sector: index
+    industry: us_large_cap_value
+    market_cap_bn: null
+  - ticker: SOXX
+    kind: etf
+    sector: technology
+    industry: semiconductors
+    market_cap_bn: null
+  - ticker: SMH
+    kind: etf
+    sector: technology
+    industry: semiconductors
+    market_cap_bn: null
+  - ticker: IGV
+    kind: etf
+    sector: technology
+    industry: software
+    market_cap_bn: null
+  - ticker: XLK
+    kind: etf
+    sector: technology
+    industry: sector_spdr
+    market_cap_bn: null
+  - ticker: XLF
+    kind: etf
+    sector: financials
+    industry: sector_spdr
+    market_cap_bn: null
+  - ticker: KRE
+    kind: etf
+    sector: financials
+    industry: regional_banks
+    market_cap_bn: null
+  - ticker: XLI
+    kind: etf
+    sector: industrials
+    industry: sector_spdr
+    market_cap_bn: null
+  - ticker: XLE
+    kind: etf
+    sector: energy
+    industry: sector_spdr
+    market_cap_bn: null
+  - ticker: XOP
+    kind: etf
+    sector: energy
+    industry: oil_gas_exploration
+    market_cap_bn: null
+  - ticker: XLV
+    kind: etf
+    sector: healthcare
+    industry: sector_spdr
+    market_cap_bn: null
+  - ticker: XBI
+    kind: etf
+    sector: healthcare
+    industry: biotech
+    market_cap_bn: null
+  - ticker: XLY
+    kind: etf
+    sector: consumer_discretionary
+    industry: sector_spdr
+    market_cap_bn: null
+  - ticker: XLP
+    kind: etf
+    sector: consumer_staples
+    industry: sector_spdr
+    market_cap_bn: null
+  - ticker: XLU
+    kind: etf
+    sector: utilities
+    industry: sector_spdr
+    market_cap_bn: null
+  - ticker: XLB
+    kind: etf
+    sector: materials
+    industry: sector_spdr
+    market_cap_bn: null
+  - ticker: XLRE
+    kind: etf
+    sector: real_estate
+    industry: sector_spdr
+    market_cap_bn: null
+  - ticker: XLC
+    kind: etf
+    sector: communications
+    industry: sector_spdr
+    market_cap_bn: null
+  - ticker: HACK
+    kind: etf
+    sector: technology
+    industry: cybersecurity
+    market_cap_bn: null
+  - ticker: ICLN
+    kind: etf
+    sector: energy
+    industry: clean_energy
+    market_cap_bn: null
+  - ticker: JETS
+    kind: etf
+    sector: industrials
+    industry: airlines_travel
+    market_cap_bn: null
+  - ticker: GLD
+    kind: etf
+    sector: commodities
+    industry: gold
+    market_cap_bn: null
+
+  # -- Secondary ETFs referenced by msr_etf_map.yaml --
+  # Needed so the secondary-fallback path in the backtester has signal coverage
+  # when a primary vehicle fails the liquidity gate.
+  - ticker: CIBR
+    kind: etf
+    sector: technology
+    industry: cybersecurity
+    market_cap_bn: null
+  - ticker: GDX
+    kind: etf
+    sector: materials
+    industry: gold_miners
+    market_cap_bn: null
+  - ticker: IBB
+    kind: etf
+    sector: healthcare
+    industry: biotech
+    market_cap_bn: null
+  - ticker: IHI
+    kind: etf
+    sector: healthcare
+    industry: medical_devices
+    market_cap_bn: null
+  - ticker: ITA
+    kind: etf
+    sector: industrials
+    industry: aerospace_defense
+    market_cap_bn: null
+  - ticker: KWEB
+    kind: etf
+    sector: technology
+    industry: china_internet
+    market_cap_bn: null
+  - ticker: TAN
+    kind: etf
+    sector: energy
+    industry: solar
+    market_cap_bn: null
+  - ticker: VPN
+    kind: etf
+    sector: real_estate
+    industry: data_centers
+    market_cap_bn: null
+  - ticker: XHB
+    kind: etf
+    sector: consumer_discretionary
+    industry: homebuilders
+    market_cap_bn: null
+  - ticker: XME
+    kind: etf
+    sector: materials
+    industry: metals_mining
+    market_cap_bn: null
+
+# -- Single-name large caps ---------------------------------------------------
+stocks:
+  # Mega-cap tech / platforms
+  - ticker: AAPL
+    kind: stock
+    sector: technology
+    industry: consumer_electronics
+    market_cap_bn: 3400
+  - ticker: MSFT
+    kind: stock
+    sector: technology
+    industry: software_cloud
+    market_cap_bn: 3100
+  - ticker: NVDA
+    kind: stock
+    sector: technology
+    industry: semiconductors
+    market_cap_bn: 3000
+  - ticker: GOOGL
+    kind: stock
+    sector: communications
+    industry: internet_search_ads
+    market_cap_bn: 2100
+  - ticker: AMZN
+    kind: stock
+    sector: consumer_discretionary
+    industry: e_commerce_cloud
+    market_cap_bn: 2100
+  - ticker: META
+    kind: stock
+    sector: communications
+    industry: social_media_ads
+    market_cap_bn: 1500
+  - ticker: AVGO
+    kind: stock
+    sector: technology
+    industry: semiconductors
+    market_cap_bn: 800
+  - ticker: AMD
+    kind: stock
+    sector: technology
+    industry: semiconductors
+    market_cap_bn: 250
+  - ticker: TSM
+    kind: stock
+    sector: technology
+    industry: semiconductor_foundry
+    market_cap_bn: 800
+  - ticker: MU
+    kind: stock
+    sector: technology
+    industry: memory_semiconductors
+    market_cap_bn: 130
+
+  # Software / cloud
+  - ticker: CRM
+    kind: stock
+    sector: technology
+    industry: software_cloud
+    market_cap_bn: 280
+  - ticker: ORCL
+    kind: stock
+    sector: technology
+    industry: software_database
+    market_cap_bn: 450
+  - ticker: ADBE
+    kind: stock
+    sector: technology
+    industry: software_creative
+    market_cap_bn: 230
+
+  # Financials
+  - ticker: JPM
+    kind: stock
+    sector: financials
+    industry: money_center_bank
+    market_cap_bn: 700
+  - ticker: BAC
+    kind: stock
+    sector: financials
+    industry: money_center_bank
+    market_cap_bn: 350
+  - ticker: GS
+    kind: stock
+    sector: financials
+    industry: investment_bank
+    market_cap_bn: 170
+  - ticker: MS
+    kind: stock
+    sector: financials
+    industry: investment_bank
+    market_cap_bn: 180
+
+  # Healthcare
+  - ticker: UNH
+    kind: stock
+    sector: healthcare
+    industry: managed_care
+    market_cap_bn: 550
+  - ticker: LLY
+    kind: stock
+    sector: healthcare
+    industry: pharma
+    market_cap_bn: 750
+  - ticker: JNJ
+    kind: stock
+    sector: healthcare
+    industry: pharma_devices
+    market_cap_bn: 400
+  - ticker: ABBV
+    kind: stock
+    sector: healthcare
+    industry: pharma
+    market_cap_bn: 320
+
+  # Industrials
+  - ticker: CAT
+    kind: stock
+    sector: industrials
+    industry: heavy_machinery
+    market_cap_bn: 180
+  - ticker: BA
+    kind: stock
+    sector: industrials
+    industry: aerospace_defense
+    market_cap_bn: 120
+
+  # Energy
+  - ticker: XOM
+    kind: stock
+    sector: energy
+    industry: oil_gas_integrated
+    market_cap_bn: 480
+  - ticker: CVX
+    kind: stock
+    sector: energy
+    industry: oil_gas_integrated
+    market_cap_bn: 290
+
+  # Consumer
+  - ticker: TSLA
+    kind: stock
+    sector: consumer_discretionary
+    industry: automotive_ev
+    market_cap_bn: 800
+  - ticker: HD
+    kind: stock
+    sector: consumer_discretionary
+    industry: home_improvement_retail
+    market_cap_bn: 380
+  - ticker: COST
+    kind: stock
+    sector: consumer_staples
+    industry: warehouse_retail
+    market_cap_bn: 380
+
+  # Communications / media
+  - ticker: NFLX
+    kind: stock
+    sector: communications
+    industry: streaming
+    market_cap_bn: 280
+  - ticker: DIS
+    kind: stock
+    sector: communications
+    industry: media_entertainment
+    market_cap_bn: 180
