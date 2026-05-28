@@ -58,6 +58,11 @@ def _to_polygon_ticker(ticker: str) -> str:
     return _INDEX_TICKER_MAP.get(ticker.upper(), ticker.upper())
 
 
+def _env_flag(name: str) -> bool:
+    """Parse a boolean env flag (default False)."""
+    return os.environ.get(name, "false").strip().lower() in ("1", "true", "yes", "on")
+
+
 class DataCache:
     """In-memory TTL cache for Polygon daily-bar history.
 
@@ -66,7 +71,8 @@ class DataCache:
     of the cached frame; no extra network calls.
     """
 
-    def __init__(self, ttl_seconds: int = 900, api_key: Optional[str] = None):
+    def __init__(self, ttl_seconds: int = 900, api_key: Optional[str] = None,
+                 shared_cache=None):
         self._cache: dict = {}
         self._lock = threading.Lock()
         self._ttl = ttl_seconds
@@ -74,6 +80,16 @@ class DataCache:
         self._indices_api_key = os.environ.get("POLYGON_INDICES_API_KEY", "")
         self._provider = None  # built lazily on first use
         self._indices_provider = None  # separate provider for index tickers
+
+        # --- Phase 1: cross-process shared SQLite bar cache (feature-flagged) ---
+        # OFF by default — when disabled, get_history() behaves EXACTLY as before
+        # (direct Polygon fetch into the per-process in-memory cache). Phase 2
+        # flips USE_SHARED_CACHE per-experiment.
+        self._use_shared = _env_flag("USE_SHARED_CACHE")
+        self._shared_cache = shared_cache          # injectable (tests / DI)
+        self._shared_init_failed = False
+        self._refreshing: set = set()              # in-process single-flight
+        self._refresh_lock = threading.Lock()
 
     # ------------------------------------------------------------------
     # Provider
@@ -128,6 +144,27 @@ class DataCache:
         metrics.inc("cache_misses")
 
         polygon_ticker = _to_polygon_ticker(ticker)
+
+        # Shared SQLite cache (Phase 1). Returns a full-window frame on hit, or
+        # None to signal "fall back to a direct fetch" (flag off, miss, or any
+        # cache error). Never raises for a cache problem — only a genuine
+        # provider failure (raised by _fetch_full) propagates.
+        data = None
+        if self._use_shared:
+            data = self._try_shared(ticker, polygon_ticker)
+        if data is None:
+            data = self._fetch_full(ticker, polygon_ticker)
+
+        with self._lock:
+            self._cache[key] = (data, time.time())
+        return self._slice_to_period(data, period).copy()
+
+    # ------------------------------------------------------------------
+    # Direct provider fetch (the pre-Phase-1 behaviour, extracted)
+    # ------------------------------------------------------------------
+
+    def _fetch_full(self, ticker: str, polygon_ticker: str) -> pd.DataFrame:
+        """Fetch the full ``_FETCH_CALENDAR_DAYS`` window directly from Polygon."""
         try:
             data = self._get_provider(polygon_ticker).get_historical(
                 polygon_ticker, days=_FETCH_CALENDAR_DAYS,
@@ -147,10 +184,99 @@ class DataCache:
             raise DataFetchError(
                 f"Polygon returned no data for {ticker} ({polygon_ticker})"
             )
+        return data
 
-        with self._lock:
-            self._cache[key] = (data, time.time())
-        return self._slice_to_period(data, period).copy()
+    # ------------------------------------------------------------------
+    # Shared-cache path (stale-while-revalidate + graceful fallback)
+    # ------------------------------------------------------------------
+
+    def _get_shared_cache(self):
+        """Lazily build the SharedBarCache; None if it can't be created."""
+        if self._shared_cache is not None:
+            return self._shared_cache
+        if self._shared_init_failed:
+            return None
+        try:
+            from shared.shared_bar_cache import SharedBarCache
+            self._shared_cache = SharedBarCache(fresh_ttl=self._ttl)
+        except Exception as exc:
+            logger.warning("Shared cache unavailable (%s) — using direct fetch", exc)
+            self._shared_init_failed = True
+            return None
+        return self._shared_cache
+
+    def _try_shared(self, ticker: str, polygon_ticker: str) -> Optional[pd.DataFrame]:
+        """Serve from the shared cache with stale-while-revalidate semantics.
+
+        Returns a full-window DataFrame, or None to tell the caller to fall back
+        to a direct fetch. A genuine provider failure (on a MISS refetch) is
+        allowed to propagate so behaviour matches the non-shared path.
+        """
+        from shared.shared_bar_cache import Freshness, SharedCacheError
+
+        sc = self._get_shared_cache()
+        if sc is None:
+            return None
+
+        try:
+            res = sc.get_bars(ticker)
+        except SharedCacheError as exc:
+            logger.warning("Shared cache read failed for %s (%s) — direct fetch", ticker, exc)
+            return None
+
+        if res.status == Freshness.FRESH:
+            metrics.inc("shared_cache_fresh")
+            return res.df
+
+        if res.status == Freshness.STALE:
+            metrics.inc("shared_cache_stale")
+            self._schedule_refresh(ticker, polygon_ticker)
+            return res.df  # serve stale immediately; background thread revalidates
+
+        # MISS — synchronous fetch + write-through.
+        metrics.inc("shared_cache_miss")
+        data = self._fetch_full(ticker, polygon_ticker)
+        try:
+            sc.put_bars(ticker, data)
+        except SharedCacheError as exc:
+            logger.warning("Shared cache write failed for %s (%s)", ticker, exc)
+        return data
+
+    def _schedule_refresh(self, ticker: str, polygon_ticker: str) -> None:
+        """Kick a background revalidation for a stale ticker (single-flight)."""
+        with self._refresh_lock:
+            if ticker in self._refreshing:
+                return
+            self._refreshing.add(ticker)
+
+        def _run():
+            from shared.shared_bar_cache import Freshness, SharedCacheError
+            try:
+                sc = self._get_shared_cache()
+                if sc is None:
+                    return
+                # Cross-process guard: another container subprocess may have
+                # already refreshed it to FRESH while we queued — skip if so.
+                try:
+                    if sc.get_bars(ticker).status == Freshness.FRESH:
+                        return
+                except SharedCacheError:
+                    pass
+                data = self._fetch_full(ticker, polygon_ticker)
+                try:
+                    sc.put_bars(ticker, data)
+                except SharedCacheError as exc:
+                    logger.warning("Background cache write failed for %s (%s)", ticker, exc)
+                with self._lock:
+                    self._cache[ticker.upper()] = (data, time.time())
+                logger.info("Shared cache background-refreshed %s", ticker)
+            except Exception as exc:
+                logger.warning("Background refresh failed for %s: %s", ticker, exc)
+            finally:
+                with self._refresh_lock:
+                    self._refreshing.discard(ticker)
+
+        threading.Thread(target=_run, name=f"bar-refresh-{ticker}", daemon=True).start()
 
     @staticmethod
     def _slice_to_period(data: pd.DataFrame, period: str) -> pd.DataFrame:
