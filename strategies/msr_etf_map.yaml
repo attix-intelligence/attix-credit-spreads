@@ -1,0 +1,155 @@
+# MSR theme → vehicle mapping
+#
+# Used by backtest/equity_backtester.py to translate an LLM theme name
+# into a tradeable equity / ETF (or fallback basket of top tickers).
+#
+# Matching rules
+# --------------
+# * Each entry has either `match_regex` (case-insensitive Python regex) or
+#   `match_any` (case-insensitive substring list — first hit wins).
+# * Entries are evaluated in order; the FIRST match wins.
+# * The selected entry's `vehicle` field is the primary ticker for the
+#   theme. Optional `secondary` is a backup if the primary fails liquidity
+#   gates at trade time.
+# * If no entry matches, the loader falls back to:
+#     basket = first 3 valid tickers in the theme's `tickers` field
+# * All vehicles MUST be ETFs or large-cap, liquid equities (≥$1B ADV)
+#   so the strategy can execute at MSR slot sizes without market impact.
+#
+# Liquidity gate (applied at fill time, not here): vehicle must have
+# 21-day ADV ≥ $50M and bid-ask spread ≤ 5 bps. Failing vehicles fall
+# through to the basket.
+
+vehicles:
+
+  # ---- AI / Semis ------------------------------------------------------
+  - theme_id: ai_infrastructure
+    match_any: ["ai infra", "ai infrastructure", "ai capex", "ai compute", "ai build"]
+    vehicle: SOXX                # iShares Semiconductor ETF
+    secondary: SMH               # VanEck Semiconductor ETF
+    notes: "Captures NVDA, AVGO, AMD, MU and the whole AI supply chain."
+
+  - theme_id: semiconductors
+    match_any: ["semi", "semis", "semiconductor", "chip"]
+    vehicle: SOXX
+    secondary: SMH
+
+  - theme_id: cloud_software
+    match_any: ["cloud", "saas", "software"]
+    vehicle: IGV                 # iShares Expanded Tech-Software
+    secondary: QQQ
+
+  - theme_id: data_center_reits
+    match_any: ["data center", "data-center", "datacenter", "reit power"]
+    vehicle: VPN                 # Global X Data Center & Digital Infra
+    secondary: XLRE
+
+  # ---- Sector SPDRs ----------------------------------------------------
+  - theme_id: financials
+    match_any: ["bank", "financial", "credit", "fintech"]
+    vehicle: XLF
+    secondary: KRE               # regional banks if "regional" appears
+    notes: "Regional-bank stress themes still route here; secondary KRE picks up small-banks."
+
+  - theme_id: regional_banks
+    match_any: ["regional bank", "small bank", "community bank"]
+    vehicle: KRE
+    secondary: XLF
+
+  - theme_id: industrials
+    match_any: ["industrial", "machinery", "construction", "engineering"]
+    vehicle: XLI
+    secondary: ITA               # aerospace & defense
+
+  - theme_id: energy
+    match_any: ["energy", "oil", "gas", "drill", "exploration", "lng"]
+    vehicle: XLE
+    secondary: XOP               # E&P pure-play
+
+  - theme_id: technology
+    match_any: ["tech mega", "mega tech", "tech rally", "tech leadership"]
+    vehicle: XLK
+    secondary: QQQ
+
+  - theme_id: healthcare
+    match_any: ["health", "pharma", "drug", "medical"]
+    vehicle: XLV
+    secondary: IHI               # medical devices
+
+  - theme_id: biotech
+    match_any: ["biotech", "gene therapy", "biopharm"]
+    vehicle: XBI
+    secondary: IBB
+
+  - theme_id: consumer_discretionary
+    match_any: ["consumer disc", "retail", "auto", "homebuild", "leisure"]
+    vehicle: XLY
+    secondary: XHB               # homebuilders
+
+  - theme_id: consumer_staples
+    match_any: ["staples", "consumer staple", "defensive consumer"]
+    vehicle: XLP
+
+  - theme_id: utilities
+    match_any: ["utility", "utilities", "power generation", "grid"]
+    vehicle: XLU
+
+  - theme_id: materials
+    match_any: ["material", "mining", "metals", "copper", "steel", "aluminum"]
+    vehicle: XLB
+    secondary: XME               # metals & mining
+
+  - theme_id: real_estate
+    match_any: ["reit", "real estate"]
+    vehicle: XLRE
+
+  - theme_id: communications
+    match_any: ["communication", "media", "telecom", "streaming"]
+    vehicle: XLC
+
+  # ---- Indices / Style -------------------------------------------------
+  - theme_id: large_cap_growth
+    match_any: ["large cap growth", "growth rally", "mega cap"]
+    vehicle: QQQ
+    secondary: SPY
+
+  - theme_id: small_caps
+    match_any: ["small cap", "russell", "iwm"]
+    vehicle: IWM
+
+  - theme_id: value_rotation
+    match_any: ["value rotation", "value", "rotation to value"]
+    vehicle: IWD               # iShares Russell 1000 Value
+
+  # ---- Thematic --------------------------------------------------------
+  - theme_id: cybersecurity
+    match_any: ["cyber", "security", "infosec"]
+    vehicle: HACK
+    secondary: CIBR
+
+  - theme_id: clean_energy
+    match_any: ["clean energy", "renewable", "solar", "wind"]
+    vehicle: ICLN
+    secondary: TAN
+
+  - theme_id: travel_airlines
+    match_any: ["travel", "airline", "hotel", "cruise"]
+    vehicle: JETS
+    secondary: XLY
+
+  - theme_id: china_tech
+    match_any: ["china tech", "china internet", "alibaba", "baba"]
+    vehicle: KWEB
+
+  - theme_id: gold_safe_haven
+    match_any: ["gold", "safe haven", "flight to safety"]
+    vehicle: GLD
+    secondary: GDX               # gold miners
+
+# Fallback config
+# ---------------
+# When no vehicle pattern matches and the theme has fewer than 2 valid
+# tickers, the theme is dropped (no entry signal).
+fallback:
+  basket_top_n: 3
+  min_tickers_required: 2
