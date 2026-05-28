@@ -295,7 +295,8 @@ body {
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
 .page { max-width: 1000px; margin: 0 auto; padding: 32px 24px 64px; }
 h1 { font-size: 22px; font-weight: 700; margin-bottom: 3px; }
-.subtitle { color: #64748b; font-size: 13px; margin-bottom: 28px; }
+.subtitle { color: #64748b; font-size: 13px; margin-bottom: 4px; }
+.verified-ts { color: #94a3b8; font-size: 11px; margin-bottom: 28px; }
 
 /* Summary cards */
 .summary { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 32px; }
@@ -988,10 +989,11 @@ def render_dashboard(all_stats: list[dict]) -> str:
         except Exception:
             pass
     combined_equity = sum(equities) if equities else None
+    # Sum position-level unrealized P&L directly — account-level is often 0 for options.
     combined_unrealized = sum(
-        s["alpaca"].get("unrealized_pl") or 0
-        for s in all_stats
-        if s.get("alpaca") and s["alpaca"].get("equity") is not None
+        sum(float(p.get("unrealized_pl") or 0) for p in d.get("positions") or [])
+        for d in _all_live.values()
+        if d.get("equity") is not None and not d.get("error")
     ) if equities else None
     combined_return_pct = (
         (combined_equity - STARTING_EQUITY * len(all_stats)) / (STARTING_EQUITY * len(all_stats)) * 100
@@ -1039,6 +1041,7 @@ def render_dashboard(all_stats: list[dict]) -> str:
 <div class="page">
   <h1>Attix Dashboard</h1>
   <p class="subtitle">Credit Spreads &bull; 8-week gate: Mar 16 → May 11, 2026</p>
+  <p class="verified-ts">Last verified: {now_str}</p>
 
   <div class="summary">
     {equity_card}

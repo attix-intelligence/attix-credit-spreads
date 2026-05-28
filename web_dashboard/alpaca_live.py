@@ -173,7 +173,9 @@ def fetch_live_data(normalized_id: str, api_key: str, api_secret: str) -> dict:
         result["buying_power"]  = float(acct.get("buying_power")            or 0)
         result["cash"]          = float(acct.get("cash")                    or 0)
         result["unrealized_pl"] = float(acct.get("unrealized_pl")           or 0)
-        result["day_pl"]        = float(acct.get("unrealized_intraday_pl")  or 0)
+        # unrealized_intraday_pl is often 0 for options; equity - last_equity is reliable.
+        _last_equity = float(acct.get("last_equity") or 0)
+        result["day_pl"] = (result["equity"] - _last_equity) if _last_equity else float(acct.get("unrealized_intraday_pl") or 0)
     except Exception as exc:
         result["error"] = f"account: {exc}"
         logger.warning("[alpaca_live] %s account error: %s", normalized_id, exc)
@@ -183,6 +185,10 @@ def fetch_live_data(normalized_id: str, api_key: str, api_secret: str) -> dict:
     try:
         positions = _get(api_key, api_secret, "/v2/positions")
         result["positions"] = positions if isinstance(positions, list) else []
+        # Account-level unrealized_pl is often 0 for options; fall back to sum of positions.
+        pos_unrealized = sum(float(p.get("unrealized_pl") or 0) for p in result["positions"])
+        if result["unrealized_pl"] == 0 and pos_unrealized != 0:
+            result["unrealized_pl"] = round(pos_unrealized, 2)
     except Exception as exc:
         logger.warning("[alpaca_live] %s positions error: %s", normalized_id, exc)
 
