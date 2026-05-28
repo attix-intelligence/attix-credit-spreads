@@ -54,7 +54,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from datetime import date as date_cls
+from datetime import date as date_cls, datetime, timedelta
 from typing import Any, Dict, List, Optional
 
 import pandas as pd
@@ -64,6 +64,14 @@ from compass.signals.tilt_score import compute_tilt_score
 from strategies.msr_universe import Universe, UniverseEntry
 
 logger = logging.getLogger(__name__)
+
+# Must match flow_proxy._DEFAULT_EXPIRY_CAP_DAYS and
+# sentiment_proxy._EXPIRY_CAP_DAYS so the prefetch cache key matches
+# what those modules pass when they call provider.options_snapshot.
+# If they ever diverge, the cache will miss for one of them and that
+# module falls back to its own per-symbol query — incorrect-result-free
+# but loses the cost optimisation.
+_PREFETCH_EXPIRY_CAP_DAYS = 180
 
 # Columns in the canonical output order — also enforced when emitting
 # an empty DataFrame so downstream Parquet schemas are stable.
@@ -124,6 +132,33 @@ def build_tilt_for_date(
     entries: List[UniverseEntry] = [*universe.etfs, *universe.stocks]
     total = len(entries)
     rows: List[TickerResult] = []
+
+    # MSR-200f — batched chain prefetch.
+    # One Athena query covers all 65 tickers' option chains for the day,
+    # populating provider's in-memory cache. Subsequent options_snapshot
+    # calls (one per ticker × {flow, sentiment} = 130 calls) read from
+    # cache without issuing further queries. Cuts Athena scan cost ~65×.
+    #
+    # We swallow prefetch failures (and log) so per-ticker computation
+    # falls through to the legacy per-symbol query path — never lose data.
+    try:
+        cap_iso = (
+            datetime.fromisoformat(as_of_str).date()
+            + timedelta(days=_PREFETCH_EXPIRY_CAP_DAYS)
+        ).isoformat()
+        populated = provider.prefetch_chains(
+            [e.ticker for e in entries],
+            expiration_lte=cap_iso,
+        )
+        logger.info(
+            "prefetched chains for %s: %d/%d symbols populated",
+            as_of_str, populated, len(entries),
+        )
+    except Exception as e:
+        logger.warning(
+            "prefetch_chains failed for %s (%s); falling back to "
+            "per-symbol queries.", as_of_str, e,
+        )
 
     for idx, entry in enumerate(entries, start=1):
         result = _compute_one(entry, as_of_str, provider, weights=weights)

@@ -58,14 +58,22 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 import time
 from datetime import date, datetime, timedelta
-from typing import Dict, List, Optional, Union
+from typing import Dict, Iterable, List, Optional, Tuple, Union
 
 import boto3
 import pandas as pd
 
 from compass.signals._data import OptionContract
+
+# Validation for symbols going into a SQL IN-clause. CBOE symbols are
+# upper-case letters, may have a leading ^ (for indices like ^SPX), and
+# can include digits or "." in rare cases (e.g. BRK.B). We exclude
+# quote characters defensively even though the universe YAML doesn't
+# contain any.
+_SYMBOL_RE = re.compile(r"^\^?[A-Z0-9][A-Z0-9.]{0,9}$")
 
 logger = logging.getLogger(__name__)
 
@@ -106,6 +114,17 @@ class AthenaSignalDataProvider:
         # invite silent look-ahead. Better to fail loudly.
         self.as_of: Optional[str] = None
 
+        # Batched-chain cache (MSR-200f). Key:
+        #     (as_of, expiration_lte_or_None, expiration_gte_or_None)
+        # Value: dict of symbol_upper → list[OptionContract] for that prefetch.
+        # options_snapshot consults this BEFORE issuing a per-symbol query.
+        # A cache miss falls back to the existing per-symbol query so the
+        # interface stays compatible with tests that don't prefetch.
+        self._chain_cache: Dict[
+            Tuple[str, Optional[str], Optional[str]],
+            Dict[str, List[OptionContract]],
+        ] = {}
+
         # Diagnostics — reset externally if you want per-batch totals.
         self._bytes_scanned = 0
         self._queries = 0
@@ -133,6 +152,14 @@ class AthenaSignalDataProvider:
         ``expiration >= as_of`` so already-expired contracts (i.e. rows
         from a 0DTE that already settled at the morning open) don't
         appear with stale-looking IVs.
+
+        Cache (MSR-200f)
+        ----------------
+        If :meth:`prefetch_chains` has populated the cache with a
+        matching ``(as_of, expiration_lte, expiration_gte)`` key, the
+        cached list is returned without issuing any Athena query. A
+        cache miss falls back to a single-symbol query so unit tests
+        and live calls work without prefetching.
         """
         del limit, max_pages  # interface compat
         if not self.as_of:
@@ -141,45 +168,161 @@ class AthenaSignalDataProvider:
                 "as_of was set. Set provider.as_of = '<YYYY-MM-DD>' before "
                 "each per-date signal computation."
             )
-
-        as_of = self.as_of
-        y, m, d = as_of.split("-")
         upper = underlying.upper()
 
-        # The expiration column in CBOE candles is DATE. Use DATE literals
-        # for safe comparison. Default lower bound is as_of so already-
-        # settled contracts are excluded.
-        exp_floor = expiration_gte or as_of
+        # Cache-first lookup — MSR-200f optimization.
+        cache_key = (self.as_of, expiration_lte, expiration_gte)
+        cached = self._chain_cache.get(cache_key)
+        if cached is not None:
+            # A prefetch covered this (as_of, window). Return the symbol's
+            # list (possibly empty) — the absence of the symbol from the
+            # cache dict is identical to "no rows for this symbol".
+            return list(cached.get(upper, ()))
+
+        # Cache miss → per-symbol query (legacy path; preserved for tests
+        # and ad-hoc calls).
+        df = self._fetch_chain_df(
+            symbols=[upper],
+            exp_floor=expiration_gte or self.as_of,
+            exp_lte=expiration_lte,
+            include_symbol_column=False,
+        )
+        return self._snapshot_for_symbol(df, upper)
+
+    def prefetch_chains(
+        self,
+        symbols: Iterable[str],
+        *,
+        expiration_lte: Optional[str] = None,
+        expiration_gte: Optional[str] = None,
+    ) -> int:
+        """Pre-fetch chains for a batch of symbols in a SINGLE Athena query.
+
+        MSR-200f optimization. Issues one query with ``symbol IN (…)`` over
+        the year/month/day partition for ``self.as_of`` (~55 MB scanned
+        regardless of symbol count, vs ~55 MB × N for the per-symbol path).
+
+        Args:
+            symbols: iterable of underlying symbols (upper-case A-Z plus
+                optional ``^`` prefix for indices; validated against
+                :data:`_SYMBOL_RE`).
+            expiration_lte / expiration_gte: ISO dates — same semantics
+                as :meth:`options_snapshot`. ``expiration_gte`` defaults
+                to ``self.as_of`` so already-settled contracts are
+                excluded.
+
+        Returns:
+            The number of symbols populated in the cache (i.e. symbols
+            for which at least one row was returned).
+
+        Subsequent :meth:`options_snapshot` calls with the same
+        ``(expiration_lte, expiration_gte)`` window will read from the
+        cache without issuing additional queries.
+        """
+        if not self.as_of:
+            raise RuntimeError(
+                "AthenaSignalDataProvider.prefetch_chains called before "
+                "as_of was set."
+            )
+
+        clean = self._clean_symbols(symbols)
+        if not clean:
+            return 0
+
+        df = self._fetch_chain_df(
+            symbols=clean,
+            exp_floor=expiration_gte or self.as_of,
+            exp_lte=expiration_lte,
+            include_symbol_column=True,
+        )
+
+        # Pre-create empty entries for every requested symbol — so a
+        # later options_snapshot lookup distinguishes "prefetched and
+        # symbol had no rows" from "prefetch never happened" (the latter
+        # falls through to per-symbol query).
+        per_symbol: Dict[str, List[OptionContract]] = {s: [] for s in clean}
+        if not df.empty:
+            for sym, sub in df.groupby("symbol"):
+                sym_upper = str(sym).upper()
+                per_symbol[sym_upper] = self._snapshot_for_symbol(
+                    sub.drop(columns=["symbol"]), sym_upper,
+                )
+
+        cache_key = (self.as_of, expiration_lte, expiration_gte)
+        self._chain_cache[cache_key] = per_symbol
+        return sum(1 for v in per_symbol.values() if v)
+
+    def clear_chain_cache(self) -> None:
+        """Drop all prefetched chains. Called between dates by the orchestrator
+        when you want to bound peak memory."""
+        self._chain_cache.clear()
+
+    # ---- private helpers (shared by per-symbol + batched paths) ---------
+
+    def _fetch_chain_df(
+        self,
+        *,
+        symbols: List[str],
+        exp_floor: str,
+        exp_lte: Optional[str],
+        include_symbol_column: bool,
+    ) -> pd.DataFrame:
+        """Issue ONE Athena query for ``symbols`` and return the raw DataFrame.
+
+        Coerces numeric columns + ``quote_timestamp``. Does NOT do the
+        per-(strike, option_type, expiration) dedup — callers handle
+        that via :meth:`_snapshot_for_symbol` on a per-symbol slice.
+        """
+        if not symbols:
+            return pd.DataFrame()
+        y, m, d = self.as_of.split("-")  # type: ignore[union-attr]
+
         exp_clauses = [f"expiration >= DATE '{exp_floor}'"]
-        if expiration_lte:
-            exp_clauses.append(f"expiration <= DATE '{expiration_lte}'")
+        if exp_lte:
+            exp_clauses.append(f"expiration <= DATE '{exp_lte}'")
         exp_sql = " AND ".join(exp_clauses)
 
+        if len(symbols) == 1:
+            sym_sql = f"symbol = '{symbols[0]}'"
+        else:
+            sym_sql = "symbol IN (" + ", ".join(f"'{s}'" for s in symbols) + ")"
+
+        select_cols = (
+            "symbol, " if include_symbol_column else ""
+        ) + (
+            "strike, option_type, quote_timestamp, expiration, "
+            "bid_close, ask_close, close_px, "
+            "implied_volatility, delta, "
+            "open_interest, trade_volume"
+        )
+
         sql = f"""
-            SELECT strike, option_type, quote_timestamp, expiration,
-                   bid_close, ask_close, close_px,
-                   implied_volatility, delta,
-                   open_interest, trade_volume
+            SELECT {select_cols}
             FROM {self.table}
             WHERE year='{y}' AND month='{m}' AND day='{d}'
-              AND symbol='{upper}'
+              AND {sym_sql}
               AND {exp_sql}
         """
         df = self._execute(sql)
         if df.empty:
-            return []
+            return df
 
-        # Coerce numerics; quote_timestamp → datetime.
         for col in ("strike", "bid_close", "ask_close", "close_px",
                     "implied_volatility", "delta"):
             df[col] = pd.to_numeric(df[col], errors="coerce")
         for col in ("open_interest", "trade_volume"):
             df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0).astype("int64")
         df["quote_timestamp"] = pd.to_datetime(df["quote_timestamp"])
+        return df
 
-        # Per-(strike, option_type, expiration) keep the row whose hour is
-        # closest to (but not after) target_hour. Falls back to the latest
-        # available bar when target_hour is past the last bar of the day.
+    def _snapshot_for_symbol(
+        self, df: pd.DataFrame, underlying_upper: str,
+    ) -> List[OptionContract]:
+        """Apply the per-(strike, option_type, expiration) EOD dedup to one
+        symbol's rows and return the OptionContract list."""
+        if df.empty:
+            return []
+        df = df.copy()
         df["_hour"] = df["quote_timestamp"].dt.hour
         eligible = df[df["_hour"] <= self.target_hour]
         if eligible.empty:
@@ -190,12 +333,31 @@ class AthenaSignalDataProvider:
             .drop_duplicates(subset=["strike", "option_type", "expiration"], keep="first")
             .reset_index(drop=True)
         )
-
         return [
-            _row_to_contract(row, upper)
+            _row_to_contract(row, underlying_upper)
             for _, row in snapshot.iterrows()
-            if _row_to_contract(row, upper) is not None
+            if _row_to_contract(row, underlying_upper) is not None
         ]
+
+    @staticmethod
+    def _clean_symbols(symbols: Iterable[str]) -> List[str]:
+        """Validate + uppercase + de-duplicate the symbol list (preserves order)."""
+        seen: set[str] = set()
+        out: List[str] = []
+        for s in symbols:
+            if s is None:
+                continue
+            up = str(s).strip().upper()
+            if not up or up in seen:
+                continue
+            if not _SYMBOL_RE.match(up):
+                raise ValueError(
+                    f"Symbol {up!r} does not match expected pattern; refusing "
+                    "to interpolate into Athena SQL."
+                )
+            seen.add(up)
+            out.append(up)
+        return out
 
     def stock_trades(
         self,
