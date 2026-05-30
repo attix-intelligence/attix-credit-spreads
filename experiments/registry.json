@@ -821,6 +821,39 @@
       "strategy_type": "credit_spread",
       "created_at": "2026-05-26T19:58:25.529375+00:00",
       "updated_at": "2026-05-26T19:58:25.529389+00:00"
+    },
+    "EXP-V8A-IBKR": {
+      "id": "EXP-V8A-IBKR",
+      "name": "VRP Multi-Stream — IBKR Paper 3× Leverage",
+      "created_by": "carlos",
+      "created_date": "2026-05-31",
+      "status": "registered",
+      "ticker": "SPY",
+      "broker": "ibkr_paper",
+      "executor_account_id": "ibkr_tafintech-p11-paper",
+      "account_id": "DUO415613",
+      "live_since": null,
+      "paper_config": "configs/paper_expv8a_ibkr.yaml",
+      "backtest_config": null,
+      "description": "PARALLEL SIBLING of EXP-V8A. Identical VRP multi-stream signals (4 credit-spread streams: exp1220/qqq_cs/xlf_cs/xli_cs); different broker (IBKR paper via the standalone executor REST service); different sizing (3× max-loss/equity on $120K NAV → $360K aggregate max-loss target). This is the A/B leg of Carlos's 2026-05-30 leverage experiment: prove that leveraged IBKR can outperform unlevered Alpaca on identical signals. Expected outcomes Carlos accepted: monthly +5-7%, annual +130-160% CAGR, 1y max DD ~38%, blowup-prob (>30% loss in 12mo) ~15%.",
+      "notes": "Launches Mon 2026-06-01 09:30 ET in parallel with EXP-V8A. Uses ExecutorOrderSink (PR #85 — merged 2026-05-30). vol_target=0.42 (= EXP-V8A's 0.12 × 3.5) per linear-scaling math on observed 0.86× max-loss/equity at vol_target=0.12. Day-1 calibration: log plan.capital sum + aggregate max-loss each cycle, adjust vol_target if exposure ratio drifts >10% off 3.0×. DO NOT TOUCH EXP-V8A on Alpaca — parallel is the experiment.",
+      "config_path": "configs/paper_expv8a_ibkr.yaml",
+      "alpaca_account_id": null,
+      "env_file": ".env.expv8a_ibkr",
+      "db_path": "data/pilotai_expv8a_ibkr.db",
+      "strategy_type": "credit_spread",
+      "sink_type": "executor",
+      "vol_target": 0.42,
+      "leverage_target": 3.0,
+      "nav_baseline": 120000,
+      "created_at": "2026-05-31T00:00:00+00:00",
+      "updated_at": "2026-05-31T00:00:00+00:00",
+      "backtest_expectations": {
+        "monthly_return_pct": 6,
+        "avg_return": 145,
+        "max_dd": -38,
+        "blowup_prob_30pct_12mo": 0.15
+      }
     }
   }
 }
