@@ -1,0 +1,219 @@
+# ============================================================================
+# paper_expv8a_ibkr.yaml — EXP-V8A-IBKR (10th experiment, IBKR paper, 3× sizing)
+# ============================================================================
+# Strategy: VRP multi-stream credit spreads, IDENTICAL signals to EXP-V8A.
+# Difference: routed through ExecutorOrderSink to IBKR paper, at 3× sizing.
+#
+# Parallel mode locked: EXP-V8A continues on Alpaca at 1× unchanged.
+# This config is independent — different DB, different env file, different
+# experiment_id. Both workers run side-by-side as a clean A/B.
+#
+# Usage:
+#   python main.py scheduler --config configs/paper_expv8a_ibkr.yaml \
+#                            --env-file .env.expv8a_ibkr
+#
+# Required env vars (in .env.expv8a_ibkr):
+#   SINK_TYPE              — must be 'executor'
+#   EXECUTOR_BASE_URL      — Railway-deployed executor URL
+#   EXECUTOR_API_KEY       — auth for ExecutorOrderSink
+#   EXECUTOR_ACCOUNT_ID    — ibkr_tafintech-p11-paper
+#   EXECUTOR_ACCOUNT_TYPE  — paper
+#   POLYGON_OPTIONS_API_KEY — same as Alpaca worker; signal-side IV chains
+#   TELEGRAM_BOT_TOKEN     — (optional) Telegram alerts (distinct chat from V8A)
+#   TELEGRAM_CHAT_ID       — (optional)
+# ============================================================================
+
+paper_mode: true                          # SAFETY flag — executor is paper-broker only
+db_path: "data/pilotai_expv8a_ibkr.db"    # ISOLATED — must not collide with EXP-V8A
+experiment_id: "EXP-V8A-IBKR"             # Distinct from EXP-V8A — required for dashboard split
+created_by: "carlos"
+
+tickers:
+  - SPY
+
+# ============================================================================
+# Credit Spread Strategy (matches EXP-V8A — signal-deterministic A/B)
+# ============================================================================
+strategy:
+  min_dte: 15
+  max_dte: 25
+  target_dte: 15
+  manage_dte: 0
+
+  direction: both
+  otm_pct: 0.02
+  use_delta_selection: false
+  target_delta: 0.12
+  min_delta: 0.08
+  max_delta: 0.18
+
+  spread_width: 5                          # UNCHANGED — VRP default $5 width
+  spread_width_high_iv: 5
+  spread_width_low_iv: 5
+
+  min_iv_rank: 0
+  min_iv_percentile: 0
+
+  iron_condor:
+    enabled: true
+    rsi_min: 35
+    rsi_max: 60
+    min_iv_rank: 45.0
+    target_dte: 30
+    min_dte: 20
+    otm_pct_put: 0.04
+    otm_pct_call: 0.03
+    spread_width: 5
+    min_combined_credit_pct: 0.25
+    profit_target_pct: 0.30
+    stop_loss_multiplier: 2.5
+    max_risk_pct: 3.5
+
+  technical:
+    use_trend_filter: true
+    use_rsi_filter: false
+    use_support_resistance: false
+    fast_ma: 50
+    slow_ma: 80
+    rsi_period: 14
+    rsi_oversold: 30
+    rsi_overbought: 70
+
+  regime_mode: combo
+  regime_config:
+    signals:
+      - price_vs_ma200
+      - rsi_momentum
+      - vix_structure
+    ma_slow_period: 80
+    ma200_neutral_band_pct: 0.5
+
+# ============================================================================
+# Risk Management — INFORMATIONAL for VRP (engine sizes from vol_target only)
+# ============================================================================
+risk:
+  # IBKR paper real-liquidation NAV after AMD appreciation.
+  # The executor's get_balance() reports $1.04M BOOK equity (includes legacy
+  # AAPL/NVDA/MSFT/AMD stock); real liquidation value ~$120K. The runner reads
+  # account_equity from the executor live each cycle — this field is the
+  # documentation baseline, not the live value.
+  account_size: 120000
+
+  # SAME safety flag as EXP-V8A — PR #84 disabled auto-close-orphan-longs
+  # because the champion PositionMonitor mis-detects VRP legs as orphans
+  # without PR-H. Both V8A configs need this until PR-H ships.
+  auto_close_orphan_longs: false
+
+  # Informational caps — VRP sizing flows from vol_target only.
+  # These are documentation of intent + guardrails for any future enforcement.
+  max_risk_per_trade: 75                  # % — informational; VRP doesn't enforce
+  sizing_mode: flat
+  compound: false
+
+  min_contracts: 1
+  max_contracts: 300                      # ceiling per spread placement (50% headroom over expected ~200/stream)
+  max_positions: 20                       # 4 streams × ~5 concurrent expirations
+  max_positions_per_ticker: 5
+
+  scan_days: [0, 1, 2, 3, 4]
+
+  profit_target: 55
+  stop_loss_multiplier: 1.25
+  stop_loss_pct_of_width: 90
+
+  momentum_filter_pct: 2.0
+
+  portfolio_risk:
+    max_portfolio_risk_pct: 300           # bumped from 90 — 3× target
+    max_single_ticker_pct: 100            # bumped from 40 — single underlying can be ≤100% of NAV at 3× leverage
+    max_same_expiration: 8                # bumped from 4 — more concurrent positions at higher size
+
+  drawdown_cb_pct: 50                     # bumped from 40 — expected 1y DD at 3× is ~38%; CB at 50% gives buffer
+  cooldown_bars: 3
+
+  enable_rolling: false
+  max_rolls_per_position: 0
+
+# ============================================================================
+# Alpaca Provider — NOT USED but required for legacy code paths
+# ============================================================================
+# The runner reads alpaca_provider when SINK_TYPE=alpaca. With SINK_TYPE=executor
+# the runner never calls submit_credit_spread on it. We still wire the keys
+# here so any incidental balance/account reads degrade gracefully.
+alpaca:
+  enabled: false                          # DISABLED — IBKR via executor instead
+  paper: true
+  base_url: "https://paper-api.alpaca.markets"
+  api_key: "${ALPACA_API_KEY:-unused}"
+  api_secret: "${ALPACA_API_SECRET:-unused}"
+
+# ============================================================================
+# Alerts — distinct experiment_id keeps Telegram threads separate from EXP-V8A
+# ============================================================================
+alerts:
+  output_json: true
+  output_text: true
+  output_csv: true
+  json_file: "alerts_expv8a_ibkr.json"
+  text_file: "alerts_expv8a_ibkr.txt"
+  csv_file: "alerts_expv8a_ibkr.csv"
+
+  telegram:
+    enabled: true
+    bot_token: "${TELEGRAM_BOT_TOKEN}"
+    chat_id: "${TELEGRAM_CHAT_ID}"
+
+# ============================================================================
+# Logging
+# ============================================================================
+logging:
+  level: "INFO"
+  file: "logs/paper_expv8a_ibkr.log"
+  console: true
+
+# ============================================================================
+# Data
+# ============================================================================
+data:
+  provider: polygon
+  cache_dir: "data/options_cache"
+  polygon:
+    api_key: "${POLYGON_API_KEY}"
+
+# ============================================================================
+# Backtester Reference (for comparison only — does not run live)
+# ============================================================================
+backtest:
+  starting_capital: 120000
+  commission_per_contract: 0.65
+  slippage: 0.05
+  exit_slippage: 0.10
+  score_threshold: 25
+  generate_reports: false                 # NEW EXP — backtest TBD
+  report_dir: "output/backtest_reports"
+
+# ============================================================================
+# VRP multi-stream engine — 3× max-loss/equity target on $120K NAV
+# ============================================================================
+# Sizing math (full derivation in ~/.openclaw/media/v8a_ibkr_launch_plan.html §1):
+#   - Current EXP-V8A on Alpaca: vol_target=0.12 → 0.86× max-loss/equity (live observed)
+#   - Linear scaling: vol_target_new = 0.12 × (3.0 / 0.86) = 0.419
+#   - Round to 0.42 → expected aggregate max-loss ≈ 3× NAV ≈ $360K
+#   - IBKR PM margin requirement on $360K defined-risk ≈ $50-70K (~50% of NAV, inside the 0.85 guardrail)
+#
+# Expected outcomes at vol_target=0.42 (Carlos accepted these):
+#   - Monthly return: +5-7%
+#   - Annual CAGR: +130-160%
+#   - Expected 1y max DD: ~38%
+#   - Blowup prob (>30% loss in 12mo): ~15%
+#
+# Calibration playbook (day 1):
+#   - Log plan.capital sum + aggregate max-loss every cycle
+#   - If exposure ratio < 2.7× or > 3.3× of NAV after 5 cycles, adjust vol_target by ratio
+#   - If realized portfolio vol diverges from 0.42 by >25%, tune LW shrinkage in vrp_risk_parity
+vrp_engine:
+  enabled: true
+  dry_run: true                           # FIRST CYCLE PLAN-ONLY — flip to false at Mon 09:25 ET
+  sink_type: executor                     # routes intents to ExecutorOrderSink (IBKR paper)
+  vol_target: 0.42                        # 3.5× the Alpaca 0.12 — see math above
+  dte_range: [25, 50]

@@ -30,19 +30,31 @@ python3 scripts/portfolio_status.py --summary
 
 ---
 
-## Account Registry (current as of 2026-03-13)
+## Account Registry (current as of 2026-05-31)
 
-| Experiment | Status | Alpaca Account | .env File | Config | DB |
+| Experiment | Status | Broker Account | .env File | Config | DB |
 |---|---|---|---|---|---|
-| **exp400** | **ACTIVE** (tmux:exp400) | PA3D6UPXF5F2 | `.env.champion` | `paper_champion.yaml` | `attix_champion.db` |
-| **exp401** | **ACTIVE** (tmux:exp401) | PA3Y2XDYB9I3 | `.env.exp401` | `paper_exp401.yaml` | `pilotai_exp401.db` |
-| exp036 | stopped | PA3D6UPXF5F2 | `.env.exp036` | `paper_exp036.yaml` | `pilotai_exp036.db` |
-| exp059 | stopped | PA3LP867WNGU | `.env.exp059` | `exp_059_friday_ic_risk10.json` | `pilotai_exp059.db` |
-| exp154 | stopped | PA3UNOV58WGK | `.env.exp154` | `exp_154_risk5_icr12_sl35.json` | `pilotai_exp154.db` |
-| exp305 | stopped | PA3W9FZKK6XD | `.env.exp305` | `paper_exp305.yaml` | `pilotai_exp305.db` |
+| **exp400** | **ACTIVE** (tmux:exp400) | Alpaca PA3D6UPXF5F2 | `.env.champion` | `paper_champion.yaml` | `attix_champion.db` |
+| **exp401** | **ACTIVE** (tmux:exp401) | Alpaca PA3Y2XDYB9I3 | `.env.exp401` | `paper_exp401.yaml` | `pilotai_exp401.db` |
+| **EXP-V8A** | **ACTIVE** (Railway) | Alpaca PA3694QR73C1 | `.env.expv8a` | `paper_expv8a.yaml` | `pilotai_expv8a.db` |
+| **EXP-V8A-IBKR** | **registered** (launches Mon 2026-06-01) | IBKR paper PA-DUO415613 (`ibkr_tafintech-p11-paper`) via executor | `.env.expv8a_ibkr` | `paper_expv8a_ibkr.yaml` | `pilotai_expv8a_ibkr.db` |
+| exp036 | stopped | Alpaca PA3D6UPXF5F2 | `.env.exp036` | `paper_exp036.yaml` | `pilotai_exp036.db` |
+| exp059 | stopped | Alpaca PA3LP867WNGU | `.env.exp059` | `exp_059_friday_ic_risk10.json` | `pilotai_exp059.db` |
+| exp154 | stopped | Alpaca PA3UNOV58WGK | `.env.exp154` | `exp_154_risk5_icr12_sl35.json` | `pilotai_exp154.db` |
+| exp305 | stopped | Alpaca PA3W9FZKK6XD | `.env.exp305` | `paper_exp305.yaml` | `pilotai_exp305.db` |
 
-> Note: exp036 and exp400 share account PA3D6UPXF5F2. exp036 was the predecessor;
+> Note: exp036 and exp400 share Alpaca account PA3D6UPXF5F2. exp036 was the predecessor;
 > exp400 (champion) is the active experiment on that account.
+
+### EXP-V8A-IBKR specifics (10th experiment — NEW 2026-05-31)
+- **Broker:** IBKR paper, gateway account `tafintech-p11-paper` (IBKR account number `DUO415613`)
+- **Sink:** `ExecutorOrderSink` (`compass/live/executor_order_sink.py` — shipped in PR #85, merged main 2026-05-30)
+- **Executor `account_id` parameter:** `ibkr_tafintech-p11-paper`
+- **Sizing target:** 3× max-loss/equity on ~$120K NAV → ~$360K aggregate max-loss
+- **VRP knob:** `vol_target: 0.42` (vs EXP-V8A's 0.12 — linear scaling on observed 0.86× max-loss/equity at 0.12)
+- **Sibling experiment:** identical VRP signals as EXP-V8A; routed to a different broker at 3× sizing. Parallel mode locked — do NOT modify EXP-V8A.
+- **Carlos accepted-risk profile:** monthly +5-7%, annual +130-160% CAGR, 1y max DD ~38%, blowup prob (>30% loss in 12mo) ~15%
+- **Launch plan:** `~/.openclaw/media/v8a_ibkr_launch_plan.html`
 
 ---
 
