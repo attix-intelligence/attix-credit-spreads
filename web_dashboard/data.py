@@ -534,6 +534,40 @@ def query_all_live(report_date: Optional[str] = None) -> List[dict]:
         live_discovered, live_injected, live_skipped,
     )
 
+    # --- Live executor data (IBKR via attix-intelligence/executor) ----------
+    # Same priority slot as live Alpaca: overrides the pushed alpaca block when
+    # available. ``EXECUTOR_API_KEY_EXP*`` triples (api_key + base_url +
+    # account_id) drive which experiments are fetched; the response is
+    # re-shaped to match the Alpaca dict the renderer expects so html.py
+    # branches on neither broker nor schema.
+    exec_discovered = 0
+    exec_injected = 0
+    try:
+        from . import executor_live
+        exec_discovered = len(executor_live.discover_experiment_keys())
+        if exec_discovered:
+            exec_live = executor_live.get_all_live_executor()
+            for r in results:
+                norm_id = r["id"].upper().replace("-", "") if r.get("id") else ""
+                exec_data = exec_live.get(norm_id)
+                if exec_data and not exec_data.get("error"):
+                    existing_history = r.get("alpaca_equity_history") or []
+                    r["alpaca"] = exec_data
+                    r["alpaca_equity_history"] = existing_history
+                    r["open_count"] = len(exec_data.get("positions") or [])
+                    exec_injected += 1
+                    r["data_source"] = "live"
+    except Exception as exc:
+        logger.warning(
+            "[data] Live executor fetch failed, falling back: %s", exc,
+        )
+    if exec_discovered:
+        logger.info(
+            "[data] live executor: discovered=%d injected=%d skipped=%d",
+            exec_discovered, exec_injected,
+            max(exec_discovered - exec_injected, 0),
+        )
+
     # --- Worker-pushed portfolio fallback ------------------------------------
     # For experiments where live Alpaca keys aren't available in the dashboard
     # process, fall back to the portfolio JSON pushed by the worker after each scan.
