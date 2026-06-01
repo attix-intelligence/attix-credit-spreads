@@ -213,7 +213,7 @@ backtest:
 #   - If realized portfolio vol diverges from 0.42 by >25%, tune LW shrinkage in vrp_risk_parity
 vrp_engine:
   enabled: true
-  dry_run: true                           # TEMPORARILY HALTED 2026-06-01 — re-enable after credit-check + cooldown + delta-picker + persistence + PR-H land
+  dry_run: false                          # RE-ARMED 2026-06-01 23:19 UTC — all 5 structural fixes landed (PRs #95/#96/#97/#98/#99)
   sink_type: executor                     # routes intents to ExecutorOrderSink (IBKR paper)
   vol_target: 0.42                        # 3.5× the Alpaca 0.12 — see math above
   dte_range: [25, 50]
