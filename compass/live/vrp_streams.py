@@ -58,6 +58,25 @@ def _mid(row: pd.Series) -> Optional[float]:
     return None
 
 
+def _worst_case_credit(short_row: pd.Series, long_row: pd.Series) -> Optional[float]:
+    """Worst-case credit on a bull-put credit spread = short_bid − long_ask.
+
+    Selling the short leg at its bid + buying the long leg at its ask is the
+    most adverse fill consistent with both quotes. If this number is positive
+    the spread is guaranteed to fill as a credit (no debit-spread surprise
+    even when the chain mids are stale or the book moves between snapshot and
+    fill). Returns None if either bid/ask is missing — caller falls back to
+    the mid-based check.
+    """
+    sb, la = short_row.get("bid"), long_row.get("ask")
+    if sb is None or la is None or pd.isna(sb) or pd.isna(la):
+        return None
+    sb_f, la_f = float(sb), float(la)
+    if sb_f <= 0 or la_f <= 0:
+        return None
+    return sb_f - la_f
+
+
 def _is_put(value: object) -> bool:
     s = str(value).strip().lower()
     return s in ("put", "p")
@@ -224,8 +243,31 @@ class CreditSpreadStream:
             if long_mid is None:
                 continue
             credit = short_mid - long_mid
-            if credit > self.min_credit:
-                return short_row, long_row, round(credit, 4)
+            if credit <= self.min_credit:
+                continue
+            # Safety net (post-XLI 165/160P debit-spread bug, 2026-06-01): the
+            # mid-credit can be positive at snapshot time while the actual
+            # fill comes back as a NET DEBIT when (a) mids are stale, (b) the
+            # book moves between order send and fill, or (c) the chain has
+            # steep put skew where the deeper-OTM long leg is structurally
+            # richer than the closer short leg. Selling the short at its bid
+            # and buying the long at its ask is the most adverse fill the
+            # current quotes allow; if that worst case is also above
+            # ``min_credit`` the spread is guaranteed to fill as a positive
+            # credit. When bid/ask is missing we degrade silently to the
+            # mid check above so the engine still functions.
+            wc = _worst_case_credit(short_row, long_row)
+            if wc is not None and wc <= self.min_credit:
+                logger.info(
+                    "[%s] skip: worst-case credit %.4f ≤ min_credit %.4f "
+                    "(short %s bid=%.2f, long %s ask=%.2f, mid-credit was %.4f)",
+                    self.stream_id, wc, self.min_credit,
+                    short_row.get("strike"), float(short_row.get("bid") or 0),
+                    long_row.get("strike"), float(long_row.get("ask") or 0),
+                    credit,
+                )
+                continue
+            return short_row, long_row, round(credit, 4)
         return None
 
 
