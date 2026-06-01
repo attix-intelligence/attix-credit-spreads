@@ -213,7 +213,7 @@ backtest:
 #   - If realized portfolio vol diverges from 0.42 by >25%, tune LW shrinkage in vrp_risk_parity
 vrp_engine:
   enabled: true
-  dry_run: true                           # FIRST CYCLE PLAN-ONLY — flip to false at Mon 09:25 ET
+  dry_run: false                          # flipped LIVE 2026-06-01 — sibling of the EXP-V8A LIVE flip
   sink_type: executor                     # routes intents to ExecutorOrderSink (IBKR paper)
   vol_target: 0.42                        # 3.5× the Alpaca 0.12 — see math above
   dte_range: [25, 50]
