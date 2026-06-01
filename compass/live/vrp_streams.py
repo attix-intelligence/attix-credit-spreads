@@ -5,10 +5,14 @@ that turns a live :class:`~compass.live.vrp_data.VRPSnapshot` + a capital budget
 (from cc3's allocator) into zero or more :class:`OrderIntent` objects.
 
 PR-B fully implements the four **credit-spread** streams (the build-plan PR-B
-scope: ``exp1220``→SPY, ``xlf_cs``→XLF, ``xli_cs``→XLI, ``qqq_cs``→QQQ), reusing
-the EXP-1220/EXP-2240 entry parameters (≈5%-OTM short put, $5-wide, 28–30 DTE,
-VIX<40 gate) that produced the backtest streams. Exits (PT/SL/roll) are NOT here
-— they belong to the multi-symbol PositionMonitor (build-plan PR-H).
+scope: ``exp1220``→SPY, ``xlf_cs``→XLF, ``xli_cs``→XLI, ``qqq_cs``→QQQ).
+Strike selection is **delta-targeted** (short ≈ |Δ| 0.20 within [0.15, 0.25],
+long = short − width; see :class:`CreditSpreadStream`), ported from the exp2160
+backtest twin's delta-targeted picker. Replaces the prior spot-anchored
+``otm_pct`` picker, which was delta-blind and produced a debit spread on
+XLI 2026-05-29 under a skew regime. Width, DTE, and VIX<40 gate are unchanged.
+Exits (PT/SL/roll) are NOT here — they belong to the multi-symbol
+PositionMonitor (build-plan PR-H).
 
 The other four streams are registered with honest, non-trading status:
   * ``v5_hedge`` / ``cross_vol`` → **DEFERRED** (signal port is build-plan PR-D).
@@ -113,9 +117,19 @@ def _select_expiration(puts: pd.DataFrame, as_of: datetime, target_dte: int) -> 
 class CreditSpreadStream:
     """Bull-put credit-spread entry generator for a single underlying.
 
-    Parameters mirror the EXP-1220/EXP-2240 streams that produced the backtest
-    cube: short put ≈ ``otm_pct`` of spot, ``width``-wide, nearest ``target_dte``,
-    require ``min_credit``, block new entries when VIX > ``vix_max_entry``.
+    Strike selection is **delta-targeted** (ported from the exp2160 backtest
+    twin): short = put whose ``|Δ|`` is closest to ``target_short_delta`` and
+    lies in ``[delta_min, delta_max]``; long = nearest strike to ``short_K −
+    width`` (preserves the configured spread width). Each candidate short is
+    accepted only if the resulting **net credit at mid is positive and ≥
+    ``min_credit``** — this is the guard against the XLI 2026-05-29 skew regime
+    that produced a debit spread under the old spot-anchored picker (deeper-OTM
+    long had a higher mid than the closer short).
+
+    Falls back to **no entry** (returns ``None`` → ``no_entry`` for the caller)
+    when no in-window short exists, when the chain lacks ``delta`` Greeks, or
+    when every candidate fails the credit check. Skipping the cycle is
+    intentional and safer than picking a delta-blind spread.
 
     Sizing comes from the allocator's per-stream ``capital`` (dollars): contracts
     = floor(capital / max_loss_per_spread). The VIX *ladder* already scaled that
@@ -127,7 +141,9 @@ class CreditSpreadStream:
         self,
         spec: StreamSpec,
         *,
-        otm_pct: float = 0.95,
+        target_short_delta: float = 0.20,
+        delta_min: float = 0.15,
+        delta_max: float = 0.25,
         width: float = 5.0,
         target_dte: int = 30,
         min_credit: float = 0.05,
@@ -136,9 +152,16 @@ class CreditSpreadStream:
     ) -> None:
         if spec.status is not StreamStatus.TRADEABLE:
             raise ValueError(f"CreditSpreadStream requires TRADEABLE spec, got {spec.status} for {spec.stream_id}")
+        if not (0.0 < delta_min <= target_short_delta <= delta_max < 1.0):
+            raise ValueError(
+                f"delta window invalid: need 0 < delta_min ({delta_min}) ≤ "
+                f"target_short_delta ({target_short_delta}) ≤ delta_max ({delta_max}) < 1"
+            )
         self.spec = spec
         self.symbol = spec.symbols[0]
-        self.otm_pct = otm_pct
+        self.target_short_delta = float(target_short_delta)
+        self.delta_min = float(delta_min)
+        self.delta_max = float(delta_max)
         self.width = width
         self.target_dte = target_dte
         self.min_credit = min_credit
@@ -216,21 +239,47 @@ class CreditSpreadStream:
         return StreamResult(sid, intents=[intent], status="entered", reason=intent.rationale)
 
     def _select_spread(self, puts: pd.DataFrame, spot: float):
-        """Pick (short_row, long_row, credit) or None.
+        """Pick (short_row, long_row, credit) by delta-targeted selection.
 
-        Short = put nearest ``spot * otm_pct``; long = nearest put ``width`` below
-        the short (within ``strike_tol``). Require a positive ``min_credit``.
+        - **Short:** put with ``|Δ|`` closest to ``target_short_delta``, restricted
+          to ``|Δ| ∈ [delta_min, delta_max]``.
+        - **Long:** nearest put strike to ``short_K − width`` (within
+          ``strike_tol``) — preserves the configured spread width.
+        - **Credit verification:** ``net_credit = short_mid − long_mid`` must be
+          ``≥ min_credit`` and positive. If the chosen short's "long below by
+          width" fails the credit check (the K-bleeder skew case from XLI
+          2026-05-29 — deeper-OTM 160P higher mid than closer 165P), we try the
+          next best short by delta-gap; if none qualify we return ``None`` and
+          the stream sits out this cycle.
+
+        ``None`` is also returned when the chain has no ``delta`` column (we
+        refuse to fall back to a delta-blind picker — that is the very bug being
+        fixed), no row has a finite delta in window, or no usable mid is found.
         """
-        target_short = spot * self.otm_pct
-        puts = puts.dropna(subset=["strike"]).copy()
+        # The chain MUST carry deltas — refuse to pick blind. (cc2's vrp_data
+        # populates "delta" from Polygon greeks; see strategy/polygon_provider.py.)
+        if "delta" not in puts.columns:
+            return None
+
+        puts = puts.dropna(subset=["strike", "delta"]).copy()
         if puts.empty:
             return None
-        puts["_short_gap"] = (puts["strike"] - target_short).abs()
-        for _, short_row in puts.sort_values("_short_gap").head(8).iterrows():
+        puts["_abs_delta"] = puts["delta"].abs()
+        in_window = puts[
+            (puts["_abs_delta"] >= self.delta_min)
+            & (puts["_abs_delta"] <= self.delta_max)
+        ].copy()
+        if in_window.empty:
+            return None
+        in_window["_delta_gap"] = (in_window["_abs_delta"] - self.target_short_delta).abs()
+
+        for _, short_row in in_window.sort_values("_delta_gap").head(8).iterrows():
             short_k = float(short_row["strike"])
             short_mid = _mid(short_row)
-            if short_mid is None:
+            if short_mid is None or short_mid <= 0:
                 continue
+
+            # Long = nearest strike below short by `width` (preserve width).
             target_long = short_k - self.width
             below = puts[puts["strike"] < short_k].copy()
             if below.empty:
@@ -240,22 +289,21 @@ class CreditSpreadStream:
             if abs(float(long_row["strike"]) - target_long) > self.strike_tol:
                 continue
             long_mid = _mid(long_row)
-            if long_mid is None:
+            if long_mid is None or long_mid <= 0:
                 continue
+
+            # Two-tier K-bleeder credit guard:
+            #   (1) mid-credit  — guards against the skew regime where the
+            #       deeper-OTM long leg has a higher mid than the closer short,
+            #       i.e. a real debit at snapshot mid (the XLI 2026-05-29 bug
+            #       that motivated the delta picker port).
+            #   (2) worst-case credit (PR #95) — short_bid − long_ask, the most
+            #       adverse fill consistent with both quotes; guards against
+            #       stale mids and book moves between snapshot and fill. When
+            #       bid/ask is missing we degrade silently to the mid check.
             credit = short_mid - long_mid
             if credit <= self.min_credit:
                 continue
-            # Safety net (post-XLI 165/160P debit-spread bug, 2026-06-01): the
-            # mid-credit can be positive at snapshot time while the actual
-            # fill comes back as a NET DEBIT when (a) mids are stale, (b) the
-            # book moves between order send and fill, or (c) the chain has
-            # steep put skew where the deeper-OTM long leg is structurally
-            # richer than the closer short leg. Selling the short at its bid
-            # and buying the long at its ask is the most adverse fill the
-            # current quotes allow; if that worst case is also above
-            # ``min_credit`` the spread is guaranteed to fill as a positive
-            # credit. When bid/ask is missing we degrade silently to the
-            # mid check above so the engine still functions.
             wc = _worst_case_credit(short_row, long_row)
             if wc is not None and wc <= self.min_credit:
                 logger.info(

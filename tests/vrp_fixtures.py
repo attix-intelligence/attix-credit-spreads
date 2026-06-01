@@ -20,14 +20,30 @@ def make_put_chain(symbol: str, spot: float, as_of: datetime, dte: int = 30) -> 
     Put mids increase linearly with strike (≈ +0.30 per $1), so a $5-wide bull put
     yields ~$1.50 credit, max_loss ~$3.50 → $350 per-spread risk. Strikes span
     0.88×–1.02× spot in $1 steps. A few calls are included to test put-filtering.
+
+    Per-strike delta (added for the delta-targeted picker): a simple monotonic
+    linear proxy ``|Δ_put| ≈ clamp(0.50 + 5·(K-S)/S, 0.01, 0.99)`` — at K=S the
+    put has |Δ|=0.50; at K=0.94·S, |Δ|=0.20 (the picker's target). Signed delta
+    is negative for puts (Polygon convention; see strategy/polygon_provider.py).
     """
     exp = (as_of + timedelta(days=dte)).date()
     exp_ts = pd.Timestamp(exp)
     exp_tag = exp.strftime("%y%m%d")
-    low = int(round(spot * 0.88))
-    high = int(round(spot * 1.02))
+    # Strike grid widened (0.80×–1.02×) and densified for low-priced ETFs
+    # (real XLF/etc. list $0.50 strikes) so a width-5 spread with a |Δ|≈0.20
+    # short always has the matching $K-5 long inside the chain.
+    low = round(spot * 0.80, 1)
+    high = round(spot * 1.02, 1)
+    step = 0.5 if spot < 60.0 else 1.0
+    strikes: List[float] = []
+    k_iter = low
+    while k_iter <= high + 1e-9:
+        strikes.append(round(k_iter, 2))
+        k_iter += step
     rows: List[dict] = []
-    for k in range(low, high + 1):
+    for k in strikes:
+        abs_delta = max(0.01, min(0.99, 0.50 + 5.0 * (k - spot) / spot))
+        put_delta = -abs_delta
         put_mid = round(max(0.05, 0.30 * (k - low) + 0.20), 2)
         rows.append({
             "contract_symbol": f"{symbol}{exp_tag}P{int(k * 1000):08d}",
@@ -39,8 +55,8 @@ def make_put_chain(symbol: str, spot: float, as_of: datetime, dte: int = 30) -> 
             "volume": 100,
             "open_interest": 500,
             "iv": 0.20,
-            "delta": -0.30,
-            "raw_delta": -0.30,
+            "delta": round(put_delta, 4),
+            "raw_delta": round(put_delta, 4),
             "gamma": 0.01,
             "theta": -0.05,
             "vega": 0.10,
@@ -49,6 +65,8 @@ def make_put_chain(symbol: str, spot: float, as_of: datetime, dte: int = 30) -> 
             "itm": k > spot,
         })
         call_mid = round(max(0.05, 0.30 * (high - k) + 0.20), 2)
+        # Calls share the put's |Δ| magnitude by put-call parity (Δ_call ≈ 1 + Δ_put).
+        call_delta = 1.0 - abs_delta
         rows.append({
             "contract_symbol": f"{symbol}{exp_tag}C{int(k * 1000):08d}",
             "strike": float(k),
@@ -59,8 +77,8 @@ def make_put_chain(symbol: str, spot: float, as_of: datetime, dte: int = 30) -> 
             "volume": 100,
             "open_interest": 500,
             "iv": 0.20,
-            "delta": 0.30,
-            "raw_delta": 0.30,
+            "delta": round(call_delta, 4),
+            "raw_delta": round(call_delta, 4),
             "gamma": 0.01,
             "theta": -0.05,
             "vega": 0.10,
