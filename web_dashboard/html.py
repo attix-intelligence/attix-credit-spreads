@@ -496,15 +496,16 @@ def _pct_return(equity):
 
 # Leverage multiplier per experiment (keyed by experiment ID).
 _LEVERAGE_MAP: dict[str, str] = {
-    "EXP-V8A":   "3.9×",
-    "EXP-3311":  "3.95×",
-    "EXP-800":   "2.0×",
-    "EXP-400":   "2.0×",
-    "EXP-401":   "2.0×",
-    "EXP-3303b": "1.8×",
-    "EXP-1220":  "1.1×",
-    "EXP-503":   "1.0×",
-    "EXP-3309":  "1.0×",
+    "EXP-V8A":      "3.9×",
+    "EXP-V8A-IBKR": "3.0×",   # IBKR-paper sibling of EXP-V8A; target 3× max-loss/equity (vol_target 0.42)
+    "EXP-3311":     "3.95×",
+    "EXP-800":      "2.0×",
+    "EXP-400":      "2.0×",
+    "EXP-401":      "2.0×",
+    "EXP-3303b":    "1.8×",
+    "EXP-1220":     "1.1×",
+    "EXP-503":      "1.0×",
+    "EXP-3309":     "1.0×",
 }
 
 # ---------------------------------------------------------------------------
