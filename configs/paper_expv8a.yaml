@@ -275,3 +275,24 @@ vrp_risk:
   # on at typical credit-spread max-loss while staying inside the LW vol target.
   max_aggregate_max_loss_pct: 0.30
 
+# ============================================================================
+# VRP Position Monitor (PR-H) — VRP-aware exits (PT / SL / DTE roll / VIX crisis)
+# ============================================================================
+# The legacy champion PositionMonitor was disabled for V8A in PR #84 because it
+# misread VRP legs as orphan longs (risk.auto_close_orphan_longs: false above).
+# PR-H replaces it with a VRP-only monitor that knows it's looking at credit
+# spreads it placed, evaluates four triggers per ~5-min scan tick, and dispatches
+# closes through the same sink that opened the spread (Alpaca here).
+#
+# Ships disabled. Flip on AFTER cc1's NOW block lands (XLI close + credit check)
+# and an initial cycle confirms the registry tracks newly-opened spreads
+# correctly. Track-opens is independently toggleable for an observation-only
+# dry-run (registry fills, no closes dispatched).
+vrp_position_monitor:
+  enabled: false          # PR-H ships disabled — operator flip is the cutover
+  track_opens: false      # set true to start filling registry without closing
+  profit_target_pct: 0.50 # close when cost-to-close ≤ 50% of credit captured
+  stop_loss_mult: 2.0     # close when loss ≥ 2× credit (cost-to-close ≥ 3× credit)
+  roll_dte: 7             # close at/under 7 DTE; next runner tick reopens at ~30 DTE
+  crisis_vix: 45.0        # close ALL open VRP spreads when VIX strictly > this
+

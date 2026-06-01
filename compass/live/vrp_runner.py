@@ -310,11 +310,28 @@ def run_vrp_cycle(system, *, strategy=None, state_store: Optional[StreamStateSto
     if dry_run or not plan.intents:
         # Dry-run path leaves plan.intents in place for telemetry; nothing placed.
         pass
-    elif sink_type == "executor":
-        results = _submit_through_sink(plan.intents, live_sink, store)
     else:
-        from compass.live.vrp_sinks import AlpacaOrderSink
-        results = _submit_through_sink(plan.intents, AlpacaOrderSink(provider), store)
+        # PR-H seam: when the VRP-aware PositionMonitor is enabled (or
+        # ``vrp_monitor.track_opens`` is explicitly set), wrap the live sink
+        # with TrackingOrderSink so each successful submit also writes to the
+        # per-experiment VRPPositionRegistry the monitor reads to evaluate
+        # PT/SL/DTE-roll exits.
+        from compass.live.vrp_position_monitor import vrp_monitor_track_opens
+
+        if sink_type == "executor":
+            sink_to_use = live_sink
+        else:
+            from compass.live.vrp_sinks import AlpacaOrderSink
+            sink_to_use = AlpacaOrderSink(provider)
+
+        if vrp_monitor_track_opens(system.config):
+            from compass.live.vrp_position_monitor import (
+                TrackingOrderSink, VRPPositionRegistry,
+            )
+            registry = VRPPositionRegistry.default_for(system.config)
+            sink_to_use = TrackingOrderSink(sink_to_use, registry)
+
+        results = _submit_through_sink(plan.intents, sink_to_use, store)
 
     # Per-stream visibility, incl. the deferred futures sleeves.
     for sid, status in plan.stream_status.items():

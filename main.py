@@ -1219,6 +1219,16 @@ Examples:
                     if (system.config.get("vrp_engine") or {}).get("enabled", False):
                         from compass.live.vrp_runner import run_vrp_cycle
                         run_vrp_cycle(system)
+                        # PR-H: VRP-aware exit monitor (PT/SL/roll/crisis). Runs
+                        # AFTER the runner so freshly-opened spreads aren't
+                        # immediately re-evaluated. Guarded by
+                        # vrp_position_monitor.enabled — inert when absent.
+                        if (system.config.get("vrp_position_monitor") or {}).get("enabled", False):
+                            try:
+                                from compass.live.vrp_position_monitor import run_vrp_monitor_cycle
+                                run_vrp_monitor_cycle(system)
+                            except Exception:
+                                logger.exception("[vrp_pm] monitor cycle raised — continuing scan")
                     else:
                         system.scan_opportunities()
                     _write_heartbeat()

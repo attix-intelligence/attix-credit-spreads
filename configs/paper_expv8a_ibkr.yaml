@@ -245,3 +245,20 @@ vrp_risk:
   max_positions_per_ticker: 5
   max_same_expiration: 8
   max_aggregate_max_loss_pct: 0.30
+
+# ============================================================================
+# VRP Position Monitor (PR-H) — VRP-aware exits (PT / SL / DTE roll / VIX crisis)
+# ============================================================================
+# Same triggers as the Alpaca V8A sleeve (see configs/paper_expv8a.yaml). The
+# executor (IBKR) close-leg payload is NOT yet wired in this PR — the monitor
+# logs an actionable EXECUTOR-CLOSE-GAP error when an exit fires and leaves the
+# spread on the books for manual operator action. That gap blocks nothing today
+# because the IBKR sleeve is dry_run:true above; the close payload lands in the
+# follow-up that re-enables this sleeve (see vrp_engine.dry_run comment).
+vrp_position_monitor:
+  enabled: false          # PR-H ships disabled — operator flip is the cutover
+  track_opens: false      # set true to start filling registry without closing
+  profit_target_pct: 0.50 # close when cost-to-close ≤ 50% of credit captured
+  stop_loss_mult: 2.0     # close when loss ≥ 2× credit (cost-to-close ≥ 3× credit)
+  roll_dte: 7             # close at/under 7 DTE; next runner tick reopens at ~30 DTE
+  crisis_vix: 45.0        # close ALL open VRP spreads when VIX strictly > this
