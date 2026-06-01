@@ -740,6 +740,14 @@ def _render_exp_card(s: dict) -> str:
     positions = alp.get("positions") or []
     alp_error = alp.get("error")
 
+    # Broker-aware labelling. ``executor_live`` stamps ``broker="ibkr_executor"``
+    # on the account dict so the card can read "IBKR" instead of "Alpaca" for
+    # experiments that route through ``attix-intelligence/executor``. Default
+    # to Alpaca to keep the historical behaviour for every other experiment.
+    _broker_tag = (alp.get("broker") if isinstance(alp, dict) else None) or "alpaca"
+    _is_executor = _broker_tag == "ibkr_executor"
+    _broker_label = "IBKR" if _is_executor else "Alpaca"
+
     tc = _ticker_cls(s["ticker"])
 
     # Equity / return block
@@ -753,7 +761,10 @@ def _render_exp_card(s: dict) -> str:
     <div class="equity-return {ret_cls}">{ret_pct:+.1f}% since inception</div>
   </div>"""
     else:
-        equity_html = '<div class="equity-block" style="color:#94a3b8;font-size:12px;">No Alpaca data</div>'
+        equity_html = (
+            f'<div class="equity-block" style="color:#94a3b8;font-size:12px;">'
+            f'No {_broker_label} data</div>'
+        )
 
     # Realized P&L
     pnl_display = _fmt_pnl(s["total_pnl"]) if s["total_closed"] > 0 else "—"
@@ -788,7 +799,7 @@ def _render_exp_card(s: dict) -> str:
   </div>
 </div>"""
 
-    # Alpaca cash + positions
+    # Broker cash + positions
     if equity is not None and not alp_error:
         alpaca_detail = f"""
 <div class="alpaca-row">
@@ -797,7 +808,7 @@ def _render_exp_card(s: dict) -> str:
     <span class="alp-val neutral">{_fmt_money(cash) if cash is not None else '—'}</span>
   </div>
   <div class="alp-item">
-    <span class="alp-lbl">Alpaca Positions</span>
+    <span class="alp-lbl">{_broker_label} Positions</span>
     <span class="alp-val neutral">{len(positions)}</span>
   </div>
   <div class="alp-item">
@@ -826,9 +837,12 @@ def _render_exp_card(s: dict) -> str:
   <td style="text-align:right" class="{'up' if unreal >= 0 else 'down'}">{_fmt_pnl(unreal)} ({unreal_pct:+.1f}%)</td>
   <td style="text-align:right" class="pos-opened">{_html.escape(_fmt_opened_at(p.get('opened_at')))}</td>
 </tr>""")
+            # IBKR-routed experiments hold stock + option legs together; the
+            # "Option Legs" heading reads wrong when half the rows are equities.
+            _pos_heading = f"{_broker_label} Positions" if _is_executor else "Alpaca Option Legs"
             pos_section = f"""
 <div class="positions-section">
-  <div class="positions-title">Alpaca Option Legs ({len(positions)})</div>
+  <div class="positions-title">{_pos_heading} ({len(positions)})</div>
   <table class="pos-table">
     <thead><tr>
       <th>Symbol</th><th>Side</th><th>Qty</th>
@@ -846,20 +860,28 @@ def _render_exp_card(s: dict) -> str:
         # SECURITY AUDIT #11: log raw error server-side; show only a generic
         # message in the HTML so API error strings are never rendered to users.
         if alp_error:
-            logger.warning("[dashboard] Alpaca error for %s: %s", s.get("id"), alp_error)
-            err_msg = "Alpaca account unavailable"
+            logger.warning(
+                "[dashboard] %s error for %s: %s",
+                _broker_label, s.get("id"), alp_error,
+            )
+            err_msg = f"{_broker_label} account unavailable"
         else:
-            err_msg = "No Alpaca credentials configured"
+            err_msg = f"No {_broker_label} credentials configured"
         # Diagnostic hint (set by data.query_all_live): surface WHY the block is
         # empty without exposing it as visible text. The category rides along in a
         # data-* attribute, the hover title, and an HTML comment so an empty card
         # is diagnosable from page source / devtools in seconds — no log dig needed.
         diag = s.get("alpaca_diag") or ("exception" if alp_error else "no-data")
+        _env_var_family = (
+            "EXECUTOR_API_KEY_EXP* / EXECUTOR_BASE_URL_EXP* / EXECUTOR_ACCOUNT_ID_EXP*"
+            if _is_executor
+            else "ALPACA_API_KEY_EXP*"
+        )
         _DIAG_HINTS = {
-            "keys-missing": "no ALPACA_API_KEY_EXP* env vars configured (or all empty)",
+            "keys-missing": f"no {_env_var_family} env vars configured (or all empty)",
             "cache-empty":  "keys present but live fetch returned no equity (empty cache / no positions)",
             "exception":    "live fetch raised or returned an error (see server logs)",
-            "no-data":      "no live, pushed, or worker-portfolio Alpaca data available",
+            "no-data":      f"no live, pushed, or worker-portfolio {_broker_label} data available",
         }
         diag_hint = _DIAG_HINTS.get(diag, diag)
         ediag = _html.escape(str(diag))
