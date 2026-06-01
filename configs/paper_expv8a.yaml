@@ -249,3 +249,29 @@ vrp_engine:
     max_open_per_stream: 1        # matches backtest — one concurrent spread per stream
     deduplicate_expirations: true # no two open spreads on a stream sharing an expiration
 
+# ============================================================================
+# VRP-native risk caps  (read by compass.live.vrp_risk_caps.VRPRiskCaps)
+# ----------------------------------------------------------------------------
+# The `risk:` block ABOVE is wired to the legacy champion credit-spread strategy
+# (`main.py`) and is NOT READ by the VRP engine — V8A retired the champion path
+# on 2026-05-29 so those keys are dead config here. This block adds VRP-native
+# equivalents that the live engine enforces between intent generation and the
+# order sink (filtering excess intents with a logged reason).
+#
+# Any cap left unset (or null) means "no limit". The 4 active streams emit at
+# most one intent per cycle each, so values should leave a little headroom for
+# them all to land in a single cycle when the existing book is small.
+# ============================================================================
+vrp_risk:
+  # Concurrent open positions per ticker (existing + this cycle's intents).
+  # Mirrors champion `risk.max_positions_per_ticker: 2` for V8A.
+  max_positions_per_ticker: 2
+  # Concurrent open positions sharing a single expiration date, across tickers.
+  # Mirrors champion `risk.portfolio_risk.max_same_expiration: 4` for V8A.
+  max_same_expiration: 4
+  # Hard cap on sum(est_max_loss across open + new) as a fraction of equity.
+  # Capital-protection brake the champion block did not have. 0.30 = "never
+  # risk more than 30% of equity at once" — leaves room for 6/8 streams to be
+  # on at typical credit-spread max-loss while staying inside the LW vol target.
+  max_aggregate_max_loss_pct: 0.30
+

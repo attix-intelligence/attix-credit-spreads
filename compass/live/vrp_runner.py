@@ -32,6 +32,11 @@ import os
 from typing import Callable, Dict, List, Optional
 
 from compass.live.vrp_contracts import OrderIntent, STREAM_SPECS, StreamStatus
+from compass.live.vrp_returns_provider import PersistedReturnsProvider
+from compass.live.vrp_risk_caps import (
+    VRPRiskCaps,
+    existing_positions_from_db,
+)
 from compass.live.vrp_stream_gates import (
     StreamGateConfig,
     StreamStateStore,
@@ -41,6 +46,29 @@ from compass.live.vrp_stream_gates import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def _active_stream_ids() -> list[str]:
+    """The streams whose generators can actually place orders today (TRADEABLE).
+
+    Computed from :data:`STREAM_SPECS` so it stays in sync as new streams flip
+    from DEFERRED → TRADEABLE without touching this module.
+    """
+    return [sid for sid, spec in STREAM_SPECS.items() if spec.status is StreamStatus.TRADEABLE]
+
+
+def _resolve_db_path(config: dict) -> Optional[str]:
+    """Per-experiment SQLite path the worker uses for this experiment.
+
+    Precedence: ``ATTIX_DB_PATH`` env (worker exports this per-experiment via
+    ``railway_worker``) > config ``db_path`` > ``None`` (fall back to the default
+    in :func:`shared.database.get_db_path`).
+    """
+    env = os.environ.get("ATTIX_DB_PATH")
+    if env:
+        return env
+    p = config.get("db_path") if config else None
+    return str(p) if p else None
 
 
 def _default_vix_signal() -> Dict:
@@ -139,12 +167,51 @@ def build_vrp_strategy(
                 return 0.0
 
     dte = cfg.get("dte_range", [25, 50])
+
+    # ── PR-I: per-stream returns persistence (replaces StaticReturnsProvider) ─
+    exp_id = (config.get("experiment_id") or "").strip()
+    db_path = _resolve_db_path(config)
+    returns_provider = None
+    if exp_id:
+        try:
+            returns_provider = PersistedReturnsProvider(
+                exp_id=exp_id,
+                stream_columns=_active_stream_ids(),
+                db_path=db_path,
+            )
+        except Exception as exc:  # noqa: BLE001 — fall back to stub on misconfig
+            logger.warning("[vrp_runner] PersistedReturnsProvider init failed (%s) "
+                           "— falling back to StaticReturnsProvider", exc)
+            returns_provider = None
+    else:
+        logger.warning("[vrp_runner] no experiment_id in config — using stub returns "
+                       "provider (cold-start prior forever)")
+
+    # ── VRP-native risk caps (vrp_risk: block) ────────────────────────────────
+    try:
+        risk_caps = VRPRiskCaps.from_config(config.get("vrp_risk") if config else None)
+    except ValueError as exc:
+        logger.error("[vrp_runner] invalid vrp_risk config: %s — caps DISABLED for safety review",
+                     exc)
+        risk_caps = VRPRiskCaps()
+
+    # Position source for the cap filter: open trades for this experiment from
+    # the worker DB. None when no exp_id — caps then only see this cycle's intents.
+    if exp_id and not risk_caps.is_inert():
+        def _position_source():
+            return existing_positions_from_db(exp_id, db_path=db_path)
+    else:
+        _position_source = None
+
     return VRPMultiStreamStrategy(
         feed,
         account_equity=_equity,
         vix_provider=vix,
+        returns_provider=returns_provider,
         vol_target=float(cfg.get("vol_target", 0.12)),
         dte_range=(int(dte[0]), int(dte[1])),
+        risk_caps=risk_caps,
+        position_source=_position_source,
     )
 
 
