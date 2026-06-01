@@ -217,3 +217,16 @@ vrp_engine:
   sink_type: executor                     # routes intents to ExecutorOrderSink (IBKR paper)
   vol_target: 0.42                        # 3.5× the Alpaca 0.12 — see math above
   dte_range: [25, 50]
+
+  # --------------------------------------------------------------------------
+  # Per-stream entry gates (mirrors paper_expv8a.yaml — see that file's notes).
+  # --------------------------------------------------------------------------
+  # Both V8A configs MUST keep these gates in sync — they are the same strategy
+  # signals, only the sink + leverage differ. State file is per-experiment
+  # (data/vrp_stream_state_exp_v8a_ibkr.json) so EXP-V8A and EXP-V8A-IBKR do
+  # not interfere with each other's cooldown windows.
+  stream_gates:
+    enabled: true
+    cooldown_days: 7
+    max_open_per_stream: 1
+    deduplicate_expirations: true

@@ -29,9 +29,16 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import Callable, Dict, Optional
+from typing import Callable, Dict, List, Optional
 
-from compass.live.vrp_contracts import STREAM_SPECS, StreamStatus
+from compass.live.vrp_contracts import OrderIntent, STREAM_SPECS, StreamStatus
+from compass.live.vrp_stream_gates import (
+    StreamGateConfig,
+    StreamStateStore,
+    apply_stream_gates,
+    build_state_store,
+    submission_was_live,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -150,16 +157,23 @@ def vrp_enabled(config: dict) -> bool:
     return bool((config.get("vrp_engine") or {}).get("enabled", False))
 
 
-def run_vrp_cycle(system, *, strategy=None):
-    """One VRP scan cycle for the scheduler. Plans intents; places them only when
-    ``vrp_engine.dry_run`` is false AND a live sink (Alpaca provider OR an
-    Executor REST account) is wired.
+def run_vrp_cycle(system, *, strategy=None, state_store: Optional[StreamStateStore] = None):
+    """One VRP scan cycle for the scheduler. Plans intents; filters them through
+    the per-stream gates (cooldown + dup-expiration + max-open); places only
+    survivors when ``vrp_engine.dry_run`` is false AND a live sink is wired.
 
     The sink is selected per-cycle by :func:`_resolve_sink_type`. The default
-    ``alpaca`` path is byte-for-byte unchanged so the running Railway worker is
-    untouched until this experiment's config / env opts into ``executor``.
+    ``alpaca`` path is byte-for-byte unchanged for non-VRP experiments — they
+    never enter this function. The gates run for every VRP cycle (live OR
+    dry-run); the state file is updated only when the cycle actually placed an
+    order with the broker (so dry-runs never pollute live state).
+
+    ``state_store`` is injectable for tests; production uses
+    :func:`vrp_stream_gates.build_state_store` keyed by the experiment id.
 
     Returns the :class:`CyclePlan` (also when dry-run) for logging/telemetry.
+    Blocked intents are removed from ``plan.intents`` and surfaced in
+    ``plan.stream_status`` so the existing per-stream log lines explain why.
     """
     cfg = system.config.get("vrp_engine", {}) or {}
     provider = getattr(system, "alpaca_provider", None)
@@ -188,14 +202,52 @@ def run_vrp_cycle(system, *, strategy=None):
     else:
         dry_run = bool(cfg.get("dry_run", True)) or provider is None
 
-    if dry_run:
-        plan = strat.plan_cycle()
-        results = []
+    # Plan first; gate; then submit the survivors. Strategy stays pure — the
+    # runner owns live-trading state.
+    plan = strat.plan_cycle()
+
+    gate_cfg = StreamGateConfig.from_config(system.config)
+    store = state_store if state_store is not None else build_state_store(system.config)
+
+    # Hygiene: drop stale entries older than the cooldown window so the file
+    # doesn't grow unbounded across long-running workers.
+    try:
+        pruned = store.prune_older_than(max(gate_cfg.cooldown_days, 1))
+        if pruned:
+            logger.info("[vrp_runner] pruned %d stale stream-state entries", pruned)
+    except Exception as exc:  # noqa: BLE001 — never crash the cycle on store IO
+        logger.warning("[vrp_runner] state-store prune failed: %s", exc)
+
+    try:
+        gate_result = apply_stream_gates(plan.intents, store, gate_cfg)
+    except Exception as exc:  # noqa: BLE001 — gate failure must not stop trading; log loudly
+        logger.error("[vrp_runner] gate evaluation failed (%s) — passing all intents through", exc)
+        from compass.live.vrp_stream_gates import GateResult  # local import on the rare error path
+        gate_result = GateResult(kept=list(plan.intents), blocked=[])
+
+    # Surface gate decisions on the plan so downstream logs/telemetry see them.
+    plan.intents = list(gate_result.kept)
+    if gate_result.blocked:
+        for intent, reason in gate_result.blocked:
+            prior = plan.stream_status.get(intent.stream, "")
+            tag = f"gate_blocked: {reason}"
+            plan.stream_status[intent.stream] = f"{prior} | {tag}" if prior else tag
+        plan.notes.append(
+            f"stream-gates blocked {len(gate_result.blocked)} intent(s) "
+            f"across {len(gate_result.block_reasons_by_stream)} stream(s)"
+        )
+
+    # Submit the survivors. Recording (state-store writes) only happens on a
+    # real broker placement, not a dry-run "recorded" status.
+    results: List[dict] = []
+    if dry_run or not plan.intents:
+        # Dry-run path leaves plan.intents in place for telemetry; nothing placed.
+        pass
     elif sink_type == "executor":
-        plan, results = strat.execute_cycle(sink=live_sink)
+        results = _submit_through_sink(plan.intents, live_sink, store)
     else:
         from compass.live.vrp_sinks import AlpacaOrderSink
-        plan, results = strat.execute_cycle(sink=AlpacaOrderSink(provider))
+        results = _submit_through_sink(plan.intents, AlpacaOrderSink(provider), store)
 
     # Per-stream visibility, incl. the deferred futures sleeves.
     for sid, status in plan.stream_status.items():
@@ -205,11 +257,37 @@ def run_vrp_cycle(system, *, strategy=None):
             logger.info("[vrp_runner] %s: %s", sid, status)
 
     logger.info(
-        "[vrp_runner] cycle %s sink=%s equity=$%.0f vix_mult=%.3f intents=%d placed=%d streams=%s%s",
+        "[vrp_runner] cycle %s sink=%s equity=$%.0f vix_mult=%.3f intents_kept=%d gate_blocked=%d placed=%d streams=%s%s",
         "DRY-RUN" if dry_run else "LIVE",
         sink_type,
-        plan.account_equity, plan.vix_exposure, len(plan.intents), len(results),
+        plan.account_equity, plan.vix_exposure,
+        len(plan.intents), len(gate_result.blocked), len(results),
         ",".join(plan.traded_streams) or "-",
         f" notes={plan.notes}" if plan.notes else "",
     )
     return plan
+
+
+def _submit_through_sink(
+    intents: List[OrderIntent], sink, store: StreamStateStore,
+) -> List[dict]:
+    """Submit each intent through ``sink``, recording state ONLY on broker
+    placements (so dry-run / recording sinks never write to the live state).
+    """
+    results: List[dict] = []
+    for intent in intents:
+        result = sink.submit(intent)
+        results.append(result)
+        if not submission_was_live(result):
+            continue
+        try:
+            coid = ""
+            if isinstance(result, dict):
+                coid = str(result.get("client_order_id") or result.get("order_id") or "")
+            store.record_submission(intent, client_order_id=coid)
+        except Exception as exc:  # noqa: BLE001 — never crash on persistence error
+            logger.warning(
+                "[vrp_runner] failed to record stream-state for %s: %s — gate may re-fire next cycle",
+                intent.stream, exc,
+            )
+    return results
