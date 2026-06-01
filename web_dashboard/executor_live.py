@@ -97,13 +97,23 @@ def _normalize(exp_id: str) -> str:
 # HTTP helper
 # ---------------------------------------------------------------------------
 
+# Empirically: the dashboard's first call to /v1/portfolio/balance against the
+# Railway-public executor URL takes ~15-25 s when there's no warm in-process
+# session at the executor side (the read fans out to ib_insync, which can
+# block if the IBKR gateway has dropped its session between calls). 10 s
+# burned every render with ``read operation timed out`` and ``injected=0``.
+# 30 s is safely above the observed p99 without making render hang on a
+# pathologically stuck call.
+_HTTP_TIMEOUT_SECONDS = 30.0
+
+
 def _get(base_url: str, api_key: str, path: str, params: dict | None = None):
     """Single executor REST GET. Raises httpx.HTTPStatusError on bad status."""
     resp = httpx.get(
         f"{base_url.rstrip('/')}{path}",
         headers={"X-API-Key": api_key},
         params=params or {},
-        timeout=10.0,
+        timeout=_HTTP_TIMEOUT_SECONDS,
     )
     resp.raise_for_status()
     return resp.json()
