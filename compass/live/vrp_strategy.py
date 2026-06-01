@@ -37,6 +37,11 @@ from compass.live.vrp_contracts import (
     VixExposureProvider,
 )
 from compass.live.vrp_data import VRPSnapshot
+from compass.live.vrp_risk_caps import (
+    ExistingPosition,
+    VRPRiskCaps,
+    apply_caps,
+)
 from compass.live.vrp_risk_parity import DEFAULT_VOL_TARGET, compute_weights
 from compass.live.vrp_sinks import RecordingOrderSink
 from compass.live.vrp_streams import build_default_registry
@@ -78,12 +83,19 @@ class VRPMultiStreamStrategy:
         registry: Optional[Mapping[str, object]] = None,
         vol_target: float = DEFAULT_VOL_TARGET,
         dte_range=(25, 50),
+        risk_caps: Optional[VRPRiskCaps] = None,
+        position_source: Optional[Callable[[], Sequence[ExistingPosition]]] = None,
     ) -> None:
         self._feed = data_feed
         self._registry: Dict[str, object] = dict(registry) if registry is not None else build_default_registry()
         self._equity_src = account_equity
         self._vol_target = float(vol_target)
         self._dte_range = dte_range
+        # Optional VRP-native risk caps. When None or inert (no keys set) the
+        # plan_cycle pass-through is a no-op — preserves the engine's prior
+        # behaviour for any caller that doesn't opt in.
+        self._risk_caps = risk_caps
+        self._position_source = position_source
 
         # Streams that can actually place orders today (TRADEABLE). The allocator
         # sizes over these; deferred/blocked streams get $0 and report status.
@@ -170,6 +182,26 @@ class VRPMultiStreamStrategy:
                 f"{result.status}: {result.reason}" if result.reason else result.status
             )
             plan.intents.extend(result.intents)
+
+        # ── VRP-native portfolio risk caps (additive: no-op when caps absent) ──
+        if self._risk_caps is not None and not self._risk_caps.is_inert() and plan.intents:
+            try:
+                existing = list(self._position_source()) if self._position_source else []
+            except Exception as exc:  # noqa: BLE001 — never crash sizing on stale state
+                logger.warning("[vrp] position_source failed: %s — caps run vs empty book", exc)
+                existing = []
+            kept, dropped = apply_caps(plan.intents, existing, equity, self._risk_caps)
+            n_before, n_after = len(plan.intents), len(kept)
+            plan.intents[:] = kept
+            for d in dropped:
+                plan.notes.append(
+                    f"vrp_risk dropped {d['stream']}/{d['symbol']}: {d['reason']}"
+                )
+            if dropped:
+                logger.info(
+                    "[vrp] risk caps: kept %d/%d intents (dropped %d) — caps=%s",
+                    n_after, n_before, n_before - n_after, self._risk_caps,
+                )
 
         logger.info(
             "[vrp] cycle as_of=%s equity=$%.0f vix_mult=%.3f intents=%d active=%s degraded=%s",

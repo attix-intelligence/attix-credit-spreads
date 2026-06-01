@@ -230,3 +230,18 @@ vrp_engine:
     cooldown_days: 7
     max_open_per_stream: 1
     deduplicate_expirations: true
+
+# ============================================================================
+# VRP-native risk caps  (read by compass.live.vrp_risk_caps.VRPRiskCaps)
+# ----------------------------------------------------------------------------
+# IBKR variant. Same brakes as paper_expv8a.yaml, but scaled to match the
+# bumped position counts above (`risk.max_positions_per_ticker: 5`,
+# `risk.portfolio_risk.max_same_expiration: 8`) — those operate on the legacy
+# champion path; these are their VRP-native counterparts the live engine
+# enforces. `max_aggregate_max_loss_pct` is held at 0.30 even at 3.5× sizing:
+# the higher exposure comes from `vol_target: 0.42`, not from a larger tail.
+# ============================================================================
+vrp_risk:
+  max_positions_per_ticker: 5
+  max_same_expiration: 8
+  max_aggregate_max_loss_pct: 0.30

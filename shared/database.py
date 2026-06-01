@@ -99,6 +99,24 @@ def init_db(path: Optional[str] = None) -> None:
                 PRIMARY KEY (exp_id, as_of_date)
             );
 
+            -- Per-stream daily realized return series. One row per (exp_id, stream,
+            -- as_of_date). Feeds compass.live.vrp_returns_provider.PersistedReturnsProvider
+            -- which replaces vrp_stubs.StaticReturnsProvider so the LW risk-parity
+            -- covariance actually learns from live history (the TODO at
+            -- vrp_stubs.py::StaticReturnsProvider). `daily_return` is the fraction the
+            -- allocator consumes; `daily_pnl`/`equity_base` are kept for audit/backfill.
+            CREATE TABLE IF NOT EXISTS stream_equity_history (
+                exp_id         TEXT NOT NULL,
+                stream         TEXT NOT NULL,
+                as_of_date     TEXT NOT NULL,
+                daily_return   REAL NOT NULL,
+                daily_pnl      REAL,
+                equity_base    REAL,
+                source         TEXT,
+                updated_at     TEXT DEFAULT (datetime('now')),
+                PRIMARY KEY (exp_id, stream, as_of_date)
+            );
+
             CREATE TABLE IF NOT EXISTS scanner_state (
                 key TEXT PRIMARY KEY NOT NULL,
                 value TEXT NOT NULL,
