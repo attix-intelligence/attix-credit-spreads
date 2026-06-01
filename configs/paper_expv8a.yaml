@@ -228,3 +228,24 @@ vrp_engine:
   vol_target: 0.12    # 12% annualized portfolio vol target (matches exp2850)
   dte_range: [25, 50]
 
+  # --------------------------------------------------------------------------
+  # Per-stream entry gates (compass/live/vrp_stream_gates.py).
+  # --------------------------------------------------------------------------
+  # The VRP cycle fires every ~5 min; without these gates the strategy will
+  # re-emit the same intent every cycle until the position expires, stacking
+  # spreads on top of losing positions (the 2026-05-29 XLI 165/160 incident).
+  #
+  # Defaults reflect the EXP-2850 backtest assumption (max one spread per
+  # stream at a time, 7-day re-entry cooldown, no two open spreads on the same
+  # stream with the same expiration). Flip ``enabled: false`` to disable
+  # without removing the keys — useful for backtest parity sweeps.
+  #
+  # State persists in ``data/vrp_stream_state_<experiment_id>.json`` (atomic
+  # writes, per-experiment isolated). Live broker close detection lands in
+  # build-plan PR-H; until then, the cooldown_days window is the close proxy.
+  stream_gates:
+    enabled: true
+    cooldown_days: 7              # block re-entry until prior is ≥7d old or pruned
+    max_open_per_stream: 1        # matches backtest — one concurrent spread per stream
+    deduplicate_expirations: true # no two open spreads on a stream sharing an expiration
+
