@@ -42,7 +42,8 @@
         "max_dd": -12.1,
         "robust": 0.87,
         "years": 6
-      }
+      },
+      "broker": "alpaca"
     },
     "EXP-401": {
       "id": "EXP-401",
@@ -84,7 +85,8 @@
         "max_dd": -7.0,
         "robust": null,
         "years": 6
-      }
+      },
+      "broker": "alpaca"
     },
     "EXP-500": {
       "id": "EXP-500",
@@ -103,7 +105,8 @@
       "db_path": null,
       "strategy_type": "ml_credit_spread",
       "created_at": "2026-03-12T00:00:00+00:00",
-      "updated_at": "2026-04-18T21:21:51.083040+00:00"
+      "updated_at": "2026-04-18T21:21:51.083040+00:00",
+      "broker": "alpaca"
     },
     "EXP-501": {
       "id": "EXP-501",
@@ -122,7 +125,8 @@
       "db_path": null,
       "strategy_type": "ml_credit_spread",
       "created_at": "2026-03-12T00:00:00+00:00",
-      "updated_at": "2026-04-18T21:21:51.083040+00:00"
+      "updated_at": "2026-04-18T21:21:51.083040+00:00",
+      "broker": "alpaca"
     },
     "EXP-503": {
       "id": "EXP-503",
@@ -164,7 +168,8 @@
         "max_dd": null,
         "robust": null,
         "years": null
-      }
+      },
+      "broker": "alpaca"
     },
     "EXP-600": {
       "id": "EXP-600",
@@ -199,9 +204,10 @@
         "robust": 0.95
       },
       "retired_date": "2026-05-26",
-      "retired_reason": "Closed by Carlos 2026-05-26 — no trades for 32 days, IV environment unsuitable",
+      "retired_reason": "Closed by Carlos 2026-05-26 \u2014 no trades for 32 days, IV environment unsuitable",
       "superseded_by": null,
-      "lessons_learned": "IBIT IV compressed below entry thresholds for extended period (last trade 2026-04-24, IV Rank 25.9% on 2026-05-26). Strategy structurally healthy but unable to find setups in low-vol regime."
+      "lessons_learned": "IBIT IV compressed below entry thresholds for extended period (last trade 2026-04-24, IV Rank 25.9% on 2026-05-26). Strategy structurally healthy but unable to find setups in low-vol regime.",
+      "broker": "alpaca"
     },
     "EXP-601": {
       "id": "EXP-601",
@@ -221,7 +227,8 @@
       "db_path": null,
       "strategy_type": "ml_credit_spread",
       "created_at": "2026-03-22T00:00:00+00:00",
-      "updated_at": "2026-04-18T21:21:51.083040+00:00"
+      "updated_at": "2026-04-18T21:21:51.083040+00:00",
+      "broker": "alpaca"
     },
     "EXP-700": {
       "id": "EXP-700",
@@ -245,7 +252,8 @@
       "db_path": "data/exp700/pilotai_exp700.db",
       "strategy_type": "ml_credit_spread",
       "created_at": "2026-04-09T00:00:00+00:00",
-      "updated_at": "2026-04-18T21:21:51.083040+00:00"
+      "updated_at": "2026-04-18T21:21:51.083040+00:00",
+      "broker": "alpaca"
     },
     "EXP-800": {
       "id": "EXP-800",
@@ -273,7 +281,8 @@
         "avg_pnl": 525.0,
         "avg_loss": 2100.0,
         "mc_worst_dd_pct": 41.5
-      }
+      },
+      "broker": "alpaca"
     },
     "EXP-1220": {
       "id": "EXP-1220",
@@ -314,7 +323,8 @@
         "avg_return": 99.2,
         "max_dd": -11.2,
         "robust": null
-      }
+      },
+      "broker": "alpaca"
     },
     "EXP-031": {
       "id": "EXP-031",
@@ -335,7 +345,8 @@
       "db_path": null,
       "strategy_type": null,
       "created_at": "2026-02-01T00:00:00+00:00",
-      "updated_at": "2026-04-18T21:21:51.083040+00:00"
+      "updated_at": "2026-04-18T21:21:51.083040+00:00",
+      "broker": "alpaca"
     },
     "EXP-036": {
       "id": "EXP-036",
@@ -356,7 +367,8 @@
       "db_path": "data/pilotai_exp036.db",
       "strategy_type": null,
       "created_at": "2026-02-01T00:00:00+00:00",
-      "updated_at": "2026-04-18T21:21:51.083040+00:00"
+      "updated_at": "2026-04-18T21:21:51.083040+00:00",
+      "broker": "alpaca"
     },
     "EXP-059": {
       "id": "EXP-059",
@@ -377,7 +389,8 @@
       "db_path": "data/pilotai_exp059.db",
       "strategy_type": null,
       "created_at": "2026-02-01T00:00:00+00:00",
-      "updated_at": "2026-04-18T21:21:51.083040+00:00"
+      "updated_at": "2026-04-18T21:21:51.083040+00:00",
+      "broker": "alpaca"
     },
     "EXP-154": {
       "id": "EXP-154",
@@ -398,7 +411,8 @@
       "db_path": "data/pilotai_exp154.db",
       "strategy_type": null,
       "created_at": "2026-02-01T00:00:00+00:00",
-      "updated_at": "2026-04-18T21:21:51.083040+00:00"
+      "updated_at": "2026-04-18T21:21:51.083040+00:00",
+      "broker": "alpaca"
     },
     "EXP-305": {
       "id": "EXP-305",
@@ -419,7 +433,8 @@
       "db_path": "data/pilotai_exp305.db",
       "strategy_type": null,
       "created_at": "2026-03-01T00:00:00+00:00",
-      "updated_at": "2026-04-18T21:21:51.083040+00:00"
+      "updated_at": "2026-04-18T21:21:51.083040+00:00",
+      "broker": "alpaca"
     },
     "EXP-810-max": {
       "id": "EXP-810-max",
@@ -436,7 +451,8 @@
       },
       "verdict": "PASS \u2014 ensemble beats single model",
       "created_at": "2026-03-31T00:00:00+00:00",
-      "updated_at": "2026-04-18T21:21:51.083040+00:00"
+      "updated_at": "2026-04-18T21:21:51.083040+00:00",
+      "broker": "alpaca"
     },
     "EXP-820-max": {
       "id": "EXP-820-max",
@@ -451,7 +467,8 @@
       },
       "verdict": "PASS \u2014 infrastructure delivered",
       "created_at": "2026-03-31T00:00:00+00:00",
-      "updated_at": "2026-04-18T21:21:51.083040+00:00"
+      "updated_at": "2026-04-18T21:21:51.083040+00:00",
+      "broker": "alpaca"
     },
     "EXP-840-max": {
       "id": "EXP-840-max",
@@ -468,7 +485,8 @@
       },
       "verdict": "PASS \u2014 all criteria met, 14/16 variants pass",
       "created_at": "2026-03-31T00:00:00+00:00",
-      "updated_at": "2026-04-18T21:21:51.083040+00:00"
+      "updated_at": "2026-04-18T21:21:51.083040+00:00",
+      "broker": "alpaca"
     },
     "EXP-850-max": {
       "id": "EXP-850-max",
@@ -485,7 +503,8 @@
       },
       "verdict": "CRITICAL \u2014 $1 spreads lose 28.6%, use $5+",
       "created_at": "2026-03-31T00:00:00+00:00",
-      "updated_at": "2026-04-18T21:21:51.083040+00:00"
+      "updated_at": "2026-04-18T21:21:51.083040+00:00",
+      "broker": "alpaca"
     },
     "EXP-860-max": {
       "id": "EXP-860-max",
@@ -502,7 +521,8 @@
       },
       "verdict": "PASS \u2014 best standalone Sharpe",
       "created_at": "2026-03-31T00:00:00+00:00",
-      "updated_at": "2026-04-18T21:21:51.083040+00:00"
+      "updated_at": "2026-04-18T21:21:51.083040+00:00",
+      "broker": "alpaca"
     },
     "EXP-870-max": {
       "id": "EXP-870-max",
@@ -518,7 +538,8 @@
       },
       "verdict": "PASS \u2014 $3.1B capacity achieved",
       "created_at": "2026-03-31T00:00:00+00:00",
-      "updated_at": "2026-04-18T21:21:51.083040+00:00"
+      "updated_at": "2026-04-18T21:21:51.083040+00:00",
+      "broker": "alpaca"
     },
     "EXP-880-max": {
       "id": "EXP-880-max",
@@ -541,7 +562,8 @@
         "cagr_pct": 76.9,
         "sharpe": 4.97,
         "max_dd_pct": 10.2
-      }
+      },
+      "broker": "alpaca"
     },
     "EXP-890-max": {
       "id": "EXP-890-max",
@@ -557,7 +579,8 @@
       },
       "verdict": "PASS \u2014 deployment-ready infrastructure",
       "created_at": "2026-03-31T00:00:00+00:00",
-      "updated_at": "2026-04-18T21:21:51.083040+00:00"
+      "updated_at": "2026-04-18T21:21:51.083040+00:00",
+      "broker": "alpaca"
     },
     "EXP-900-max": {
       "id": "EXP-900-max",
@@ -572,7 +595,8 @@
       },
       "verdict": "PASS \u2014 ensemble rule + HMM for production",
       "created_at": "2026-03-31T00:00:00+00:00",
-      "updated_at": "2026-04-18T21:21:51.083040+00:00"
+      "updated_at": "2026-04-18T21:21:51.083040+00:00",
+      "broker": "alpaca"
     },
     "EXP-910-max": {
       "id": "EXP-910-max",
@@ -590,7 +614,8 @@
       },
       "verdict": "PASS \u2014 5/6 North Star targets met",
       "created_at": "2026-03-31T00:00:00+00:00",
-      "updated_at": "2026-04-18T21:21:51.083040+00:00"
+      "updated_at": "2026-04-18T21:21:51.083040+00:00",
+      "broker": "alpaca"
     },
     "EXP-920-max": {
       "id": "EXP-920-max",
@@ -607,7 +632,8 @@
       },
       "verdict": "PASS \u2014 strategy is statistically robust",
       "created_at": "2026-03-31T00:00:00+00:00",
-      "updated_at": "2026-04-18T21:21:51.083040+00:00"
+      "updated_at": "2026-04-18T21:21:51.083040+00:00",
+      "broker": "alpaca"
     },
     "EXP-940-max": {
       "id": "EXP-940-max",
@@ -618,7 +644,8 @@
       "description": "Investor-grade HTML report consolidating all experiments.",
       "verdict": "DELIVERED",
       "created_at": "2026-03-31T00:00:00+00:00",
-      "updated_at": "2026-04-18T21:21:51.083040+00:00"
+      "updated_at": "2026-04-18T21:21:51.083040+00:00",
+      "broker": "alpaca"
     },
     "EXP-950-max": {
       "id": "EXP-950-max",
@@ -634,7 +661,8 @@
       },
       "verdict": "100% CAGR not achievable at DD<12%. 3.5x optimal.",
       "created_at": "2026-03-31T00:00:00+00:00",
-      "updated_at": "2026-04-18T21:21:51.083040+00:00"
+      "updated_at": "2026-04-18T21:21:51.083040+00:00",
+      "broker": "alpaca"
     },
     "EXP-960-max": {
       "id": "EXP-960-max",
@@ -651,7 +679,8 @@
       },
       "verdict": "PASS \u2014 100% CAGR achievable with combined portfolio + leverage",
       "created_at": "2026-03-31T00:00:00+00:00",
-      "updated_at": "2026-04-18T21:21:51.083040+00:00"
+      "updated_at": "2026-04-18T21:21:51.083040+00:00",
+      "broker": "alpaca"
     },
     "EXP-970-max": {
       "id": "EXP-970-max",
@@ -669,7 +698,8 @@
       },
       "verdict": "PASS \u2014 leverage validated out-of-sample",
       "created_at": "2026-03-31T00:00:00+00:00",
-      "updated_at": "2026-04-18T21:21:51.083040+00:00"
+      "updated_at": "2026-04-18T21:21:51.083040+00:00",
+      "broker": "alpaca"
     },
     "EXP-980-max": {
       "id": "EXP-980-max",
@@ -684,7 +714,8 @@
       },
       "verdict": "2.0x at Alpaca (live), 2.5-3.0x at IBKR (portfolio margin)",
       "created_at": "2026-03-31T00:00:00+00:00",
-      "updated_at": "2026-04-18T21:21:51.083040+00:00"
+      "updated_at": "2026-04-18T21:21:51.083040+00:00",
+      "broker": "alpaca"
     },
     "EXP-990-max": {
       "id": "EXP-990-max",
@@ -695,7 +726,8 @@
       "description": "~180 test files consolidated. Coverage analysis.",
       "verdict": "DELIVERED \u2014 test infrastructure validated",
       "created_at": "2026-03-31T00:00:00+00:00",
-      "updated_at": "2026-04-18T21:21:51.083040+00:00"
+      "updated_at": "2026-04-18T21:21:51.083040+00:00",
+      "broker": "alpaca"
     },
     "EXP-307": {
       "id": "EXP-307",
@@ -708,7 +740,8 @@
       "config_path": "configs/paper_exp307.yaml",
       "db_path": "data/exp307/pilotai_exp307.db",
       "strategy_type": "portfolio",
-      "description": "Multi-ticker scanner: SPY + XLI + XLF simultaneously."
+      "description": "Multi-ticker scanner: SPY + XLI + XLF simultaneously.",
+      "broker": "alpaca"
     },
     "EXP-3311": {
       "id": "EXP-3311",
@@ -739,7 +772,8 @@
       "backtest_baseline": {
         "mc_worst_dd_pct": 5.89
       },
-      "status_reason": "Railway deployment \u2014 activating for paper trading"
+      "status_reason": "Railway deployment \u2014 activating for paper trading",
+      "broker": "alpaca"
     },
     "EXP-3309": {
       "id": "EXP-3309",
@@ -767,7 +801,8 @@
         "max_dd": null,
         "robust": null
       },
-      "status_reason": "Railway deployment \u2014 activating for paper trading"
+      "status_reason": "Railway deployment \u2014 activating for paper trading",
+      "broker": "alpaca"
     },
     "EXP-3303b": {
       "id": "EXP-3303b",
@@ -798,7 +833,8 @@
       "backtest_baseline": {
         "mc_worst_dd_pct": 10.455
       },
-      "status_reason": "Railway deployment \u2014 Alpaca keys set, activating for paper trading"
+      "status_reason": "Railway deployment \u2014 Alpaca keys set, activating for paper trading",
+      "broker": "alpaca"
     },
     "EXP-V8A": {
       "id": "EXP-V8A",
@@ -812,7 +848,7 @@
       "live_since": "2026-05-26",
       "paper_config": "configs/paper_expv8a.yaml",
       "backtest_config": null,
-      "description": "PARTIAL (MVP 6 of 8 streams) — 8-stream options portfolio harvesting volatility risk premium across SPY/QQQ/XLF/XLI/GLD/SLV/VIX with Ledoit-Wolf risk-parity and a 12% vol target. Cutover from the champion clone is staged (activates after legacy positions flush). MVP: credit-spread streams exp1220/xlf_cs/xli_cs/qqq_cs (SPY/QQQ/XLF/XLI) go live first; cross_vol + v5_hedge follow once their signal generators ship. gld_cal + slv_cal deferred — futures execution venue pending (they are ETF-vs-front-month-futures basis trades, not options calendars; Alpaca has no futures). Full 8-stream figures are BACKTEST/TARGET, not yet live: Sharpe 6.39, CAGR 118%, Max DD 5.1%.",
+      "description": "PARTIAL (MVP 6 of 8 streams) \u2014 8-stream options portfolio harvesting volatility risk premium across SPY/QQQ/XLF/XLI/GLD/SLV/VIX with Ledoit-Wolf risk-parity and a 12% vol target. Cutover from the champion clone is staged (activates after legacy positions flush). MVP: credit-spread streams exp1220/xlf_cs/xli_cs/qqq_cs (SPY/QQQ/XLF/XLI) go live first; cross_vol + v5_hedge follow once their signal generators ship. gld_cal + slv_cal deferred \u2014 futures execution venue pending (they are ETF-vs-front-month-futures basis trades, not options calendars; Alpaca has no futures). Full 8-stream figures are BACKTEST/TARGET, not yet live: Sharpe 6.39, CAGR 118%, Max DD 5.1%.",
       "notes": "2026-05-29: PAUSED pre-open to disable the Champion clone before the VRP cutover. Stops the worker spawning the V8A scanner (manager.active() filters status=='active'), so no new Champion entries at 09:30. Legacy 735/723 spread is flushed manually ~09:33 ET; re-activate with VRP toggle (dry_run:false) at ~09:40 after confirmed flat.",
       "config_path": "configs/paper_expv8a.yaml",
       "alpaca_account_id": "PA3694QR73C1",
@@ -820,11 +856,12 @@
       "db_path": "data/pilotai_expv8a.db",
       "strategy_type": "credit_spread",
       "created_at": "2026-05-26T19:58:25.529375+00:00",
-      "updated_at": "2026-05-26T19:58:25.529389+00:00"
+      "updated_at": "2026-05-26T19:58:25.529389+00:00",
+      "broker": "alpaca"
     },
     "EXP-V8A-IBKR": {
       "id": "EXP-V8A-IBKR",
-      "name": "VRP Multi-Stream — IBKR Paper 3× Leverage",
+      "name": "VRP Multi-Stream \u2014 IBKR Paper 3\u00d7 Leverage",
       "created_by": "carlos",
       "created_date": "2026-05-31",
       "status": "active",
@@ -836,8 +873,8 @@
       "live_since": "2026-06-01",
       "paper_config": "configs/paper_expv8a_ibkr.yaml",
       "backtest_config": null,
-      "description": "PARALLEL SIBLING of EXP-V8A. Identical VRP multi-stream signals (4 credit-spread streams: exp1220/qqq_cs/xlf_cs/xli_cs); different broker (IBKR paper via the standalone executor REST service); different sizing (3× max-loss/equity on $120K NAV → $360K aggregate max-loss target). This is the A/B leg of Carlos's 2026-05-30 leverage experiment: prove that leveraged IBKR can outperform unlevered Alpaca on identical signals. Expected outcomes Carlos accepted: monthly +5-7%, annual +130-160% CAGR, 1y max DD ~38%, blowup-prob (>30% loss in 12mo) ~15%.",
-      "notes": "Launches Mon 2026-06-01 09:30 ET in parallel with EXP-V8A. Uses ExecutorOrderSink (PR #85 — merged 2026-05-30). vol_target=0.42 (= EXP-V8A's 0.12 × 3.5) per linear-scaling math on observed 0.86× max-loss/equity at vol_target=0.12. Day-1 calibration: log plan.capital sum + aggregate max-loss each cycle, adjust vol_target if exposure ratio drifts >10% off 3.0×. DO NOT TOUCH EXP-V8A on Alpaca — parallel is the experiment.",
+      "description": "PARALLEL SIBLING of EXP-V8A. Identical VRP multi-stream signals (4 credit-spread streams: exp1220/qqq_cs/xlf_cs/xli_cs); different broker (IBKR paper via the standalone executor REST service); different sizing (3\u00d7 max-loss/equity on $120K NAV \u2192 $360K aggregate max-loss target). This is the A/B leg of Carlos's 2026-05-30 leverage experiment: prove that leveraged IBKR can outperform unlevered Alpaca on identical signals. Expected outcomes Carlos accepted: monthly +5-7%, annual +130-160% CAGR, 1y max DD ~38%, blowup-prob (>30% loss in 12mo) ~15%.",
+      "notes": "Launches Mon 2026-06-01 09:30 ET in parallel with EXP-V8A. Uses ExecutorOrderSink (PR #85 \u2014 merged 2026-05-30). vol_target=0.42 (= EXP-V8A's 0.12 \u00d7 3.5) per linear-scaling math on observed 0.86\u00d7 max-loss/equity at vol_target=0.12. Day-1 calibration: log plan.capital sum + aggregate max-loss each cycle, adjust vol_target if exposure ratio drifts >10% off 3.0\u00d7. DO NOT TOUCH EXP-V8A on Alpaca \u2014 parallel is the experiment.",
       "config_path": "configs/paper_expv8a_ibkr.yaml",
       "alpaca_account_id": null,
       "env_file": ".env.expv8a_ibkr",

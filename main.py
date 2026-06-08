@@ -1229,6 +1229,24 @@ Examples:
                                 run_vrp_monitor_cycle(system)
                             except Exception:
                                 logger.exception("[vrp_pm] monitor cycle raised — continuing scan")
+                        # IBKR-via-executor equity-history writer. Mirrors
+                        # PositionMonitor._record_equity_point() for accounts
+                        # without an Alpaca client (V8A-IBKR routes through
+                        # the executor — no Alpaca account read available).
+                        # Inert when EXECUTOR_* env vars aren't set, so every
+                        # other experiment's cycle is unchanged.
+                        try:
+                            from execution.executor_equity_writer import ExecutorEquityWriter
+                            _writer = ExecutorEquityWriter.from_env(
+                                exp_id=_exp_id,
+                                db_path=args.db_path or os.environ.get('ATTIX_DB_PATH'),
+                            )
+                            if _writer is not None:
+                                _writer.record_one_cycle()
+                        except Exception:
+                            logger.exception(
+                                "[exec-equity] writer raised — continuing scan",
+                            )
                     else:
                         system.scan_opportunities()
                     _write_heartbeat()
