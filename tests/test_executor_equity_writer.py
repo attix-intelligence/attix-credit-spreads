@@ -153,3 +153,86 @@ def test_record_one_cycle_uses_utc_today():
         w.record_one_cycle()
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     assert mock_up.call_args.kwargs["as_of_date"] == today
+
+
+# =====================================================================
+# Inception seeding
+# =====================================================================
+
+def test_inception_seed_skipped_when_env_vars_absent(monkeypatch):
+    """No env vars → no seed write. The chart starts from whatever the
+    writer accumulates from today forward — same as it does today."""
+    from execution.executor_equity_writer import ExecutorEquityWriter
+    monkeypatch.delenv("EXECUTOR_SEED_INCEPTION_DATE", raising=False)
+    monkeypatch.delenv("EXECUTOR_SEED_INCEPTION_NAV", raising=False)
+    w = ExecutorEquityWriter(
+        exp_id="EXP-V8A-IBKR", adapter=_adapter_returning(nav=120_000.0),
+    )
+    with patch("execution.executor_equity_writer.upsert_equity_point") as mock_up:
+        w.record_one_cycle()
+    # Only one upsert — today's NAV. No seed row.
+    assert mock_up.call_count == 1
+    assert mock_up.call_args.kwargs["source"] == "executor"
+
+
+def test_inception_seed_writes_when_env_set_and_table_empty(monkeypatch):
+    """First call with env vars set + empty equity_history → writes the
+    inception seed AND today's NAV. Chart has 2 points to draw a curve."""
+    from execution.executor_equity_writer import ExecutorEquityWriter
+    monkeypatch.setenv("EXECUTOR_SEED_INCEPTION_DATE", "2026-06-01")
+    monkeypatch.setenv("EXECUTOR_SEED_INCEPTION_NAV", "1000000")
+    w = ExecutorEquityWriter(
+        exp_id="EXP-V8A-IBKR", adapter=_adapter_returning(nav=950_000.0),
+    )
+    with patch(
+        "execution.executor_equity_writer.upsert_equity_point"
+    ) as mock_up, patch(
+        "shared.database.get_equity_history", return_value=[],
+    ):
+        w.record_one_cycle()
+    assert mock_up.call_count == 2
+    # First call is the seed
+    seed_call = mock_up.call_args_list[0].kwargs
+    assert seed_call["as_of_date"] == "2026-06-01"
+    assert seed_call["equity"] == 1_000_000.0
+    assert seed_call["source"] == "executor_seed_inception"
+    # Second call is today's NAV
+    today_call = mock_up.call_args_list[1].kwargs
+    assert today_call["equity"] == 950_000.0
+    assert today_call["source"] == "executor"
+
+
+def test_inception_seed_skipped_when_table_already_has_rows(monkeypatch):
+    """A second call (or after any prior write) MUST NOT re-seed —
+    otherwise we'd clobber the historical curve on every cycle."""
+    from execution.executor_equity_writer import ExecutorEquityWriter
+    monkeypatch.setenv("EXECUTOR_SEED_INCEPTION_DATE", "2026-06-01")
+    monkeypatch.setenv("EXECUTOR_SEED_INCEPTION_NAV", "1000000")
+    w = ExecutorEquityWriter(
+        exp_id="EXP-V8A-IBKR", adapter=_adapter_returning(nav=950_000.0),
+    )
+    with patch(
+        "execution.executor_equity_writer.upsert_equity_point"
+    ) as mock_up, patch(
+        "shared.database.get_equity_history",
+        return_value=[{"date": "2026-06-01", "equity": 1_000_000.0}],
+    ):
+        w.record_one_cycle()
+    # Only today's NAV — no second seed write
+    assert mock_up.call_count == 1
+    assert mock_up.call_args.kwargs["source"] == "executor"
+
+
+def test_inception_seed_bad_nav_value_skips_gracefully(monkeypatch, caplog):
+    """A typo'd EXECUTOR_SEED_INCEPTION_NAV must not crash the cycle —
+    log + skip the seed, still write today's NAV."""
+    from execution.executor_equity_writer import ExecutorEquityWriter
+    monkeypatch.setenv("EXECUTOR_SEED_INCEPTION_DATE", "2026-06-01")
+    monkeypatch.setenv("EXECUTOR_SEED_INCEPTION_NAV", "garbage")
+    w = ExecutorEquityWriter(
+        exp_id="EXP-V8A-IBKR", adapter=_adapter_returning(nav=950_000.0),
+    )
+    with patch("execution.executor_equity_writer.upsert_equity_point") as mock_up:
+        w.record_one_cycle()
+    assert mock_up.call_count == 1
+    assert mock_up.call_args.kwargs["source"] == "executor"
