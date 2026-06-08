@@ -951,17 +951,31 @@ def render_dashboard(all_stats: list[dict]) -> str:
     total_wins   = sum(s["wins"] for s in all_stats)
     wr = (total_wins / total_closed * 100) if total_closed else 0
 
-    # Combined live equity — always fetch directly from all Alpaca accounts
-    # so the header total is never stale or missing experiments.
+    # Combined live equity — always fetch directly from all configured
+    # broker accounts so the header total is never stale or missing
+    # experiments. Alpaca and the IBKR-via-executor service are read in
+    # parallel and merged into one dict; suffix collisions cannot happen
+    # because an experiment uses one broker, not both.
     _all_live: dict = {}
     try:
         from .alpaca_live import get_all_live_alpaca
         _all_live = get_all_live_alpaca()
+    except Exception:
+        _all_live = {}
+    try:
+        from .executor_live import get_all_live_executor
+        _exec_live = get_all_live_executor()
+        # Alpaca wins on the impossible-but-defensive case of suffix collision.
+        for _k, _v in _exec_live.items():
+            _all_live.setdefault(_k, _v)
+    except Exception:
+        pass
+    if _all_live:
         equities = [
             d["equity"] for d in _all_live.values()
             if d.get("equity") is not None and not d.get("error")
         ]
-    except Exception:
+    else:
         equities = [
             s["alpaca"]["equity"]
             for s in all_stats
