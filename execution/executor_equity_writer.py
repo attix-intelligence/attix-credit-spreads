@@ -97,6 +97,14 @@ class ExecutorEquityWriter:
             # would clobber the day's equity if we wrote it — skip instead.
             return False
 
+        # One-time inception seed: an executor-routed experiment has no
+        # equity_history rows until our first scan tick. The chart needs
+        # at least two points to render a curve, so on the first call we
+        # also write a single inception point if the env vars provide it
+        # and the table is empty for this exp_id. Idempotent — once the
+        # seed exists the early-return below skips it forever.
+        self._maybe_seed_inception()
+
         today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         try:
             upsert_equity_point(
@@ -119,3 +127,62 @@ class ExecutorEquityWriter:
             self.exp_id, today, snap.nav,
         )
         return True
+
+    # ------------------------------------------------------------------
+    # Inception seed
+    # ------------------------------------------------------------------
+
+    def _maybe_seed_inception(self) -> None:
+        """If the env vars ``EXECUTOR_SEED_INCEPTION_DATE`` and
+        ``EXECUTOR_SEED_INCEPTION_NAV`` are set AND the ``equity_history``
+        table has no rows for this experiment, write a single seed row
+        so the chart has a baseline point to draw a curve from.
+
+        Justification for the seed value: IBKR paper accounts ship at a
+        documented default balance ($1,000,000) — that's not a fabricated
+        number, it's the documented starting balance the broker creates
+        the account with. Setting ``EXECUTOR_SEED_INCEPTION_NAV`` is an
+        explicit per-experiment opt-in by the operator.
+
+        Failure-silent — a seed that doesn't land must never block a
+        normal cycle write.
+        """
+        seed_date = os.environ.get("EXECUTOR_SEED_INCEPTION_DATE", "").strip()
+        seed_nav_raw = os.environ.get("EXECUTOR_SEED_INCEPTION_NAV", "").strip()
+        if not (seed_date and seed_nav_raw):
+            return
+        try:
+            seed_nav = float(seed_nav_raw)
+        except ValueError:
+            logger.warning(
+                "[exec-equity-seed] %s skipping — bad EXECUTOR_SEED_INCEPTION_NAV=%r",
+                self.exp_id, seed_nav_raw,
+            )
+            return
+        try:
+            # Lazy import — avoids a hard dependency on shared.database
+            # for adapter-only callers (tests).
+            from shared.database import get_equity_history
+            existing = get_equity_history(
+                exp_id=self.exp_id, limit=1, path=self.db_path,
+            )
+            if existing:
+                return  # already have at least one row — don't re-seed
+            upsert_equity_point(
+                exp_id=self.exp_id,
+                as_of_date=seed_date,
+                equity=seed_nav,
+                realized_pnl=0.0,
+                unrealized_pnl=0.0,
+                source="executor_seed_inception",
+                path=self.db_path,
+            )
+            logger.info(
+                "[exec-equity-seed] exp=%s seeded date=%s equity=%.2f "
+                "source=executor_seed_inception",
+                self.exp_id, seed_date, seed_nav,
+            )
+        except Exception as exc:
+            logger.warning(
+                "[exec-equity-seed] %s seed write failed: %s", self.exp_id, exc,
+            )

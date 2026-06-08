@@ -1247,6 +1247,66 @@ Examples:
                             logger.exception(
                                 "[exec-equity] writer raised — continuing scan",
                             )
+
+                        # Push the executor-routed portfolio snapshot + equity
+                        # curve to the dashboard, parallel to the Alpaca push
+                        # below (which is gated on ALPACA_* env vars and so is
+                        # a no-op for V8A-IBKR). The dashboard's pushed-data
+                        # fallback reads the JSON we POST here, so without it
+                        # the V8A-IBKR card has no equity_history to chart.
+                        try:
+                            import requests as _req
+                            _dash_url = os.environ.get("RAILWAY_SERVICE_ATTIX_DASHBOARD_URL", "") or os.environ.get("RAILWAY_SERVICE_ATTIX_CREDIT_SPREADS_URL", "")
+                            _dash_key = os.environ.get("DASHBOARD_API_KEY", "")
+                            _exec_key = os.environ.get("EXECUTOR_API_KEY", "")
+                            _exec_base = os.environ.get("EXECUTOR_BASE_URL", "")
+                            _exec_acct = os.environ.get("EXECUTOR_ACCOUNT_ID", "")
+                            if (_dash_url and _dash_key and _exec_key and _exec_base and _exec_acct):
+                                _base_url = _dash_url if _dash_url.startswith("http") else f"https://{_dash_url}"
+                                _exec_headers = {"X-API-Key": _exec_key}
+                                _bal = _req.get(
+                                    f"{_exec_base.rstrip('/')}/v1/portfolio/balance",
+                                    params={"account_id": _exec_acct},
+                                    headers=_exec_headers, timeout=15,
+                                ).json()
+                                _pos = _req.get(
+                                    f"{_exec_base.rstrip('/')}/v1/portfolio/positions",
+                                    params={"account_id": _exec_acct},
+                                    headers=_exec_headers, timeout=15,
+                                ).json()
+                                try:
+                                    from shared.database import get_equity_history
+                                    _eq = get_equity_history(
+                                        _exp_id, limit=365,
+                                        path=args.db_path or os.environ.get("ATTIX_DB_PATH"),
+                                    )
+                                except Exception:
+                                    _eq = []
+                                _req.post(
+                                    f"{_base_url.rstrip('/')}/api/v1/experiments/{_exp_id}/push-portfolio",
+                                    json={
+                                        "equity": float(_bal.get("total_equity") or 0),
+                                        "cash": float(_bal.get("cash") or 0),
+                                        "buying_power": float(_bal.get("buying_power") or 0),
+                                        "unrealized_pl": float(_bal.get("unrealized_pnl") or 0),
+                                        "day_pl": float(_bal.get("realized_pnl_today") or 0),
+                                        "positions": _pos if isinstance(_pos, list) else [],
+                                        "orders": [],
+                                        "broker": "ibkr_executor",
+                                        "equity_history": _eq,
+                                    },
+                                    headers={"X-API-Key": _dash_key},
+                                    timeout=10,
+                                )
+                                logger.info(
+                                    "[exec-equity] pushed portfolio to dashboard "
+                                    "(equity=%.2f, history_points=%d)",
+                                    float(_bal.get("total_equity") or 0), len(_eq),
+                                )
+                        except Exception:
+                            logger.exception(
+                                "[exec-equity] portfolio push raised — non-fatal",
+                            )
                     else:
                         system.scan_opportunities()
                     _write_heartbeat()
