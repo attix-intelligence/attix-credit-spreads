@@ -1,0 +1,171 @@
+# ============================================================================
+# live_expv8a_tradier.yaml — EXP-V8A-TRADIER (Tradier LIVE Phase 1, cap 1 contract)
+# ============================================================================
+# DORMANT pilot config. Strategy is a VERBATIM copy of paper_exp800.yaml
+# (EXP-800 Safe Kelly 4/7/9). The only differences from paper_exp800.yaml are:
+#   (a) broker/account routing -> Tradier LIVE account tradier_6YA42569,
+#       via the standalone executor REST service (SINK_TYPE=executor) using
+#       the same env-var unmasking pattern as EXP-V8A-IBKR
+#       (SINK_TYPE_EXPV8ATRADIER, EXECUTOR_ACCOUNT_ID_EXPV8ATRADIER,
+#        EXECUTOR_ACCOUNT_TYPE_EXPV8ATRADIER -> live)
+#   (b) risk.max_contracts hard-capped to 1 (Phase 1 cap)
+#   (c) experiment_id = EXP-V8A-TRADIER (separate dashboard line)
+#
+# Required-by-plumbing extras (no strategy effect):
+#   - paper_mode: false
+#   - alpaca.enabled: false (legacy-path safety; executor sink is the live route)
+#   - db_path / log file isolated from paper EXP-800 so Kelly state never mixes
+#
+# Worker activation:
+#   status='registered' in experiments/registry.json -> railway_worker WILL NOT
+#   spawn this scheduler. To go live, transition registered -> configuring ->
+#   active in registry.json AND ensure executor-repo wiring + Carlos's per-
+#   session live "go" per feedback-live-trade-gates. That flip is OUT OF SCOPE
+#   for this config-only landing.
+# ============================================================================
+
+paper_mode: false
+experiment_id: "EXP-V8A-TRADIER"
+db_path: "data/expv8a_tradier/pilotai_expv8a_tradier.db"
+created_by: "carlos"
+
+tickers:
+  - SPY
+
+# ============================================================================
+# Strategy — EXP-400 champion params (identical to EXP-700)
+# ============================================================================
+strategy:
+  target_dte: 15
+  min_dte: 15
+  max_dte: 25
+
+  direction: both             # regime selects bull_put vs bear_call vs iron_condor
+
+  otm_pct: 0.02               # 2% out-of-the-money
+  use_delta_selection: false
+
+  spread_width: 12            # $12 wide spreads
+
+  iron_condor:
+    enabled: true             # used in neutral regime only
+    risk_per_trade: 7.0       # overridden by Kelly neutral fraction at runtime
+
+  regime_mode: combo
+  regime_config:
+    signals:
+      - price_vs_ma200
+      - rsi_momentum
+      - vix_structure
+    ma_slow_period: 80
+    ma200_neutral_band_pct: 0.5
+    rsi_period: 14
+    rsi_bull_threshold: 50.0
+    rsi_bear_threshold: 45.0
+    vix_structure_bull: 0.95
+    vix_structure_bear: 1.05
+    bear_requires_unanimous: true
+    cooldown_days: 3
+    vix_extreme: 40.0
+    vix_extreme_regime: NEUTRAL
+
+  momentum_filter_pct: 2.0
+
+# ============================================================================
+# Safe Kelly 4/7/9 — the core addition vs EXP-400 / EXP-700
+# ============================================================================
+kelly:
+  # Risk fraction (% of current equity) per regime
+  regime_fractions:
+    bull:    9.0    # highest conviction — directional bull puts
+    neutral: 7.0    # moderate — iron condors
+    bear:    4.0    # defensive — directional bear calls
+
+  # Sizing base: "current_equity" compounds gains/losses into size
+  sizing_base: current_equity
+
+  # 3-tier circuit breakers (% portfolio drawdown from rolling HWM)
+  circuit_breakers:
+    tier1_dd:        -8.0   # DD ≤ -8%  → apply 0.5× multiplier to Kelly fraction
+    tier2_dd:       -10.0   # DD ≤ -10% → floor to min_fraction
+    tier3_dd:       -12.0   # DD ≤ -12% → halt new entries for tier3_halt_trades
+    min_fraction:    2.0    # minimum risk % when Tier 2 active (floor, not zero)
+    tier3_halt_trades: 30   # trade slots skipped after Tier 3 trigger
+    recovery_dd:    -7.0    # DD must recover above this to exit Tier 2 pause
+
+# ============================================================================
+# Risk Management (non-Kelly limits — hard caps applied after Kelly sizing)
+# ============================================================================
+risk:
+  account_size: 100000       # starting capital (used for HWM bootstrap)
+  max_risk_per_trade: 17.0    # hard cap (matches max Kelly bull fraction)
+  max_contracts: 1           # Phase 1 LIVE cap (paper_exp800.yaml: 30)
+  max_positions: 10
+
+  profit_target: 55          # 55% of credit
+  stop_loss_multiplier: 1.25
+
+  min_credit_pct: 5          # minimum credit as % of spread width
+
+  vix_max_entry: 40          # block entries above VIX 40
+
+  portfolio_risk:
+    max_portfolio_risk_pct: 60
+    max_single_ticker_pct: 40
+    max_same_expiration: 4
+
+# ============================================================================
+# Alpaca — DISABLED. Tradier live order routing flows through the executor
+# REST service (sink_type=executor) using the EXP-V8A-IBKR env-unmask pattern.
+# Kept here only so any incidental account/balance reads in legacy code paths
+# degrade gracefully when this experiment is activated.
+# ============================================================================
+alpaca:
+  enabled: false
+  paper: false
+  base_url: "https://paper-api.alpaca.markets"
+  api_key: "${ALPACA_API_KEY:-unused}"
+  api_secret: "${ALPACA_API_SECRET:-unused}"
+
+# ============================================================================
+# Tradier LIVE — broker routing intent (Phase 1).
+# Live wiring lives in the executor repo (scripts/tradier_phase1/_live_guards.py
+# pins LIVE_ACCOUNT_ID + LIVE_BASE_URL + LIVE_TOKEN_ENV). This block documents
+# the per-substream contract the worker honors via env-var unmasking:
+#
+#   SINK_TYPE_EXPV8ATRADIER          -> SINK_TYPE          (= executor)
+#   EXECUTOR_ACCOUNT_ID_EXPV8ATRADIER -> EXECUTOR_ACCOUNT_ID (= tradier_6YA42569)
+#   EXECUTOR_ACCOUNT_TYPE_EXPV8ATRADIER -> EXECUTOR_ACCOUNT_TYPE (= live)
+#   EXECUTOR_BASE_URL_EXPV8ATRADIER  -> EXECUTOR_BASE_URL
+#   EXECUTOR_API_KEY_EXPV8ATRADIER   -> EXECUTOR_API_KEY
+# ============================================================================
+tradier_live:
+  enabled: true
+  account_id: tradier_6YA42569
+  account_type: live
+  base_url: "https://api.tradier.com"
+  token_env: TRADIER_PROD_TOKEN
+  sink_type: executor
+
+# ============================================================================
+# Alerts / Logging
+# ============================================================================
+alerts:
+  telegram:
+    enabled: true
+    bot_token: "${TELEGRAM_BOT_TOKEN}"
+    chat_id: "${TELEGRAM_CHAT_ID}"
+
+logging:
+  level: "INFO"
+  file: "logs/expv8a_tradier_scanner.log"
+  console: true
+
+# ============================================================================
+# Data
+# ============================================================================
+data:
+  provider: polygon
+  cache_dir: "data/options_cache"
+  polygon:
+    api_key: "${POLYGON_API_KEY}"

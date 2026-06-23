@@ -1,6 +1,6 @@
 {
   "schema_version": "3.0",
-  "last_updated": "2026-05-24",
+  "last_updated": "2026-06-23",
   "experiments": {
     "EXP-400": {
       "id": "EXP-400",
@@ -858,6 +858,33 @@
       "created_at": "2026-05-26T19:58:25.529375+00:00",
       "updated_at": "2026-05-26T19:58:25.529389+00:00",
       "broker": "alpaca"
+    },
+    "EXP-V8A-TRADIER": {
+      "id": "EXP-V8A-TRADIER",
+      "name": "Safe Kelly 4/7/9 \u2014 Tradier LIVE Phase 1 (cap 1 contract)",
+      "created_by": "carlos",
+      "created_date": "2026-06-23",
+      "status": "registered",
+      "ticker": "SPY",
+      "broker": "tradier_live",
+      "executor_account_id": "tradier_6YA42569",
+      "account_id": "tradier_6YA42569",
+      "account_type": "live",
+      "live_since": null,
+      "paper_config": null,
+      "backtest_config": null,
+      "description": "DORMANT \u2014 Tradier LIVE pilot of the EXP-800 Safe Kelly 4/7/9 strategy on SPY, hard-capped to 1 contract for Phase 1. Strategy params (DTE=15, OTM=2%, Width=$12, SL=1.25x, PT=55%, Safe Kelly 9/7/4, 3-tier DD circuit breakers, VIX-40 gate) are a VERBATIM copy of paper_exp800.yaml. Order routing flows through the standalone executor REST service (sink_type=executor) using the EXP-V8A-IBKR env-var unmask pattern (SINK_TYPE_EXPV8ATRADIER -> SINK_TYPE, EXECUTOR_ACCOUNT_ID_EXPV8ATRADIER -> EXECUTOR_ACCOUNT_ID=tradier_6YA42569, EXECUTOR_ACCOUNT_TYPE_EXPV8ATRADIER -> live). Funded live account tradier_6YA42569 is pinned in the executor repo at scripts/tradier_phase1/_live_guards.py. Phase 1 = LIVE-but-capped pilot; activation (registered -> configuring -> active) is a separate operator step gated on Carlos's per-session live 'go' and the executor-side wiring landing.",
+      "notes": "CC5 deliverable for the Tradier rollout: worker-repo config + registry entry. status=registered so railway_worker WILL NOT spawn it (railway_worker.py:287 filters status=='active'). To go live, transition registered -> configuring -> active AND ensure executor-repo Tradier-live path is wired AND Carlos has given per-session 'go' (feedback-live-trade-gates). DO NOT activate from this entry alone. Env-var suffix: EXPV8ATRADIER (exp_env_suffix derivation in railway_worker.py:77).",
+      "config_path": "configs/live_expv8a_tradier.yaml",
+      "alpaca_account_id": null,
+      "env_file": ".env.expv8a_tradier",
+      "db_path": "data/expv8a_tradier/pilotai_expv8a_tradier.db",
+      "strategy_type": "iron_condor",
+      "sink_type": "executor",
+      "phase": "Phase 1 \u2014 LIVE config landed (dormant), awaiting executor-side wiring + operator activation",
+      "max_contracts_cap": 1,
+      "created_at": "2026-06-23T00:00:00+00:00",
+      "updated_at": "2026-06-23T00:00:00+00:00"
     },
     "EXP-V8A-IBKR": {
       "id": "EXP-V8A-IBKR",
