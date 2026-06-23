@@ -1029,7 +1029,7 @@ Examples:
                 _sentinel_exp_id = _sentinel_cfg.get('experiment_id', '')
                 if _sentinel_exp_id:
                     from sentinel.guards import pre_scan_check
-                    pre_scan_check(_sentinel_exp_id)
+                    pre_scan_check(_sentinel_exp_id, config=_sentinel_cfg)
             except SystemExit:
                 raise
             except Exception as _sg_exc:

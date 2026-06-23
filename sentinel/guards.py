@@ -48,7 +48,12 @@ _STATE_PATH = _PROJECT_ROOT / "sentinel_state.json"
 # ---------------------------------------------------------------------------
 
 
-def pre_scan_check(experiment_id: str, config_path: Optional[str] = None) -> None:
+def pre_scan_check(
+    experiment_id: str,
+    config_path: Optional[str] = None,
+    *,
+    config: Optional[dict] = None,
+) -> None:
     """
     Pre-scan enforcement gate.  Must be called at the top of every scanner.
 
@@ -59,6 +64,11 @@ def pre_scan_check(experiment_id: str, config_path: Optional[str] = None) -> Non
                        If omitted, the guard reads config_path from the state
                        file (stored during ``--onboard``).  If neither is
                        available, the fingerprint check is skipped.
+        config:        Optional parsed config dict.  When provided and
+                       ``config['alpaca']['enabled']`` is False, the Alpaca
+                       credential/health check is skipped — the experiment is
+                       routed through a non-Alpaca sink (e.g. executor REST
+                       service for Tradier/IBKR live).  All other checks run.
 
     Raises:
         SystemExit(1): experiment is halted, config drifted, API key dead,
@@ -167,7 +177,7 @@ def pre_scan_check(experiment_id: str, config_path: Optional[str] = None) -> Non
     # ------------------------------------------------------------------
     # 3. Alpaca API key health check (fast, <500 ms)
     # ------------------------------------------------------------------
-    _check_alpaca_health(experiment_id)
+    _check_alpaca_health(experiment_id, config=config)
 
     logger.debug("SENTINEL: %s guard passed (status=%s)", experiment_id, status)
 
@@ -239,7 +249,7 @@ def _load_state() -> dict:
 # ---------------------------------------------------------------------------
 
 
-def _check_alpaca_health(experiment_id: str) -> None:
+def _check_alpaca_health(experiment_id: str, *, config: Optional[dict] = None) -> None:
     """
     Verify Alpaca API credentials with a GET /v2/account call.
 
@@ -250,7 +260,21 @@ def _check_alpaca_health(experiment_id: str) -> None:
 
     Uses raw requests to avoid the full SDK initialisation overhead.
     Must complete within ~500 ms (timeout=3 s but usually <200 ms on LAN).
+
+    When ``config`` is provided and ``config['alpaca']['enabled']`` is False,
+    the entire check is skipped — the experiment routes through a non-Alpaca
+    sink (executor REST for Tradier/IBKR live). Sink-specific health checks
+    live in their own modules.
     """
+    if isinstance(config, dict):
+        alpaca_cfg = config.get("alpaca")
+        if isinstance(alpaca_cfg, dict) and alpaca_cfg.get("enabled") is False:
+            logger.info(
+                "SENTINEL: %s skipping Alpaca health check (alpaca.enabled=false, "
+                "sink-routed)", experiment_id,
+            )
+            return
+
     suffix = experiment_id.replace("-", "").upper()  # e.g. 'EXP-400' -> 'EXP400'
     key_var = f"ALPACA_API_KEY_{suffix}"
     secret_var = f"ALPACA_API_SECRET_{suffix}"

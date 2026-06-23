@@ -4,20 +4,56 @@
 Usage:
     python scripts/preflight_check.py configs/paper_champion.yaml
     python scripts/preflight_check.py configs/paper_exp401.yaml
+    python scripts/preflight_check.py configs/live_expv8a_tradier.yaml
 
-Required fields:
-    - db_path
-    - logging (section with level and file)
-    - strategy (section with min_delta and max_delta)
-    - risk (section)
-    - paper_mode: true
-    - experiment_id
+Mode dispatch:
+    - paper_mode: true  → standard paper safety check (unchanged).
+    - paper_mode: false → live config; requires a fully-formed `tradier_live`
+      routing block (sink_type=executor, account_id set, account_type=live,
+      enabled=true) AND risk.max_contracts==1 (Phase 1 cap). A live config
+      missing any of these fails preflight.
+    - paper_mode unset / non-bool → fails (safety check, unchanged).
 """
 
 import sys
 from pathlib import Path
 
 import yaml
+
+
+def _validate_live_routing(config: dict) -> list:
+    """Return error strings for a live config. Empty list = ok."""
+    errors = []
+    tradier = config.get("tradier_live")
+    if not isinstance(tradier, dict):
+        errors.append(
+            "paper_mode is false but no 'tradier_live' routing section present"
+        )
+        return errors
+
+    if tradier.get("enabled") is not True:
+        errors.append("tradier_live.enabled must be true for a live config")
+    if tradier.get("sink_type") != "executor":
+        errors.append(
+            f"tradier_live.sink_type must be 'executor' (got {tradier.get('sink_type')!r})"
+        )
+    if not tradier.get("account_id"):
+        errors.append(
+            "tradier_live.account_id must be set (e.g. 'tradier_6YA42569')"
+        )
+    if tradier.get("account_type") != "live":
+        errors.append(
+            f"tradier_live.account_type must be 'live' (got {tradier.get('account_type')!r})"
+        )
+
+    risk = config.get("risk")
+    cap = risk.get("max_contracts") if isinstance(risk, dict) else None
+    if cap != 1:
+        errors.append(
+            f"risk.max_contracts must be 1 for Phase 1 LIVE cap (got {cap!r})"
+        )
+
+    return errors
 
 
 def validate(config: dict) -> list:
@@ -31,7 +67,13 @@ def validate(config: dict) -> list:
     if not config.get("experiment_id"):
         errors.append("Missing required field: experiment_id")
 
-    if config.get("paper_mode") is not True:
+    # Mode dispatch
+    paper_mode = config.get("paper_mode")
+    if paper_mode is True:
+        pass  # paper happy-path — unchanged
+    elif paper_mode is False:
+        errors.extend(_validate_live_routing(config))
+    else:
         errors.append("paper_mode must be true (safety check)")
 
     # Logging section
@@ -49,10 +91,14 @@ def validate(config: dict) -> list:
     if not isinstance(strategy, dict):
         errors.append("Missing required section: strategy")
     else:
-        if "min_delta" not in strategy:
-            errors.append("strategy.min_delta is required")
-        if "max_delta" not in strategy:
-            errors.append("strategy.max_delta is required")
+        # min_delta/max_delta only meaningful when delta-based strike selection
+        # is enabled. EXP-800-family configs use otm_pct and explicitly disable
+        # delta selection — requiring those fields was a latent bug.
+        if strategy.get("use_delta_selection", True):
+            if "min_delta" not in strategy:
+                errors.append("strategy.min_delta is required")
+            if "max_delta" not in strategy:
+                errors.append("strategy.max_delta is required")
 
     # Risk section
     risk = config.get("risk")
