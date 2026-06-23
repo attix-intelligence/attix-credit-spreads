@@ -323,6 +323,33 @@ h1 { font-size: 22px; font-weight: 700; margin-bottom: 3px; }
     overflow: hidden; transition: box-shadow 0.15s;
 }
 .exp-card:hover { box-shadow: 0 2px 16px rgba(0,0,0,0.07); }
+.exp-card.live {
+    border-color: #fecaca;
+    border-left: 3px solid #ef4444;
+}
+
+/* Live trading section header (real-money cards) */
+.live-trading-section { margin-bottom: 32px; }
+.live-trading-head {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    margin-bottom: 12px; padding-bottom: 8px;
+    border-bottom: 1px solid #fecaca;
+}
+.live-trading-title {
+    font-size: 16px; font-weight: 800; color: #7f1d1d;
+    letter-spacing: -0.3px;
+}
+.live-trading-pill {
+    background: #fee2e2; color: #991b1b; border: 1px solid #fecaca;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.5px;
+    padding: 2px 8px; border-radius: 999px; text-transform: uppercase;
+}
+.live-trading-note { font-size: 11px; color: #94a3b8; margin-left: auto; }
+.paper-section-head {
+    font-size: 13px; font-weight: 700; color: #64748b;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    margin: 0 0 10px;
+}
 
 /* Card header row */
 .exp-header {
@@ -742,11 +769,19 @@ def _render_exp_card(s: dict) -> str:
 
     # Broker-aware labelling. ``executor_live`` stamps ``broker="ibkr_executor"``
     # on the account dict so the card can read "IBKR" instead of "Alpaca" for
-    # experiments that route through ``attix-intelligence/executor``. Default
-    # to Alpaca to keep the historical behaviour for every other experiment.
-    _broker_tag = (alp.get("broker") if isinstance(alp, dict) else None) or "alpaca"
+    # experiments that route through ``attix-intelligence/executor``. When the
+    # account block is empty (e.g. a live-trading experiment awaiting its first
+    # fill) fall back to the registry-level ``broker`` field carried on the row.
+    _broker_tag = (alp.get("broker") if isinstance(alp, dict) else None)
+    if not _broker_tag:
+        _broker_tag = s.get("broker") or "alpaca"
     _is_executor = _broker_tag == "ibkr_executor"
-    _broker_label = "IBKR" if _is_executor else "Alpaca"
+    if _is_executor:
+        _broker_label = "IBKR"
+    elif _broker_tag in ("tradier", "tradier_live"):
+        _broker_label = "Tradier"
+    else:
+        _broker_label = "Alpaca"
 
     tc = _ticker_cls(s["ticker"])
 
@@ -865,6 +900,8 @@ def _render_exp_card(s: dict) -> str:
                 _broker_label, s.get("id"), alp_error,
             )
             err_msg = f"{_broker_label} account unavailable"
+        elif s.get("is_live_trading"):
+            err_msg = f"Awaiting first fill &middot; {_broker_label}"
         else:
             err_msg = f"No {_broker_label} credentials configured"
         # Diagnostic hint (set by data.query_all_live): surface WHY the block is
@@ -917,8 +954,9 @@ def _render_exp_card(s: dict) -> str:
 
     source_badge = _render_source_badge(s)
 
+    _card_cls = "exp-card live" if s.get("is_live_trading") else "exp-card"
     return f"""
-<div class="exp-card">
+<div class="{_card_cls}">
   <div class="exp-header">
     <div class="exp-left">
       <div class="exp-id-line">{eid}{source_badge}{lev_badge}</div>
@@ -940,10 +978,19 @@ def _render_exp_card(s: dict) -> str:
 
 # ---------------------------------------------------------------------------
 
-def render_dashboard(all_stats: list[dict]) -> str:
+def render_dashboard(
+    all_stats: list[dict],
+    live_trading_stats: list[dict] | None = None,
+) -> str:
     from zoneinfo import ZoneInfo
     now = datetime.now(ZoneInfo("America/New_York"))
     now_str = now.strftime("%b %d, %Y %-I:%M %p ET")
+
+    # Paper section excludes anything that belongs in the live-trading section
+    # (account_type=='live'). The live experiments are surfaced separately above.
+    live_ids = {s.get("id") for s in (live_trading_stats or [])}
+    if live_ids:
+        all_stats = [s for s in all_stats if s.get("id") not in live_ids]
 
     total_pnl    = sum(s["total_pnl"] for s in all_stats)
     total_closed = sum(s["total_closed"] for s in all_stats)
@@ -1038,6 +1085,28 @@ def render_dashboard(all_stats: list[dict]) -> str:
 
     exp_rows = "".join(_render_exp_card(s) for s in sorted(all_stats, key=_lev_sort_key))
 
+    # Live-trading section (real-money accounts). Rendered above the paper grid
+    # and only emitted when at least one row exists, so the section vanishes
+    # cleanly on dashboards with no live accounts wired up.
+    live_section = ""
+    if live_trading_stats:
+        live_cards = "".join(
+            _render_exp_card(s) for s in sorted(live_trading_stats, key=lambda x: x.get("id", ""))
+        )
+        live_section = f"""
+  <div class="live-trading-section">
+    <div class="live-trading-head">
+      <span class="live-trading-title">Live Trading</span>
+      <span class="live-trading-pill">Real Money</span>
+      <span class="live-trading-note">{len(live_trading_stats)} live account{'s' if len(live_trading_stats) != 1 else ''}</span>
+    </div>
+    <div class="exp-list">
+      {live_cards}
+    </div>
+  </div>"""
+
+    paper_heading = '<div class="paper-section-head">Paper Experiments</div>' if live_section else ""
+
     nav = _render_nav("/", f'<span class="live-dot"></span> <span>Updated {now_str} &bull; Refresh in <span id="cd">300s</span></span>')
 
     return f"""<!DOCTYPE html>
@@ -1076,6 +1145,8 @@ def render_dashboard(all_stats: list[dict]) -> str:
     </div>
   </div>
 
+  {live_section}
+  {paper_heading}
   <div class="exp-list">
     {exp_rows}
   </div>

@@ -60,6 +60,7 @@ from .data import (
     get_trades,
     query_all_live,
     query_experiment,
+    query_live_trading_experiments,
     summary_all,
     PUSHED_DATA_PATH,
     load_pushed_data,
@@ -321,6 +322,9 @@ async def dashboard(request: Request, _: None = Depends(require_session)):
     """Live paper trading dashboard — session required."""
     try:
         all_stats = _cached("dashboard_stats", 60.0, query_all_live)
+        live_trading_stats = _cached(
+            "live_trading_stats", 60.0, query_live_trading_experiments
+        )
         # Log alpaca presence for first experiment (Railway diagnostics)
         if all_stats:
             first = all_stats[0]
@@ -331,7 +335,7 @@ async def dashboard(request: Request, _: None = Depends(require_session)):
                 alp is not None,
                 alp.get("equity") if alp else None,
             )
-        html = render_dashboard(all_stats)
+        html = render_dashboard(all_stats, live_trading_stats=live_trading_stats)
         return HTMLResponse(content=html, status_code=200)
     except Exception as e:
         logger.exception("Dashboard render failed")

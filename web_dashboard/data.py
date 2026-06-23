@@ -188,6 +188,21 @@ def get_all_experiments(registry: dict | None = None) -> list[dict]:
     return sorted(registry["experiments"].values(), key=lambda e: e["id"])
 
 
+def get_live_trading_experiments(registry: dict | None = None) -> list[dict]:
+    """Registry entries flagged as real-money live trading accounts.
+
+    Includes any experiment with ``account_type == "live"`` regardless of
+    status, so a newly registered live account surfaces on the dashboard
+    before it transitions to ``active``.
+    """
+    if registry is None:
+        exps = list(get_manager().all().values())
+    else:
+        exps = list(registry["experiments"].values())
+    live = [e for e in exps if e.get("account_type") == "live"]
+    return sorted(live, key=lambda e: e["id"])
+
+
 # ---------------------------------------------------------------------------
 # DB path resolution
 # ---------------------------------------------------------------------------
@@ -724,6 +739,32 @@ def get_positions(exp: dict) -> list[dict]:
         return [dict(r) for r in rows]
     except Exception:
         return []
+
+
+def query_live_trading_experiments(report_date: Optional[str] = None) -> List[dict]:
+    """Per-experiment rows for real-money accounts (``account_type == "live"``).
+
+    Independent of ``query_all_live`` (which only surfaces paper experiments in
+    LIVE_STATUSES). Each row is tagged ``is_live_trading=True`` and carries the
+    registry's ``broker``/``status``/``account_type`` so the renderer can label
+    the broker and render an "awaiting first fill" state when no live equity
+    block is wired up yet. No equity, P&L, or position numbers are fabricated:
+    rows lacking an account block fall through to the renderer's empty-state path.
+    """
+    live_exps = get_live_trading_experiments()
+    if not live_exps:
+        return []
+
+    results = [query_experiment(exp, report_date) for exp in live_exps]
+    for exp, row in zip(live_exps, results):
+        row["broker"] = exp.get("broker")
+        row["account_type"] = exp.get("account_type")
+        row["status"] = exp.get("status")
+        row["is_live_trading"] = True
+        if not row.get("alpaca"):
+            row["data_source"] = "empty"
+            row["data_age_seconds"] = None
+    return results
 
 
 def summary_all() -> dict:
