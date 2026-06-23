@@ -152,6 +152,8 @@ export async function GET() {
       creator:    (e.created_by as string) ?? '',
       live_since: (e.live_since as string) ?? (e.created_date as string) ?? '',
       account_id: (e.alpaca_account_id as string) ?? (e.account_id as string) ?? '',
+      account_type: 'paper' as const,
+      broker:     'alpaca' as const,
       notes:      (e.notes as string) ?? '',
       backtest: {
         avg_return: be?.avg_return as number | undefined,
@@ -181,6 +183,36 @@ export async function GET() {
     }
   })
 
+  // ── Tradier Phase 1 live experiment (EXP-V8A-TRADIER) ──────────────────
+  // Real-money account; Tradier live data wiring not yet present in the
+  // upstream API, so we surface it with an awaiting-data flag. Do NOT
+  // fabricate P&L / position numbers — only static known metadata is shown.
+  const tradierLive = {
+    id:           'EXP-V8A-TRADIER',
+    name:         'EXP-800 Safe Kelly — LIVE (Tradier)',
+    ticker:       'SPY',
+    creator:      'carlos',
+    live_since:   '2026-06-22',
+    account_id:   '6YA42569',
+    account_type: 'live' as const,
+    broker:       'tradier-live' as const,
+    starting_equity: 133_000,
+    awaiting_data: true,
+    notes:        'Phase 1 launch — capped at 1 contract per trade. Real money.',
+    backtest:     {},
+    error:        null,
+    alpaca:       null,
+    stats: {
+      total_closed: 0, wins: 0, losses: 0, win_rate: 0,
+      total_pnl: 0, total_return_pct: 0, max_dd_pct: 0, max_dd_dollars: 0,
+      open_count: 0, avg_pnl: 0, trades_week: 0,
+      last_trade_date: null, profit_factor: null,
+    },
+    equity_curve:   [],
+    open_positions: [],
+    recent_trades:  [],
+  }
+
   // ── Build ExperimentsExport payload ────────────────────────────────────
   const generatedAt = (summary.generated_at as string) ?? new Date().toISOString()
 
@@ -190,6 +222,8 @@ export async function GET() {
     .sort()
     .at(-1) ?? generatedAt
 
+  const allExperiments = [tradierLive, ...experiments]
+
   const payload = {
     schema_version:  (experimentsPayload.schema_version as string) ?? '3.0',
     generated_at:    generatedAt,
@@ -197,7 +231,7 @@ export async function GET() {
     generated_epoch: Math.floor(new Date(generatedAt).getTime() / 1000),
     report_date:     generatedAt.slice(0, 10),
     starting_equity: 100_000,
-    experiments,
+    experiments: allExperiments,
     summary: {
       total_experiments:    experiments.length,
       with_trades:          experiments.filter(e => e.stats.total_closed > 0).length,

@@ -124,6 +124,10 @@ export interface ExperimentData {
   creator: string
   live_since: string
   account_id: string
+  account_type?: 'paper' | 'live'
+  broker?: 'alpaca' | 'tradier-live'
+  starting_equity?: number
+  awaiting_data?: boolean
   notes: string
   backtest: { avg_return?: number; max_dd?: number; robust?: number }
   error: string | null

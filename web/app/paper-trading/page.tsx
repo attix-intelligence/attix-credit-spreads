@@ -1,6 +1,6 @@
 'use client'
 
-import { RefreshCw, TrendingUp, DollarSign, Activity, AlertCircle, CheckCircle } from 'lucide-react'
+import { RefreshCw, TrendingUp, DollarSign, Activity, AlertCircle, CheckCircle, ShieldAlert } from 'lucide-react'
 import { useExperiments, ExperimentData } from '@/lib/hooks'
 
 function fmt$(n: number | null | undefined, decimals = 0) {
@@ -44,6 +44,9 @@ export default function PaperTradingPage() {
   const s = data.summary
   const starting = data.starting_equity ?? 100_000
 
+  const liveExperiments  = data.experiments.filter(e => e.account_type === 'live')
+  const paperExperiments = data.experiments.filter(e => e.account_type !== 'live')
+
   const lastVerifiedStr = (() => {
     const ts = data.last_verified_at
     if (!ts) return null
@@ -52,8 +55,8 @@ export default function PaperTradingPage() {
     const timePart = d.toLocaleString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'America/New_York' })
     return `${datePart} ${timePart} ET`
   })()
-  const combinedReturn = s.combined_equity
-    ? ((s.combined_equity - starting * data.experiments.length) / (starting * data.experiments.length)) * 100
+  const combinedReturn = s.combined_equity && paperExperiments.length > 0
+    ? ((s.combined_equity - starting * paperExperiments.length) / (starting * paperExperiments.length)) * 100
     : null
   const stale = data._meta?.stale
 
@@ -109,14 +112,115 @@ export default function PaperTradingPage() {
           />
         </div>
 
-        {/* Experiment Cards */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-          {data.experiments.map(exp => (
-            <ExperimentCard key={exp.id} exp={exp} starting={starting} />
-          ))}
+        {/* ─── Live Trading (real money) ─── */}
+        {liveExperiments.length > 0 && (
+          <section
+            aria-labelledby="live-trading-heading"
+            className="rounded-xl border-2 border-red-200 bg-white p-5 space-y-4 shadow-sm"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ShieldAlert className="w-5 h-5 text-red-500" />
+                <h2 id="live-trading-heading" className="text-base font-bold text-gray-900">
+                  Live Trading
+                </h2>
+                <span className="px-2 py-0.5 rounded-full bg-red-50 border border-red-200 text-[10px] font-bold uppercase tracking-wider text-red-600">
+                  Real Money
+                </span>
+              </div>
+              <span className="text-xs text-gray-400">
+                {liveExperiments.length} {liveExperiments.length === 1 ? 'account' : 'accounts'}
+              </span>
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+              {liveExperiments.map(exp => (
+                <LiveExperimentCard key={exp.id} exp={exp} />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* ─── Paper Trading experiments ─── */}
+        <div>
+          <h2 className="text-base font-bold text-gray-900 mb-3">Paper Trading</h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            {paperExperiments.map(exp => (
+              <ExperimentCard key={exp.id} exp={exp} starting={starting} />
+            ))}
+          </div>
         </div>
 
       </main>
+    </div>
+  )
+}
+
+function LiveExperimentCard({ exp }: { exp: ExperimentData }) {
+  const startingEquity = exp.starting_equity
+  const awaiting = exp.awaiting_data === true
+  const alp = exp.alpaca
+  const equity = alp?.equity ?? null
+
+  return (
+    <div className="bg-white rounded-xl border-2 border-red-200 p-5 shadow-sm relative">
+      <div className="absolute top-3 right-3 px-2 py-0.5 rounded bg-red-50 border border-red-200 text-[10px] font-bold uppercase tracking-wider text-red-600">
+        Live
+      </div>
+
+      <div className="flex items-start justify-between mb-4 pr-16">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="text-base font-bold text-gray-900">{exp.id}</span>
+            <span className="text-xs text-gray-400 font-medium">{exp.ticker}</span>
+          </div>
+          {exp.name && exp.name !== exp.id && (
+            <p className="text-xs text-gray-500 mt-0.5">{exp.name}</p>
+          )}
+          <p className="text-xs text-gray-400 mt-0.5">
+            Tradier · acct {exp.account_id} · live since {exp.live_since}
+          </p>
+        </div>
+        {equity != null && (
+          <div className="text-right">
+            <p className="text-2xl font-bold text-gray-900">
+              ${equity.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+            </p>
+          </div>
+        )}
+      </div>
+
+      <div className="grid grid-cols-3 gap-3 mb-4 p-3 bg-gray-50 rounded-lg">
+        <div className="text-center">
+          <p className="text-xs text-gray-400">Starting Equity</p>
+          <p className="text-sm font-bold text-gray-700">
+            {startingEquity != null ? `$${startingEquity.toLocaleString('en-US')}` : '—'}
+          </p>
+        </div>
+        <div className="text-center">
+          <p className="text-xs text-gray-400">Unrealized P&L</p>
+          <p className="text-sm font-bold text-gray-400">{awaiting ? 'pending' : fmt$(alp?.unrealized_pl)}</p>
+        </div>
+        <div className="text-center">
+          <p className="text-xs text-gray-400">Open Positions</p>
+          <p className="text-sm font-bold text-gray-700">{exp.stats.open_count}</p>
+        </div>
+      </div>
+
+      {awaiting && (
+        <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+          <AlertCircle className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
+          <div className="text-xs text-amber-700">
+            <p className="font-semibold">Awaiting first fill</p>
+            <p className="text-amber-600/80 mt-0.5">
+              Live Tradier data feed not yet wired. Account metadata only.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {exp.notes && (
+        <p className="text-xs text-gray-500 mt-3">{exp.notes}</p>
+      )}
     </div>
   )
 }
