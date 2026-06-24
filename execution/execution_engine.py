@@ -98,7 +98,13 @@ class ExecutionEngine:
         # result['status'] == 'submitted' | 'dry_run' | 'error'
     """
 
-    def __init__(self, alpaca_provider, db_path: Optional[str] = None, config: Optional[Dict] = None):
+    def __init__(
+        self,
+        alpaca_provider,
+        db_path: Optional[str] = None,
+        config: Optional[Dict] = None,
+        executor_sink=None,
+    ):
         """
         Args:
             alpaca_provider: AlpacaProvider instance, or None for dry-run/alert-only mode.
@@ -108,8 +114,14 @@ class ExecutionEngine:
                     iron condors will be submitted as a single atomic order instead of two
                     separate 2-leg orders.  Currently this flag only controls a log warning;
                     the two-order path is always used until Alpaca supports atomic 4-leg ICs.
+            executor_sink: Optional ExecutorOrderSink (or compatible) instance.  When
+                    provided, submit_opportunity() routes orders through the executor REST
+                    service instead of Alpaca.  Activated by main.py when
+                    ``tradier_live.sink_type=executor`` (Phase 1 V8A-TRADIER route).
+                    See compass/live/executor_order_sink.py for the protocol.
         """
         self.alpaca = alpaca_provider
+        self.executor_sink = executor_sink
         self.db_path = db_path
         self.config = config or {}
 
@@ -364,6 +376,27 @@ class ExecutionEngine:
         except Exception as e:
             logger.warning("ExecutionEngine: feature logging failed for %s (non-fatal): %s", client_id, e)
 
+        # ────────────────────────────────────────────────────────────────────
+        # NEW (V8A-TRADIER): executor sink route.
+        # When ExecutorOrderSink is wired (sink_type=executor + tradier_live block),
+        # submit through the executor REST service instead of Alpaca. This branch
+        # is taken ONLY when self.executor_sink is set; the existing Alpaca/dry-run
+        # path below is unchanged byte-for-byte.
+        # ────────────────────────────────────────────────────────────────────
+        if self.executor_sink is not None:
+            return self._submit_via_executor(
+                opp=opp,
+                client_id=client_id,
+                ticker=ticker,
+                spread_type=spread_type,
+                spread_lower=spread_lower,
+                contracts=contracts,
+                credit=credit,
+                expiration=expiration,
+                short_strike=short_strike,
+                long_strike=long_strike,
+            )
+
         # Dry-run mode: no Alpaca provider configured
         if not self.alpaca:
             if "straddle" in spread_lower or "strangle" in spread_lower:
@@ -536,6 +569,220 @@ class ExecutionEngine:
                     "ExecutionEngine: DB update to %s failed for %s: %s", new_status, client_id, db_err
                 )
             return {"status": "error", "message": str(e), "client_order_id": client_id}
+
+    # ────────────────────────────────────────────────────────────────────────
+    # V8A-TRADIER: executor sink route (additive, never touches Alpaca path).
+    # ────────────────────────────────────────────────────────────────────────
+    def _build_executor_intent(
+        self,
+        *,
+        client_id: str,
+        ticker: str,
+        spread_type: str,
+        contracts: int,
+        credit: float,
+        expiration,
+        short_strike: float,
+        long_strike: float,
+    ):
+        """Adapt the engine's ``opp`` dict into an ExecutorOrderSink-compatible
+        :class:`OrderIntent`.
+
+        Local adapter — ExecutorOrderSink is not modified. Reuses the existing
+        deterministic client_id as the intent's ``stream`` so the sink's
+        ``stream_client_order_id`` produces a stable idempotency key.
+        """
+        # Lazy import — keeps the engine import surface unchanged when the
+        # executor route is never used (default for all non-V8A-TRADIER experiments).
+        from compass.live.vrp_contracts import OrderIntent, OrderLeg
+
+        exp_str = str(expiration).split(" ")[0] if expiration else ""
+        right = "P" if spread_type.lower() == "bull_put" else "C"
+        opt_type = "put" if right == "P" else "call"
+        sell_occ = _build_occ_symbol(ticker, exp_str, short_strike, opt_type) or ticker
+        buy_occ = _build_occ_symbol(ticker, exp_str, long_strike, opt_type) or ticker
+        return OrderIntent(
+            stream=client_id,  # routed through stream_client_order_id for idempotency
+            symbol=ticker,
+            structure=spread_type.lower(),
+            legs=(
+                OrderLeg(
+                    side="sell", sec_type="option", symbol=sell_occ,
+                    qty=int(contracts), strike=float(short_strike),
+                    expiration=exp_str, right=right,
+                ),
+                OrderLeg(
+                    side="buy", sec_type="option", symbol=buy_occ,
+                    qty=int(contracts), strike=float(long_strike),
+                    expiration=exp_str, right=right,
+                ),
+            ),
+            contracts=int(contracts),
+            est_credit=float(credit) if credit and credit > 0 else None,
+            rationale=f"v8a_tradier:{self._exp_id}",
+        )
+
+    def _submit_via_executor(
+        self,
+        *,
+        opp: Dict,
+        client_id: str,
+        ticker: str,
+        spread_type: str,
+        spread_lower: str,
+        contracts: int,
+        credit: float,
+        expiration,
+        short_strike: float,
+        long_strike: float,
+    ) -> Dict:
+        """Executor-route submit path. Layered guards (RTH → live_submit gate →
+        phase-1 cap → submit), each early-returning with a structured status dict.
+        """
+        # Lazy import keeps default Alpaca path import-time-clean.
+        from execution.market_hours import is_rth_now
+
+        # ── 1) Broker-agnostic market-hours guard ──────────────────────────
+        if not is_rth_now():
+            logger.warning(
+                "ExecutionEngine: market is CLOSED (RTH check) — blocking executor "
+                "order for %s %s (client_id=%s)",
+                ticker, spread_type, client_id,
+            )
+            self._mark_pending_failed(client_id, "market_closed: outside RTH (executor route)")
+            return {
+                "status": "market_closed",
+                "client_order_id": client_id,
+                "message": "market closed; outside NYSE RTH",
+            }
+
+        # ── 2) live_submit gate (default OFF) ──────────────────────────────
+        live_submit_cfg = bool((self.config or {}).get("live_submit", False))
+        live_submit_env = os.environ.get("LIVE_SUBMIT", "").strip().lower() in (
+            "1", "true", "yes", "on",
+        )
+        if not (live_submit_cfg or live_submit_env):
+            # Same log shape as the existing DRY RUN line so dashboards/log scrapers keep working.
+            logger.info(
+                "ExecutionEngine [DRY RUN — live_submit=false]: would submit %s %s x%d "
+                "@ %.2f credit (client_id=%s)",
+                ticker, spread_type, contracts, credit, client_id,
+            )
+            self._mark_pending_failed(client_id, "dry_run: live_submit gate off")
+            return {
+                "status": "dry_run",
+                "client_order_id": client_id,
+                "message": "live_submit gate off",
+            }
+
+        # ── 3) Phase-1 contracts cap (belt-and-suspenders) ─────────────────
+        _max_contracts = int(((self.config or {}).get("risk") or {}).get("max_contracts", 1))
+        if contracts > _max_contracts:
+            logger.error(
+                "ExecutionEngine: contracts %d exceeds risk.max_contracts %d for %s "
+                "(client_id=%s) — refusing submit",
+                contracts, _max_contracts, ticker, client_id,
+            )
+            self._mark_pending_failed(
+                client_id,
+                f"phase1_cap_exceeded: contracts={contracts} max={_max_contracts}",
+            )
+            return {
+                "status": "error",
+                "client_order_id": client_id,
+                "message": f"phase1 cap exceeded: contracts={contracts} max={_max_contracts}",
+            }
+
+        # ── 4) Structure support — executor sink only supports credit spreads.
+        if spread_lower not in ("bull_put", "bear_call"):
+            logger.error(
+                "ExecutionEngine: executor route does not support structure %r "
+                "(client_id=%s) — refusing submit. Phase-1 V8A-TRADIER ships with "
+                "credit-spread structures only.",
+                spread_type, client_id,
+            )
+            self._mark_pending_failed(
+                client_id,
+                f"unsupported_structure_executor: {spread_type}",
+            )
+            return {
+                "status": "error",
+                "client_order_id": client_id,
+                "message": f"executor route does not support structure: {spread_type}",
+            }
+
+        # ── 5) Submit via executor sink ────────────────────────────────────
+        try:
+            intent = self._build_executor_intent(
+                client_id=client_id, ticker=ticker, spread_type=spread_type,
+                contracts=contracts, credit=credit, expiration=expiration,
+                short_strike=short_strike, long_strike=long_strike,
+            )
+            raw = self.executor_sink.submit(intent)
+        except Exception as exc:  # noqa: BLE001 — sink should not crash the cycle
+            logger.error(
+                "ExecutionEngine: executor submit raised for %s: %s",
+                client_id, exc, exc_info=True,
+            )
+            try:
+                upsert_trade(
+                    {"id": client_id, "status": "failed_open",
+                     "exit_reason": f"executor_submit_failed: {exc}"},
+                    source="execution", path=self.db_path,
+                )
+            except Exception as db_err:
+                logger.error(
+                    "ExecutionEngine: DB update to failed_open failed for %s: %s",
+                    client_id, db_err,
+                )
+            return {
+                "status": "error",
+                "client_order_id": client_id,
+                "message": f"executor submit failed: {exc}",
+            }
+
+        # Normalize sink response and update DB.
+        sink_status = (raw or {}).get("status", "")
+        if sink_status == "submitted":
+            order_id = raw.get("order_id")
+            logger.info(
+                "ExecutionEngine [EXECUTOR SUBMIT]: %s %s x%d @ %.2f credit "
+                "order_id=%s broker_order_id=%s (client_id=%s)",
+                ticker, spread_type, contracts, credit,
+                order_id, raw.get("broker_order_id"), client_id,
+            )
+            # Mirror Alpaca-path behaviour: leave trade in pending_open; the
+            # reconciler / monitor will flip to 'open' once the broker confirms fill.
+            return {
+                "status": "submitted",
+                "client_order_id": client_id,
+                "order_id": order_id,
+                "broker_order_id": raw.get("broker_order_id"),
+                "message": raw.get("message", "executor submit ok"),
+            }
+
+        # Non-submitted response from the executor sink (HTTP error, validation, etc.)
+        err_msg = (raw or {}).get("message", sink_status or "unknown")
+        logger.warning(
+            "ExecutionEngine: executor sink returned non-submitted status for %s: %s",
+            client_id, raw,
+        )
+        try:
+            upsert_trade(
+                {"id": client_id, "status": "failed_open",
+                 "exit_reason": f"executor_rejected: {err_msg}"},
+                source="execution", path=self.db_path,
+            )
+        except Exception as db_err:
+            logger.error(
+                "ExecutionEngine: DB update to failed_open failed for %s: %s",
+                client_id, db_err,
+            )
+        return {
+            "status": "error",
+            "client_order_id": client_id,
+            "message": f"executor submit failed: {err_msg}",
+        }
 
     def _mark_pending_failed(self, client_id: str, reason: str) -> None:
         """Update a pending_open DB record to failed_open.
