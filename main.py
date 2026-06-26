@@ -169,11 +169,37 @@ class CreditSpreadSystem:
                     f"AlpacaProvider init failed (alpaca.enabled=true): {e}"
                 ) from e
 
+        # Executor sink (Tradier/IBKR via executor REST) — opt-in via tradier_live.sink_type=executor.
+        # Reuses compass.live.executor_order_sink.ExecutorOrderSink which the VRP path already uses.
+        # Reads EXECUTOR_BASE_URL / EXECUTOR_API_KEY / EXECUTOR_ACCOUNT_ID from env (railway_worker.py
+        # unmasks _<SUFFIX> suffixed vars before spawning the substream).
+        self.executor_sink = None
+        _tradier_cfg = self.config.get('tradier_live', {}) or {}
+        _sink_type = (os.environ.get('SINK_TYPE') or _tradier_cfg.get('sink_type') or '').strip().lower()
+        if _sink_type == 'executor' and _tradier_cfg.get('enabled', False):
+            try:
+                from compass.live.executor_order_sink import ExecutorOrderSink
+                self.executor_sink = ExecutorOrderSink.from_env()
+                logger.info(
+                    "ExecutorOrderSink wired for experiment_id=%s account=%s type=%s",
+                    self.config.get('experiment_id'),
+                    _tradier_cfg.get('account_id'),
+                    _tradier_cfg.get('account_type'),
+                )
+            except Exception as e:
+                logger.critical(
+                    "ExecutorOrderSink init FAILED — cannot start with tradier_live.sink_type=executor: %s",
+                    e, exc_info=True,
+                )
+                raise RuntimeError(f"ExecutorOrderSink init failed: {e}") from e
+
         # ExecutionEngine (P0 Fix 1)
         from execution.execution_engine import ExecutionEngine
         self.execution_engine = ExecutionEngine(
             alpaca_provider=self.alpaca_provider,
             db_path=os.environ.get('ATTIX_DB_PATH'),
+            config=self.config,
+            executor_sink=self.executor_sink,
         )
 
         # MASTERPLAN alert router pipeline (P0 Fix 1: now accepts execution_engine)
