@@ -38,7 +38,6 @@ import math
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -688,25 +687,25 @@ def main():
     is_m = result["is_metrics"]
 
     print(f"\n{'━' * 52}")
-    print(f"  IN-SAMPLE (2020–2021, 1.6× levered):")
+    print("  IN-SAMPLE (2020–2021, 1.6× levered):")
     print(f"    CAGR:   {is_m['cagr_pct']:.1f}%   Sharpe: {is_m['sharpe']:.2f}   Max DD: {is_m['max_dd_pct']:.1f}%")
-    print(f"\n  OUT-OF-SAMPLE (2022–2025, net of costs):")
+    print("\n  OUT-OF-SAMPLE (2022–2025, net of costs):")
     print(f"    CAGR:   {agg['cagr_pct']:.1f}%   Sharpe: {agg['sharpe']:.2f}   Max DD: {agg['max_dd_pct']:.1f}%")
     print(f"    Calmar: {agg['calmar']:.2f}    Sortino: {agg['sortino']:.2f}   Vol: {agg['vol_pct']:.1f}%")
     print(f"    Return: {agg['total_ret_pct']:.1f}%   Days: {agg['n_days']}")
-    print(f"\n  Targets:")
+    print("\n  Targets:")
     print(f"    CAGR ≥100%:  {'PASS ✓' if agg['cagr_pct'] >= 100 else 'MISS ✗'} ({agg['cagr_pct']:.1f}%)")
     print(f"    DD   ≤12%:   {'PASS ✓' if agg['max_dd_pct'] <= 12 else 'MISS ✗'} ({agg['max_dd_pct']:.1f}%)")
     print(f"    Sharpe ≥4:   {'PASS ✓' if agg['sharpe'] >= 4.0 else 'MISS ✗'} ({agg['sharpe']:.2f})")
     print(f"    Total costs: {result['total_oos_cost_bps']:.0f} bps")
     print(f"{'━' * 52}")
 
-    print(f"\n  Year-by-Year OOS:")
+    print("\n  Year-by-Year OOS:")
     for yr, m in sorted(result["yearly_oos"].items()):
         print(f"    {yr}: CAGR={m['cagr_pct']:7.1f}%  Sharpe={m['sharpe']:.2f}  MaxDD={m['max_dd_pct']:.1f}%  Ret={m['total_ret_pct']:.1f}%")
 
     # Generate report
-    print(f"\n[3/3] Generating HTML report...")
+    print("\n[3/3] Generating HTML report...")
     html = generate_html(result)
     REPORT_PATH.parent.mkdir(parents=True, exist_ok=True)
     REPORT_PATH.write_text(html, encoding="utf-8")

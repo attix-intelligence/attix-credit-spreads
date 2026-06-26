@@ -26,7 +26,6 @@ from typing import Any, Dict, List
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
 
-import numpy as np
 import pandas as pd
 import yaml
 
@@ -491,7 +490,7 @@ def main():
     print("\n" + "=" * 70)
     print("EXP-880-real: IronVault Backtest Results")
     print("=" * 70)
-    print(f"Data Source:      IronVault (options_cache.db) — ZERO synthetic data")
+    print("Data Source:      IronVault (options_cache.db) — ZERO synthetic data")
     print(f"Period:           {START_DATE.date()} → {END_DATE.date()}")
     print(f"Starting Capital: ${STARTING_CAPITAL:,.0f}")
     print(f"Ending Capital:   ${ending_capital:,.0f}")

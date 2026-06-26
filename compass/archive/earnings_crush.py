@@ -44,13 +44,11 @@ from __future__ import annotations
 
 import json
 import logging
-import math
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List
 
-import numpy as np
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -65,10 +63,6 @@ from compass.earnings_vol_crush import (
     TICKER_TO_INDEX,
     run_earnings_vol_crush,
     compute_metrics,
-    generate_html,
-    REPORT_PATH as VCR_REPORT,
-    JSON_PATH as VCR_JSON,
-    CAPITAL,
     OOS_START,
 )
 

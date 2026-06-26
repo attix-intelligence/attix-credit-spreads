@@ -18,7 +18,7 @@ Usage:
 import argparse
 import logging
 import sys
-from datetime import date, timezone, datetime
+from datetime import date
 from pathlib import Path
 
 from dotenv import load_dotenv

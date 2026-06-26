@@ -63,9 +63,9 @@ import logging
 import re
 import sqlite3
 from dataclasses import dataclass, field
-from datetime import date, datetime, timezone
+from datetime import date
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional, Set
 
 logger = logging.getLogger(__name__)
 

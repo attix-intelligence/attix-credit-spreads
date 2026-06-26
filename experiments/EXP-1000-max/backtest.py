@@ -13,7 +13,7 @@ import json
 import logging
 import math
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 import numpy as np
 import pandas as pd
@@ -325,11 +325,11 @@ def main():
     print(f"  Max DD: {s['max_dd_pct']:.1f}%")
     print(f"  Win Rate: {s['win_rate']:.1%}")
     print(f"  Correlation w/ EXP-880: {s['correlation_with_exp880']:.3f}")
-    print(f"\n  Per-Year:")
+    print("\n  Per-Year:")
     for yr in s["per_year"]:
         icon = "+" if yr["profitable"] else "-"
         print(f"    {yr['year']}: {yr['trades']} trades, ${yr['pnl']:+,.0f}, WR={yr['win_rate']:.0%} ({icon})")
-    print(f"\n  Criteria:")
+    print("\n  Criteria:")
     for name, c in sc.items():
         icon = "✓" if c["met"] else "✗"
         actual = f"{c['actual']:.3f}" if isinstance(c["actual"], float) else str(c["actual"])

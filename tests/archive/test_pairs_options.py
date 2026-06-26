@@ -4,9 +4,8 @@ import numpy as np
 import pandas as pd
 import pytest
 from compass.pairs_options import (
-    BacktestResult, CointegrationTest, PairAnalysis, PairsConfig,
-    PairsOptionsEngine, PairsTrade, SpreadSnapshot,
-    compute_spread, rolling_zscore,
+    BacktestResult, PairAnalysis, PairsConfig,
+    PairsOptionsEngine, PairsTrade, compute_spread, rolling_zscore,
     test_cointegration as run_coint_test,
 )
 

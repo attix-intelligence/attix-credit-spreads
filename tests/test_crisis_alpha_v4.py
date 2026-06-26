@@ -3,13 +3,11 @@
 import math
 import numpy as np
 import pandas as pd
-import pytest
 
 from compass.crisis_alpha_v4 import (
-    UNIVERSE_V4, ConfigV4, AllocationTest, WFFold,
+    UNIVERSE_V4, ConfigV4, WFFold,
     corrected_sharpe, compute_metrics,
-    compute_signal_with_confirmation, compute_v4_weights,
-    apply_drawdown_brake, backtest_v4, walk_forward_v4,
+    compute_signal_with_confirmation, apply_drawdown_brake, backtest_v4, walk_forward_v4,
     select_best_v4, TRADING_DAYS,
 )
 # Renamed import to avoid pytest collecting it as a test function

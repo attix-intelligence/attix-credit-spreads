@@ -272,7 +272,7 @@ def main():
     print("\n" + "=" * 70)
     print("SUMMARY")
     print("=" * 70)
-    print(f"  Problem: Real puts cost 4.36%/yr (2.2x assumed)")
+    print("  Problem: Real puts cost 4.36%/yr (2.2x assumed)")
     print(f"  Pareto winner: {pareto['name']}")
     print(f"    CAGR:     {pct(pareto['cagr'])}")
     print(f"    Sharpe:   {pareto['sharpe']:.2f}")

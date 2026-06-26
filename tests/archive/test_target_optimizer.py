@@ -4,8 +4,8 @@ import pandas as pd
 import pytest
 from pathlib import Path
 from compass.target_optimizer import (
-    TargetOptimizer, PerformanceGap, SweepResult, CombinationResult,
-    ImprovementOpportunity, TargetAnalysis, NORTH_STAR,
+    TargetOptimizer, SweepResult, CombinationResult,
+    TargetAnalysis,
 )
 
 def _strat_returns(n=300, k=3, seed=42):

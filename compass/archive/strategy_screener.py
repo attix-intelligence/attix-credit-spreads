@@ -414,10 +414,10 @@ def format_result(result: ScreenResult) -> str:
     s = result
     badge = {"PASS": "✅ PASS", "CONDITIONAL": "⚠️  CONDITIONAL", "FAIL": "❌ FAIL"}[s.grade]
     lines = [
-        f"════════════════════════════════════════════════════════════",
+        "════════════════════════════════════════════════════════════",
         f"{badge}  {s.spec.name}",
         f"Data: {s.spec.data_source}",
-        f"────────────────────────────────────────────────────────────",
+        "────────────────────────────────────────────────────────────",
         f"  CAGR        {s.cagr*100:+7.1f}%",
         f"  Sharpe      {s.sharpe:7.2f}",
         f"  Max DD      {s.max_dd*100:7.1f}%",
@@ -433,7 +433,7 @@ def format_result(result: ScreenResult) -> str:
     if s.pass_reasons:
         lines.append(f"  ✓ {len(s.pass_reasons)} criteria met")
     if s.fail_reasons:
-        lines.append(f"  ✗ Fail reasons:")
+        lines.append("  ✗ Fail reasons:")
         for f in s.fail_reasons:
             lines.append(f"      - {f}")
     return "\n".join(lines)

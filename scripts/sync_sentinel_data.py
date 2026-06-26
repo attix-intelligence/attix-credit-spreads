@@ -404,7 +404,7 @@ def _collect_config_integrity(
     })
 
     # Gate 2: Registry Integrity — verify registry matches sentinel_state
-    reg_exps = set(registry.get("experiments", {}).keys())
+    set(registry.get("experiments", {}).keys())
     state_exps = set(experiments_state.keys())
     active_reg = {k for k, v in registry.get("experiments", {}).items() if v.get("status") == "paper_trading"}
     missing_from_state = active_reg - state_exps
@@ -730,7 +730,7 @@ def main() -> int:
     parser.add_argument("--token", default=os.environ.get("RAILWAY_ADMIN_TOKEN"))
     args = parser.parse_args()
 
-    print(f"[sentinel-sync] Collecting Sentinel data...")
+    print("[sentinel-sync] Collecting Sentinel data...")
     payload = collect_sentinel_data()
     print(f"[sentinel-sync] {payload['experiment_count']} experiments, "
           f"{len(payload.get('alerts', []))} alerts")

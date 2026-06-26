@@ -19,7 +19,7 @@ from __future__ import annotations
 import json
 import math
 import warnings
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
@@ -29,7 +29,6 @@ import pandas as pd
 warnings.filterwarnings("ignore", category=UserWarning)
 warnings.filterwarnings("ignore", category=FutureWarning)
 
-from sklearn.calibration import CalibratedClassifierCV
 from sklearn.ensemble import ExtraTreesClassifier, RandomForestClassifier
 from sklearn.linear_model import LogisticRegression, Ridge
 from xgboost import XGBClassifier
@@ -565,7 +564,7 @@ def main():
     best = summary["best_variant_at_075"]
 
     print(f"\n{'='*70}")
-    print(f"  EXP-810-max: Signal Ensemble Results (at P>=0.75)")
+    print("  EXP-810-max: Signal Ensemble Results (at P>=0.75)")
     print(f"{'='*70}")
     for vname in ["A_XGBoost", "B_Ensemble3", "C_Stacked"]:
         r = comp.get(vname, {})

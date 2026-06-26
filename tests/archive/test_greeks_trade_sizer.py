@@ -2,7 +2,6 @@
 from __future__ import annotations
 import numpy as np
 import pandas as pd
-import pytest
 from compass.greeks_trade_sizer import (
     BacktestResult, BacktestTrade, GreeksTradeSizer, PortfolioState,
     SizerConfig, SizingResult, TradeGreeks, estimate_trade_greeks,

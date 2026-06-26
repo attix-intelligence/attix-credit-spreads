@@ -1,7 +1,6 @@
 """Tests for compass.deployment_validator — 32 tests."""
 
 import os
-import pytest
 from pathlib import Path
 
 from compass.deployment_validator import (

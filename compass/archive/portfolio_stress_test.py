@@ -31,10 +31,9 @@ from compass.exp1780_exp1220_integration import (
     build_exp1220_daily_returns,
     run_exp1780_best_config,
     compute_metrics,
-    compute_sharpe,
     TRADING_DAYS,
 )
-from compass.crisis_alpha_v3 import load_universe_v3, UNIVERSE_V3
+from compass.crisis_alpha_v3 import load_universe_v3
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -374,7 +373,7 @@ def run_stress_test(weights: Dict[str, float] = None) -> StressTestResult:
     port = pd.Series(df.values @ w_arr, index=df.index)
     port_metrics = compute_metrics(port.values)
 
-    print(f"\nPortfolio standalone metrics:")
+    print("\nPortfolio standalone metrics:")
     print(f"  CAGR={port_metrics['cagr']*100:+.1f}%  Sharpe={port_metrics['sharpe']:.2f}  "
           f"DD={port_metrics['dd']*100:.1f}%  Calmar={port_metrics['calmar']:.2f}")
 
@@ -449,7 +448,6 @@ def _corr_table(c: pd.DataFrame) -> str:
 
 
 def generate_report(result: StressTestResult, out_path: str) -> None:
-    df = result.df
     pm = result.portfolio_metrics
     mc = result.mc
     weights = result.weights
@@ -467,7 +465,6 @@ def generate_report(result: StressTestResult, out_path: str) -> None:
         )
 
     crisis_rows = []
-    spy_proxy_idx = None
     for k, r in result.crises.items():
         crisis_rows.append(
             f"<tr><td>{k}</td>"
@@ -507,7 +504,7 @@ def generate_report(result: StressTestResult, out_path: str) -> None:
         )
 
     # Compute correlation drift
-    full_corr = avg_pairwise_corr(result.correlations["FULL SAMPLE"])
+    avg_pairwise_corr(result.correlations["FULL SAMPLE"])
     crisis_corrs = [avg_pairwise_corr(c) for k, c in result.correlations.items() if k.startswith("CRISIS")]
     calm_corrs = [avg_pairwise_corr(c) for k, c in result.correlations.items() if k.startswith("CALM")]
     avg_crisis = float(np.mean(crisis_corrs)) if crisis_corrs else 0.0

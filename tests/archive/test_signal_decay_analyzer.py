@@ -1,8 +1,9 @@
 """Tests for compass.signal_decay_analyzer."""
-import math, unittest
+import math
+import unittest
 from compass.signal_decay_analyzer import (
     ACFResult, FullDecayResult, HalfLifeResult, ICDecayResult,
-    R2DecayResult, RebalanceRecommendation, SignalDecayAnalysis,
+    R2DecayResult, SignalDecayAnalysis,
     SignalDecayEngine, SignalSeries,
     compute_acf, compute_ic_decay, compute_r2_decay,
     fit_exponential_decay, generate_test_signals, recommend_rebalance,

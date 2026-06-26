@@ -10,7 +10,6 @@ Covers:
 
 import base64
 import os
-import tempfile
 
 import numpy as np
 import pandas as pd

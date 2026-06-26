@@ -31,7 +31,7 @@ import math
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -495,7 +495,6 @@ def simulate_today_candidates(price_feats: pd.DataFrame, vix_feats: pd.DataFrame
 
 def score_candidates(model_data: Dict, candidates: List[Dict]) -> List[float]:
     """Score candidates with loaded joblib model data (dict format)."""
-    import joblib
     from compass.ensemble_signal_model import EnsembleSignalModel
 
     m = EnsembleSignalModel(model_dir=str(MODEL_DIR))
@@ -519,7 +518,7 @@ def score_candidates(model_data: Dict, candidates: List[Dict]) -> List[float]:
 
 def compute_oos_metrics(df: pd.DataFrame, model, threshold: float = 0.65) -> Dict:
     """Compute OOS metrics on 2024-2025 test set with new model."""
-    from sklearn.metrics import roc_auc_score, precision_score, recall_score
+    from sklearn.metrics import roc_auc_score
     test_df = df[df["year"].isin(OOS_YEARS)].copy()
     if test_df.empty:
         return {}
@@ -592,7 +591,7 @@ def write_report(
     a("")
     a("**Model date:** 2026-04-01  ")
     a(f"**Training data:** {train_result['training_range']} ({train_result['n_train']} trades)  ")
-    a(f"**Architecture:** XGBoost + RandomForest + ExtraTrees ensemble (soft voting)  ")
+    a("**Architecture:** XGBoost + RandomForest + ExtraTrees ensemble (soft voting)  ")
     a("**Feature count:** 37 (identical to production schema)  ")
     a("")
     a("---")
@@ -609,9 +608,9 @@ def write_report(
     a("")
     a("## Training Data")
     a("")
-    a(f"- Source: `output/ml_filter_exp400_trades_cache.json` (EXP-400 6-year backtest)")
+    a("- Source: `output/ml_filter_exp400_trades_cache.json` (EXP-400 6-year backtest)")
     a(f"- Trade count: {train_result['n_train']} total (2020-2025)")
-    a(f"- Strategy mix: ~519 bull_put, ~96 bear_call, ~1052 iron_condor")
+    a("- Strategy mix: ~519 bull_put, ~96 bear_call, ~1052 iron_condor")
     a(f"- Win rate: {stats.get('positive_rate', 0):.1%}")
     a("")
     a("---")
@@ -717,7 +716,7 @@ def write_report(
     for name, ms in per_model.items():
         a(f"| {name} | {ms.get('test_auc', 0):.3f} | {ms.get('test_accuracy', 0):.3f} | "
           f"{ms.get('test_precision', 0):.3f} | {ms.get('test_recall', 0):.3f} | {ms.get('weight', 0):.3f} |")
-    ew = stats.get("ensemble_weights", {})
+    stats.get("ensemble_weights", {})
     a(f"| **Ensemble** | **{stats.get('ensemble_test_auc', 0):.3f}** | {stats.get('ensemble_test_accuracy', 0):.3f} | "
       f"{stats.get('ensemble_test_precision', 0):.3f} | {stats.get('ensemble_test_recall', 0):.3f} | 1.000 |")
     a("")

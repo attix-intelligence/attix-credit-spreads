@@ -24,10 +24,9 @@ from __future__ import annotations
 import logging
 import time
 from dataclasses import dataclass, field
-from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -488,7 +487,7 @@ class SystemIntegration:
 
         # Stage 7: Portfolio construction
         ret_df = pd.DataFrame({"SPY": rets}) if not rets.empty else pd.DataFrame()
-        s7 = self._run_stage(
+        self._run_stage(
             "portfolio", self.stage_portfolio,
             dependencies=["risk_check"],
             weights=risk_result.adjusted_weights if risk_result else {},
@@ -519,7 +518,7 @@ class SystemIntegration:
 
         # Stage 10: Attribution
         port_rets = pnl.daily_returns if pnl and not pnl.daily_returns.empty else pd.Series(dtype=float)
-        s10 = self._run_stage(
+        self._run_stage(
             "attribution", self.stage_attribution,
             dependencies=["pnl", "market_data"],
             portfolio_returns=port_rets,

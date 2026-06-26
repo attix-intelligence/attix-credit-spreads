@@ -4,7 +4,6 @@ from __future__ import annotations
 import tempfile
 from pathlib import Path
 
-import numpy as np
 import pytest
 
 from compass.risk_limits import (
@@ -12,8 +11,6 @@ from compass.risk_limits import (
     BULL,
     CRASH,
     CRITICAL,
-    HIGH_VOL,
-    INFO,
     LOW_VOL,
     WARNING,
     Breach,
@@ -21,7 +18,6 @@ from compass.risk_limits import (
     ExposureSnapshot,
     LimitConfig,
     ReductionTrigger,
-    RegimeMultipliers,
     RiskLimitEngine,
     RiskLimitResult,
 )

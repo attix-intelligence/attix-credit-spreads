@@ -26,7 +26,7 @@ import sys
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 import yaml
 
@@ -520,7 +520,7 @@ def main():
             baseline_result = result
 
         # Print gate evaluation
-        print(f"\n  GATES:")
+        print("\n  GATES:")
         print(f"    ROBUST score: {gates['robust_score']:.3f} "
               f"({'PASS' if gates['robust_pass'] else 'FAIL'} >= 0.90)")
         print(f"    6/6 profitable: {'PASS' if gates['profitable_6_6'] else 'FAIL'}")

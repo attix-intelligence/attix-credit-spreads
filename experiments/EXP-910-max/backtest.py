@@ -15,10 +15,9 @@ from __future__ import annotations
 
 import json
 import logging
-import math
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict
 
 import numpy as np
 import pandas as pd
@@ -224,8 +223,8 @@ def run_north_star(df: pd.DataFrame) -> Dict[str, Any]:
 
         base_credit = abs(row.get("net_credit", 1.0))
         base_contracts = int(row.get("contracts", 1))
-        base_win = int(row.get("win", 0))
-        base_pnl = float(row.get("pnl", 0))
+        int(row.get("win", 0))
+        float(row.get("pnl", 0))
         entry_date = str(row.get("entry_date", ""))
         exit_date = str(row.get("exit_date", ""))
         year = int(row.get("year", 2024))
@@ -516,16 +515,15 @@ def main():
     print("\n[2/4] Training ML ensemble (walk-forward)...")
     df = train_ml_walk_forward(df)
     oos = df.dropna(subset=["pred_prob"])
-    avg_auc = "computed above"
     print(f"  OOS predictions: {len(oos)}")
 
     print("\n[3/4] Running North Star portfolio backtest...")
-    print(f"  Components: ML filter + 6 underlyings + crisis hedge + regime leverage")
+    print("  Components: ML filter + 6 underlyings + crisis hedge + regime leverage")
     results = run_north_star(df)
 
-    print(f"\n  ╔══════════════════════════════════════════════╗")
-    print(f"  ║  NORTH STAR RESULTS                          ║")
-    print(f"  ╠══════════════════════════════════════════════╣")
+    print("\n  ╔══════════════════════════════════════════════╗")
+    print("  ║  NORTH STAR RESULTS                          ║")
+    print("  ╠══════════════════════════════════════════════╣")
     print(f"  ║  CAGR:        {results['cagr']:>8.0%}  (target: 100%)    ║")
     print(f"  ║  Sharpe:      {results['sharpe']:>8.2f}  (target: 6.0)     ║")
     print(f"  ║  Max DD:      {results['max_drawdown']:>8.1%}  (target: -12%)   ║")
@@ -535,7 +533,7 @@ def main():
     print(f"  ║  Capacity:    ${results['capacity_M']:>6,.0f}M                  ║")
     print(f"  ║  Final Equity:${results['final_equity']:>10,.0f}              ║")
     print(f"  ║  All years +: {'  YES' if results['all_years_positive'] else '   NO'}                        ║")
-    print(f"  ╚══════════════════════════════════════════════╝")
+    print("  ╚══════════════════════════════════════════════╝")
 
     # North Star check
     ns_pass = sum([

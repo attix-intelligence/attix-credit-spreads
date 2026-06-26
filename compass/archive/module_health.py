@@ -10,7 +10,6 @@ import importlib.util
 import inspect
 import re
 import sys
-import traceback
 from dataclasses import dataclass, field
 from pathlib import Path
 

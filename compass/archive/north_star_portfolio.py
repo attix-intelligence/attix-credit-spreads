@@ -40,13 +40,11 @@ Sharpe via compass/metrics.py (arithmetic mean, correct formula).
 from __future__ import annotations
 
 import json
-import math
 import sys
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
-from itertools import product
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List
 
 import numpy as np
 import pandas as pd
@@ -54,7 +52,7 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from compass.metrics import annualized_sharpe, full_metrics
+from compass.metrics import full_metrics
 
 TRADING_DAYS = 252
 STARTING_CAPITAL = 100_000
@@ -144,10 +142,8 @@ def load_exp1660_xli_daily() -> pd.Series:
     This is an HONEST simplification — see disclaimer in module docstring.
     """
     # Known from reports/exp1660_vrp_production.json per_ticker_results.XLI
-    n_trades = 61
     total_pnl = 6173.0
     active_months = 37
-    trade_sharpe = 1.424
 
     # Active period ~2020-06 to ~2025-11 (5.5 years, ~66 months total)
     # Uniform distribution: one trade every ~30 days
@@ -164,7 +160,7 @@ def load_exp1660_xli_daily() -> pd.Series:
     # monthly return stdev implied: monthly_mean / stdev * sqrt(12) = sharpe
     # monthly_mean = total_pnl / active_months / CAPITAL = ~0.00167
     # Given target sharpe 1.42: stdev = 0.00167 / 1.42 * sqrt(12) = 0.00407
-    rng = np.random.RandomState(0)  # deterministic — NOT synthetic data, just
+    np.random.RandomState(0)  # deterministic — NOT synthetic data, just
     # arranging known aggregate into monthly buckets per trade_sharpe stat
 
     # Actually — to stay strict Rule Zero, use DETERMINISTIC uniform distribution
@@ -549,7 +545,7 @@ def main():
     print(f"\n{'━'*60}")
     print(f"  BEST CONFIG: {best['config'].name}")
     print(f"    CAGR: {bm['cagr_pct']:.1f}%  Sharpe: {bm['sharpe']:.2f}  DD: {bm['max_dd_pct']:.1f}%")
-    print(f"\n  TARGETS:")
+    print("\n  TARGETS:")
     for t, hit in targets.items():
         print(f"    {t}: {'PASS' if hit else 'MISS'}")
     n_hit = sum(targets.values())

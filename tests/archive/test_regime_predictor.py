@@ -11,10 +11,7 @@ import pytest
 from compass.regime_predictor import (
     DEFAULT_FEATURES,
     DEFAULT_HORIZONS,
-    REGIMES,
-    CalibrationPoint,
     FeatureImportance,
-    HorizonAccuracy,
     PredictorResult,
     RegimeForecast,
     RegimePredictor,

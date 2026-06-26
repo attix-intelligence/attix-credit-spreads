@@ -17,7 +17,7 @@ All methods work on pre-loaded return data — no network calls.
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from pathlib import Path

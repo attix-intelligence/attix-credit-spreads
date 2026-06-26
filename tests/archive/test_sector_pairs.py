@@ -3,11 +3,9 @@
 import math
 import numpy as np
 import pandas as pd
-import pytest
 
 from compass.sector_pairs import (
-    SECTOR_ETFS, CointResult, PairBacktest, WFFold, PortfolioResult,
-    corrected_sharpe, compute_metrics,
+    SECTOR_ETFS, CointResult, PairBacktest, WFFold, corrected_sharpe, compute_metrics,
     estimate_hedge_ratio, estimate_half_life,
     screen_all_pairs,
     backtest_pair, walk_forward_pair, build_portfolio,

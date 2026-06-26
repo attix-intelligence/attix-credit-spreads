@@ -17,12 +17,11 @@ from __future__ import annotations
 import json
 import logging
 import math
-import sqlite3
 import sys
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -33,8 +32,8 @@ sys.path.insert(0, str(ROOT))
 from shared.iron_vault import IronVault
 from compass.gld_tlt_relval import (
     _dl, _find_exps, _sell_spread, _walk_spread, _exp_dt, _sharpe,
-    LOOKBACK, Z_ENTRY, Z_EXIT, MIN_SPACING,
-    OTM_PCT, PROFIT_PCT, STOP_MULT, OOS_START,
+    LOOKBACK, Z_ENTRY, MIN_SPACING,
+    OTM_PCT, OOS_START,
 )
 from compass.regime import RegimeClassifier, Regime
 
@@ -719,7 +718,7 @@ def _build_html(
         corr_rows += f"<tr><td>{k}</td><td style='color:{c}'>{v:.3f}</td><td>{label}</td></tr>\n"
 
     # Feasibility verdict
-    best_single = max(sizing_results + leverage_results, key=lambda r: r.cagr / max(r.max_dd, 0.001))
+    max(sizing_results + leverage_results, key=lambda r: r.cagr / max(r.max_dd, 0.001))
     can_hit_10 = any(p.cagr >= 0.10 and p.max_dd < 0.25 for p in portfolios)
     can_hit_15 = any(p.cagr >= 0.15 and p.max_dd < 0.30 for p in portfolios)
     can_hit_20 = any(p.cagr >= 0.20 and p.max_dd < 0.35 for p in portfolios)

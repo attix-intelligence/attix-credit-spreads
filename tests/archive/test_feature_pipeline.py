@@ -10,9 +10,7 @@ from compass.feature_pipeline import (
     _log1p_column,
     _credit_to_width,
     _loss_to_width,
-    _IMPUTATION_DEFAULTS,
     _RAW_PRICE_COLUMNS,
-    ZSCORE_WINDOW,
 )
 
 
@@ -219,7 +217,7 @@ class TestFeaturePipelineTransform:
 
     def test_no_contracts_raw(self, pipeline, raw_df):
         """Raw contracts should not be in output features."""
-        result = pipeline.transform(raw_df)
+        pipeline.transform(raw_df)
         default_feats = FeaturePipeline.default_numeric_features()
         assert "contracts" not in default_feats
 
@@ -250,8 +248,8 @@ class TestFeaturePipelineTransform:
         """Pruned pipeline keeps only signal-carrying dummies."""
         result = pipeline.transform(raw_df)
         # Pruned: only strategy_type_CS and spread_type_bull_put survive
-        strategy_cols = [c for c in result.columns if c.startswith("strategy_type_")]
-        spread_cols = [c for c in result.columns if c.startswith("spread_type_")]
+        [c for c in result.columns if c.startswith("strategy_type_")]
+        [c for c in result.columns if c.startswith("spread_type_")]
         assert "strategy_type_CS" in result.columns
         assert "spread_type_bull_put" in result.columns
         # Full pipeline has all dummies
@@ -351,7 +349,7 @@ class TestFeaturePipelineStationarity:
     def test_spy_zscore_stationary_on_trending_prices(self):
         """spy_price_zscore should not trend even when spy_price trends."""
         n = 200
-        rng = np.random.RandomState(0)
+        np.random.RandomState(0)
         df = _make_raw_trade_df(n=n, seed=0)
         # Make SPY price trend strongly upward
         df["spy_price"] = np.linspace(350, 600, n)

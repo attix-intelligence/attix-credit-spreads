@@ -10,12 +10,8 @@ import pandas as pd
 import pytest
 
 from compass.execution_quality import (
-    CostAttribution,
     ExecutionQualityAnalyzer,
     ExecutionSummary,
-    RegimeExecStats,
-    SlippageStats,
-    TimeOfDayBucket,
     estimate_cost_attribution,
     estimate_slippage_bps,
     recommend_execution_time,
@@ -211,7 +207,7 @@ class TestGenerateReport:
         a.fit(_make_trades())
         with tempfile.TemporaryDirectory() as tmpdir:
             path = str(Path(tmpdir) / "report.html")
-            html = a.generate_report(path)
+            a.generate_report(path)
             assert Path(path).exists()
             assert Path(path).stat().st_size > 3000
 

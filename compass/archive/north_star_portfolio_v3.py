@@ -41,15 +41,13 @@ from __future__ import annotations
 
 import argparse
 import json
-import math
 import pickle
 import sys
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
-import numpy as np
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -585,7 +583,7 @@ def main() -> None:
 
     # Variant 1: BASE (no overlay scaling)
     base_result = walk_forward_static(aligned, ALLOC, EXP1220_LEVERAGE)
-    print(f"\n[base] North Star v3 (no overlays)")
+    print("\n[base] North Star v3 (no overlays)")
     m = base_result.metrics
     print(f"  CAGR {m['cagr_pct']:+7.1f}%  Sharpe {m['sharpe']:.2f}  "
           f"DD {m['max_dd_pct']:.1f}%  Calmar {m['calmar']:.2f}  Vol {m['vol_pct']:.1f}%")
@@ -595,7 +593,7 @@ def main() -> None:
     aligned_boosted = aligned.copy()
     aligned_boosted["exp1220"] = boosted
     overlay_result = walk_forward_static(aligned_boosted, ALLOC, EXP1220_LEVERAGE)
-    print(f"\n[overlays] North Star v3 + EXP-1740 + EXP-1750 overlays")
+    print("\n[overlays] North Star v3 + EXP-1740 + EXP-1750 overlays")
     print(f"  audit: base_sh={audit['base_sharpe']:.3f}  "
           f"composed_lift=+{audit['composed_lift']:.3f}  "
           f"factor=×{audit['mean_multiplier']:.4f}")

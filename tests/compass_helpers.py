@@ -10,7 +10,7 @@ All data is deterministic (no randomness) so tests are fully reproducible.
 """
 
 from datetime import date, timedelta
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional
 
 import numpy as np
 import pandas as pd

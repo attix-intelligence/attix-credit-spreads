@@ -250,7 +250,7 @@ class TestFeatureDrift:
         results = mon.detect_drift(min_samples=20)
         vix_drift = [d for d in results if d.feature == "vix"]
         assert len(vix_drift) == 1
-        assert vix_drift[0].drifted == False
+        assert not vix_drift[0].drifted
 
     def test_drift_detected_shifted_distribution(self):
         mon = _mon()
@@ -262,7 +262,7 @@ class TestFeatureDrift:
             mon.record_prediction(0.7, features={"vix": float(v)})
         results = mon.detect_drift(min_samples=20)
         vix_drift = [d for d in results if d.feature == "vix"]
-        assert vix_drift[0].drifted == True
+        assert vix_drift[0].drifted
         assert vix_drift[0].p_value < 0.05
 
     def test_drift_with_stats_only(self):

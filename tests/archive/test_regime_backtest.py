@@ -14,14 +14,10 @@ from compass.regime_backtest import (
     BacktestSummary,
     RegimeBacktester,
     RegimePerformance,
-    RegimeSelection,
-    SwitchingResult,
-    TransitionPerformance,
     _compute_max_dd,
     _compute_sharpe,
     _detect_transitions,
     _regime_metrics,
-    _simulate_switching,
 )
 
 ROOT = Path(__file__).resolve().parent.parent

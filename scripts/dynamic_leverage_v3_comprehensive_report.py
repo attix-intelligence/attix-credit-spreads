@@ -16,11 +16,10 @@ from __future__ import annotations
 
 import base64
 import io
-import math
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 import numpy as np
 import pandas as pd
@@ -414,7 +413,7 @@ def main():
     my_2x = configs["2× + 10% Hedge"]["metrics"]
     print(f"\n  cc2 CLAIM:     CAGR={cc2_claim['cagr']}%  Sharpe={cc2_claim['sharpe']}  DD={cc2_claim['dd']}%")
     print(f"  MY MEASUREMENT: CAGR={my_2x['cagr_pct']:.1f}%  Sharpe={my_2x['sharpe']:.2f}  DD={my_2x['max_dd_pct']:.1f}%")
-    print(f"  → cc2 numbers likely use yearly Sharpe (inflated) or different params")
+    print("  → cc2 numbers likely use yearly Sharpe (inflated) or different params")
 
     # Yearly breakdowns
     yearly_all = {}

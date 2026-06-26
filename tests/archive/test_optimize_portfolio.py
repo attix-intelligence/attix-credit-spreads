@@ -1,6 +1,5 @@
 """Tests for scripts/optimize_portfolio.py — experiment-to-portfolio pipeline."""
 import json
-import tempfile
 from pathlib import Path
 
 import numpy as np
@@ -143,7 +142,7 @@ class TestExperimentsToMonthlyReturns:
         returns, months = experiments_to_monthly_returns(lb[:2])
         for run_id, arr in returns.items():
             # Typical monthly P&L of ~$1500 on $100k = 0.015
-            assert np.abs(arr).max() < 1.0, f"Returns look like percentages, not fractions"
+            assert np.abs(arr).max() < 1.0, "Returns look like percentages, not fractions"
 
     def test_months_sorted(self):
         lb = _make_leaderboard()
@@ -193,7 +192,7 @@ class TestPortfolioOptimization:
             assert (w >= 0).all(), f"{method_name} has negative weights"
 
     def test_regime_tilt_changes_weights(self):
-        from compass.portfolio_optimizer import PortfolioOptimizer, EXPERIMENT_PROFILES
+        from compass.portfolio_optimizer import PortfolioOptimizer
 
         # Use experiment IDs that match EXPERIMENT_PROFILES
         returns = {

@@ -31,8 +31,7 @@ import tempfile
 import threading
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional
-from unittest.mock import MagicMock
+from typing import Dict, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -316,11 +315,11 @@ class TestAgreementStats:
         wrapper = ShadowEnsemble(_StubModel(prob=0.7), _StubModel(prob=0.8), log_path=log_path)
         wrapper.predict({})  # both bullish → agree
         wrapper.predict({})  # both bullish → agree
-        wrapper2 = ShadowEnsemble(_StubModel(prob=0.3), _StubModel(prob=0.7), log_path=log_path)
+        ShadowEnsemble(_StubModel(prob=0.3), _StubModel(prob=0.7), log_path=log_path)
         # Different wrapper so counts don't carry over — use one wrapper:
-        w = ShadowEnsemble(_StubModel(prob=0.7), _StubModel(prob=0.8), log_path=tmp_path / "log2.csv")
-        agree_shadow = _StubModel(prob=0.8)   # bullish
-        disagree_shadow = _StubModel(prob=0.3)  # bearish
+        ShadowEnsemble(_StubModel(prob=0.7), _StubModel(prob=0.8), log_path=tmp_path / "log2.csv")
+        _StubModel(prob=0.8)   # bullish
+        _StubModel(prob=0.3)  # bearish
         # Make a wrapper that we can control per-call is awkward with stubs,
         # so just test the counter arithmetic directly.
         w2 = ShadowEnsemble(
@@ -508,7 +507,6 @@ class TestGap1TestAucAlias:
 
     def test_training_stats_has_test_auc(self):
         """training_stats must expose 'test_auc' for online_retrain compatibility."""
-        import tempfile
         import numpy as np
         import pandas as pd
         from compass.ensemble_signal_model import EnsembleSignalModel
@@ -532,7 +530,6 @@ class TestGap1TestAucAlias:
 
     def test_test_auc_equals_ensemble_test_auc(self):
         """test_auc alias must equal ensemble_test_auc (not an independent value)."""
-        import tempfile
         import numpy as np
         import pandas as pd
         from compass.ensemble_signal_model import EnsembleSignalModel
@@ -561,7 +558,6 @@ class TestGap2TimestampKey:
 
     def test_training_stats_has_timestamp(self):
         """training_stats must expose 'timestamp' for online_retrain age check."""
-        import tempfile
         import numpy as np
         import pandas as pd
         from compass.ensemble_signal_model import EnsembleSignalModel
@@ -584,7 +580,6 @@ class TestGap2TimestampKey:
 
     def test_timestamp_is_parseable_iso_string(self):
         """timestamp value must be a parseable ISO-8601 string."""
-        import tempfile
         import numpy as np
         import pandas as pd
         from compass.ensemble_signal_model import EnsembleSignalModel
@@ -608,7 +603,6 @@ class TestGap2TimestampKey:
 
     def test_timestamp_enables_age_trigger_in_online_retrain(self):
         """ModelRetrainer._get_model_age_days must return an int for EnsembleSignalModel."""
-        import tempfile
         import numpy as np
         import pandas as pd
         from compass.ensemble_signal_model import EnsembleSignalModel
@@ -643,7 +637,6 @@ class TestGap1Integration:
 
     def test_check_performance_returns_result_not_none(self):
         """_check_performance must not return None for EnsembleSignalModel (GAP-1)."""
-        import tempfile
         import numpy as np
         import pandas as pd
         from compass.ensemble_signal_model import EnsembleSignalModel

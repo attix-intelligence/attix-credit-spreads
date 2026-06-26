@@ -3,12 +3,10 @@
 import math
 import numpy as np
 import pandas as pd
-import pytest
 
 from compass.overnight_drift import (
-    OvernightConfig, Trade, WFFold, VariantResult,
-    classify_regime, backtest, compute_sharpe, compute_metrics,
-    walk_forward, corr_to_spy, correlation_vs,
+    OvernightConfig, Trade, VariantResult,
+    classify_regime, backtest, compute_sharpe, walk_forward, corr_to_spy, correlation_vs,
     build_exp1220_reference, run_variant, generate_report, TRADING_DAYS,
 )
 

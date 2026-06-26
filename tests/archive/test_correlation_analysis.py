@@ -11,9 +11,7 @@ Covers:
   - generate_correlation_report: end-to-end with synthetic data
 """
 
-import math
 import sqlite3
-import tempfile
 from pathlib import Path
 
 import numpy as np
@@ -29,7 +27,6 @@ from compass.correlation_analysis import (
     daily_pnl_from_db,
     generate_correlation_report,
     generate_html,
-    load_all_daily_pnl,
 )
 
 

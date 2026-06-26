@@ -197,7 +197,7 @@ def run_combo(combo_id, label, params, years, ticker="SPY"):
     summary = compute_summary(combo_id, label, params, year_results, years)
 
     yp = int(summary["years_profitable"].split("/")[0])
-    yt = int(summary["years_profitable"].split("/")[1])
+    int(summary["years_profitable"].split("/")[1])
     avg = summary["avg_return"]
     if yp >= 5 and avg > 3.7:
         flag = "BEATS P0141"
@@ -270,11 +270,11 @@ def stage_a():
     assert len(combos) == 24, f"Expected 24 combos, got {len(combos)}"
 
     print(f"\n{'='*100}")
-    print(f"  STAGE A: Refine P0141 Neighbourhood (24 combos)")
-    print(f"  Fixed: DTE=30, W=$5, OTM=3%, min_credit=5%, combo regime")
-    print(f"  Vary: risk=[3,5,7]%, PT=[40,60]%, SL=[2,3]x, compound=[on,off]")
-    print(f"  24 combos x 6 years = 144 backtests")
-    print(f"  P0141 baseline: +3.7% avg, 6/6 profitable, -13.8% DD")
+    print("  STAGE A: Refine P0141 Neighbourhood (24 combos)")
+    print("  Fixed: DTE=30, W=$5, OTM=3%, min_credit=5%, combo regime")
+    print("  Vary: risk=[3,5,7]%, PT=[40,60]%, SL=[2,3]x, compound=[on,off]")
+    print("  24 combos x 6 years = 144 backtests")
+    print("  P0141 baseline: +3.7% avg, 6/6 profitable, -13.8% DD")
     print(f"{'='*100}\n")
 
     results = []
@@ -307,7 +307,7 @@ def stage_a():
     print_leaderboard(results, "STAGE A LEADERBOARD — Top 15 by Consistency Score")
 
     # Summary by risk level
-    print(f"\n  === Risk Level Summary ===")
+    print("\n  === Risk Level Summary ===")
     for risk in risks:
         subset = [r for r in results if r["params"]["max_risk_per_trade"] == risk]
         pos = sum(1 for r in subset if r["avg_return"] > 0)
@@ -317,7 +317,7 @@ def stage_a():
         print(f"  risk={risk}%: {pos}/{len(subset)} positive, avg={avg_all:+.1f}%, 5/6+={five_plus}")
 
     # Summary by compound
-    print(f"\n  === Compound Summary ===")
+    print("\n  === Compound Summary ===")
     for comp in [True, False]:
         comp_label = "compound" if comp else "flat"
         subset = [r for r in results if r["params"].get("compound", False) == comp]
@@ -367,10 +367,10 @@ def stage_b(best_a_params):
 
     base_label = best_a_params.get("label", "best_A")
     print(f"\n{'='*100}")
-    print(f"  STAGE B: VIX Regime Thresholds (18 combos)")
+    print("  STAGE B: VIX Regime Thresholds (18 combos)")
     print(f"  Base config from Stage A: {base_label}")
-    print(f"  Vary: vix_extreme=[30,35,40], rsi_bull=[50,55,60], rsi_bear=[40,45]")
-    print(f"  18 combos x 6 years = 108 backtests")
+    print("  Vary: vix_extreme=[30,35,40], rsi_bull=[50,55,60], rsi_bear=[40,45]")
+    print("  18 combos x 6 years = 108 backtests")
     print(f"{'='*100}\n")
 
     results = []
@@ -403,7 +403,7 @@ def stage_b(best_a_params):
     print_leaderboard(results, "STAGE B LEADERBOARD — VIX Regime Thresholds")
 
     # Summary by vix_extreme
-    print(f"\n  === VIX Extreme Summary ===")
+    print("\n  === VIX Extreme Summary ===")
     for vix_ext in vix_extremes:
         subset = [r for r in results
                   if r["params"].get("regime_config", {}).get("vix_extreme") == vix_ext]
@@ -436,10 +436,10 @@ def stage_c(best_params):
 
     base_label = best_params.get("label", "best_config")
     print(f"\n{'='*100}")
-    print(f"  STAGE C: Multi-Ticker (6 combos)")
+    print("  STAGE C: Multi-Ticker (6 combos)")
     print(f"  Base config: {base_label}")
-    print(f"  Tickers: SPY, QQQ, IWM solo + pairs + triple")
-    print(f"  6 combos, each ticker x 6 years")
+    print("  Tickers: SPY, QQQ, IWM solo + pairs + triple")
+    print("  6 combos, each ticker x 6 years")
     print(f"{'='*100}\n")
 
     results = []
@@ -571,7 +571,7 @@ def main():
         best_params["label"] = f"{best_a['label']} + {best_b['label']}"
         print(f"\n  Stage B improved: using {best_b['combo_id']} {best_b['label']}")
     else:
-        print(f"\n  Stage B did not improve. Using Stage A config for Stage C.")
+        print("\n  Stage B did not improve. Using Stage A config for Stage C.")
 
     # ── Stage C ──
     c_results = stage_c(best_params)
@@ -579,7 +579,7 @@ def main():
     # ── Final Summary ──
     total_elapsed = time.time() - t_total
     print(f"\n{'='*100}")
-    print(f"  FINAL SUMMARY — EXP-600 v8 Three-Stage Sweep")
+    print("  FINAL SUMMARY — EXP-600 v8 Three-Stage Sweep")
     print(f"{'='*100}")
     print(f"  Stage A: {len(a_results)} combos, best={a_results[0]['combo_id']} "
           f"({a_results[0]['avg_return']:+.1f}%, {a_results[0]['years_profitable']} yrs+)")
@@ -588,7 +588,7 @@ def main():
     print(f"  Stage C: {len(c_results)} combos, best={c_results[0]['combo_id']} "
           f"({c_results[0]['avg_return']:+.1f}%, {c_results[0]['years_profitable']} yrs+)")
     print(f"  Total elapsed: {total_elapsed:.0f}s ({total_elapsed/60:.1f} min)")
-    print(f"  Results: results/exp600/sweep_v8_stage[ABC].json")
+    print("  Results: results/exp600/sweep_v8_stage[ABC].json")
     print(f"{'='*100}\n")
 
     # Save combined summary

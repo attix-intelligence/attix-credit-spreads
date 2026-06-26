@@ -28,10 +28,9 @@ Sections rendered
 from __future__ import annotations
 
 import json
-import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 ROOT = Path(__file__).resolve().parent.parent
 REPORTS = ROOT / "compass" / "reports"
@@ -385,7 +384,7 @@ def load_all() -> Dict[str, Dict]:
         try:
             ent["data_obj"] = json.load(open(path))
             ent["headline"] = extract_headline(ent["data_obj"])
-        except Exception as e:
+        except Exception:
             ent["data_obj"] = None
             ent["headline"] = None
         out[ent["id"]] = ent

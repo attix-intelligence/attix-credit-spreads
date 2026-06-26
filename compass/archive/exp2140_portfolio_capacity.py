@@ -56,14 +56,12 @@ import math
 import sqlite3
 import sys
 import urllib.request
-from collections import defaultdict
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
-import pandas as pd
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
@@ -242,7 +240,7 @@ def build_liquidity_profiles() -> Dict[str, LiquidityProfile]:
     iwm_notional = iwm_vol * iwm_px
     iwm_opt_ctr = fetch_ironvault_option_volume("IWM")  # likely None
     if iwm_opt_ctr is None:
-        binder3 = f"IWM ETF shares (options data absent from IronVault)"
+        binder3 = "IWM ETF shares (options data absent from IronVault)"
         binding = iwm_notional
     else:
         iwm_opt_notional = iwm_opt_ctr * 100 * iwm_px

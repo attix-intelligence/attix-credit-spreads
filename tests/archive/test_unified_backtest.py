@@ -12,13 +12,8 @@ import pytest
 from compass.unified_backtest import (
     BacktestConfig,
     BacktestResult,
-    ExperimentSummary,
-    RegimeBenchmark,
-    RollingMetrics,
-    TradeResult,
     UnifiedBacktester,
     WalkForwardFold,
-    aggregate_experiments,
     apply_signal_filter,
     apply_slippage,
     check_risk_gates,
@@ -26,13 +21,10 @@ from compass.unified_backtest import (
     compute_max_drawdown,
     compute_position_size,
     compute_profit_factor,
-    compute_regime_benchmarks,
-    compute_rolling_metrics,
     compute_sharpe,
     compute_sortino,
     compute_trade_costs,
     load_config,
-    walk_forward_validate,
 )
 
 

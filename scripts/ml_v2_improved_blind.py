@@ -42,14 +42,12 @@ from compass.collect_training_data import (
     enrich_trades,
     run_year_backtest_exp401,
     _load_full_market_data,
-    _compute_ma,
     STARTING_CAPITAL,
 )
 from scripts.ml_v2_backtest import (
     add_v2_features,
     compute_year_stats,
     compute_sharpe,
-    V2_FEATURE_COLS,
 )
 from scripts.ml_v2_regime_train import (
     XGB_PARAMS,

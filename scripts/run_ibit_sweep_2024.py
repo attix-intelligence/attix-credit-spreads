@@ -33,7 +33,7 @@ import json
 import sqlite3
 import sys
 import time
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -597,7 +597,6 @@ class IBITBacktester:
 
     def _build_results(self, start_date: str, end_date: str) -> Dict[str, Any]:
         """Build results dict with annualized return and max drawdown."""
-        import math
 
         trades    = self.trades
         n_trades  = len(trades)
@@ -684,7 +683,7 @@ def run_backtest(params: Dict[str, Any], start: str, end: str) -> Optional[Dict]
         result = bt.run(start, end)
         bt.close()
         return result
-    except Exception as e:
+    except Exception:
         return None
 
 

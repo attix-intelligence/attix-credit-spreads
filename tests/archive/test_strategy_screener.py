@@ -3,10 +3,9 @@
 import math
 import numpy as np
 import pandas as pd
-import pytest
 
 from compass.strategy_screener import (
-    NorthStarCriteria, StrategySpec, WFFold, SensitivityResult, ScreenResult,
+    NorthStarCriteria, StrategySpec, WFFold, ScreenResult,
     corrected_sharpe, compute_metrics, yearly_returns, years_profitable_fraction,
     walk_forward, parameter_sensitivity, scan_rule_zero, grade_strategy,
     screen, format_result, TRADING_DAYS,
@@ -164,7 +163,8 @@ class TestRuleZeroScanner:
 
     def test_lambda_unintrospectable(self):
         # lambdas may or may not be introspectable; should not crash
-        f = lambda p, x: pd.Series(0.0, index=p.index)
+        def f(p, x):
+            return pd.Series(0.0, index=p.index)
         clean, warn = scan_rule_zero(f)
         assert isinstance(clean, bool)
 

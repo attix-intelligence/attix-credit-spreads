@@ -30,7 +30,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-from shared.macro_state_db import get_db, get_state, init_db
+from shared.macro_state_db import get_db, init_db
 
 
 # Canonical DDL — single source of truth for both the migration and this script.

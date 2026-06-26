@@ -19,10 +19,9 @@ import math
 import sys
 import urllib.request
 from collections import defaultdict
-from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -30,8 +29,7 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from compass.metrics import annualized_sharpe, full_metrics
-from compass.zero_dte_ic import backtest_1_3_dte, ICTrade, CAPITAL
+from compass.zero_dte_ic import backtest_1_3_dte, ICTrade
 
 TRADING_DAYS = 252
 REPORT_PATH = ROOT / "reports" / "exp1710_diagnosis.html"
@@ -226,7 +224,7 @@ def apply_adaptive_filter(trades: List[dict], regime: Dict) -> Tuple[List[dict],
     """
     # Find best VIX bucket from 2023-2024 training
     train_trades = [t for t in trades if t["year"] <= 2024]
-    test_trades = [t for t in trades if t["year"] >= 2025]
+    [t for t in trades if t["year"] >= 2025]
 
     def _vix_bucket(v):
         if v is None: return "unknown"
@@ -586,19 +584,19 @@ def main():
 
     print("\n  Regime analysis:")
     regime = regime_analysis(enriched)
-    print(f"\n  By VIX bucket:")
+    print("\n  By VIX bucket:")
     for bucket, s in sorted(regime["by_vix"].items()):
         print(f"    {bucket:20s} n={s['n']:3d}  Sharpe={s['sharpe']:5.2f}  WR={s['win_rate']:5.1f}%  PnL=${s['pnl']:,.0f}")
 
-    print(f"\n  By direction:")
+    print("\n  By direction:")
     for d, s in regime["by_direction"].items():
         print(f"    {d:25s} n={s['n']:3d}  Sharpe={s['sharpe']:5.2f}  PnL=${s['pnl']:,.0f}")
 
-    print(f"\n  By day of week:")
+    print("\n  By day of week:")
     for d, s in regime["by_dow"].items():
         print(f"    {d:5s} n={s['n']:3d}  Sharpe={s['sharpe']:5.2f}  PnL=${s['pnl']:,.0f}")
 
-    print(f"\n  Year × VIX decay:")
+    print("\n  Year × VIX decay:")
     for k, s in sorted(regime["by_year_vix"].items()):
         if s["n"] >= 3:
             print(f"    {k:25s} n={s['n']:3d}  Sharpe={s['sharpe']:5.2f}  PnL=${s['pnl']:,.0f}")
@@ -610,26 +608,26 @@ def main():
     print(f"  Filtered count: {filter_result['n_filtered']} / {filter_result['n_unfiltered']}")
 
     wf = walk_forward_filtered(enriched)
-    print(f"\n  Walk-forward filtered by year:")
+    print("\n  Walk-forward filtered by year:")
     for w in wf["windows"]:
         print(f"    {w['year']}: bucket={w['best_bucket']:20s}  "
               f"n_filt={w['n_filtered']:3d}  Sharpe={w['sharpe']:5.2f}  "
               f"PnL=${w['pnl']:,.0f}")
 
     oos = wf["oos_aggregate"]
-    print(f"\n  OOS AGGREGATE (filtered walk-forward):")
+    print("\n  OOS AGGREGATE (filtered walk-forward):")
     print(f"    Trades: {oos['n_trades']}  PnL: ${oos['total_pnl']:,.0f}  "
           f"Sharpe: {oos['sharpe']}  Win: {oos['win_rate']}%")
 
     print(f"\n{'━'*60}")
-    print(f"  VERDICT:")
-    print(f"    2025 unfiltered Sharpe:    ~2.0")
+    print("  VERDICT:")
+    print("    2025 unfiltered Sharpe:    ~2.0")
     print(f"    Filtered WF OOS Sharpe:    {oos['sharpe']}")
     if oos["sharpe"] > 2.5:
         print(f"    → Filter HELPS recover some alpha. Forward: {oos['sharpe']:.1f}")
     else:
-        print(f"    → Filter does NOT meaningfully recover decay.")
-        print(f"    → Honest forward Sharpe: 1.5-2.5 range")
+        print("    → Filter does NOT meaningfully recover decay.")
+        print("    → Honest forward Sharpe: 1.5-2.5 range")
     print(f"{'━'*60}")
 
     # Generate report

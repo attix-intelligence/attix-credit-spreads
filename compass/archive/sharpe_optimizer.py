@@ -16,20 +16,18 @@ Uses calibrated return streams from production_portfolio_wf.py.
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List
 
 import numpy as np
 import pandas as pd
 
 from compass.production_portfolio_wf import (
-    STRATEGY_IDS, STRATEGY_PROFILES, STRATEGY_CORRELATIONS,
-    generate_strategy_returns, TRADING_DAYS,
+    STRATEGY_PROFILES, generate_strategy_returns, TRADING_DAYS,
 )
 from compass.regime_performance import (
-    Regime, ALL_REGIMES, generate_regime_returns,
-    STRATEGY_PROFILES as REGIME_PROFILES,
+    Regime, generate_regime_returns,
 )
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -563,7 +561,7 @@ def generate_report(
                      for j, (i, v) in enumerate(pts))
         eq_svg = f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" style="border:1px solid #e2e8f0;border-radius:6px;margin:0.5rem 0"><text x="{w//2}" y="16" text-anchor="middle" font-size="11" fill="#64748b">Optimized Equity ({best.name})</text><path d="{d}" fill="none" stroke="#16a34a" stroke-width="1.5"/></svg>'
 
-    gap_pct = result.sharpe_gap / result.target_sharpe * 100
+    result.sharpe_gap / result.target_sharpe * 100
     closed_pct = (result.final_sharpe - result.portfolio_sharpe) / result.sharpe_gap * 100 if result.sharpe_gap > 0 else 0
 
     html = f"""<!DOCTYPE html>
@@ -659,14 +657,14 @@ def run_analysis(seed: int = 42) -> SharpeAnalysisResult:
     print(f"  Target Sharpe:  {result.target_sharpe:.1f}")
     print(f"  Gap:            {result.sharpe_gap:+.2f}")
 
-    print(f"\n  Attribution (marginal contribution):")
+    print("\n  Attribution (marginal contribution):")
     for a in result.attributions:
         tag = "DRAG" if a.is_drag else "OK"
         print(f"    {a.strategy_name:35s}: Sharpe={a.standalone_sharpe:.2f}, "
               f"Marginal={a.marginal_sharpe_contribution:+.3f}, "
               f"ρ={a.corr_to_portfolio:+.3f} [{tag}]")
 
-    print(f"\n  Optimizations:")
+    print("\n  Optimizations:")
     for o in result.optimizations:
         star = " ★ BEST" if o.name == result.best_optimization.name else ""
         print(f"    {o.name:25s}: {o.baseline_sharpe:.2f} → {o.optimized_sharpe:.2f} "

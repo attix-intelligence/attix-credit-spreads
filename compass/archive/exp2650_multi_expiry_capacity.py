@@ -54,10 +54,9 @@ Run: python3 -m compass.exp2650_multi_expiry_capacity
 from __future__ import annotations
 
 import json
-import math
 import sqlite3
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
@@ -492,7 +491,7 @@ def main() -> int:
         top3_median = variants["top3_expiries"]["median_aum_cap_usd"]
         multiplier = top3_median / max(single_median, 1)
 
-        headline = [f"<ul>"]
+        headline = ["<ul>"]
         headline.append(
             f"<li><b>Single-expiry median AUM cap: "
             f"{_fmt_usd(single_median)}.</b> At the canonical "
@@ -519,7 +518,7 @@ def main() -> int:
             f"capacity is the binding constraint).</li>"
         )
         headline.append(
-            f"<li><b>AUM ceiling for 'always-tradable' (95%+ feasibility):</b> "
+            "<li><b>AUM ceiling for 'always-tradable' (95%+ feasibility):</b> "
         )
         for name, s in variants.items():
             # find the largest book size that still has ≥95% feasibility

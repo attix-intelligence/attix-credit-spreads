@@ -22,10 +22,9 @@ Output
 from __future__ import annotations
 
 import json
-import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Dict
 
 ROOT = Path(__file__).resolve().parent.parent
 REPORTS = ROOT / "compass" / "reports"
@@ -159,10 +158,10 @@ def render(**ctx) -> str:
     pooled = ctx["pooled"] or {}
     dist   = ctx["dist"]   or {}
     cs     = ctx["corr_summary"] or {}
-    xm     = ctx["xle_metrics"]  or {}
-    xc     = ctx["xle_corr"]
-    v7     = ctx["v7"] or {}
-    v8     = ctx["v8"] or {}
+    ctx["xle_metrics"]  or {}
+    ctx["xle_corr"]
+    ctx["v7"] or {}
+    ctx["v8"] or {}
     tsc    = ctx["target_scenario"] or {}
     ibk    = ctx["baseline_ibkr"] or {}
     fb     = ctx["flash_baseline"] or {}
@@ -171,7 +170,7 @@ def render(**ctx) -> str:
     cap    = ctx["cap_streams"] or []
 
     tgt_lw = (tsc.get("variants") or {}).get("ledoit_only", {}) if tsc else {}
-    tgt_cm = (tsc.get("variants") or {}).get("combined",    {}) if tsc else {}
+    (tsc.get("variants") or {}).get("combined",    {}) if tsc else {}
     ibk_lw = (ibk.get("variants") or {}).get("ledoit_only", {}) if ibk else {}
 
     # Stream roster (curated)
@@ -404,7 +403,7 @@ read directly from a committed experiment report in
 
 def commfree_gross(ctx: Dict) -> str:
     """Pull the gross Sharpe from the commission-free scenarios list."""
-    sc = ctx.get("target_scenario") or {}
+    ctx.get("target_scenario") or {}
     # The commfree JSON doesn't embed gross directly in the target scenario;
     # pull from the top-level gross block if available.
     commfree = _load("exp2570_commfree_net_sharpe.json")

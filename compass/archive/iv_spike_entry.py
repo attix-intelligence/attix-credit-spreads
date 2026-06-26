@@ -150,7 +150,7 @@ def load_spy_daily() -> Dict[str, float]:
     from backtest.backtester import _yf_download_safe
     df = _yf_download_safe(TICKER, START_DATE, END_DATE)
     if df.empty:
-        raise RuntimeError(f"Failed to load real SPY data")
+        raise RuntimeError("Failed to load real SPY data")
     return {d.strftime("%Y-%m-%d"): float(c) for d, c in df["Close"].items()}
 
 
@@ -806,7 +806,7 @@ if __name__ == "__main__":
     save_results(result, comparison)
 
     print(f"\n{'=' * 70}")
-    print(f"EXP-1840: IV Spike Entry — Summary")
+    print("EXP-1840: IV Spike Entry — Summary")
     print(f"{'=' * 70}")
     print(f"Trades:         {result.n_trades}")
     print(f"Spike days:     {result.n_spike_days} / {result.n_eligible_days} eligible")
@@ -816,10 +816,10 @@ if __name__ == "__main__":
     print(f"Sharpe:         {result.sharpe:.2f}")
     print(f"Max DD:         {result.max_dd*100:.2f}%")
     print(f"Years:          {result.n_years:.1f}")
-    print(f"\nWalk-forward:")
+    print("\nWalk-forward:")
     print(f"  IS (2020-{IS_END_YEAR}):  CAGR {result.is_cagr*100:+.2f}%, Sharpe {result.is_sharpe:.2f}")
     print(f"  OOS ({OOS_START_YEAR}-2025): CAGR {result.oos_cagr*100:+.2f}%, Sharpe {result.oos_sharpe:.2f}")
-    print(f"\nComparison vs EXP-1220 base:")
+    print("\nComparison vs EXP-1220 base:")
     base = comparison.get("exp1220_base", {})
     ex1840 = comparison.get("exp1840", {})
     if base:

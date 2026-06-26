@@ -19,7 +19,7 @@ import sys
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 import numpy as np
 
@@ -28,7 +28,7 @@ sys.path.insert(0, str(ROOT))
 
 from compass.correlation_analyzer import (
     STRATEGIES, build_daily_returns, compute_correlation_matrix,
-    avg_pairwise_corr, portfolio_metrics, TRADING_DAYS, N_YEARS,
+    avg_pairwise_corr, TRADING_DAYS, N_YEARS,
 )
 
 REPORT_PATH = ROOT / "reports" / "optimal_combos_backtest.html"
@@ -112,7 +112,7 @@ def optimize_weights(
     Searches allocations where EXP-1220 gets 40-95% and remaining strategies
     split the rest, maximizing Sharpe while maintaining CAGR > 50%.
     """
-    n = len(strategies)
+    len(strategies)
     has_1220 = "EXP-1220 Tail Risk" in strategies
     others = [s for s in strategies if s != "EXP-1220 Tail Risk"]
 
@@ -169,7 +169,7 @@ def optimize_weights(
             cum = np.cumprod(1 + combined)
             n_years = len(combined) / TRADING_DAYS
             cagr = cum[-1] ** (1 / n_years) - 1 if cum[-1] > 0 else -1
-            vol = np.std(combined) * math.sqrt(TRADING_DAYS)
+            np.std(combined) * math.sqrt(TRADING_DAYS)
             _rf_daily = 0.045 / 252
             sharpe = (float(np.mean(combined)) - _rf_daily) / float(np.std(combined)) * math.sqrt(TRADING_DAYS) if float(np.std(combined)) > 1e-12 else 0
 
@@ -313,13 +313,13 @@ def run_backtest(
         train_cum = np.cumprod(1 + train_ret)
         test_cum = np.cumprod(1 + test_ret)
 
-        t_cagr = train_cum[-1] ** (1 / (len(train_ret) / TRADING_DAYS)) - 1
-        t_vol = np.std(train_ret) * math.sqrt(TRADING_DAYS)
+        train_cum[-1] ** (1 / (len(train_ret) / TRADING_DAYS)) - 1
+        np.std(train_ret) * math.sqrt(TRADING_DAYS)
         _rf_daily = 0.045 / 252
         t_sharpe = (float(np.mean(train_ret)) - _rf_daily) / float(np.std(train_ret)) * math.sqrt(TRADING_DAYS) if float(np.std(train_ret)) > 1e-12 else 0
 
         o_cagr = test_cum[-1] ** (1 / (len(test_ret) / TRADING_DAYS)) - 1
-        o_vol = np.std(test_ret) * math.sqrt(TRADING_DAYS)
+        np.std(test_ret) * math.sqrt(TRADING_DAYS)
         _rf_daily = 0.045 / 252
         o_sharpe = (float(np.mean(test_ret)) - _rf_daily) / float(np.std(test_ret)) * math.sqrt(TRADING_DAYS) if float(np.std(test_ret)) > 1e-12 else 0
         o_peak = np.maximum.accumulate(test_cum)
@@ -411,7 +411,6 @@ def generate_html(results: List[BacktestResult]) -> str:
     if winner is None:
         winner = best
 
-    vc = "#059669"
 
     # ── Head-to-head comparison ──
     h2h_rows = ""

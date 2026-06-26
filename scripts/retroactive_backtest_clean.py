@@ -460,7 +460,7 @@ def main():
         print("    1. Ensure options_cache.db is populated:")
         print("       python scripts/backfill_polygon_cache.py --years 2020-2025")
         print()
-        print(f"   2. Copy to this machine:")
+        print("   2. Copy to this machine:")
         print(f"       scp mac-studio:~/attix/data/options_cache.db {OPTIONS_CACHE}")
         print()
         print("    3. Re-run with --fresh flag:")

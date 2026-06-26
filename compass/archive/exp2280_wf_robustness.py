@@ -41,7 +41,7 @@ import json
 import math
 import pickle
 import sys
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Dict, List, Tuple
 

@@ -39,7 +39,6 @@ from __future__ import annotations
 import importlib
 import importlib.util
 import json
-import math
 import os
 import pickle
 import sys
@@ -47,7 +46,7 @@ import traceback
 from dataclasses import dataclass, asdict, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
@@ -621,7 +620,7 @@ def main():
             r = CheckResult(fn.__name__, fn.__name__, FAIL,
                             f"Check itself raised: {type(e).__name__}: {e}")
         checks.append(r)
-        c = _status_color(r.status)
+        _status_color(r.status)
         print(f"\n[{r.check_id}] {r.name}: {r.status}")
         for line in (r.detail or "").split("\n"):
             print(f"    {line}")
@@ -657,7 +656,7 @@ def main():
     REPORT_JSON.write_text(json.dumps(payload, indent=2, default=str))
     write_html(checks, overall, REPORT_HTML)
     print(f"\nReports → {REPORT_JSON.name} + {REPORT_HTML.name}")
-    print(f"Signal script → compass/scripts/generate_daily_signals.py")
+    print("Signal script → compass/scripts/generate_daily_signals.py")
     return payload
 
 

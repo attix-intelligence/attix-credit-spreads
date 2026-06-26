@@ -13,7 +13,6 @@ from compass.signal_ensemble import (
     EnsembleResult,
     SignalEnsemble,
     SignalStats,
-    WalkForwardFold,
     apply_quality_gates,
     compute_ic,
     compute_ic_series,

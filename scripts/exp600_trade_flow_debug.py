@@ -99,7 +99,7 @@ def probe_year(conn, year, report_lines, spy_prices=None):
     """, (TICKER, OPTION_TYPE,
           f"{year}-01-01", f"{year}-12-31"))
     expirations = cur.fetchall()
-    report_lines.append(f"### Contract Coverage")
+    report_lines.append("### Contract Coverage")
     report_lines.append(f"- Total expirations with put contracts: **{len(expirations)}**")
     if expirations:
         avg_strikes = sum(r[1] for r in expirations) / len(expirations)
@@ -120,9 +120,9 @@ def probe_year(conn, year, report_lines, spy_prices=None):
     """, (TICKER, OPTION_TYPE,
           f"{year}-01-01", f"{year}-12-31"))
     monthly_bars = cur.fetchall()
-    report_lines.append(f"\n### Daily Bars by Month")
-    report_lines.append(f"| Month | Bars | Status |")
-    report_lines.append(f"|-------|------|--------|")
+    report_lines.append("\n### Daily Bars by Month")
+    report_lines.append("| Month | Bars | Status |")
+    report_lines.append("|-------|------|--------|")
     total_bars = 0
     for month, n_bars in monthly_bars:
         status = "OK" if n_bars > 100 else ("SPARSE" if n_bars > 0 else "EMPTY")
@@ -139,8 +139,8 @@ def probe_year(conn, year, report_lines, spy_prices=None):
 
     # --- Level 3: Per-sample-day deep probe ---
     report_lines.append(f"\n### Per-Day Probe ({len(days)} sample days)")
-    report_lines.append(f"| Date | DTE40-50 Exps | Strikes | Short Leg Bars | Long Leg Bars | Spread OK | Rejection |")
-    report_lines.append(f"|------|--------------|---------|---------------|---------------|-----------|-----------|")
+    report_lines.append("| Date | DTE40-50 Exps | Strikes | Short Leg Bars | Long Leg Bars | Spread OK | Rejection |")
+    report_lines.append("|------|--------------|---------|---------------|---------------|-----------|-----------|")
 
     stats = {
         "days_probed": 0,
@@ -257,7 +257,7 @@ def probe_year(conn, year, report_lines, spy_prices=None):
 
             rejection = ""
             if not has_short and not has_long:
-                rejection = f"BOTH legs missing"
+                rejection = "BOTH legs missing"
                 if short_any and short_any[0] == 0:
                     rejection += f" (short {short_sym}: 0 bars ever)"
                 else:
@@ -320,7 +320,7 @@ def probe_year(conn, year, report_lines, spy_prices=None):
     report_lines.append(f"- Days with valid spread: {stats['days_with_spread']} ({stats['days_with_spread']/max(1,stats['days_probed'])*100:.0f}%)")
 
     if stats["rejection_reasons"]:
-        report_lines.append(f"\n**Rejection breakdown:**")
+        report_lines.append("\n**Rejection breakdown:**")
         for reason, count in sorted(stats["rejection_reasons"].items(), key=lambda x: -x[1]):
             report_lines.append(f"- {reason}: {count}")
 
@@ -330,12 +330,12 @@ def probe_year(conn, year, report_lines, spy_prices=None):
 def probe_intraday_coverage(conn, report_lines):
     """Check intraday bar coverage since backtester uses intraday scan times."""
     cur = conn.cursor()
-    report_lines.append(f"\n## Intraday Bar Coverage\n")
-    report_lines.append(f"The backtester uses 14 scan times per day (9:30-16:00 ET).")
-    report_lines.append(f"If intraday bars are missing, it falls back to daily bars.\n")
+    report_lines.append("\n## Intraday Bar Coverage\n")
+    report_lines.append("The backtester uses 14 scan times per day (9:30-16:00 ET).")
+    report_lines.append("If intraday bars are missing, it falls back to daily bars.\n")
 
-    report_lines.append(f"| Year | Intraday Bars | Contracts w/ Intraday | Dates w/ Intraday |")
-    report_lines.append(f"|------|--------------|----------------------|-------------------|")
+    report_lines.append("| Year | Intraday Bars | Contracts w/ Intraday | Dates w/ Intraday |")
+    report_lines.append("|------|--------------|----------------------|-------------------|")
 
     for year in YEARS:
         cur.execute("""
@@ -372,9 +372,9 @@ def probe_intraday_coverage(conn, report_lines):
 def probe_expiration_patterns(conn, report_lines):
     """Check what expiration frequencies exist — daily/weekly/monthly."""
     cur = conn.cursor()
-    report_lines.append(f"\n## Expiration Frequency by Year\n")
-    report_lines.append(f"W=$10 OTM=5% DTE=45 targets specific expirations.")
-    report_lines.append(f"If expirations are only monthly, there are fewer entry opportunities.\n")
+    report_lines.append("\n## Expiration Frequency by Year\n")
+    report_lines.append("W=$10 OTM=5% DTE=45 targets specific expirations.")
+    report_lines.append("If expirations are only monthly, there are fewer entry opportunities.\n")
 
     for year in YEARS:
         cur.execute("""
@@ -391,7 +391,6 @@ def probe_expiration_patterns(conn, report_lines):
             continue
 
         # Calculate intervals between expirations
-        from datetime import date as date_type
         exp_dates = []
         for e in exps:
             try:
@@ -416,11 +415,11 @@ def probe_expiration_patterns(conn, report_lines):
 def probe_daily_bar_density(conn, report_lines):
     """For contracts with DTE 40-50, how many daily bars exist per contract?"""
     cur = conn.cursor()
-    report_lines.append(f"\n## Daily Bar Density for DTE 40-50 Contracts\n")
-    report_lines.append(f"How many days of pricing data does each contract have?\n")
+    report_lines.append("\n## Daily Bar Density for DTE 40-50 Contracts\n")
+    report_lines.append("How many days of pricing data does each contract have?\n")
 
-    report_lines.append(f"| Year | Contracts | Avg Bars/Contract | Median | Min | Max | 0-bar contracts |")
-    report_lines.append(f"|------|-----------|-------------------|--------|-----|-----|-----------------|")
+    report_lines.append("| Year | Contracts | Avg Bars/Contract | Median | Min | Max | 0-bar contracts |")
+    report_lines.append("|------|-----------|-------------------|--------|-----|-----|-----------------|")
 
     for year in YEARS:
         # Get all contracts that would be in DTE 40-50 range during this year
@@ -472,8 +471,8 @@ def run_mini_backtest_trace(report_lines):
     from backtest.backtester import Backtester
     from shared.iron_vault import IronVault
 
-    report_lines.append(f"\n## Mini Backtest Trace (2021 & 2023)\n")
-    report_lines.append(f"Running backtester on specific months with DEBUG logging to trace rejections.\n")
+    report_lines.append("\n## Mini Backtest Trace (2021 & 2023)\n")
+    report_lines.append("Running backtester on specific months with DEBUG logging to trace rejections.\n")
 
     config = {
         "strategy": {
@@ -522,7 +521,7 @@ def run_mini_backtest_trace(report_lines):
 
     # Set up logging to capture debug messages
     log_capture = []
-    handler = logging.Handler()
+    logging.Handler()
 
     class ListHandler(logging.Handler):
         def emit(self, record):
@@ -568,7 +567,7 @@ def run_mini_backtest_trace(report_lines):
         no_strikes = sum(1 for l in log_capture if "No strikes" in l)
         no_price = sum(1 for l in log_capture if "No" in l and "price data" in l)
         below_min = sum(1 for l in log_capture if "below minimum" in l)
-        negative_credit = sum(1 for l in log_capture if "credit" in l.lower() and "<=" in l)
+        sum(1 for l in log_capture if "credit" in l.lower() and "<=" in l)
         vol_gate = sum(1 for l in log_capture if "vol-gate" in l)
         opened = sum(1 for l in log_capture if "Opened" in l)
 
@@ -587,14 +586,14 @@ def run_mini_backtest_trace(report_lines):
 def probe_bar_availability_vs_dte(conn, report_lines):
     """Key question: at what DTE do daily bars actually appear?"""
     cur = conn.cursor()
-    report_lines.append(f"\n## Daily Bar Availability vs DTE\n")
-    report_lines.append(f"For each year, sample 50 OTM put contracts and check: at what DTE do daily bars first appear?\n")
+    report_lines.append("\n## Daily Bar Availability vs DTE\n")
+    report_lines.append("For each year, sample 50 OTM put contracts and check: at what DTE do daily bars first appear?\n")
 
     from shared.iron_vault import IronVault
-    hd = IronVault.instance()
+    IronVault.instance()
 
-    report_lines.append(f"| Year | Contracts Sampled | Avg First-Bar DTE | Median | Min DTE | Max DTE | Never-Bars |")
-    report_lines.append(f"|------|------------------|-------------------|--------|---------|---------|------------|")
+    report_lines.append("| Year | Contracts Sampled | Avg First-Bar DTE | Median | Min DTE | Max DTE | Never-Bars |")
+    report_lines.append("|------|------------------|-------------------|--------|---------|---------|------------|")
 
     for year in YEARS:
         # Get OTM put contracts with known expirations
@@ -701,9 +700,9 @@ def main():
     run_mini_backtest_trace(report_lines)
 
     # Cross-year comparison
-    report_lines.append(f"\n## Cross-Year Comparison\n")
-    report_lines.append(f"| Year | Probed | Has Exps | Has Strikes | Short Bar | Long Bar | Valid Spread | Spread Rate |")
-    report_lines.append(f"|------|--------|----------|-------------|-----------|----------|-------------|-------------|")
+    report_lines.append("\n## Cross-Year Comparison\n")
+    report_lines.append("| Year | Probed | Has Exps | Has Strikes | Short Bar | Long Bar | Valid Spread | Spread Rate |")
+    report_lines.append("|------|--------|----------|-------------|-----------|----------|-------------|-------------|")
     for year in YEARS:
         s = all_stats[year]
         rate = s["days_with_spread"] / max(1, s["days_probed"]) * 100

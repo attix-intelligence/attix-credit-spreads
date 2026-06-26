@@ -3,15 +3,12 @@
 import numpy as np
 import pandas as pd
 import pytest
-from datetime import datetime
 from pathlib import Path
 
 from compass.risk_parity import (
     RiskParityOptimizer,
     RPMethod,
-    RPWeights,
     RiskContribution,
-    BacktestRow,
     MethodComparison,
 )
 

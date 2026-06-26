@@ -19,7 +19,6 @@ Success criteria:
 
 from __future__ import annotations
 
-import json
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -30,8 +29,8 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from compass.stress_test import StressTester, CRISIS_SCENARIOS
-from compass.metrics import annualized_sharpe, full_metrics
+from compass.stress_test import StressTester
+from compass.metrics import full_metrics
 
 REPORT_PATH = ROOT / "reports" / "stress_test_report.html"
 TRADING_DAYS = 252
@@ -349,7 +348,7 @@ def main():
     mc_dd_p5 = abs(mc['max_drawdown']['percentiles_pct']['p5'])
     crisis_pass = all(abs(c['portfolio_drawdown_pct']) <= 40 for c in crisis)
     mc_pass = mc_dd_p5 <= 30
-    print(f"  VERDICT:")
+    print("  VERDICT:")
     print(f"    MC P5 DD ≤30%:       {'PASS' if mc_pass else 'FAIL'} ({mc_dd_p5:.1f}%)")
     print(f"    All crises ≤40%:     {'PASS' if crisis_pass else 'FAIL'}")
     print(f"{'━'*56}")

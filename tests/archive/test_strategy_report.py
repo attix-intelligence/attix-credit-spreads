@@ -34,16 +34,12 @@ from compass.strategy_report import (
     _max_drawdown_duration,
     _monthly_returns,
     _rolling_sharpe,
-    _sharpe_ratio,
-    _sortino_ratio,
-    _var_cvar,
     compute_benchmark,
     compute_performance,
     compute_regime_performance,
     compute_risk,
     compute_trade_statistics,
     generate_batch,
-    render_html,
 )
 
 

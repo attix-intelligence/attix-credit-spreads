@@ -10,11 +10,9 @@ import pandas as pd
 import pytest
 
 from compass.transformer_predictor import (
-    FoldResult,
     PredictorResult,
     TransformerConfig,
     TransformerPredictor,
-    TransformerWeights,
     causal_mask,
     compute_signal_sharpe,
     evaluate_weights,

@@ -1,7 +1,6 @@
 """Tests for EXP-1600-max: Comprehensive Experiment Summary Report."""
 
 import json
-import os
 from pathlib import Path
 
 import pytest

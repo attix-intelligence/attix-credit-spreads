@@ -1,10 +1,9 @@
 """Tests for compass.strategy_generator — 32 tests."""
 import numpy as np
 import pandas as pd
-import pytest
 from pathlib import Path
 from compass.strategy_generator import (
-    StrategyGenerator, StrategyTemplate, FitnessScore, StrategyResult, GenerationSummary,
+    StrategyGenerator, StrategyTemplate, FitnessScore, StrategyResult,
 )
 
 def _prices(n=500, seed=42):

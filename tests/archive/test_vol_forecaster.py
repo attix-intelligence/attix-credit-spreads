@@ -12,9 +12,7 @@ from compass.vol_forecaster import (
     GARCHParams,
     ForecastAccuracy,
     IVRVSpread,
-    TermStructurePoint,
     TermStructureSnapshot,
-    VOL_REGIME_THRESHOLDS,
     TRADING_DAYS,
 )
 

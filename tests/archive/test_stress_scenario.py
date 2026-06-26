@@ -14,7 +14,6 @@ from compass.stress_scenario import (
     GreeksStressPnL,
     RecoveryPath,
     ScenarioDef,
-    ScenarioOutcome,
     StressResult,
     StressScenarioEngine,
     _build_shock_path,

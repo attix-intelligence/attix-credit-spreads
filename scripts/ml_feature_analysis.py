@@ -11,7 +11,6 @@ Usage:
     python3 scripts/ml_feature_analysis.py [--max-mc-files N] [--sample-seeds N]
 """
 
-import os
 import sys
 import json
 import sqlite3
@@ -24,7 +23,6 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import cross_val_score, StratifiedKFold
-from sklearn.metrics import roc_auc_score
 import xgboost as xgb
 
 warnings.filterwarnings("ignore")
@@ -699,8 +697,8 @@ def generate_report(
     # ── 2. Model Performance ─────────────────────────────────────────────
     h("## 2. Model Performance\n")
     h("**XGBoost Win/Loss Classifier — 5-Fold Stratified CV:**\n")
-    h(f"| Metric | Value |")
-    h(f"|--------|-------|")
+    h("| Metric | Value |")
+    h("|--------|-------|")
     h(f"| Mean AUC | **{cv_scores.mean():.4f}** |")
     h(f"| Std Dev  | {cv_scores.std():.4f} |")
     h(f"| Min / Max | {cv_scores.min():.4f} / {cv_scores.max():.4f} |")

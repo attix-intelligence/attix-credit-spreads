@@ -29,12 +29,11 @@ from __future__ import annotations
 import json
 import math
 import re
-import sqlite3
 import sys
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -44,8 +43,6 @@ sys.path.insert(0, str(ROOT))
 
 from compass.exp1220_standalone import (
     run_exp1220_trades,
-    sharpe_correct,
-    TRADING_DAYS,
 )
 
 FOMC_DIR = ROOT / "data" / "fomc"

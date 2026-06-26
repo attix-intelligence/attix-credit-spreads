@@ -16,10 +16,10 @@ from __future__ import annotations
 
 import math
 import sqlite3
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List
 
 import numpy as np
 import pandas as pd
@@ -302,7 +302,7 @@ def walk_forward_cadence(trades: List[Dict], hedge_daily: float = 0.0) -> List[W
         if is_mask.sum() < 5 or oos_mask.sum() < 3: continue
 
         is_net = net[is_mask]; oos_net = net[oos_mask]
-        n_is = len(is_net); n_oos = len(oos_net)
+        len(is_net); n_oos = len(oos_net)
 
         def _sr(arr):
             if len(arr) < 2: return 0.0

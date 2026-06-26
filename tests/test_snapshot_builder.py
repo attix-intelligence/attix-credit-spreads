@@ -1,7 +1,5 @@
 """Tests for shared.snapshot_builder — build_live_market_snapshot()."""
 
-import math
-from datetime import datetime, timezone
 
 import numpy as np
 import pandas as pd

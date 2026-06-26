@@ -13,10 +13,8 @@ Covers:
 """
 
 import sqlite3
-import tempfile
 from pathlib import Path
 
-import numpy as np
 import pytest
 
 from compass.paper_tracker import (

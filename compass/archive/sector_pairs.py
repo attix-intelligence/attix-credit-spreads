@@ -494,7 +494,7 @@ def run_pipeline() -> Dict:
               f"CAGR {bt.cagr:+5.1f}%  Sharpe {bt.sharpe:5.2f}  "
               f"DD {bt.max_dd:5.1f}%  WR {bt.win_rate:.0f}%")
 
-    print(f"\n[4/5] Walk-forward (top 5 by Sharpe)...")
+    print("\n[4/5] Walk-forward (top 5 by Sharpe)...")
     survivors.sort(key=lambda b: b.sharpe, reverse=True)
     wf_all = []
     for bt in survivors[:5]:
@@ -504,7 +504,7 @@ def run_pipeline() -> Dict:
         avg_oos = float(np.mean([f.oos_sharpe for f in folds])) if folds else 0.0
         print(f"  {bt.pair:11s}  {len(folds)} folds  avg OOS Sharpe {avg_oos:+.2f}")
 
-    print(f"\n[5/5] Building EXP-1220 reference + portfolio...")
+    print("\n[5/5] Building EXP-1220 reference + portfolio...")
     from compass.exp1780_exp1220_integration import build_exp1220_daily_returns
     from compass.crisis_alpha_v3 import load_universe_v3
     ref_prices = load_universe_v3(start="2015-01-01", end="2026-01-01")

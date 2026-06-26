@@ -34,7 +34,6 @@ from compass.crisis_alpha_v3 import load_universe_v3
 from compass.crisis_alpha_v4 import ConfigV4, backtest_v4
 from compass.crisis_alpha_v5 import (
     HedgeConfigV5,
-    backtest_v5,
     score_hedge,
     search_hedge_configs,
     select_best_hedge,

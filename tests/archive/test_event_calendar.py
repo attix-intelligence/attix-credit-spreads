@@ -1,13 +1,12 @@
 """Tests for compass/event_calendar.py — event calendar engine."""
 
 from __future__ import annotations
-from datetime import date, timedelta
+from datetime import date
 import numpy as np
 import pandas as pd
 import pytest
 from compass.event_calendar import (
-    Event, EventCalendarEngine, EventCluster, EventPnL, EventTypeStats,
-    PostEventSignal, PreEventRule, UpcomingEvent,
+    Event, EventCalendarEngine, EventCluster, EventPnL, PostEventSignal, PreEventRule, UpcomingEvent,
     generate_cpi_dates, generate_nfp_dates, generate_opex_dates,
     generate_quad_witching, generate_vix_expiry, _third_friday,
 )

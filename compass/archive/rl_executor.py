@@ -147,7 +147,7 @@ class ExecutionEnvironment:
         spread = self.base_spread + self.rng.rand() * 3
 
         # Determine execution qty based on action
-        inv_frac = self._remaining / max(self.total_qty, 1)
+        self._remaining / max(self.total_qty, 1)
         if action == 0:    # market 100%
             qty = self._remaining
         elif action == 1:  # market 50%
@@ -282,7 +282,7 @@ class QLearningAgent:
 def run_twap(env: ExecutionEnvironment) -> float:
     """Execute with equal slices each step."""
     env.reset()
-    qty_per_step = max(1, env.total_qty // env.n_steps)
+    max(1, env.total_qty // env.n_steps)
     total_cost = 0.0
     for step in range(env.n_steps):
         _, reward, done = env.step(1)  # market 50% as proxy for even split

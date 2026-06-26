@@ -15,13 +15,13 @@ Target: 100%+ CAGR, <12% max DD in ALL regimes including COVID.
 Walk-forward validated with expanding window, 1-year OOS.
 """
 
-import math, os, sys
+import math
+import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Tuple
 
 import numpy as np
-import pandas as pd
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
@@ -177,7 +177,6 @@ def compute_hedge_pnl(
 def build_market_data(seed=8000):
     """Build aligned daily returns, VIX, and VIX3M series."""
     rng = np.random.RandomState(seed)
-    n_total = 0
     all_port_ret = []
     all_spy_ret = []
     all_vix = []
@@ -588,7 +587,7 @@ def main():
     print("\n" + "=" * 70)
     print("SUMMARY")
     print("=" * 70)
-    print(f"  Production mode (adaptive_hedged):")
+    print("  Production mode (adaptive_hedged):")
     print(f"    CAGR:        {pct(prod['cagr'])}")
     print(f"    Sharpe:      {prod['sharpe']:.2f}")
     print(f"    Max DD:      {pct(prod['max_dd'])}")

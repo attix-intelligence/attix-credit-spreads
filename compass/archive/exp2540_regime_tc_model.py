@@ -57,7 +57,6 @@ import sqlite3
 import sys
 import urllib.request
 from collections import defaultdict
-from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
@@ -256,7 +255,7 @@ def apply_regime_tc(
     regime_seq = np.array([classify_regime(v) for v in vix_aligned.values])
 
     skip = set(skip_regimes or [])
-    gross = df.values @ w
+    df.values @ w
     net_contrib = np.zeros(len(idx))
     tc_total = np.zeros(len(idx))
     skipped_pnl_by_regime: Dict[str, float] = defaultdict(float)
@@ -467,7 +466,7 @@ def main() -> int:
     vix = load_vix_series("2019-12-01", "2026-01-01")
     stats = measure_spy_friction_by_regime(vix)
     regime_bps = calibrate_regime_bps(stats)
-    print(f"\n  Per-regime friction (real SPY option_daily H-L/close, calibrated):")
+    print("\n  Per-regime friction (real SPY option_daily H-L/close, calibrated):")
     for reg in REGIMES:
         s = stats.get(reg, {})
         bps = regime_bps.get(reg, 0)
@@ -484,7 +483,7 @@ def main() -> int:
     w = equal_risk_weights(df, target_gross=3.0)
     cols = list(df.columns)
     print(f"  streams: {cols}")
-    print(f"  per-sleeve lev: " + ", ".join(f"{c}={w[i]:.3f}" for i, c in enumerate(cols)))
+    print("  per-sleeve lev: " + ", ".join(f"{c}={w[i]:.3f}" for i, c in enumerate(cols)))
     print(f"  gross leverage: {float(np.sum(np.abs(w))):.2f}×")
 
     print("\n[3/5] Running variants...")
@@ -509,7 +508,7 @@ def main() -> int:
     print(f"    active days by regime: {tc_all_diag['active_days_by_regime']}")
     print(f"  regime_filtered_high_crisis:   CAGR={tc_filt_m['cagr_pct']:.2f}%  Sharpe={tc_filt_m['sharpe']:.2f}  DD={tc_filt_m['max_dd_pct']:.2f}%")
     print(f"    skipped days by regime: {tc_filt_diag['skipped_days_by_regime']}")
-    print(f"    foregone pnl by regime: " +
+    print("    foregone pnl by regime: " +
           ", ".join(f"{k}={v*100:.3f}%" for k, v in tc_filt_diag['skipped_pnl_by_regime'].items()))
 
     print("\n[4/5] Walk-forward on each variant...")

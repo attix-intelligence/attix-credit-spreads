@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 from compass.north_star_gap import (
     CapacityPoint, ExperimentResult, GapSummary, MCProjection,
-    NorthStarGapAnalyzer, StrategyCombo, TargetGap, TARGETS,
+    NorthStarGapAnalyzer, StrategyCombo, TargetGap,
 )
 
 def _make_returns(n=500, mu=0.002, seed=42):

@@ -6,8 +6,7 @@ position stops, DD circuit breaker, plus integration and report generation.
 Target: 50+ tests.
 """
 
-import math
-from datetime import date, datetime, timedelta
+from datetime import date
 
 import numpy as np
 import pandas as pd
@@ -17,16 +16,12 @@ from compass.risk_overlay import (
     RiskOverlay,
     RiskOverlayConfig,
     RiskOverlayResult,
-    RiskRegime,
-    DayRiskState,
     _ramp,
     _compute_metrics,
     _crisis_score,
-    _get_event_scaling,
     _inline_event_scaling,
     generate_test_data,
     generate_report,
-    TRADING_DAYS,
 )
 
 
@@ -505,7 +500,7 @@ class TestDDCircuitBreaker:
         # Eventually should recover (crash ends, equity rebuilds)
         if result.breaker_activations > 0:
             # Check final state — may or may not have recovered
-            final = result.daily_states[-1]
+            result.daily_states[-1]
             # Breaker should have eventually released
             assert result.breaker_days < len(result.daily_states)
 

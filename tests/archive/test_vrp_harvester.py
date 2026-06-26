@@ -2,10 +2,9 @@
 from __future__ import annotations
 import numpy as np
 import pandas as pd
-import pytest
 from compass.vrp_harvester import (
-    BacktestResult, GammaScalpResult, HarvestTrade, TenorVRP,
-    TermStructure, VRPConfig, VRPHarvester,
+    BacktestResult, HarvestTrade, TenorVRP,
+    VRPConfig, VRPHarvester,
     classify_regime_from_vix, compute_vrp, gamma_scalp_pnl,
     implied_vol_proxy, realised_vol,
 )

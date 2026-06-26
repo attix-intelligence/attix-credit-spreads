@@ -62,12 +62,9 @@ Run: python3 -m compass.exp2060_cross_vol_arb_v2
 from __future__ import annotations
 
 import json
-import math
-import os
 import sqlite3
 import sys
 from dataclasses import dataclass
-from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
@@ -87,8 +84,6 @@ from compass.exp2020_cross_vol_arb import (
     DROPPED,
     HOLDING_DAYS,
     VEGA_NOTIONAL,
-    START as BASE_START,
-    END as BASE_END,
     build_trades,
     load_prices,
     metrics as base_metrics,

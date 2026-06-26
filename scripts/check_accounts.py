@@ -12,7 +12,6 @@ Importable:
     results = check_all_accounts()
 """
 
-import os
 from pathlib import Path
 
 import requests

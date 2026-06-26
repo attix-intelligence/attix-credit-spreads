@@ -292,7 +292,7 @@ class FeaturePipeline:
         parts: list[pd.DataFrame] = []
 
         # Numeric: fill missing with domain-aware defaults
-        present_numeric = [c for c in numeric_cols if c in out.columns]
+        [c for c in numeric_cols if c in out.columns]
         missing_numeric = [c for c in numeric_cols if c not in out.columns]
         if missing_numeric:
             logger.debug("Pipeline: %d numeric features not in data, filling defaults: %s",

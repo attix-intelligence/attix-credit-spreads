@@ -4,7 +4,6 @@ Covers: crisis detection, SPY puts, VIX calls, portfolio delta,
 cost budget, leverage management, stress tests, report generation.
 """
 
-import math
 
 import numpy as np
 import pandas as pd
@@ -13,14 +12,9 @@ import pytest
 from compass.tail_risk_hedge import (
     TailRiskHedgeConfig,
     TailRiskHedgeEngine,
-    HedgeDayState,
-    BacktestResult,
-    CrisisScenario,
-    ScenarioResult,
     generate_market_data,
     get_crisis_scenarios,
     generate_report,
-    run_full_analysis,
     _compute_full_metrics,
     _yearly_breakdown,
     _build_crisis_path,

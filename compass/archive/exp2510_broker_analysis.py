@@ -53,11 +53,10 @@ Run: python3 -m compass.exp2510_broker_analysis
 from __future__ import annotations
 
 import json
-import math
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 import numpy as np
 
@@ -590,7 +589,7 @@ def main() -> int:
         "runs more than 10k contracts/month, IBKR Pro Tiered drops the "
         "effective commission from $0.65 to ~$0.25 per contract. That "
         "would cut the commission drag from 8.27%/yr to ~3.18%/yr — a "
-        f"net-Sharpe lift of roughly +0.50 above the current IBKR "
+        "net-Sharpe lift of roughly +0.50 above the current IBKR "
         "Fixed baseline. Worth engaging the IBKR relationship manager "
         "once live volume justifies it.</p>"
     )

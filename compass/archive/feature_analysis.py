@@ -10,12 +10,11 @@ No numpy/sklearn dependencies.
 
 from __future__ import annotations
 
-import html as html_mod
 import math
 import random
 from collections import defaultdict
-from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Tuple, Callable
+from dataclasses import dataclass
+from typing import Dict, List, Optional, Tuple
 
 
 # ---------------------------------------------------------------------------
@@ -141,10 +140,10 @@ def compute_permutation_importance(
     rng = random.Random(seed)
     features = list(data[0].features.keys())
     labels = [d.label for d in data]
-    n = len(data)
+    len(data)
 
     # Baseline: correlation between each feature and label
-    baseline_score = _mean([abs(_correlation(
+    _mean([abs(_correlation(
         [d.features[f] for d in data], labels)) for f in features])
 
     importance: Dict[str, float] = {}
@@ -186,7 +185,7 @@ def compute_interaction_scores(
     if not data or not data[0].features:
         return {}
 
-    rng = random.Random(seed)
+    random.Random(seed)
     features = list(data[0].features.keys())[:top_n]
     labels = [d.label for d in data]
     interactions: Dict[Tuple[str, str], float] = {}

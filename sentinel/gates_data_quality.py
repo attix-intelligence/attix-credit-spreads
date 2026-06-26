@@ -46,11 +46,10 @@ from __future__ import annotations
 import logging
 import os
 import sqlite3
-import time
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 logger = logging.getLogger("sentinel.gates_data_quality")
 
@@ -674,7 +673,6 @@ def check_regime_parity(
     Returns:
         ParityResult with divergence details.
     """
-    import pandas as pd
 
     result = ParityResult(
         experiment_id=experiment_id,

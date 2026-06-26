@@ -6,7 +6,6 @@ import json
 import tempfile
 from pathlib import Path
 
-import numpy as np
 import pytest
 
 from compass.pairs_deep_validation import (

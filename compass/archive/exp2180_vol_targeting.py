@@ -49,11 +49,9 @@ import json
 import math
 import pickle
 import sys
-from dataclasses import dataclass, asdict, field
 from pathlib import Path
 from typing import Dict, List, Tuple
 
-import numpy as np
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -234,7 +232,7 @@ def write_html(payload: Dict, path: Path) -> None:
     for res in payload["targets"]:
         m = res["pooled_oos"]
         ds = round(m["sharpe"] - base_m["sharpe"], 3)
-        dcagr = round(m["cagr_pct"] - base_m["cagr_pct"], 2)
+        round(m["cagr_pct"] - base_m["cagr_pct"], 2)
         ddd = round(m["max_dd_pct"] - base_m["max_dd_pct"], 2)
         sh_color = "#16a34a" if ds > 0 else "#dc2626"
         rows += (
@@ -337,7 +335,7 @@ def main():
     print(f"[shannon] lag-1 autocorr of 60-day realised vol: {vac:+.3f}")
 
     # Baseline walk-forward
-    base_wf = walk_forward(base, target_vol=float("nan"))
+    walk_forward(base, target_vol=float("nan"))
     # Inject 1x identical metrics into the "baseline" slot by re-using the
     # non-scaled pooled series (override so mean_lev=1.0)
     # Simpler: construct baseline dict directly

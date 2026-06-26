@@ -12,12 +12,9 @@ import pytest
 from compass.order_flow_analyzer import (
     AnalysisResult,
     CumulativeDelta,
-    DivergenceSignal,
     FlowImbalance,
     FootprintBar,
-    LargeTrade,
     OrderFlowAnalyzer,
-    PriceLevel,
     VolumeProfile,
     VWAPData,
     build_footprint_bars,
@@ -280,7 +277,7 @@ class TestDivergence:
         trending = _make_trending_trades(300)
         analyzer = OrderFlowAnalyzer(trending, divergence_window=30)
         result = analyzer.analyze()
-        bearish = [d for d in result.divergence_signals if d.signal_type == "bearish_divergence"]
+        [d for d in result.divergence_signals if d.signal_type == "bearish_divergence"]
         # May or may not find divergences depending on randomness, but should not crash
         assert isinstance(result.divergence_signals, list)
 

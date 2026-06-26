@@ -30,16 +30,15 @@ from __future__ import annotations
 
 import math
 import os
-from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Tuple
+from dataclasses import dataclass
+from typing import Dict, List, Optional
 
 import numpy as np
 import pandas as pd
 
 from compass.crisis_alpha_v3 import LOOKBACK_GRID, load_universe_v3
 from compass.crisis_alpha_v4 import (
-    UNIVERSE_V4, compute_metrics, corrected_sharpe,
-    compute_signal_with_confirmation, apply_drawdown_brake,
+    UNIVERSE_V4, compute_metrics, compute_signal_with_confirmation, apply_drawdown_brake,
 )
 from compass.exp1780_exp1220_integration import build_exp1220_daily_returns
 
@@ -435,7 +434,7 @@ def run_v5_pipeline() -> Dict:
     # KEY METRIC
     pure_2x = next(t for t in lev_tests if t.leverage == 2.0 and t.crisis_pct == 0.0)
     hedged_2x = next(t for t in lev_tests if t.leverage == 2.0 and t.crisis_pct == 0.10)
-    print(f"\nKEY METRIC — 2× EXP-1220 DD reduction with 10% v5 hedge:")
+    print("\nKEY METRIC — 2× EXP-1220 DD reduction with 10% v5 hedge:")
     print(f"  Pure 2× EXP-1220:           DD {pure_2x.max_dd:.1f}%")
     print(f"  90% (2× EXP-1220) + 10% v5: DD {hedged_2x.max_dd:.1f}%")
     print(f"  Reduction: {pure_2x.max_dd - hedged_2x.max_dd:+.1f}pp "

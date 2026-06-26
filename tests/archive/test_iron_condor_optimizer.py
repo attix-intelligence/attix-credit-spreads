@@ -3,14 +3,9 @@
 from __future__ import annotations
 
 import json
-import math
 import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock, patch
 
-import numpy as np
-import pandas as pd
-import pytest
 
 from compass.iron_condor_optimizer import (
     CAPITAL,
@@ -23,7 +18,6 @@ from compass.iron_condor_optimizer import (
     VIX_FILTER_RANGES,
     _compute_ic_result,
     _result_to_dict,
-    backtest_iron_condor,
 )
 
 

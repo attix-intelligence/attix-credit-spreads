@@ -8,7 +8,6 @@ from compass.crisis_hedge_v2 import (
     CRISIS_SCENARIOS,
     CrisisHedgeControllerV2,
     CrisisHedgeV2Config,
-    CrisisHedgeV2Result,
     HedgeState,
     PutOverlayResult,
     RecoverySignal,

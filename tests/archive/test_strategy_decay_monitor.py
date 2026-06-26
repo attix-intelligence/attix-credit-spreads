@@ -7,7 +7,6 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-import pytest
 
 from compass.strategy_decay_monitor import (
     CUSUMResult,
@@ -18,12 +17,10 @@ from compass.strategy_decay_monitor import (
     RollingMetrics,
     StrategyDecayMonitor,
     classify_lifecycle,
-    compute_kill_score,
     compute_rolling_hit_rate,
     compute_rolling_sharpe,
     cusum_on_sharpe,
     score_recent_performance,
-    TRADING_DAYS,
 )
 
 

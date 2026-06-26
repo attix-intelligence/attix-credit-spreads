@@ -10,12 +10,9 @@ import pandas as pd
 import pytest
 
 from compass.market_maker import (
-    AdverseSelectionMetrics,
     FillEvent,
     MMConfig,
     MarketMakerSimulator,
-    PnLDecomposition,
-    QuoteState,
     SimulationResult,
     SpreadAnalysis,
     compute_half_spread,

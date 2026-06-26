@@ -18,7 +18,7 @@ import sys
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -736,10 +736,10 @@ def main():
             print(f"  IS: {analysis.is_n} trades, Sharpe {_fr(analysis.is_sharpe)} | "
                   f"OOS: {analysis.oos_n} trades, Sharpe {_fr(analysis.oos_sharpe)}")
         else:
-            print(f"  No trades (insufficient data)")
+            print("  No trades (insufficient data)")
 
     # Run ALL-MONTHS comparison for XLF (control group)
-    print(f"\n[XLF] ALL MONTHS (control — not earnings-specific)")
+    print("\n[XLF] ALL MONTHS (control — not earnings-specific)")
     all_month_config = {
         "name": "Financials All-Month",
         "months": list(range(1, 13)),
@@ -762,7 +762,7 @@ def main():
     # Compare earnings-only vs all-months for XLF
     xlf_earnings = next((a for a in analyses if a.ticker == "XLF"), None)
     if xlf_earnings and all_month_analysis.n_trades > 0:
-        print(f"\n  COMPARISON — XLF Earnings-Only vs All-Month:")
+        print("\n  COMPARISON — XLF Earnings-Only vs All-Month:")
         print(f"    Earnings: WR {_fp(xlf_earnings.win_rate)}, crush {xlf_earnings.avg_iv_crush_pct:.1f}%, "
               f"overstatement {_fr(xlf_earnings.iv_overstatement_ratio)}×")
         print(f"    All-Month: WR {_fp(all_month_analysis.win_rate)}, crush {all_month_analysis.avg_iv_crush_pct:.1f}%, "
@@ -772,7 +772,7 @@ def main():
     combined = analyze_combined(analyses)
 
     print(f"\n{'=' * 65}")
-    print(f"COMBINED PORTFOLIO")
+    print("COMBINED PORTFOLIO")
     print(f"  {combined.get('n_trades', 0)} trades, P&L {_fd(combined.get('total_pnl', 0))}")
     print(f"  Win Rate: {_fp(combined.get('win_rate', 0))}, Sharpe: {_fr(combined.get('sharpe', 0))}")
     print(f"  OOS: {combined.get('oos_n', 0)} trades, Sharpe: {_fr(combined.get('oos_sharpe', 0))}")

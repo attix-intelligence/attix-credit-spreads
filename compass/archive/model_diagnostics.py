@@ -25,11 +25,10 @@ import io
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List
 
 import numpy as np
 import pandas as pd
-from sklearn.base import clone
 from sklearn.calibration import calibration_curve
 from sklearn.metrics import (
     accuracy_score,
@@ -280,7 +279,7 @@ def _render_confusion_matrices(folds: List[Dict]) -> str:
         cm = confusion_matrix(f["y_test"], f["y_pred"])
         ax = axes[i]
 
-        im = ax.imshow(cm, interpolation="nearest", cmap="Blues")
+        ax.imshow(cm, interpolation="nearest", cmap="Blues")
         ax.set_title(
             f"Fold {f['fold']} (test {f['test_year']})\nthresh={f['optimal_threshold']:.3f}",
             fontsize=9,
@@ -338,7 +337,7 @@ def _render_feature_importance(folds: List[Dict], top_n: int = 15) -> str:
     fig, ax = plt.subplots(figsize=(8, max(4, 0.4 * len(names))))
     y_pos = np.arange(len(names))
 
-    bars = ax.barh(y_pos, means, xerr=stds, height=0.65,
+    ax.barh(y_pos, means, xerr=stds, height=0.65,
                    color="#3b82f6", edgecolor="white", capsize=3, alpha=0.85)
     ax.set_yticks(y_pos)
     ax.set_yticklabels(names, fontsize=9)

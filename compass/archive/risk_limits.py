@@ -17,10 +17,9 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 import numpy as np
-import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -439,7 +438,7 @@ svg{{display:block;margin:0 auto}}
         gauges = ""
         for l in main:
             util = min(l.utilisation, 1.2)
-            pct = min(util * 100, 100)
+            min(util * 100, 100)
             colour = "#4ade80" if util < 0.80 else "#fbbf24" if util < 0.95 else "#f87171"
             w, h = 130, 80
             # Arc gauge

@@ -43,10 +43,10 @@ import math
 import sqlite3
 import sys
 import urllib.request
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 
@@ -499,7 +499,7 @@ def main() -> int:
             print(f"    Path A (ETF-option): soft cap {fmt_usd(path_a['ceiling']['soft_cap_portfolio_aum'])}  "
                   f"hard cap {fmt_usd(path_a['ceiling']['hard_cap_portfolio_aum'])}")
         else:
-            print(f"    Path A (ETF-option): DATA_GAP")
+            print("    Path A (ETF-option): DATA_GAP")
         print(f"    Path B (futures):    soft cap {fmt_usd(path_b['ceiling']['soft_cap_portfolio_aum'])}  "
               f"hard cap {fmt_usd(path_b['ceiling']['hard_cap_portfolio_aum'])}")
         sleeves.append(s)

@@ -16,9 +16,8 @@ import importlib.util
 import json
 import sys
 from collections import defaultdict
-from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Dict, List
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
@@ -219,7 +218,7 @@ def print_report(champion_name: str, summary: Dict, monthly: List[Dict], yearly:
           f"Risk={cfg['risk_pct']*100:.0f}% | Adaptive={'YES' if cfg.get('direction_adaptive') else 'NO'}")
     print(f"{'='*70}")
 
-    print(f"\n  SUMMARY")
+    print("\n  SUMMARY")
     print(f"  Total return:    {summary['total_return_pct']:+.1f}%")
     print(f"  Annualized:      {summary['annualized_return_pct']:+.1f}%")
     print(f"  Max drawdown:    {summary['max_drawdown_pct']:.1f}%")
@@ -229,7 +228,7 @@ def print_report(champion_name: str, summary: Dict, monthly: List[Dict], yearly:
     print(f"  Profit factor:   {summary['profit_factor']:.2f}")
     print(f"  Avg win:         ${summary['avg_win_dollar']:,.0f} | Avg loss: ${summary['avg_loss_dollar']:,.0f}")
 
-    print(f"\n  MONTHLY BREAKDOWN")
+    print("\n  MONTHLY BREAKDOWN")
     print(f"  {'Month':<9} {'Trades':>6} {'W':>4} {'L':>4} {'Mth%':>8} {'Cum%':>9}  Dir")
     for m in monthly:
         bar = "+" * min(int(abs(m["monthly_return_pct"]) / 2), 20)
@@ -237,7 +236,7 @@ def print_report(champion_name: str, summary: Dict, monthly: List[Dict], yearly:
         print(f"  {m['month']:<9} {m['trades']:>6} {m['wins']:>4} {m['losses']:>4} "
               f"{m['monthly_return_pct']:>+7.1f}% {m['cumulative_return_pct']:>+8.1f}%  {sign}{bar}")
 
-    print(f"\n  YEARLY SUMMARY")
+    print("\n  YEARLY SUMMARY")
     print(f"  {'Year':<6} {'Mo':>4} {'Trd':>5} {'W':>4} {'L':>4} {'WR%':>6} {'Ann%':>9} {'WorstMo':>9}")
     for y in yearly:
         print(f"  {y['year']:<6} {y['months_active']:>4} {y['trades']:>5} "

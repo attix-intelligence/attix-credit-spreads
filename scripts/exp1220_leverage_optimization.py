@@ -20,7 +20,7 @@ import math
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 import numpy as np
 import pandas as pd
@@ -29,7 +29,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from backtest.backtester import _yf_download_safe
-from compass.tail_risk_protector import TailRiskProtector, ThreatLevel
+from compass.tail_risk_protector import TailRiskProtector
 
 logger = logging.getLogger(__name__)
 TRADING_DAYS = 252

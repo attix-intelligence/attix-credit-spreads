@@ -10,7 +10,6 @@ Usage as CLI:
 """
 
 import logging
-import sqlite3
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
@@ -221,7 +220,6 @@ def _extract_features_from_opportunity(opp: Dict[str, Any], context: Dict[str, A
 
 def _cli_main():
     import argparse
-    import json as _json
 
     parser = argparse.ArgumentParser(description="Trade Feature Logger stats")
     parser.add_argument("--db", required=True, help="Path to SQLite database")
@@ -233,7 +231,7 @@ def _cli_main():
         stats = fl.get_stats()
         print(f"Total logged trades:  {stats['total_features']}")
         print(f"Date range:           {stats['first_timestamp'] or 'N/A'} → {stats['last_timestamp'] or 'N/A'}")
-        print(f"Class balance:")
+        print("Class balance:")
         for outcome, cnt in stats["class_balance"].items():
             print(f"  {outcome}: {cnt}")
     else:

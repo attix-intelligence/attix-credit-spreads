@@ -61,7 +61,7 @@ def _make_trades(n: int = 100, seed: int = 42, clean: bool = True) -> pd.DataFra
 
 def _make_dirty_trades(n: int = 50) -> pd.DataFrame:
     """Trades with various issues."""
-    rng = np.random.RandomState(99)
+    np.random.RandomState(99)
     df = _make_trades(n, seed=99)
     # Inject problems
     df.loc[0, "vix"] = 150.0       # out of range

@@ -36,7 +36,7 @@ import types
 from datetime import date as _date
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -71,7 +71,7 @@ _import_module("compass.feature_pipeline", str(HERE / "feature_pipeline.py"))
 _import_module("compass.ensemble_signal_model", str(HERE / "ensemble_signal_model.py"))
 
 from compass.ensemble_signal_model import EnsembleSignalModel
-from compass.feature_pipeline import FeaturePipeline, _zscore_column, _IMPUTATION_DEFAULTS
+from compass.feature_pipeline import FeaturePipeline, _zscore_column
 
 logging.basicConfig(
     level=logging.INFO,
@@ -804,7 +804,7 @@ def main():
               f"orig_AUC={d.get('orig_auc', 0):.4f}  "
               f"tier1_AUC={d.get('tier1_auc', 0):.4f}  "
               f"Δ={d.get('auc_delta', 0):+.4f}")
-    print(f"\nOutputs:")
+    print("\nOutputs:")
     print(f"  {TIER1_PATH}")
     print(f"  {JSON_PATH}")
     print(f"  {MD_PATH}")

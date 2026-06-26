@@ -68,7 +68,7 @@ def _th(label, tooltip=None):
 def credit_table_html(data):
     rows = data["rows"]
     baseline = data["baseline_credit_fraction"]
-    breakeven = data["breakeven_credit_fraction"]
+    data["breakeven_credit_fraction"]
     years = data["years"]
 
     html = ['<table style="border-collapse:collapse; width:100%; font-family: monospace; font-size: 13px;">']
@@ -201,11 +201,11 @@ def build_html(credit_data, slip_data):
 
     baseline_credit = credit_data["baseline_credit_fraction"]
     baseline_slip_frac = slip_data["baseline_exit_slippage_fraction"]
-    baseline_slip_abs = slip_data["baseline_exit_slippage_abs"]
+    slip_data["baseline_exit_slippage_abs"]
 
     # Find baseline row for credit
-    baseline_credit_row = next(r for r in credit_data["rows"] if abs(r["credit_fraction"] - baseline_credit) < 0.001)
-    baseline_slip_row = next(r for r in slip_data["rows"] if abs(r["exit_slippage_fraction"] - baseline_slip_frac) < 0.001)
+    next(r for r in credit_data["rows"] if abs(r["credit_fraction"] - baseline_credit) < 0.001)
+    next(r for r in slip_data["rows"] if abs(r["exit_slippage_fraction"] - baseline_slip_frac) < 0.001)
 
     # Verdict for break-even margin
     if be_slip is not None:

@@ -14,10 +14,9 @@ Verifies:
 
 from datetime import datetime
 from typing import Any, Dict, List
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pandas as pd
-import pytest
 
 from compass.ml_strategy import MLEnhancedStrategy, DEFAULT_CONFIDENCE_THRESHOLD
 from compass.signal_model import SignalModel

@@ -17,7 +17,7 @@ from compass.feature_importance import (
     aggregate_importances,
     generate_report,
 )
-from compass.walk_forward import NUMERIC_FEATURES, CATEGORICAL_FEATURES
+from compass.walk_forward import NUMERIC_FEATURES
 
 
 # ── Fixtures ──────────────────────────────────────────────────────────────

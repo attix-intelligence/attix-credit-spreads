@@ -1,8 +1,6 @@
 """Tests for shared.feature_logger (ML-1)."""
 
-import os
 import sqlite3
-import tempfile
 
 import pytest
 
@@ -16,7 +14,7 @@ def db_path(tmp_path):
 
 class TestFeatureLogger:
     def test_create_table(self, db_path):
-        fl = FeatureLogger(db_path=db_path)
+        FeatureLogger(db_path=db_path)
         conn = sqlite3.connect(db_path)
         tables = [r[0] for r in conn.execute(
             "SELECT name FROM sqlite_master WHERE type='table'"

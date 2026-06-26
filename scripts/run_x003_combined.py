@@ -17,7 +17,6 @@ Usage:
 import argparse
 import json
 import logging
-import math
 import sys
 import time
 from datetime import datetime
@@ -32,7 +31,6 @@ sys.path.insert(0, str(ROOT))
 
 from compass.collect_training_data import enrich_trades, _load_full_market_data
 from compass.signal_model import SignalModel
-from engine.portfolio_backtester import PortfolioBacktester
 from scripts.run_phase4_validate import (
     CompassBacktester,
     build_strategy_params,
@@ -209,10 +207,9 @@ def main():
             df["ml_pass"] = probabilities >= threshold
 
             trades_kept = df[df["ml_pass"]].to_dict("records")
-            trades_rejected = len(df) - len(trades_kept)
+            len(df) - len(trades_kept)
         else:
             trades_kept = []
-            trades_rejected = 0
 
         all_trades_enriched.extend(
             df.to_dict("records") if trades else []
@@ -229,7 +226,7 @@ def main():
     print("=" * 70)
 
     df_all = pd.DataFrame(all_trades_enriched)
-    df_kept = df_all[df_all["ml_pass"] == True].copy()
+    df_kept = df_all[df_all["ml_pass"]].copy()
 
     yearly_combined = {}
     for year in YEARS:
@@ -311,7 +308,7 @@ def main():
     combined_avg = summary["avg_return"]
     combined_dd = summary["worst_dd"]
 
-    print(f"\n  SUMMARY:")
+    print("\n  SUMMARY:")
     print(f"    C-001 alone:  avg={c001_avg:+.1f}%  worst_dd={c001_dd:.1f}%  "
           f"trades={c001_summary['total_trades']}")
     print(f"    Combined:     avg={combined_avg:+.1f}%  worst_dd={combined_dd:.1f}%  "

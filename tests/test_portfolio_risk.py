@@ -3,15 +3,10 @@
 All Alpaca calls are mocked.  A temporary file DB is used for each test.
 """
 
-import json
 import os
 import sqlite3
 import tempfile
-import threading
-import time
 import unittest
-from dataclasses import dataclass
-from datetime import datetime, timezone
 from typing import Dict, Optional
 from unittest.mock import MagicMock, patch
 

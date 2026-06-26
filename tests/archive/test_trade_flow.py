@@ -5,9 +5,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from compass.trade_flow import (
-    AccumulationSignal, BlockTrade, FlowClassification, FlowImbalance,
-    FlowMomentum, FlowSnapshot, TradeFlowAnalyzer, VPINResult,
-    classify_smart_money, classify_trades, compute_vpin,
+    TradeFlowAnalyzer, classify_smart_money, classify_trades, compute_vpin,
 )
 
 # ── Helpers ──────────────────────────────────────────────────────────────
@@ -50,7 +48,7 @@ class TestClassifyTrades:
         prices = np.array([100] * 10, dtype=float)
         volumes = np.array([100] * 9 + [2000], dtype=float)
         _, _, ib = classify_trades(prices, volumes, block_threshold=5.0)
-        assert ib[-1] is True or ib[-1] == True
+        assert ib[-1] is True or ib[-1]
 
     def test_with_mid_prices(self):
         prices = np.array([100.1, 99.9, 100.05], dtype=float)
@@ -66,7 +64,7 @@ class TestClassifySmartMoney:
         is_block = np.array([False] * 9 + [True])
         prices = np.arange(10, dtype=float) + 100
         is_smart = classify_smart_money(volumes, is_block, prices)
-        assert is_smart[-1] is True or is_smart[-1] == True
+        assert is_smart[-1] is True or is_smart[-1]
 
     def test_returns_bool_array(self):
         n = 50

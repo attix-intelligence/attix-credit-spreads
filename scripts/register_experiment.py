@@ -110,7 +110,7 @@ def prompt(label: str, default: str = "", required: bool = True) -> str:
             return val
         if not required:
             return ""
-        print(f"  (required — cannot be blank)")
+        print("  (required — cannot be blank)")
 
 
 def prompt_choice(label: str, choices: list[str], default: str = "") -> str:
@@ -199,13 +199,13 @@ def _build_entry(
 
 def confirm_and_write(entry: dict, registry: dict) -> None:
     exp_id = entry["id"]
-    print(f"\n  ┌─────────────────────────────────────────────────┐")
+    print("\n  ┌─────────────────────────────────────────────────┐")
     print(f"  │  New Experiment: {exp_id:<32}│")
     print(f"  │  Name:           {entry['name']:<32}│")
     print(f"  │  Created by:     {entry['created_by']:<32}│")
     print(f"  │  Status:         {entry['status']:<32}│")
     print(f"  │  Ticker:         {str(entry.get('ticker') or '—'):<32}│")
-    print(f"  └─────────────────────────────────────────────────┘")
+    print("  └─────────────────────────────────────────────────┘")
 
     answer = input("\n  Write to registry.json? [yes/no]: ").strip().lower()
     if answer != "yes":
@@ -214,9 +214,9 @@ def confirm_and_write(entry: dict, registry: dict) -> None:
 
     get_manager().register({k: v for k, v in entry.items() if v is not None})
     print(f"\n  ✅ {exp_id} registered. Next steps:")
-    print(f"     1. Fill in backtest_config and paper_config when ready.")
-    print(f"     2. Run validate_registry.py to confirm integrity.")
-    print(f"     3. Run pre_deploy_check.py before going live.")
+    print("     1. Fill in backtest_config and paper_config when ready.")
+    print("     2. Run validate_registry.py to confirm integrity.")
+    print("     3. Run pre_deploy_check.py before going live.")
 
 
 # ---------------------------------------------------------------------------

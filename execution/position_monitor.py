@@ -728,7 +728,7 @@ class PositionMonitor:
             return None  # Cannot price — skip this cycle
 
         credit = float(pos.get("credit") or 0)
-        spread_type = str(pos.get("strategy_type", pos.get("type", ""))).lower()
+        str(pos.get("strategy_type", pos.get("type", ""))).lower()
         is_debit = pos.get("is_debit", False) or credit < 0
 
         if is_debit:

@@ -26,7 +26,7 @@ import base64
 import io
 import logging
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -430,7 +430,7 @@ class TradeClusterAnalyzer:
 
         fig, ax = plt.subplots(figsize=(8, 6))
         colors = plt.cm.tab10(np.linspace(0, 1, max(self.optimal_k, 1)))
-        wins = self.trades["win"].values if "win" in self.trades.columns else np.zeros(len(self.trades))
+        self.trades["win"].values if "win" in self.trades.columns else np.zeros(len(self.trades))
 
         for cid in range(self.optimal_k):
             mask = self.labels == cid

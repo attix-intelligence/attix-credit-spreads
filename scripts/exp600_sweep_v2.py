@@ -22,7 +22,6 @@ Charles reference: 2020:+86.9%, 2021:+216.7%, 2022:+28.3%, 2023:+12.9%, 2024:-5.
 import itertools
 import json
 import logging
-import os
 import sys
 import time
 from datetime import datetime
@@ -121,7 +120,7 @@ def run_sweep(param_grid, years, ticker="SPY"):
     total = len(combos)
 
     print(f"\n{'='*80}")
-    print(f"  EXP-600 Phase 2: Targeted Real Data Sweep")
+    print("  EXP-600 Phase 2: Targeted Real Data Sweep")
     print(f"  {total} combos × {len(years)} years = {total * len(years)} backtests")
     print(f"  Ticker: {ticker} | Iron Vault: ACTIVE")
     print(f"{'='*80}\n")
@@ -210,7 +209,7 @@ def run_sweep(param_grid, years, ticker="SPY"):
 
     # Print leaderboard
     print(f"\n{'='*80}")
-    print(f"  LEADERBOARD — Top 15")
+    print("  LEADERBOARD — Top 15")
     print(f"{'='*80}")
     print(f"  {'Rk':<3} {'ID':<7} {'Avg':>7} {'Trds':>5} {'Yr+':>4} {'WR':>5} {'DD':>7}  Config")
     print(f"  {'-'*78}")

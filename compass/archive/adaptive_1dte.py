@@ -15,7 +15,6 @@ Zero synthetic data.
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
@@ -28,9 +27,7 @@ TRADING_DAYS = 252
 CAPITAL = 100_000
 
 from compass.zero_dte_ic import (
-    ICTrade, backtest_1_3_dte, find_friday_expirations,
-    find_condor_spread, get_spread_close, load_spy_spot_yfinance,
-    trade_sharpe, corrected_sharpe,
+    ICTrade, trade_sharpe, corrected_sharpe,
 )
 
 

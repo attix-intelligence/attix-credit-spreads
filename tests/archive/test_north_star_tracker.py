@@ -5,8 +5,7 @@ import pytest
 from datetime import datetime
 from pathlib import Path
 from compass.north_star_tracker import (
-    NorthStarTracker, MetricSnapshot, GapAnalysis, Milestone,
-    TrajectoryProjection, ExperimentMetrics, TrackerReport, NORTH_STAR_TARGETS,
+    NorthStarTracker, MetricSnapshot, ExperimentMetrics, TrackerReport,
 )
 
 def _exp_returns(n=200, k=3, seed=42):

@@ -66,7 +66,7 @@ import pickle
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -75,7 +75,7 @@ ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from compass.metrics import full_metrics, annualized_sharpe
+from compass.metrics import full_metrics
 
 REPORT_JSON = ROOT / "compass" / "reports" / "exp2100_vf_true_integration.json"
 REPORT_HTML = ROOT / "compass" / "reports" / "exp2100_vf_true_integration.html"

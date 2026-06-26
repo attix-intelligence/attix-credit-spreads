@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
 """EXP-1780 v3 runner: focused grid around v2 winner."""
 
-import math
 import sys
 from datetime import datetime
 from pathlib import Path
 
-import numpy as np
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))

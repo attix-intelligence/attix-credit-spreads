@@ -501,9 +501,9 @@ def stage_a():
                     })
 
     print(f"\n{'='*120}")
-    print(f"  STAGE A: Conservative IC Sweep (DTE=35)")
+    print("  STAGE A: Conservative IC Sweep (DTE=35)")
     print(f"  ic=[on,off] × OTM=[5%,7%] × risk=[1,1.5,2%] × PT=[40,50%] = {len(combos)} combos")
-    print(f"  HARD GATE: 6/6 years profitable")
+    print("  HARD GATE: 6/6 years profitable")
     print(f"{'='*120}\n")
 
     results = []
@@ -556,8 +556,8 @@ def stage_b():
                 })
 
     print(f"\n{'='*120}")
-    print(f"  STAGE B: P0141 Variants with Compound (DTE=45)")
-    print(f"  P0141 base: DTE=45, W=$5, OTM=5%, min_credit=10% (the ONLY known 6/6 config)")
+    print("  STAGE B: P0141 Variants with Compound (DTE=45)")
+    print("  P0141 base: DTE=45, W=$5, OTM=5%, min_credit=10% (the ONLY known 6/6 config)")
     print(f"  ic=[on,off] × risk=[2,3%] × SL=[2.0,2.5,3.0] = {len(combos)} combos")
     print(f"{'='*120}\n")
 
@@ -595,9 +595,9 @@ def stage_c(base_configs):
     risk_factors = [0.5, 0.25]
 
     print(f"\n{'='*120}")
-    print(f"  STAGE C: Drawdown-Adaptive (month-by-month)")
-    print(f"  When YTD return drops below threshold → multiply risk by factor")
-    print(f"  dd_threshold=[-3%,-5%] × risk_factor=[0.5,0.25] × 2 base configs = 8 combos")
+    print("  STAGE C: Drawdown-Adaptive (month-by-month)")
+    print("  When YTD return drops below threshold → multiply risk by factor")
+    print("  dd_threshold=[-3%,-5%] × risk_factor=[0.5,0.25] × 2 base configs = 8 combos")
     print(f"{'='*120}\n")
 
     results = []
@@ -636,9 +636,9 @@ def stage_d(base_configs):
     skip_afters = [3, 4]
 
     print(f"\n{'='*120}")
-    print(f"  STAGE D: Monthly Circuit Breaker")
-    print(f"  After N consecutive losing months → skip. After each loss → risk × factor^N")
-    print(f"  factor=[0.5,0.33] × skip_after=[3,4] × 2 base configs = 8 combos")
+    print("  STAGE D: Monthly Circuit Breaker")
+    print("  After N consecutive losing months → skip. After each loss → risk × factor^N")
+    print("  factor=[0.5,0.33] × skip_after=[3,4] × 2 base configs = 8 combos")
     print(f"{'='*120}\n")
 
     results = []
@@ -699,14 +699,14 @@ def stage_e(best_6_6_params, best_aggressive_params):
         ("E001", "70% P0141 + 30% Q1-aggr", p0141_safe, q1_aggr, 0.70),
         ("E002", "60% P0141 + 40% Q1-aggr", p0141_safe, q1_aggr, 0.60),
         ("E003", "80% P0141 + 20% A003-config", p0141_safe, best_aggressive_params, 0.80),
-        ("E004", f"70% best6/6 + 30% Q1-aggr", best_6_6_params, q1_aggr, 0.70),
-        ("E005", f"best6/6 solo (baseline)", best_6_6_params, best_6_6_params, 1.0),
+        ("E004", "70% best6/6 + 30% Q1-aggr", best_6_6_params, q1_aggr, 0.70),
+        ("E005", "best6/6 solo (baseline)", best_6_6_params, best_6_6_params, 1.0),
     ]
 
     print(f"\n{'='*120}")
-    print(f"  STAGE E: P0141 + Aggressive Blend")
-    print(f"  Capital split: safe leg (6/6 floor) + aggressive leg (upside)")
-    print(f"  6 combos with varying weights")
+    print("  STAGE E: P0141 + Aggressive Blend")
+    print("  Capital split: safe leg (6/6 floor) + aggressive leg (upside)")
+    print("  6 combos with varying weights")
     print(f"{'='*120}\n")
 
     results = []
@@ -746,11 +746,11 @@ def main():
 
     # ── Stage A ──
     a_results = stage_a()
-    a_six = [r for r in a_results if r["is_6_6"]]
+    [r for r in a_results if r["is_6_6"]]
 
     # ── Stage B ──
     b_results = stage_b()
-    b_six = [r for r in b_results if r["is_6_6"]]
+    [r for r in b_results if r["is_6_6"]]
 
     # Pick best configs for Stages C/D
     all_ab = a_results + b_results
@@ -806,7 +806,7 @@ def main():
     total_elapsed = time.time() - t_total
 
     print(f"\n{'='*120}")
-    print(f"  GRAND SUMMARY — EXP-604: 6/6 Year Consistency")
+    print("  GRAND SUMMARY — EXP-604: 6/6 Year Consistency")
     print(f"{'='*120}")
     print(f"  Total combos tested: {len(all_results)}")
     print(f"  6/6 configs found: {len(all_six)}")
@@ -814,7 +814,7 @@ def main():
 
     if all_six:
         all_six.sort(key=lambda x: x["avg_return"], reverse=True)
-        print(f"\n  ★★★ ALL 6/6 CONFIGS (ranked by avg return) ★★★")
+        print("\n  ★★★ ALL 6/6 CONFIGS (ranked by avg return) ★★★")
         for i, r in enumerate(all_six, 1):
             print(f"  {i}. {r['combo_id']} {r['label'][:60]}")
             print(f"     avg={r['avg_return']:+.1f}%, total={r['total_return_pct']:+.1f}%, "
@@ -824,7 +824,7 @@ def main():
                 print(f"       {yr}: {y['return_pct']:+.1f}% "
                       f"({y.get('trades',0)} tr, IC={y.get('ic_trades',0)})")
     else:
-        print(f"\n  ✗ NO 6/6 configs found. Closest:")
+        print("\n  ✗ NO 6/6 configs found. Closest:")
         almost = sorted(all_results,
                         key=lambda x: (int(x["years_profitable"].split("/")[0]),
                                        x["avg_return"]), reverse=True)

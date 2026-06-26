@@ -14,7 +14,6 @@ from __future__ import annotations
 import datetime
 import logging
 import time
-from typing import Dict, List, Optional
 
 import requests
 

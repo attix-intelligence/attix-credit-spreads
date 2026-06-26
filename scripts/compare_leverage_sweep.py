@@ -20,12 +20,11 @@ import argparse
 import csv
 import json
 import logging
-import math
 import os
 import sys
-from datetime import datetime, date
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 import yaml
 

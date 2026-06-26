@@ -44,8 +44,8 @@ from __future__ import annotations
 import logging
 import math
 import sys
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
+from dataclasses import dataclass
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -886,7 +886,7 @@ def main():
 
     result = run_full_analysis()
 
-    print(f"\nResults:")
+    print("\nResults:")
     print(f"  Events in calendar: {result.n_events_total}")
     print(f"  Trades executed:    {result.n_events_traded}")
     print(f"  Win rate:           {result.win_rate:.0%}")
@@ -898,7 +898,7 @@ def main():
     print(f"  Sortino:            {result.sortino:.2f}")
     print(f"  Max DD:             {result.max_dd:.1f}%")
 
-    print(f"\nCorrelations:")
+    print("\nCorrelations:")
     print(f"  vs SPY:     {result.corr_to_spy:+.3f}")
     c1220 = f"{result.corr_to_exp1220:+.3f}" if result.corr_to_exp1220 is not None else "N/A"
     print(f"  vs EXP-1220: {c1220}")

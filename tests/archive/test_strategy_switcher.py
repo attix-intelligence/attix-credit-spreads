@@ -3,17 +3,14 @@
 import numpy as np
 import pandas as pd
 import pytest
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 
 from compass.strategy_switcher import (
     StrategySwitcher,
     StrategyAllocation,
-    SwitchEvent,
-    BacktestDay,
     BacktestResult,
     RegimeRanking,
-    TRADING_DAYS,
 )
 from compass.regime import Regime, REGIME_INFO
 

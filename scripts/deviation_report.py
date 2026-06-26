@@ -99,7 +99,7 @@ def format_exp_block(exp_id: str, cfg: dict) -> str:
             elif warn_count > 0:
                 lines.append(f"  7-day trend: {warn_count} WARN days ⚠️")
             else:
-                lines.append(f"  7-day trend: stable ✅")
+                lines.append("  7-day trend: stable ✅")
     except Exception:
         pass
 

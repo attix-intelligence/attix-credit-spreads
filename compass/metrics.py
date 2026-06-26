@@ -16,7 +16,7 @@ Common bug found in codebase (commit 1f0888a audit):
 from __future__ import annotations
 
 import math
-from typing import Dict, Optional
+from typing import Dict
 
 import numpy as np
 

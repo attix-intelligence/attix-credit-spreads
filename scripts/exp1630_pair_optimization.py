@@ -19,12 +19,11 @@ from __future__ import annotations
 import json
 import logging
 import math
-import sqlite3
 import sys
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -35,7 +34,7 @@ sys.path.insert(0, str(ROOT))
 from shared.iron_vault import IronVault
 from compass.gld_tlt_relval import (
     _find_exps, _sell_spread, _walk_spread, _exp_dt, _sharpe,
-    MIN_SPACING, OTM_PCT, PROFIT_PCT, STOP_MULT, OOS_START,
+    MIN_SPACING, OTM_PCT, OOS_START,
 )
 from backtest.backtester import _yf_download_safe
 
@@ -520,7 +519,7 @@ def _generate_html(data: Dict) -> str:
     regime_details = data["regime_details"]
 
     # ── Hero stats ──
-    bp = best_pairs[0] if best_pairs else {"pair": "N/A", "oos_sharpe": 0}
+    best_pairs[0] if best_pairs else {"pair": "N/A", "oos_sharpe": 0}
     port_cagr = portfolio.get("cagr", 0)
     port_sharpe = portfolio.get("sharpe", 0)
     port_dd = portfolio.get("max_dd", 0)
@@ -815,7 +814,7 @@ def main():
     viable = [r for r in pair_results if r.n_trades >= 5 and (r.oos_sharpe > 0 or r.total_pnl > 0)]
     viable.sort(key=lambda r: r.oos_sharpe, reverse=True)
     best_pairs = viable[:5]
-    best_pair_names = {r.pair for r in best_pairs}
+    {r.pair for r in best_pairs}
 
     print(f"\n  BEST PAIRS: {[r.pair for r in best_pairs]}")
     for r in best_pairs:

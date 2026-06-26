@@ -7,15 +7,11 @@ from pathlib import Path
 import pytest
 
 from compass.paper_monitor_dashboard import (
-    DD_CRIT,
-    DD_HALT,
-    DD_WARN,
     DashboardResult,
     PaperMonitorDashboard,
     PositionInfo,
     RegimeState,
     SignalQuality,
-    StrategyView,
 )
 
 

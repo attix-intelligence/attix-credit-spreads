@@ -11,16 +11,13 @@ Strategy:
 from __future__ import annotations
 
 import datetime
-import math
-import time
-from typing import Any, Dict, List
+from typing import Dict, List
 from unittest.mock import MagicMock, patch
 
 import pytest
 
 from compass.crypto.historical_score import (
     HistoricalScoreCache,
-    _DEFAULT_IV_PREMIUM,
     _PRICE_LOOKBACK_DAYS,
     _score_to_regime,
     build_historical_score,
@@ -432,9 +429,8 @@ class TestCachePopulate:
         mock_resp.raise_for_status.return_value = None
         mock_resp.json.return_value = payload
 
-        with patch("requests.get", return_value=mock_resp) as mock_get:
+        with patch("requests.get", return_value=mock_resp):
             self.cache._populate_fear_greed(self.start, self.end)
-            calls_first = mock_get.call_count
 
         # Insert covers the range — second call should skip
         with patch("requests.get", return_value=mock_resp) as mock_get2:

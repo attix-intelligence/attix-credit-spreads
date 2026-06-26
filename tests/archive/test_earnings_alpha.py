@@ -1,9 +1,7 @@
 """Tests for compass.earnings_alpha."""
 import unittest
 from compass.earnings_alpha import (
-    BacktestResult, CalendarEntry, ClusterAnalysis, CrushEntrySignal,
-    EarningsAlphaEngine, EarningsAlphaResult, EarningsEvent,
-    IVExpansionSignal, SectorCluster,
+    BacktestResult, ClusterAnalysis, EarningsAlphaEngine, EarningsAlphaResult, EarningsEvent,
     analyse_sector_clustering, backtest_post_earnings,
     build_earnings_calendar, detect_iv_expansion,
     generate_crush_entries, generate_sample_events,

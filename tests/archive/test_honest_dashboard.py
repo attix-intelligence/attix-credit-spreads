@@ -1,13 +1,12 @@
 """Tests for compass/honest_dashboard.py."""
 
-import pytest
 from compass.honest_dashboard import generate_dashboard
 
 
 class TestDashboard:
     def test_generates_html(self, tmp_path):
         out = tmp_path / "dash.html"
-        p = generate_dashboard(str(out))
+        generate_dashboard(str(out))
         assert out.exists()
         c = out.read_text()
         assert "<!DOCTYPE html>" in c

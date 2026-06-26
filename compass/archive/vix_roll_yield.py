@@ -34,14 +34,14 @@ import json
 import math
 import urllib.request
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict
 
 import numpy as np
 import pandas as pd
 
-from compass.metrics import annualized_sharpe, full_metrics
+from compass.metrics import full_metrics
 
 ROOT = Path(__file__).resolve().parent.parent
 TRADING_DAYS = 252
@@ -392,18 +392,18 @@ def main():
     full_m = wf["full"]
     agg = wf["oos_aggregate"]
 
-    print(f"\n  FULL PERIOD (2018-2025):")
+    print("\n  FULL PERIOD (2018-2025):")
     print(f"    CAGR:   {full_m['cagr_pct']:6.1f}%")
     print(f"    Sharpe: {full_m['sharpe']:6.2f}")
     print(f"    Max DD: {full_m['max_dd_pct']:6.1f}%")
     print(f"    Vol:    {full_m['vol_pct']:6.1f}%")
 
-    print(f"\n  OOS AGGREGATE (walk-forward):")
+    print("\n  OOS AGGREGATE (walk-forward):")
     print(f"    CAGR:   {agg.get('cagr_pct', 0):6.1f}%")
     print(f"    Sharpe: {agg.get('sharpe', 0):6.2f}")
     print(f"    Max DD: {agg.get('max_dd_pct', 0):6.1f}%")
 
-    print(f"\n  YEAR-BY-YEAR OOS:")
+    print("\n  YEAR-BY-YEAR OOS:")
     for w in wf["windows"]:
         print(f"    {w['year']}: CAGR={w['cagr_pct']:6.1f}%  Sharpe={w['sharpe']:5.2f}  "
               f"DD={w['max_dd_pct']:5.1f}%  Short={w['pct_short']:.0f}%")

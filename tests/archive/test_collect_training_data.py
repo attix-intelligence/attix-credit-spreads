@@ -17,9 +17,7 @@ Tests cover:
 Blueprint spec: 8+ tests, all green (Phase 3 exit criteria).
 """
 
-import math
 
-import numpy as np
 import pandas as pd
 import pytest
 

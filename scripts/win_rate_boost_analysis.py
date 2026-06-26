@@ -252,7 +252,6 @@ def run_ml_walkforward(df: pd.DataFrame) -> pd.DataFrame:
     """
     from compass.walk_forward import (
         WalkForwardValidator, NUMERIC_FEATURES, CATEGORICAL_FEATURES,
-        prepare_features,
     )
     try:
         from xgboost import XGBClassifier
@@ -406,7 +405,7 @@ def run_analysis(df: pd.DataFrame) -> Dict:
     """Run all filter combinations and collect metrics."""
     results = {}
     n_total = len(df)
-    n_has_ml = df["ml_prob"].notna().sum()
+    df["ml_prob"].notna().sum()
 
     # ── A. Raw baseline (all 1251 trades, no filter) ─────────────────────────
     results["raw_all"] = filter_metrics(df, "Raw baseline (all trades)", ref_n=n_total)
@@ -553,7 +552,7 @@ def write_report(results: Dict, df: pd.DataFrame) -> None:
     raw  = results["raw_all"]
     oos  = results["oos_baseline"]
     ml65 = results["ml65_base"]
-    ml65_yr = results["ml65_base"]["yr"]
+    results["ml65_base"]["yr"]
 
     lines: List[str] = []
     A = lines.append
@@ -561,9 +560,9 @@ def write_report(results: Dict, df: pd.DataFrame) -> None:
     A("# Win Rate Boost Analysis: EXP-305 COMPASS Trades 2020-2025")
     A("")
     A(f"**Date:** {datetime.now().strftime('%Y-%m-%d')}")
-    A(f"**Branch:** experiment/win-rate-boost")
-    A(f"**Baseline:** EXP-305 COMPASS top-2 strict (SPY + top-2 sectors at 65% threshold)")
-    A(f"**Research goal:** Identify filters that add ≥ +1pp win rate beyond ML-0.65 current filter")
+    A("**Branch:** experiment/win-rate-boost")
+    A("**Baseline:** EXP-305 COMPASS top-2 strict (SPY + top-2 sectors at 65% threshold)")
+    A("**Research goal:** Identify filters that add ≥ +1pp win rate beyond ML-0.65 current filter")
     A("")
     A("---")
     A("")
@@ -661,20 +660,20 @@ def write_report(results: Dict, df: pd.DataFrame) -> None:
     A(sep)
 
     # ML sweep
-    A(f"| **Filter 1: ML confidence threshold**            |       |         |           |             |         |             |          |")
+    A("| **Filter 1: ML confidence threshold**            |       |         |           |             |         |             |          |")
     for m in results["ml_sweep"]:
         A(_sr_row(m, ref=oos))
     A(sep)
 
     # Standalone non-ML filters
-    A(f"| **Filter 2-4: Standalone (no ML)**               |       |         |           |             |         |             |          |")
+    A("| **Filter 2-4: Standalone (no ML)**               |       |         |           |             |         |             |          |")
     A(_sr_row(results["vix_standalone"], ref=oos))
     A(_sr_row(results["expiry_standalone"], ref=oos))
     A(_sr_row(results["earnings_standalone"], ref=oos))
     A(sep)
 
     # ML-0.65 combinations
-    A(f"| **Stacked: ML ≥ 0.65 + additional filters**      |       |         |           |             |         |             |          |")
+    A("| **Stacked: ML ≥ 0.65 + additional filters**      |       |         |           |             |         |             |          |")
     A(_sr_row(ml65, ref=oos))
     A(_sr_row(results["ml65_vix"],      ref=ml65))
     A(_sr_row(results["ml65_expiry"],   ref=ml65))
@@ -683,13 +682,13 @@ def write_report(results: Dict, df: pd.DataFrame) -> None:
     A(sep)
 
     # ML-0.70 combinations
-    A(f"| **Stacked: ML ≥ 0.70**                           |       |         |           |             |         |             |          |")
+    A("| **Stacked: ML ≥ 0.70**                           |       |         |           |             |         |             |          |")
     A(_sr_row(results["ml70_base"], ref=ml65))
     A(_sr_row(results["ml70_all"],  ref=ml65))
     A(sep)
 
     # ML-0.75
-    A(f"| **Stacked: ML ≥ 0.75**                           |       |         |           |             |         |             |          |")
+    A("| **Stacked: ML ≥ 0.75**                           |       |         |           |             |         |             |          |")
     A(_sr_row(results["ml75_base"], ref=ml65))
 
     A("")
@@ -731,7 +730,7 @@ def write_report(results: Dict, df: pd.DataFrame) -> None:
     A("|-----------|----------|---------|------|----------|-----------|----------|")
     oos_sr = oos["sr_annual"]
     for m in results["ml_sweep"]:
-        n_delta = m["n_annual"] - oos["n_annual"]
+        m["n_annual"] - oos["n_annual"]
         delta_sr = m["sr_annual"] - oos_sr
         sign = "+" if delta_sr >= 0 else ""
         A(f"| {m['threshold']:.2f}      | {_pct(m['win_rate'], d=2):>8} | {m['n']:>7} | {m['n_annual']:>4.1f} | {m['sr_trade']:>8.4f} | {m['sr_annual']:>9.2f} | {sign}{delta_sr:.2f} ({_pct(delta_sr/oos_sr*100 if oos_sr else 0, plus=True)}) |")
@@ -754,9 +753,9 @@ def write_report(results: Dict, df: pd.DataFrame) -> None:
     A(f"or VIX > {VIX_LEVEL_HIGH:.0f}. Rationale: rapidly moving VIX indicates regime")
     A("transitions where historical win-rate priors break down.")
     A("")
-    A(f"- **VIX spike (ROC > +20%):** panic entries — IV elevated, regime uncertain")
-    A(f"- **VIX crash (ROC < -20%):** recovery bounces — spread premiums collapse rapidly")
-    A(f"- **VIX > 35:** extreme fear — historical data shows elevated stop-loss frequency")
+    A("- **VIX spike (ROC > +20%):** panic entries — IV elevated, regime uncertain")
+    A("- **VIX crash (ROC < -20%):** recovery bounces — spread premiums collapse rapidly")
+    A("- **VIX > 35:** extreme fear — historical data shows elevated stop-loss frequency")
     A("")
 
     df_oos = df[df["ml_prob"].notna()]
@@ -878,7 +877,7 @@ def write_report(results: Dict, df: pd.DataFrame) -> None:
     # Compute break-even analysis
     ml65_wr = ml65["win_rate"]
     ml65_n  = ml65["n_annual"]
-    ml65_sr = ml65["sr_annual"]
+    ml65["sr_annual"]
 
     A("### 1. The win-rate vs trade-count tradeoff is severe")
     A("")
@@ -936,7 +935,7 @@ def write_report(results: Dict, df: pd.DataFrame) -> None:
     A("")
     A("**To achieve +1pp win rate without reducing N, would need:**")
     A(f"- SR_annual improvement: +{needed_sr_t - current_sr_a:.2f} (+{(needed_sr_t/current_sr_a - 1)*100:.1f}%)")
-    A(f"- This requires a filter that improves win rate +1pp while keeping ≥97% of trades")
+    A("- This requires a filter that improves win rate +1pp while keeping ≥97% of trades")
     A("")
     A("Based on the analysis, **no single mechanical filter** (VIX, expiry, earnings) meets")
     A("this bar cleanly. The most promising paths are:")

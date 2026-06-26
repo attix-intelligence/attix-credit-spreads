@@ -29,7 +29,7 @@ import sys
 import warnings
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -38,10 +38,10 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from compass.metrics import (
-    annualized_sharpe, cagr, max_drawdown, full_metrics,
+    full_metrics,
     TRADING_DAYS,
 )
-from compass.vix_ladder import VIXLadder, fetch_vix
+from compass.vix_ladder import fetch_vix
 
 CACHE_DIR = ROOT / "compass" / "cache"
 REPORT_DIR = ROOT / "compass" / "reports"
@@ -148,7 +148,7 @@ def strategy_long_short_xsect(closes_df: pd.DataFrame,
     Equal-weight within each leg. Returns daily return series."""
     endpoints = monthly_endpoints(returns_df.index)
     sectors = list(returns_df.columns)
-    n_sectors = len(sectors)
+    len(sectors)
     daily_returns = pd.Series(0.0, index=returns_df.index, name="ls_xsect")
 
     for i in range(len(endpoints) - 1):
@@ -175,8 +175,8 @@ def strategy_long_short_xsect(closes_df: pd.DataFrame,
 
         hold_ret = returns_df.iloc[hold_start:hold_end]
         # Equal-weight long-short
-        long_ret = hold_ret[longs].mean(axis=1) / n_long * n_long  # simplify: mean
-        short_ret = hold_ret[shorts].mean(axis=1) / n_short * n_short
+        hold_ret[longs].mean(axis=1) / n_long * n_long  # simplify: mean
+        hold_ret[shorts].mean(axis=1) / n_short * n_short
         # Portfolio: long + short (dollar-neutral)
         port_ret = hold_ret[longs].mean(axis=1) - hold_ret[shorts].mean(axis=1)
         daily_returns.iloc[hold_start:hold_end] = port_ret.values
@@ -402,7 +402,7 @@ def portfolio_integration(strat_daily: pd.Series, vix: pd.Series) -> Dict:
     """Integrate best strategy into 9-stream portfolio."""
     from compass.exp2420_transaction_costs import net_sharpe_from_drag
     from compass.exp2910_tlt_credit_spreads import (
-        walk_forward_portfolio, risk_parity_weights,
+        walk_forward_portfolio,
     )
 
     cube_path = CACHE_DIR / "exp2280_v6_sparse.pkl"
@@ -515,7 +515,7 @@ def main():
 
     # 11-sector: from 2018 (includes XLC, XLRE)
     closes_11 = pd.DataFrame({t: closes[t] for t in SECTORS_11}).dropna()
-    returns_11 = closes_11.pct_change().dropna()
+    closes_11.pct_change().dropna()
     print(f"  11-sector universe: {closes_11.index[0].date()} to {closes_11.index[-1].date()}, {len(closes_11)} days")
 
     # Compute momentum signals
@@ -524,7 +524,7 @@ def main():
     mom_9 = compute_momentum(closes_9, lookbacks)
     mom_11 = compute_momentum(closes_11, lookbacks)
     combo_9 = combo_momentum(mom_9, [63, 126, 252])
-    combo_11 = combo_momentum(mom_11, [63, 126, 252])
+    combo_momentum(mom_11, [63, 126, 252])
 
     # Run all strategy variants
     print("\n[3/8] Running strategy variants on 9-sector universe...")
@@ -656,9 +656,9 @@ def main():
 
     individual_pass = len(kill_reasons) == 0
     if individual_pass:
-        print(f"  All individual kill criteria PASSED.")
+        print("  All individual kill criteria PASSED.")
     else:
-        print(f"  KILL CRITERIA TRIGGERED:")
+        print("  KILL CRITERIA TRIGGERED:")
         for r in kill_reasons:
             print(f"    - {r}")
 
@@ -685,7 +685,7 @@ def main():
         except Exception as e:
             print(f"  Integration failed: {e}")
     else:
-        print(f"  Skipping — individual criteria failed.")
+        print("  Skipping — individual criteria failed.")
 
     # Compile results
     print("\n" + "=" * 70)
@@ -768,7 +768,7 @@ def write_results_md(r: Dict):
     best = r["best_strategy"]
     corr = r.get("correlation", {})
     integ = r.get("portfolio_integration")
-    kc = r["kill_criteria"]
+    r["kill_criteria"]
 
     md = f"""# EXP-2950: Sector Momentum Rotation Strategy — Results
 
@@ -846,7 +846,7 @@ def write_results_md(r: Dict):
     if integ:
         md += f"| 9-stream net Sharpe | ≥ 6.0 | {integ['nine_net']['sharpe']:.2f} | {'PASS' if integ['nine_net']['sharpe'] >= 6.0 else 'FAIL'} |\n"
 
-    md += f"""
+    md += """
 ---
 
 ## 6. Portfolio Integration

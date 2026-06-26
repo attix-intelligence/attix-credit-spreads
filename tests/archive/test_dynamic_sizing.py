@@ -1,14 +1,12 @@
 """Tests for compass/dynamic_sizing.py — Dynamic Position Sizing."""
 
-import math
 import numpy as np
 import pandas as pd
 import pytest
 
 from compass.dynamic_sizing import (
-    DynamicSizingConfig, DynamicSizer, SizingState, BacktestComparison,
-    generate_market_data, generate_report, _compute_metrics, _equity_curve,
-    _yearly_comparison, TRADING_DAYS,
+    DynamicSizingConfig, DynamicSizer, generate_market_data, generate_report, _compute_metrics, _equity_curve,
+    TRADING_DAYS,
 )
 
 

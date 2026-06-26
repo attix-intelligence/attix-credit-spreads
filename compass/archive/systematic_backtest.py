@@ -618,7 +618,6 @@ class SystematicBacktester:
         equity = result.equity_curve
         metrics = result.metrics
         trades = result.trades
-        pnl = result.daily_pnl
 
         # SVG equity curve
         eq_svg = self._svg_line_chart(

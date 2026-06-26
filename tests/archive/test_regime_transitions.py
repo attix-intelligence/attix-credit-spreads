@@ -11,7 +11,6 @@ import pytest
 
 from compass.regime import Regime
 from compass.regime_transitions import (
-    EarlyWarning,
     RegimeSummary,
     RegimeTransitionDetector,
     TransitionEvent,

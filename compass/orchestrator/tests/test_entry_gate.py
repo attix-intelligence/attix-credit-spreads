@@ -13,7 +13,7 @@ confidence_adj invariants.
 from __future__ import annotations
 
 from datetime import date, datetime, timezone
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 import pytest
 

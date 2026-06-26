@@ -11,7 +11,6 @@ Usage:
 """
 
 import argparse
-import importlib
 import inspect
 import json
 import logging
@@ -20,7 +19,7 @@ import sqlite3
 import sys
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
@@ -777,7 +776,7 @@ def main():
         if not db_path:
             db_path = candidates[1] if len(candidates) > 1 else "data/pilotai.db"
 
-    print(f"Running live-readiness checks...")
+    print("Running live-readiness checks...")
     print(f"  Config:   {args.config}")
     print(f"  Champion: {args.champion}")
     print(f"  DB:       {db_path}")

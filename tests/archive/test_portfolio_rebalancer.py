@@ -1,7 +1,5 @@
 """Tests for compass.portfolio_rebalancer — 35+ tests."""
 
-import numpy as np
-import pandas as pd
 import pytest
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -14,7 +12,6 @@ from compass.portfolio_rebalancer import (
     DriftSnapshot,
     DriftAlert,
     TriggerType,
-    DEFAULT_DRIFT_THRESHOLD,
 )
 
 
@@ -167,7 +164,7 @@ class TestTrades:
         rb = PortfolioRebalancer(tax_aware=True, min_trade_size=0.01)
         trades = rb.compute_trades(_positions(drifted=True))
         # EXP-401 has negative PnL and needs selling → should be tax harvest
-        harvest = [t for t in trades if t.is_tax_harvest]
+        [t for t in trades if t.is_tax_harvest]
         # EXP-400 (overweight, positive PnL sell) should NOT be tax harvest
         assert any(not t.is_tax_harvest for t in trades if t.trade_weight < 0)
 

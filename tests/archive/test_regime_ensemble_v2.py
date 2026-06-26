@@ -1,10 +1,9 @@
 """Tests for compass.regime_ensemble_v2."""
-import math, unittest
+import unittest
 from compass.regime_ensemble_v2 import (
     REGIMES, DETECTOR_NAMES, MarketObs, HMMDetector, RuleDetector,
     VolClusterDetector, MarkovSwitchDetector, MetaLearner, EnsembleOutput,
-    RegimeEnsembleV2, ComparisonResult, DetectorScore,
-    generate_test_data, _score_detector,
+    RegimeEnsembleV2, ComparisonResult, generate_test_data, _score_detector,
 )
 
 def _bull(): return MarketObs("d",0.04,0.10,0.10,14,1.0,290)

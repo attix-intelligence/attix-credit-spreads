@@ -13,11 +13,9 @@ No external API calls or file system state required.
 """
 
 import json
-import math
 import os
 import sqlite3
 import sys
-import tempfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -1240,7 +1238,7 @@ class TestOrphanGateWrapper:
 
         with patch.dict(os.environ, {"ALPACA_API_KEY": "key", "ALPACA_API_SECRET": "secret"}), \
              patch("alpaca.trading.client.TradingClient") as mock_client_cls, \
-             patch("sentinel.state.set_halt") as mock_halt:
+             patch("sentinel.state.set_halt"):
             mock_client = MagicMock()
             mock_client.get_all_positions.return_value = positions
             mock_client_cls.return_value = mock_client

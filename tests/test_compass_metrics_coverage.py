@@ -1,10 +1,8 @@
 """Tests for compass/metrics.py — canonical Sharpe, CAGR, DD, Sortino, Calmar, vol."""
 
 import numpy as np
-import pytest
 
 from compass.metrics import (
-    TRADING_DAYS,
     annualized_sharpe,
     annualized_vol,
     cagr,

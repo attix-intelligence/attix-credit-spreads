@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from compass.online_retrain import ModelRetrainer, RetrainTrigger, ABResult, _model_file_prefix
+from compass.online_retrain import ModelRetrainer, ABResult, _model_file_prefix
 from compass.signal_model import SignalModel
 
 

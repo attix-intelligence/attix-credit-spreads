@@ -48,8 +48,7 @@ import json
 import math
 import sys
 import urllib.request
-from collections import defaultdict
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
@@ -114,7 +113,6 @@ def load_universe() -> pd.DataFrame:
 
 def month_end_index(prices: pd.DataFrame) -> pd.DatetimeIndex:
     """Last business day of each calendar month present in the index."""
-    ends = []
     seen = set()
     for d in prices.index:
         key = (d.year, d.month)

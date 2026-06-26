@@ -24,7 +24,7 @@ import logging
 import math
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -732,8 +732,10 @@ def _svg_line(vals, title, color="#58a6ff", w=700, h=200):
     pad = 55; pw = w - 2*pad; ph = h - 65
     y0 = min(vs); y1 = max(vs)
     if y1 <= y0: y1 = y0 + 1
-    tx = lambda i: pad + i / max(n-1,1) * pw
-    ty = lambda v: 35 + (1-(v-y0)/(y1-y0)) * ph
+    def tx(i):
+        return pad + i / max(n-1,1) * pw
+    def ty(v):
+        return 35 + (1-(v-y0)/(y1-y0)) * ph
     p = [f'<svg viewBox="0 0 {w} {h}" class="chart">']
     p.append(f'<text x="{w//2}" y="20" text-anchor="middle" class="svg-title">{title}</text>')
     if y0 < 0 < y1:

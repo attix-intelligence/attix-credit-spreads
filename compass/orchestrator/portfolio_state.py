@@ -31,7 +31,6 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Dict, List, Optional
 
-import numpy as np
 import pandas as pd
 
 from compass.alpaca_connector import (

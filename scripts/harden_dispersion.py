@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """EXP-1820 Hardening: walk-forward, param sweep, capacity, monthly corr."""
 
-import math, sys
+import math
+import sys
 from datetime import datetime
 from pathlib import Path
 
@@ -12,7 +13,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from compass.dispersion_strategy import (
-    DispersionStrategy, PRODUCTION_CONFIG, trade_sharpe, corrected_sharpe, CAPITAL,
+    DispersionStrategy, trade_sharpe, CAPITAL,
 )
 
 
@@ -101,7 +102,7 @@ def capacity_analysis(trades):
         return []
 
     # Average contracts at base $100K
-    avg_contracts = np.mean([t.contracts for t in trades])
+    np.mean([t.contracts for t in trades])
 
     # ADV estimates (ATM volume per day, rough)
     SECTOR_ADV = {
@@ -376,7 +377,7 @@ def main():
     print("\n[5] Monthly correlation with EXP-1220...")
     monthly_corr = monthly_correlation(trades)
     print(f"  Monthly correlation: {monthly_corr:+.3f}")
-    print(f"  (vs yearly -0.130 from previous analysis)")
+    print("  (vs yearly -0.130 from previous analysis)")
 
     # Generate report
     print("\n[6] Generating HTML report...")
@@ -388,7 +389,7 @@ def main():
     print("\n" + "=" * 70)
     print("HARDENING SUMMARY")
     print("=" * 70)
-    print(f"  Production module: compass/dispersion_strategy.py")
+    print("  Production module: compass/dispersion_strategy.py")
     print(f"  Baseline:          Sharpe {baseline_m['sharpe']:.2f}, OOS {baseline_m['oos_sharpe']:.2f}")
     print(f"  WF yearly average: Sharpe {np.mean([w['oos_sharpe'] for w in wf]):.2f}")
     print(f"  Monthly corr:      {monthly_corr:+.3f}")

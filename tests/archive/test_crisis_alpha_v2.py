@@ -1,16 +1,13 @@
 """Tests for compass/crisis_alpha_v2.py — EXP-1780 v2 grid search."""
 
-import math
 import numpy as np
 import pandas as pd
 import pytest
 
 from compass.crisis_alpha_v2 import (
     ASSET_UNIVERSE_V2, LOOKBACK_PRESETS, WEIGHTING_METHODS, LEVERAGE_LEVELS,
-    ConfigResult, V2Result,
-    compute_momentum_signal, compute_weights,
+    ConfigResult, compute_momentum_signal, compute_weights,
     backtest_config, run_full_grid, generate_report,
-    TRADING_DAYS,
 )
 
 

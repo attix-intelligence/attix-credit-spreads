@@ -27,13 +27,10 @@ Targets: CAGR > 100%, Sharpe > 6.0, DD < 12%.
 
 import json
 import logging
-import math
 import sys
-from dataclasses import dataclass, field
 from datetime import datetime
-from itertools import product
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 import numpy as np
 

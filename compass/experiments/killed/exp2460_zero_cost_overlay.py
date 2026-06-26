@@ -52,7 +52,7 @@ import sys
 import warnings
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict
 
 import numpy as np
 import pandas as pd
@@ -216,15 +216,13 @@ def run_variant(df: pd.DataFrame, panel: pd.DataFrame, *,
     # report gross and net separately.
     gross = pd.Series(daily_ret, index=dates, dtype=float)
     total_turnover = float(np.sum(turnovers))
-    total_cost = total_turnover * (COST_BPS / 1e4)
+    total_turnover * (COST_BPS / 1e4)
     # distribute across rebalance events (one cost-day per event)
     net = gross.copy()
-    event_idx = 0
     # mark rebalance dates
     rb_dates = []
     i = TRAIN_DAYS
-    w_prev_sim = np.full(len(cols), 1 / len(cols))
-    sc_prev_sim = 1.0
+    np.full(len(cols), 1 / len(cols))
     while i < n:
         entry_date = df.index[i]
         if variant == "baseline":

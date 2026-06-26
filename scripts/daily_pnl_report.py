@@ -17,7 +17,7 @@ Can also be called as a module:
 import argparse
 import os
 import sys
-from datetime import date, datetime, timedelta, timezone
+from datetime import date
 from pathlib import Path
 from typing import Dict, List, Optional
 

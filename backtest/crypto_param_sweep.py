@@ -413,7 +413,7 @@ def sweep_summary() -> str:
     lines = [
         "IBIT Crypto Credit Spread Parameter Sweep",
         "=" * 44,
-        f"  Ticker            : IBIT",
+        "  Ticker            : IBIT",
         f"  DTE values        : {DTE_VALUES}",
         f"  Delta values      : {DELTA_VALUES}",
         f"  Profit target %   : {PROFIT_TARGET_VALUES}",

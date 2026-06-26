@@ -49,7 +49,7 @@ import math
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, Tuple
 
 import numpy as np
 import pandas as pd
@@ -283,7 +283,7 @@ def main() -> None:
     # Net portfolio Sharpe (apply EXP-2570 daily drag)
     daily_drag = NET_DRAG_PCT / 100.0 / TRADING_DAYS
     port_net = port - daily_drag
-    sigma_p_net = annualised_vol(port_net)
+    annualised_vol(port_net)
     sr_p_net = annualised_sharpe(port_net)
     print(f"      portfolio net SR   : {sr_p_net:.3f}  "
           f"(drag {NET_DRAG_BPS:.1f} bps/yr)")
@@ -292,7 +292,7 @@ def main() -> None:
     # contrib_i = w_i · mu_i_ann / sigma_p   (sums to SR_p exactly)
     contrib_sr = w_scaled * means_ann / sigma_p
     # Risk decomposition: contrib_vol_i = w_i · Cov(R_i, R_p) / sigma_p
-    cov_with_port = (cube_arr.T @ port) / (n - 1) - cube_arr.mean(axis=0) * port.mean() * n / (n - 1)
+    (cube_arr.T @ port) / (n - 1) - cube_arr.mean(axis=0) * port.mean() * n / (n - 1)
     # cleaner: use np.cov on the joint matrix
     joint = np.column_stack([cube_arr, port])
     cov_full = np.cov(joint, rowvar=False, ddof=1)

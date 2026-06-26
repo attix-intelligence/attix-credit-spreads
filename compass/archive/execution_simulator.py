@@ -30,11 +30,10 @@ Usage::
 
 from __future__ import annotations
 
-import json
 import logging
 import math
 import sqlite3
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
@@ -908,8 +907,8 @@ class CapitalScaleAnalyzer:
         # spread_cents is the full bid-ask spread in cents.
         # Cost per contract per leg = half_spread × $100 multiplier
         # As BPS of notional: (half_spread_dollars / notional_per_contract) × 10000
-        half_spread_dollars = binding.spread_cents / 100 / 2  # in dollars
-        notional_per_contract = max(effective / max(contracts, 1), 100)  # rough notional
+        binding.spread_cents / 100 / 2  # in dollars
+        max(effective / max(contracts, 1), 100)  # rough notional
         # Simpler: use spread relative to typical option price (~$2-5)
         avg_opt_price = 3.0  # typical OTM option price
         spread_cost = (binding.spread_cents / 100) / avg_opt_price * 10000 * 0.5  # half-spread in bps

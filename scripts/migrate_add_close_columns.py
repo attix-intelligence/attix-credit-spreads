@@ -10,8 +10,6 @@ Discovers DB paths from:
 Uses ALTER TABLE ADD COLUMN with try/except for idempotency — safe to re-run.
 """
 
-import glob
-import os
 import re
 import sqlite3
 import sys

@@ -24,12 +24,11 @@ import base64
 import io
 import logging
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List
 
-import numpy as np
 from scipy.stats import norm
 
 logger = logging.getLogger(__name__)
@@ -229,7 +228,7 @@ class RealtimePnLEstimator:
         cv = spread_value(current_price, pos.short_strike, pos.long_strike,
                           T_now, self.r, current_iv, pos.direction)
         # Entry spread value
-        ev = spread_value(pos.underlying_price, pos.short_strike, pos.long_strike,
+        spread_value(pos.underlying_price, pos.short_strike, pos.long_strike,
                           T_entry, self.r, pos.iv, pos.direction)
 
         # Unrealized P&L: credit received minus cost to close
@@ -246,7 +245,7 @@ class RealtimePnLEstimator:
         # Attribution: decompose P&L into Greek components
         price_change = current_price - pos.underlying_price
         iv_change = current_iv - pos.iv
-        days_remaining = pos.expiration_days - days_elapsed
+        pos.expiration_days - days_elapsed
 
         # Theta P&L: cumulative theta decay over days_elapsed
         # Approximate as average theta × days

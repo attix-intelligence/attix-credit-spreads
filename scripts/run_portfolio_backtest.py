@@ -544,7 +544,7 @@ def main():
     print(f"  Years        : {years}")
     print(f"  SPY floor    : {spy_allocation:.0%}")
     print(f"  Leading pct  : {min_leading_pct:.0%} min to qualify")
-    print(f"  Data mode    : real data (Iron Vault)")
+    print("  Data mode    : real data (Iron Vault)")
     print(f"  Note         : {args.note or '(none)'}")
     print("═" * 80)
 

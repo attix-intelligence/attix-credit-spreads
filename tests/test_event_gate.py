@@ -21,9 +21,6 @@ import pytest
 
 from compass.events import (
     ALL_FOMC_DATES,
-    FOMC_SCALING,
-    CPI_SCALING,
-    NFP_SCALING,
     get_upcoming_events,
     compute_composite_scaling,
     run_daily_event_check,

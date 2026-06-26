@@ -1,11 +1,9 @@
 """Tests for compass/hedge_cost_reality.py."""
 
 import numpy as np
-import pytest
 
 from compass.hedge_cost_reality import (
-    MonthlyHedgeCost, RealCostSummary, BacktestComparison,
-    summarise_costs, run_backtest_comparison, _metrics,
+    MonthlyHedgeCost, summarise_costs, run_backtest_comparison, _metrics,
     generate_report, query_monthly_hedge_costs,
 )
 

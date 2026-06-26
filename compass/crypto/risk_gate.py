@@ -36,7 +36,7 @@ Gate thresholds (class constants — override via ``RiskGate.THRESHOLD_*``):
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 
 # ---------------------------------------------------------------------------

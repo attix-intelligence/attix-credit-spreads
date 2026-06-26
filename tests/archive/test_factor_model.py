@@ -9,12 +9,10 @@ import pandas as pd
 import pytest
 
 from compass.factor_model import (
-    FUNDAMENTAL_FACTORS,
     FactorExposure,
     FactorModel,
     FactorModelResult,
     FactorReturn,
-    NeutralPortfolio,
     RiskDecomposition,
 )
 

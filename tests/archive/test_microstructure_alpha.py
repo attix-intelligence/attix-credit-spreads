@@ -11,7 +11,6 @@ import pytest
 
 from compass.microstructure_alpha import (
     LiquiditySignal,
-    MicroFeatures,
     MicrostructureScanner,
     OverlayResult,
     ScannerResult,

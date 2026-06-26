@@ -4,7 +4,7 @@ All HTTP calls are mocked — no real network requests.
 """
 
 import unittest
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import MagicMock, patch
 
 import requests
 

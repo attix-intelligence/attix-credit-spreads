@@ -1,7 +1,7 @@
 """Tests for compass.regime_transition."""
-import math, unittest
+import unittest
 from compass.regime_transition import (
-    REGIMES, DEFAULT_DURATIONS, EarlyWarning, HSMMDetector, MarketObs,
+    REGIMES, HSMMDetector, MarketObs,
     RegimeTransitionEngine, SwitchBacktest, TransitionAnalysis,
     backtest_switching, duration_survival_prob, duration_transition_prob,
     generate_early_warnings, generate_test_data,

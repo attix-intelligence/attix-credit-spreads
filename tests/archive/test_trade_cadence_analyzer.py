@@ -2,10 +2,8 @@
 
 import numpy as np
 import pandas as pd
-import pytest
 
 from compass.trade_cadence_analyzer import (
-    TradeTimeline, OverlapSnapshot, CadenceResult,
     analyze_timeline, compute_cadence_metrics, generate_report,
 )
 

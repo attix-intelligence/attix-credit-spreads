@@ -13,12 +13,9 @@ Finds the optimal combo that maximizes CAGR while keeping COVID DD < 20%.
 
 from __future__ import annotations
 
-import json
-import math
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List
 
 import numpy as np
 import pandas as pd
@@ -190,7 +187,6 @@ def run_best_walkforward(df, spy_ret, vix, vix3m, best):
     oos_rets = []
     oos_dates = []
     yearly = []
-    capital = ACCOUNT
 
     for _, _, ts, te, label in windows:
         mask = (df.index >= ts) & (df.index <= te)
@@ -201,7 +197,7 @@ def run_best_walkforward(df, spy_ret, vix, vix3m, best):
         result = run_hedged(test_df, w, names, spy_ret, vix, vix3m, lev, budget)
         oos_rets.extend(result.daily_returns.tolist())
         oos_dates.extend(test_df.index.tolist())
-        capital = result.equity_curve[-1]
+        result.equity_curve[-1]
 
         yearly.append({
             "label": label,
@@ -473,7 +469,7 @@ def main():
     print(f"  → {REPORT_PATH}")
 
     print(f"\n{'━'*56}")
-    print(f"  OPTIMAL CONFIG:")
+    print("  OPTIMAL CONFIG:")
     print(f"    Leverage:  {best['leverage']:.1f}×")
     print(f"    EXP-1220:  {best['exp_weight']*100:.0f}%  |  XLI ICs: {best['xli_weight']*100:.0f}%")
     print(f"    Budget:    {best['budget']:.1f}%/yr")

@@ -14,9 +14,9 @@ Backtests 2020-2025: static weights vs regime-adaptive vs dynamic sizing.
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List
 
 import numpy as np
 import pandas as pd

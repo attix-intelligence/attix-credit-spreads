@@ -1,9 +1,8 @@
 """Tests for compass.dependency_analyzer — 30 tests."""
-import pytest
 from pathlib import Path
 from compass.dependency_analyzer import (
-    DependencyAnalyzer, ModuleNode, CouplingMetrics, CircularImport,
-    ModuleCluster, DependencyReport,
+    DependencyAnalyzer, CircularImport,
+    DependencyReport,
 )
 
 ROOT = Path(__file__).resolve().parent.parent

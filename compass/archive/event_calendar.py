@@ -24,10 +24,10 @@ import base64
 import io
 import logging
 from collections import defaultdict
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -450,7 +450,7 @@ class EventCalendarEngine:
 
         for ep in self.event_pnl[-20:]:
             move = ep.total_pnl
-            wr = type_wr.get(ep.event.event_type, 0.5)
+            type_wr.get(ep.event.event_type, 0.5)
             # Mean reversion: large moves tend to reverse
             mr_prob = min(abs(move) / (abs(move) + 100), 0.8)
             expected_rev = -move * mr_prob * 0.3

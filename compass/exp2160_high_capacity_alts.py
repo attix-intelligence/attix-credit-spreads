@@ -52,10 +52,9 @@ from __future__ import annotations
 
 import json
 import math
-import os
 import sqlite3
 import sys
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
@@ -74,7 +73,7 @@ DB_PATH = ROOT / "data" / "options_cache.db"
 EXP1220_SUMMARY = ROOT / "experiments" / "EXP-1220-real" / "results" / "summary.json"
 
 # Reuse battle-tested helpers
-from compass.greeks_sensitivity import bs_put_price, bs_call_price
+from compass.greeks_sensitivity import bs_call_price
 from compass.exp1960_skew_alpha import (
     implied_vol_put,
     bs_put_delta,
@@ -158,7 +157,7 @@ def pick_expiration(con: sqlite3.Connection, ticker: str, snapshot: str,
     if not rows:
         return None
     snap_dt = datetime.strptime(snapshot, "%Y-%m-%d")
-    target = snap_dt + timedelta(days=target_dte)
+    snap_dt + timedelta(days=target_dte)
     candidates = []
     for exp, _ in rows:
         try:

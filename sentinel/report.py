@@ -289,7 +289,7 @@ def generate_daily_html(
         edata = experiments[exp_id]
         snap = edata.get("latest_snapshot") or {}
         cert = edata.get("certificate")
-        exp_alerts = edata.get("active_alerts", [])
+        edata.get("active_alerts", [])
         health = health_map.get(exp_id)
 
         state_entry = state_map.get(exp_id, {})

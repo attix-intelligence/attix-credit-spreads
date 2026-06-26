@@ -50,7 +50,6 @@ Run: python3 -m compass.exp2700_reproducibility_audit
 from __future__ import annotations
 
 import json
-import math
 import sys
 from dataclasses import dataclass
 from pathlib import Path

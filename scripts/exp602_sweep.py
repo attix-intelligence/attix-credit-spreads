@@ -480,11 +480,11 @@ def stage_a():
             })
 
     print(f"\n{'='*120}")
-    print(f"  STAGE A: Compounding ON — A017 base (DTE=35, W=$5, OTM=3%)")
-    print(f"  compound=True, equity carries forward year-to-year")
-    print(f"  Vary: risk=[2,3,4,5%], stop_loss=[1.5,2.0,2.5,3.0]")
+    print("  STAGE A: Compounding ON — A017 base (DTE=35, W=$5, OTM=3%)")
+    print("  compound=True, equity carries forward year-to-year")
+    print("  Vary: risk=[2,3,4,5%], stop_loss=[1.5,2.0,2.5,3.0]")
     print(f"  {len(combos)} combos × 6 years = {len(combos)*6} backtests")
-    print(f"  EXP-601 A017 baseline: +18.2% avg (non-compound), compound return +127.4%")
+    print("  EXP-601 A017 baseline: +18.2% avg (non-compound), compound return +127.4%")
     print(f"{'='*120}\n")
 
     results = []
@@ -502,7 +502,7 @@ def stage_a():
     save_stage("stageA", "Compounding ON with A017 base", results, elapsed)
 
     # Analysis
-    print(f"\n  === Risk Level Analysis ===")
+    print("\n  === Risk Level Analysis ===")
     for risk in risks:
         subset = [r for r in results if r["params"]["max_risk_per_trade"] == risk]
         avg = sum(r["avg_return"] for r in subset) / len(subset)
@@ -510,7 +510,7 @@ def stage_a():
         print(f"  risk={risk}%: avg_avg={avg:+.1f}%, best total={best['total_return_pct']:+.1f}% "
               f"(SL={best['params']['stop_loss_multiplier']}x)")
 
-    print(f"\n  === Stop Loss Analysis ===")
+    print("\n  === Stop Loss Analysis ===")
     for sl in stops:
         subset = [r for r in results if r["params"]["stop_loss_multiplier"] == sl]
         avg = sum(r["avg_return"] for r in subset) / len(subset)
@@ -556,9 +556,9 @@ def stage_b():
                 })
 
     print(f"\n{'='*120}")
-    print(f"  STAGE B: Higher Risk + Tighter Stops (no compound)")
-    print(f"  Fixed: DTE=35, W=$5, OTM=3%, IC enabled, compound=False")
-    print(f"  Vary: risk=[4,5,6,8%], SL=[1.5,2.0,2.5], PT=[40,50%]")
+    print("  STAGE B: Higher Risk + Tighter Stops (no compound)")
+    print("  Fixed: DTE=35, W=$5, OTM=3%, IC enabled, compound=False")
+    print("  Vary: risk=[4,5,6,8%], SL=[1.5,2.0,2.5], PT=[40,50%]")
     print(f"  {len(combos)} combos × 6 years = {len(combos)*6} backtests")
     print(f"{'='*120}\n")
 
@@ -577,7 +577,7 @@ def stage_b():
     save_stage("stageB", "Higher risk (4-8%) + tighter stops", results, elapsed)
 
     # Risk analysis
-    print(f"\n  === Risk Level Analysis ===")
+    print("\n  === Risk Level Analysis ===")
     for risk in risks:
         subset = [r for r in results if r["params"]["max_risk_per_trade"] == risk]
         avg = sum(r["avg_return"] for r in subset) / len(subset)
@@ -585,7 +585,7 @@ def stage_b():
         print(f"  risk={risk}%: avg={avg:+.1f}%, avg_DD={avg_dd:.1f}%")
 
     # Stop loss analysis
-    print(f"\n  === Stop Loss Analysis ===")
+    print("\n  === Stop Loss Analysis ===")
     for sl in stops:
         subset = [r for r in results if r["params"]["stop_loss_multiplier"] == sl]
         avg = sum(r["avg_return"] for r in subset) / len(subset)
@@ -630,11 +630,11 @@ def stage_c():
             })
 
     print(f"\n{'='*120}")
-    print(f"  STAGE C: DTE=15 Compound Push — A003 base (W=$5, OTM=5%)")
-    print(f"  compound=True, 71% IC rate in EXP-601")
-    print(f"  Vary: risk=[2,3,4,5%], SL=[1.5,2.0,2.5,3.0]")
+    print("  STAGE C: DTE=15 Compound Push — A003 base (W=$5, OTM=5%)")
+    print("  compound=True, 71% IC rate in EXP-601")
+    print("  Vary: risk=[2,3,4,5%], SL=[1.5,2.0,2.5,3.0]")
     print(f"  {len(combos)} combos × 6 years = {len(combos)*6} backtests")
-    print(f"  EXP-601 A003 baseline: +15.5% avg, 4/6 yrs, 71% IC")
+    print("  EXP-601 A003 baseline: +15.5% avg, 4/6 yrs, 71% IC")
     print(f"{'='*120}\n")
 
     results = []
@@ -682,9 +682,9 @@ def stage_d(best_a_params, best_c_params):
     ]
 
     print(f"\n{'='*120}")
-    print(f"  STAGE D: Multi-Ticker Blend")
-    print(f"  Using best compound configs from Stages A and C")
-    print(f"  8 combos: SPY/QQQ solo, 50/50, 70/30, triple")
+    print("  STAGE D: Multi-Ticker Blend")
+    print("  Using best compound configs from Stages A and C")
+    print("  8 combos: SPY/QQQ solo, 50/50, 70/30, triple")
     print(f"{'='*120}\n")
 
     results = []
@@ -748,10 +748,10 @@ def stage_e():
                 })
 
     print(f"\n{'='*120}")
-    print(f"  STAGE E: VIX-Dynamic DTE Switching")
-    print(f"  DTE=15 when VIX >= threshold (high IC rate), DTE=35/45 when VIX low")
-    print(f"  compound=True, W=$5, OTM=3%")
-    print(f"  Vary: vix_threshold=[20,25], dte_low_vix=[35,45], risk=[3,5%]")
+    print("  STAGE E: VIX-Dynamic DTE Switching")
+    print("  DTE=15 when VIX >= threshold (high IC rate), DTE=35/45 when VIX low")
+    print("  compound=True, W=$5, OTM=3%")
+    print("  Vary: vix_threshold=[20,25], dte_low_vix=[35,45], risk=[3,5%]")
     print(f"  {len(combos)} combos × 6 years = {len(combos)*6} backtests")
     print(f"{'='*120}\n")
 
@@ -839,7 +839,7 @@ def main():
     # ── Final Summary ──
     total_elapsed = time.time() - t_total
     print(f"\n{'='*120}")
-    print(f"  FINAL SUMMARY — EXP-602")
+    print("  FINAL SUMMARY — EXP-602")
     print(f"{'='*120}")
     print(f"  Stage A (Compound DTE=35): {len(a_results)} combos, "
           f"best={best_a['combo_id']} total={best_a['total_return_pct']:+.1f}% "
@@ -853,17 +853,17 @@ def main():
           f"best={best_d['combo_id']} total={best_d['total_return_pct']:+.1f}%")
     print(f"  Stage E (VIX-DTE):         {len(e_results)} combos, "
           f"best={best_e['combo_id']} total={best_e['total_return_pct']:+.1f}%")
-    print(f"")
-    print(f"  TOP 5 OVERALL (by total return):")
+    print("")
+    print("  TOP 5 OVERALL (by total return):")
     for i, r in enumerate(all_results[:5], 1):
         print(f"    {i}. {r['combo_id']} {r['label']}: "
               f"avg={r['avg_return']:+.1f}%, total={r['total_return_pct']:+.1f}%, "
               f"final=${r['final_capital']:,}, {r['years_profitable']} yrs+, "
               f"DD={r['worst_drawdown']:.1f}%")
-    print(f"")
-    print(f"  Carlos reference: ~+56.6% avg, ~+339.6% total (compound 6yr)")
+    print("")
+    print("  Carlos reference: ~+56.6% avg, ~+339.6% total (compound 6yr)")
     print(f"  Total elapsed: {total_elapsed:.0f}s ({total_elapsed/60:.1f} min)")
-    print(f"  Results: results/exp602/sweep_stage[ABCDE].json")
+    print("  Results: results/exp602/sweep_stage[ABCDE].json")
     print(f"{'='*120}\n")
 
     # Save combined summary

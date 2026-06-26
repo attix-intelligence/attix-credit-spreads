@@ -1,16 +1,14 @@
 """Tests for compass/portfolio_stress_test.py."""
 
 import json
-import math
 import numpy as np
 import pandas as pd
-import pytest
 
 from compass.portfolio_stress_test import (
     block_bootstrap_paths, path_max_dd, path_terminal_return, mc_summary,
     replay_crisis, correlation_in_window, correlation_stability, avg_pairwise_corr,
     find_worst_real_drawdowns, build_exp1660_daily_returns,
-    BLOCK_SIZE, HORIZON_DAYS, CAPITAL, CRISIS_PERIODS, DEFAULT_WEIGHTS,
+    CRISIS_PERIODS, DEFAULT_WEIGHTS,
 )
 
 

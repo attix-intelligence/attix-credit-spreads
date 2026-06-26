@@ -22,7 +22,7 @@ from __future__ import annotations
 import logging
 import math
 from dataclasses import dataclass, field
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -912,7 +912,7 @@ def run_demo():
         data["vix"], data["vix3m"],
     )
 
-    print(f"\n=== Results ===")
+    print("\n=== Results ===")
     print(f"  Protected:   CAGR {result.cagr_pct:.1f}%, DD {result.max_dd_pct:.1f}%, Sharpe {result.sharpe:.2f}")
     print(f"  Unprotected: CAGR {result.unprotected_cagr_pct:.1f}%, DD {result.unprotected_max_dd_pct:.1f}%, Sharpe {result.unprotected_sharpe:.2f}")
     print(f"  DD reduction: {result.dd_reduction_pct:+.1f}pp")

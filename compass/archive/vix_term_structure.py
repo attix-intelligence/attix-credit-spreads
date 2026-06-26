@@ -19,7 +19,7 @@ from __future__ import annotations
 import math
 import random
 from collections import defaultdict
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Dict, List, Optional, Tuple
 
 
@@ -286,7 +286,7 @@ def run_backtest(
         if m.regime == "contango":
             # Sell premium: profit from theta if SPY doesn't crash
             edge = base_premium * (1 + m.slope * 3)
-            noise_factor = 0.5 + abs(m.slope) * 2
+            0.5 + abs(m.slope) * 2
             pnl = edge + s.spy_return_5d * 0.3  # partial market exposure
             action = "sell_premium"
         elif m.regime == "backwardation":

@@ -6,10 +6,9 @@ or matplotlib required.
 
 from __future__ import annotations
 
-import math
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict
 
 
 class HTMLReportGenerator:

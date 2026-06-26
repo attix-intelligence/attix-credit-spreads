@@ -12,11 +12,10 @@ can be audited — never silently $0).
 
 import tempfile
 from datetime import datetime, timezone
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
-import pytest
 
-from shared.database import get_db, get_trade_by_id, init_db, upsert_trade
+from shared.database import get_trade_by_id, init_db, upsert_trade
 
 
 # ---------------------------------------------------------------------------
@@ -162,7 +161,6 @@ def test_record_close_pnl_with_none_fill_price():
         source="execution",
         path=db,
     )
-    db_path = db
 
     trade = get_trade_by_id(trade_id, path=db)
     assert trade is not None
@@ -189,7 +187,6 @@ def test_assignment_triggers_pnl_calculation():
     long_strike = 495.0
     credit = 1.50
     contracts = 1
-    assignment_price = 490.0  # SPY drops to $490 → assigned at $500
 
     # Short put was assigned: we bought 100 shares at $500, market is at $490
     # The long put (495) provides partial protection

@@ -15,10 +15,10 @@ Scenarios:
 Strategy-level attribution shows which strategies protect/fail.
 """
 
-import math, sys
+import math
+import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List
 
 import numpy as np
 

@@ -40,11 +40,10 @@ from __future__ import annotations
 
 import json
 import math
-import os
 import sqlite3
 import sys
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
@@ -304,7 +303,7 @@ def trade_metrics(trades: List[TradeRow], years: float) -> Dict[str, float]:
                     median_pnl_pct=0.0, worst_pnl_pct=0.0, max_dd_pct=0.0)
     pnls = np.array([t.pnl_pct_capital for t in trades], dtype=float)
     wins = int((pnls > 0).sum())
-    eq = np.cumsum(pnls) + 1.0
+    np.cumsum(pnls) + 1.0
     eq_factor = np.cumprod(1.0 + pnls)
     total_return = float(eq_factor[-1] - 1.0)
     cagr = float(eq_factor[-1] ** (1 / max(years, 1e-9)) - 1.0) if eq_factor[-1] > 0 else -1.0

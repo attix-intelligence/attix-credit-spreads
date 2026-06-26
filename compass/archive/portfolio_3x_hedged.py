@@ -19,7 +19,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List
 
 import numpy as np
 import pandas as pd
@@ -28,7 +28,7 @@ ROOT = Path(__file__).resolve().parent.parent
 TRADING_DAYS = 252
 
 from compass.crisis_alpha_v3 import load_universe_v3
-from compass.crisis_alpha_v4 import ConfigV4, backtest_v4, UNIVERSE_V4
+from compass.crisis_alpha_v4 import ConfigV4, backtest_v4
 from compass.exp1780_exp1220_integration import build_exp1220_daily_returns
 
 

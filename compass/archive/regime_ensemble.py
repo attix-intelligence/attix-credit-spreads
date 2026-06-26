@@ -15,11 +15,10 @@ Provides:
 from __future__ import annotations
 
 import logging
-import math
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -205,7 +204,7 @@ def detect_vol_clustering(returns: pd.Series, window: int = 20) -> MethodResult:
         return MethodResult("vol_cluster", [], [])
 
     rolling_vol = r.rolling(window).std().dropna()
-    vol_median = float(rolling_vol.median())
+    float(rolling_vol.median())
     vol_p25 = float(rolling_vol.quantile(0.25))
     vol_p75 = float(rolling_vol.quantile(0.75))
     vol_p90 = float(rolling_vol.quantile(0.90))

@@ -19,7 +19,6 @@ import re
 import sys
 import json
 import logging
-from datetime import date
 from pathlib import Path
 
 # --- repo root: walk up until we find strategy/alpaca_provider.py ---
@@ -63,7 +62,8 @@ def alert(msg):
     if not tok or not chat:
         log.error("ALERT (telegram UNCONFIGURED on this host): %s", msg)
         return
-    import urllib.request, urllib.parse
+    import urllib.request
+    import urllib.parse
     try:
         urllib.request.urlopen(urllib.request.Request(
             f"https://api.telegram.org/bot{tok}/sendMessage",

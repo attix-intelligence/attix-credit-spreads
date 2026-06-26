@@ -34,7 +34,7 @@ import sys
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -545,7 +545,7 @@ def main():
             log.info(f"  {proxy.name} @ {threshold.name}...")
             result = backtest_one_config(data, proxy, threshold)
             if result is None:
-                log.warning(f"    failed (insufficient data)")
+                log.warning("    failed (insufficient data)")
                 continue
 
             results.append(result)

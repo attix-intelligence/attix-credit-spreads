@@ -19,10 +19,10 @@ from __future__ import annotations
 
 import math
 import sqlite3
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List
 
 import numpy as np
 import pandas as pd
@@ -447,7 +447,7 @@ def _dual_equity_svg(eq1, eq2):
         def tx(i): return pl + i/max(n-1,1)*pw
         def ty(v): return pt + (1-(v-ym)/max(yx-ym,1))*ph
         d = " ".join(f"{'M' if j==0 else 'L'}{tx(i):.1f},{ty(v):.1f}" for j,(i,v) in enumerate(pts))
-        da = f' stroke-dasharray="4,3"' if dash else ""
+        da = ' stroke-dasharray="4,3"' if dash else ""
         return f'<path d="{d}" fill="none" stroke="{color}" stroke-width="1.5"{da}/>'
     return f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" style="border:1px solid #e2e8f0;border-radius:6px"><text x="{w//2}" y="16" text-anchor="middle" font-size="10" fill="#64748b">Assumed 2% (gray dashed) vs Real cost (green)</text>{line(eq1,"#94a3b8","dash")}{line(eq2,"#16a34a","")}</svg>'
 
@@ -469,17 +469,17 @@ def run_analysis():
     print(f"  Ratio: {summary.actual_vs_assumed_ratio:.1f}x")
     print(f"  Range: {summary.min_annual_cost_pct:.2f}% to {summary.max_annual_cost_pct:.2f}%")
 
-    print(f"\n  Per-year costs:")
+    print("\n  Per-year costs:")
     for yr, cost in sorted(summary.yearly_costs.items()):
         print(f"    {yr}: {cost:.2f}% (vs 2.00% assumed, delta={cost-2.0:+.2f}%)")
 
-    print(f"\n  VIX options: NOT IN DATABASE (VIX/UVXY/VXX all absent)")
-    print(f"  Impact: 40% of hedge budget (VIX calls) cannot be validated")
+    print("\n  VIX options: NOT IN DATABASE (VIX/UVXY/VXX all absent)")
+    print("  Impact: 40% of hedge budget (VIX calls) cannot be validated")
 
-    print(f"\n  Re-running backtest with real cost...")
+    print("\n  Re-running backtest with real cost...")
     bt = run_backtest_comparison(summary.avg_annual_cost_pct)
 
-    print(f"\n  Impact on portfolio (1.6x leverage):")
+    print("\n  Impact on portfolio (1.6x leverage):")
     print(f"    {'Metric':<12} {'Assumed 2%':>12} {'Real':>12} {'Delta':>10}")
     print(f"    {'-'*46}")
     print(f"    {'CAGR':<12} {bt.assumed_cagr:>11.1f}% {bt.real_cagr:>11.1f}% {bt.cagr_delta:>+9.1f}%")

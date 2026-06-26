@@ -1,8 +1,6 @@
 """Tests for compass.options_flow_sentiment — 28 tests."""
 
-import numpy as np
 import pandas as pd
-import pytest
 from pathlib import Path
 
 from compass.options_flow_sentiment import (

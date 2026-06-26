@@ -499,7 +499,7 @@ class TestHTMLReport:
     def test_report_writes_file(self, tmp_path):
         ch = _make_checker()
         out = tmp_path / "report.html"
-        html = ch.generate_report(output=str(out))
+        ch.generate_report(output=str(out))
         assert out.exists()
         assert "<!DOCTYPE html>" in out.read_text()
 

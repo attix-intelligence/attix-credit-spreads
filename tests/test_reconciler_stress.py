@@ -11,7 +11,7 @@ All Alpaca/DB calls mocked.
 import os
 import sys
 from datetime import datetime, timedelta, timezone
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -21,7 +21,6 @@ from shared.reconciler import (
     PositionReconciler,
     ReconciliationResult,
     _DEFAULT_COMMISSION_PER_CONTRACT,
-    _PENDING_MAX_AGE_HOURS,
     _TERMINAL_ORDER_STATES,
 )
 

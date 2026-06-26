@@ -296,12 +296,12 @@ def stage_a():
     assert len(combos) == 24, f"Expected 24 combos, got {len(combos)}"
 
     print(f"\n{'='*110}")
-    print(f"  STAGE A: IC-Enhanced Credit Spreads (24 combos)")
-    print(f"  Fixed: direction=both, regime_mode=combo, min_credit=5%, PT=50%, SL=2.5x")
-    print(f"  IC: enabled=True, neutral_regime_only=True, min_combined_credit=10%")
-    print(f"  Vary: DTE=[15,25,35], W=[$5,$10], OTM=[3%,5%], risk=[2%,3%]")
-    print(f"  24 combos x 6 years = 144 backtests")
-    print(f"  P0141 baseline: +3.7% avg, 6/6 profitable, -13.8% DD")
+    print("  STAGE A: IC-Enhanced Credit Spreads (24 combos)")
+    print("  Fixed: direction=both, regime_mode=combo, min_credit=5%, PT=50%, SL=2.5x")
+    print("  IC: enabled=True, neutral_regime_only=True, min_combined_credit=10%")
+    print("  Vary: DTE=[15,25,35], W=[$5,$10], OTM=[3%,5%], risk=[2%,3%]")
+    print("  24 combos x 6 years = 144 backtests")
+    print("  P0141 baseline: +3.7% avg, 6/6 profitable, -13.8% DD")
     print(f"{'='*110}\n")
 
     results = []
@@ -334,7 +334,7 @@ def stage_a():
     print_leaderboard(results, "STAGE A LEADERBOARD — IC-Enhanced Credit Spreads")
 
     # Summary by DTE
-    print(f"\n  === DTE Summary ===")
+    print("\n  === DTE Summary ===")
     for dte in dtes:
         subset = [r for r in results if r["params"]["target_dte"] == dte]
         avg_all = sum(r["avg_return"] for r in subset) / len(subset) if subset else 0
@@ -343,7 +343,7 @@ def stage_a():
         print(f"  DTE={dte}: avg={avg_all:+.1f}%, avg_IC_trades={avg_ic:.0f}, 5/6+={five_plus}/{len(subset)}")
 
     # Summary by spread width
-    print(f"\n  === Width Summary ===")
+    print("\n  === Width Summary ===")
     for w in widths:
         subset = [r for r in results if r["params"]["spread_width"] == w]
         avg_all = sum(r["avg_return"] for r in subset) / len(subset) if subset else 0
@@ -351,7 +351,7 @@ def stage_a():
         print(f"  W=${w}: avg={avg_all:+.1f}%, avg_IC_trades={avg_ic:.0f}")
 
     # Summary by OTM
-    print(f"\n  === OTM Summary ===")
+    print("\n  === OTM Summary ===")
     for otm in otms:
         subset = [r for r in results if r["params"]["otm_pct"] == otm]
         avg_all = sum(r["avg_return"] for r in subset) / len(subset) if subset else 0
@@ -361,7 +361,7 @@ def stage_a():
     # IC trade analysis
     total_ic = sum(r["total_ic_trades"] for r in results)
     total_all = sum(r["total_trades"] for r in results)
-    print(f"\n  === IC Trade Analysis ===")
+    print("\n  === IC Trade Analysis ===")
     print(f"  Total IC trades across all combos: {total_ic}")
     print(f"  Total all trades across all combos: {total_all}")
     if total_all > 0:
@@ -408,10 +408,10 @@ def stage_b(best_a_params):
 
     base_label = best_a_params.get("label", "best_A")
     print(f"\n{'='*110}")
-    print(f"  STAGE B: VIX Gating + IV Rank Filtering (18 combos)")
+    print("  STAGE B: VIX Gating + IV Rank Filtering (18 combos)")
     print(f"  Base config from Stage A: {base_label}")
-    print(f"  Vary: iv_rank_min=[0,20,30], vix_max=[0,25,30], vix_close_all=[0,35]")
-    print(f"  18 combos x 6 years = 108 backtests")
+    print("  Vary: iv_rank_min=[0,20,30], vix_max=[0,25,30], vix_close_all=[0,35]")
+    print("  18 combos x 6 years = 108 backtests")
     print(f"{'='*110}\n")
 
     results = []
@@ -444,7 +444,7 @@ def stage_b(best_a_params):
     print_leaderboard(results, "STAGE B LEADERBOARD — VIX Gating + IV Rank")
 
     # Summary by IV rank
-    print(f"\n  === IV Rank Summary ===")
+    print("\n  === IV Rank Summary ===")
     for ivr in iv_ranks:
         subset = [r for r in results if r["params"].get("iv_rank_min_entry") == ivr]
         avg_all = sum(r["avg_return"] for r in subset) / len(subset) if subset else 0
@@ -452,14 +452,14 @@ def stage_b(best_a_params):
         print(f"  IVR>={ivr}: avg={avg_all:+.1f}%, avg_trades={avg_trades:.0f}")
 
     # Summary by VIX max
-    print(f"\n  === VIX Max Summary ===")
+    print("\n  === VIX Max Summary ===")
     for vmax in vix_maxes:
         subset = [r for r in results if r["params"].get("vix_max_entry") == vmax]
         avg_all = sum(r["avg_return"] for r in subset) / len(subset) if subset else 0
         print(f"  VIX<={vmax or 'off'}: avg={avg_all:+.1f}%")
 
     # Summary by vix_close_all
-    print(f"\n  === VIX Close-All Summary ===")
+    print("\n  === VIX Close-All Summary ===")
     for vclose in vix_closes:
         subset = [r for r in results if r["params"].get("vix_close_all") == vclose]
         avg_all = sum(r["avg_return"] for r in subset) / len(subset) if subset else 0
@@ -496,10 +496,10 @@ def stage_c(best_params):
 
     base_label = best_params.get("label", "best_config")
     print(f"\n{'='*110}")
-    print(f"  STAGE C: Multi-Ticker (6 combos)")
+    print("  STAGE C: Multi-Ticker (6 combos)")
     print(f"  Base config: {base_label}")
-    print(f"  Tickers: SPY, QQQ, IWM solo + pairs + triple")
-    print(f"  6 combos, each ticker x 6 years")
+    print("  Tickers: SPY, QQQ, IWM solo + pairs + triple")
+    print("  6 combos, each ticker x 6 years")
     print(f"{'='*110}\n")
 
     results = []
@@ -651,7 +651,7 @@ def main():
         best_params["label"] = f"{best_a['label']} + {best_b['label']}"
         print(f"\n  Stage B improved: using {best_b['combo_id']} {best_b['label']}")
     else:
-        print(f"\n  Stage B did not improve. Using Stage A config for Stage C.")
+        print("\n  Stage B did not improve. Using Stage A config for Stage C.")
 
     # ── Stage C ──
     c_results = stage_c(best_params)
@@ -659,7 +659,7 @@ def main():
     # ── Final Summary ──
     total_elapsed = time.time() - t_total
     print(f"\n{'='*110}")
-    print(f"  FINAL SUMMARY — EXP-601 IC-Enhanced Multi-Regime Sweep")
+    print("  FINAL SUMMARY — EXP-601 IC-Enhanced Multi-Regime Sweep")
     print(f"{'='*110}")
     print(f"  Stage A: {len(a_results)} combos, best={a_results[0]['combo_id']} "
           f"({a_results[0]['avg_return']:+.1f}%, {a_results[0]['years_profitable']} yrs+, "
@@ -671,9 +671,9 @@ def main():
           f"({c_results[0]['avg_return']:+.1f}%, {c_results[0]['years_profitable']} yrs+, "
           f"IC={c_results[0]['total_ic_trades']})")
     print(f"  Total IC trades (Stage A): {total_ic}")
-    print(f"  P0141 baseline: +3.7% avg, 6/6 profitable, -13.8% DD")
+    print("  P0141 baseline: +3.7% avg, 6/6 profitable, -13.8% DD")
     print(f"  Total elapsed: {total_elapsed:.0f}s ({total_elapsed/60:.1f} min)")
-    print(f"  Results: results/exp601/sweep_stage[ABC].json")
+    print("  Results: results/exp601/sweep_stage[ABC].json")
     print(f"{'='*110}\n")
 
     # Save combined summary

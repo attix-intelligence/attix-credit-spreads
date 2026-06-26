@@ -22,7 +22,7 @@ import argparse
 import json
 import os
 import sys
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -300,7 +300,7 @@ def check_signal_generation() -> List[CheckResult]:
         import pandas as pd
 
         # Create synthetic market snapshot
-        rng = np.random.RandomState(42)
+        np.random.RandomState(42)
         snapshot = pd.Series({
             "regime": "bull",
             "vix": 18.5,
@@ -409,7 +409,7 @@ def check_infrastructure() -> List[CheckResult]:
     # Data directory
     data_dir = ROOT / "data" / "exp880"
     data_dir.mkdir(parents=True, exist_ok=True)
-    results.append(CheckResult("data_dir", True, f"data/exp880/ ready"))
+    results.append(CheckResult("data_dir", True, "data/exp880/ ready"))
 
     # Logs directory
     logs_dir = ROOT / "logs"

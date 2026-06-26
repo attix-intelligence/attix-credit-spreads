@@ -4,8 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from compass.corr_regime_detector import (
-    AbsorptionRatio, AnalysisResult, CorrDispersion, CorrRegime,
-    CorrRegimeDetector, DetectorConfig, EarlyWarning, OverlayResult,
+    AnalysisResult, CorrRegimeDetector, DetectorConfig, OverlayResult,
     absorption_ratio, classify_regime, correlation_dispersion,
     rolling_correlation_matrix,
 )
@@ -21,7 +20,6 @@ def _returns(n=300, assets=5, seed=42):
     for i, name in enumerate(names):
         noise = rng.normal(0, 0.008, n)
         # Inject correlation shift: first half uncorrelated, second half correlated
-        corr_factor = 0.1 if i > 0 else 0
         factor = np.where(np.arange(n) < n // 2, 0.1, 0.7)  # increases in second half
         data[name] = noise + common * factor * (0.5 if i % 2 else 1.0)
     return pd.DataFrame(data, index=dates)
@@ -201,7 +199,7 @@ class TestOverlay:
         rng = np.random.RandomState(42)
         pnls = rng.normal(50, 200, 50)
         indices = rng.randint(80, 250, 50)
-        r = det.backtest_overlay(pnls, indices)
+        det.backtest_overlay(pnls, indices)
         assert det.result is not None
 
 # ── Edge cases ───────────────────────────────────────────────────────────

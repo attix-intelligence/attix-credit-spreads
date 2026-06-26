@@ -13,13 +13,11 @@ Extends (does not replace) the static ``CrisisHedgeController`` from
 from __future__ import annotations
 
 import logging
-import math
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
-import numpy as np
 import pandas as pd
 
 logger = logging.getLogger(__name__)
@@ -376,7 +374,7 @@ class DynamicHedgeEngine:
 
                 if c > self.config.corr_hedge_threshold:
                     # Highly correlated — reduce both
-                    combined_w = w_a + w_b
+                    w_a + w_b
                     adj = max(0.5, 1.0 - (c - self.config.corr_hedge_threshold))
                     hedges.append(CrossHedge(
                         exp_a=a, exp_b=b, correlation=c,

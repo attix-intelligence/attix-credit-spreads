@@ -28,12 +28,11 @@ from __future__ import annotations
 
 import json
 import logging
-import math
 import time
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Callable, Dict, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -362,7 +361,7 @@ class DashboardAlertEngine:
                 severity="CRITICAL",
                 category="position_limit",
                 title=f"POSITION LIMIT REACHED: {n_positions}/{self.config.max_positions}",
-                message=f"No new positions can be opened",
+                message="No new positions can be opened",
                 value=float(n_positions),
                 threshold=float(self.config.max_positions),
             )

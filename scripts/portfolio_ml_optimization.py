@@ -30,8 +30,8 @@ import numpy as np
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from compass.portfolio_optimizer import PortfolioOptimizer, EXPERIMENT_PROFILES
-from compass.stress_test import StressTester, _max_drawdown, _sharpe_ratio, _cagr, _calmar_ratio, _returns_to_equity
+from compass.portfolio_optimizer import PortfolioOptimizer
+from compass.stress_test import StressTester, _returns_to_equity
 
 logging.basicConfig(level=logging.WARNING, format="%(levelname)s %(name)s: %(message)s")
 logger = logging.getLogger(__name__)
@@ -283,7 +283,7 @@ def compute_blended_equity_curve(
 def compute_correlation_matrix(monthly_returns: Dict[str, np.ndarray]) -> Tuple[np.ndarray, List[str]]:
     """Compute Pearson correlation matrix from monthly return series."""
     labels = sorted(monthly_returns.keys())
-    n = len(labels)
+    len(labels)
     min_len = min(len(monthly_returns[s]) for s in labels)
 
     mat = np.column_stack([monthly_returns[s][:min_len] for s in labels])
@@ -392,13 +392,13 @@ def write_report(
     today = date.today().isoformat()
 
     # ── Header ────────────────────────────────────────────────────────────────
-    A(f"# Portfolio ML Optimization Report")
-    A(f"")
+    A("# Portfolio ML Optimization Report")
+    A("")
     A(f"**Generated:** {today}  ")
     A(f"**Strategies:** {len(STRATEGY_DATA)} champions analyzed  ")
-    A(f"**Period:** 2020–2025 (6 years)  ")
+    A("**Period:** 2020–2025 (6 years)  ")
     A(f"**Base capital:** ${STARTING_CAPITAL:,}")
-    A(f"")
+    A("")
 
     # ── Executive Summary ──────────────────────────────────────────────────────
     A("## Executive Summary")
@@ -454,17 +454,17 @@ def write_report(
         best_yr = YEARS[int(np.argmax(ann_rets))]
         worst_dd = min(sdata["max_drawdowns"])
         A(f"### {sdata['label']}")
-        A(f"")
+        A("")
         A(f"- **Source:** {sdata['source']}")
         A(f"- **Profile:** {sdata['profile']}")
         A(f"- **6-year avg return:** {pct(avg_ret)} | Std dev: {pct(std_ret)} | Best: {pct(float(np.max(ann_rets)))} ({best_yr}) | Worst: {pct(float(np.min(ann_rets)))} ({worst_yr})")
         A(f"- **Max drawdown (worst year):** {pct(worst_dd)}")
-        A(f"")
-        A(f"| Year | Return | Max DD | Sharpe |")
-        A(f"|------|--------|--------|--------|")
+        A("")
+        A("| Year | Return | Max DD | Sharpe |")
+        A("|------|--------|--------|--------|")
         for i, yr in enumerate(YEARS):
             A(f"| {yr} | {pct(sdata['annual_returns'][i])} | {pct(sdata['max_drawdowns'][i])} | {sdata['sharpe_ratios'][i]:.2f} |")
-        A(f"")
+        A("")
 
     # ── Portfolio Optimization Results ────────────────────────────────────────
     A("## Portfolio Optimization: Allocation Weights")
@@ -663,7 +663,7 @@ def write_report(
         tw = mc.get("terminal_wealth", {})
         pcts = tw.get("percentiles", {})
         summ = st.get("summary", {})
-        mc_conf = summ.get("monte_carlo_confidence", {})
+        summ.get("monte_carlo_confidence", {})
         risk_rating = summ.get("risk_rating", "N/A")
         label = "**COMBINED**" if sid == "COMBINED" else STRATEGY_DATA[sid]["short"]
         p5 = pcts.get("p5", 0)
@@ -876,7 +876,7 @@ def main():
     print("=" * 70)
     print("  Portfolio ML Optimization")
     print(f"  Strategies: {', '.join(STRATEGY_DATA.keys())}")
-    print(f"  Period: 2020–2025")
+    print("  Period: 2020–2025")
     print("=" * 70)
 
     # 1. Build return matrices
@@ -939,7 +939,7 @@ def main():
 
     # 7. Print key findings
     print("\n[6/6] Key findings:")
-    print(f"  Best allocation (max Sharpe):")
+    print("  Best allocation (max Sharpe):")
     for sid, w in sorted(best_weights.items(), key=lambda x: x[1], reverse=True):
         print(f"    {sid}: {w:.1%}")
     avg_corr = (corr_matrix.sum() - len(corr_labels)) / (len(corr_labels) * (len(corr_labels) - 1))

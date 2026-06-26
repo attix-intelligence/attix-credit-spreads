@@ -16,13 +16,11 @@ Typical credit spread max-loss:
   SLV calendar: max_loss = $150/contract (debit paid)
 """
 
-import math
 import pytest
 
 from compass.dollar_notional_sizer import (
     DollarNotionalSizer,
     PortfolioSizingResult,
-    SizingResult,
     SpreadQuote,
     size_from_risk_decision,
 )

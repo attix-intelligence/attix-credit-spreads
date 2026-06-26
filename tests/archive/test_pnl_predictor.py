@@ -15,7 +15,6 @@ from compass.pnl_predictor import (
     ModelMetrics,
     PnLPredictor,
     Prediction,
-    PredictionLogEntry,
     PredictorResult,
     _z_score,
 )

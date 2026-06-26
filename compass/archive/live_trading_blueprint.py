@@ -17,18 +17,15 @@ adapter interface. All methods are synchronous for testability.
 
 from __future__ import annotations
 
-import hashlib
 import json
 import logging
-import time
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
-import pandas as pd
 
 logger = logging.getLogger(__name__)
 

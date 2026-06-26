@@ -9,27 +9,18 @@ All Alpaca calls mocked. Temp DB per test.
 
 import json
 import os
-import sqlite3
 import sys
-import tempfile
 import threading
-import time
-from datetime import datetime, timezone
 from unittest.mock import MagicMock, patch
 
-import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from shared.portfolio_risk import (
     CircuitBreakerLevel,
     PortfolioRiskMonitor,
-    PortfolioStatus,
     _action_from_level,
     _level_from_drawdown,
-    _HARD_STOP_THRESHOLD,
-    _RED_THRESHOLD,
-    _YELLOW_THRESHOLD,
 )
 
 
@@ -96,7 +87,6 @@ class TestLevelFromDrawdownBoundaries:
 
     def test_nan_drawdown(self):
         """NaN comparisons are all False, so NaN should map to NORMAL (fail-open)."""
-        import math
         result = _level_from_drawdown(float("nan"))
         assert result == CircuitBreakerLevel.NORMAL
 
@@ -401,7 +391,7 @@ class TestCacheTTL:
     def test_cache_returns_stale_within_ttl(self, tmp_path):
         m = _make_monitor(tmp_path, cache_ttl=60)
         _patch_equity(m, {"EXP-400": 100000.0})
-        s1 = m.check()
+        m.check()
         # Change equity — but cache should prevent re-fetch
         _patch_equity(m, {"EXP-400": 50000.0})
         s2 = m.check()

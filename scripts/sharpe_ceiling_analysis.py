@@ -16,7 +16,7 @@ from __future__ import annotations
 import math
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 import numpy as np
 
@@ -207,7 +207,7 @@ def between_year_variance_contribution(annual_returns: List[float]) -> Dict[str,
     Between-year: each 12-month block has a different mean, adding (sigma_annual/12) to monthly var
     Within-year: residual variance from trade-level randomness
     """
-    n_years = len(annual_returns)
+    len(annual_returns)
     mean_ann = np.mean(annual_returns)
     std_ann  = float(np.std(annual_returns, ddof=1))
 
@@ -324,14 +324,13 @@ def write_report() -> None:
 
     # ── Sharpe needed from strategy improvement alone ──────────────────────
     # If all cross-year variance eliminated (smoothest possible returns):
-    sharpe_if_steady = vd["sharpe_no_between"]
+    vd["sharpe_no_between"]
 
     # If per-trade SR improved to sr_req_trade with same N:
-    sharpe_at_req_trade = 6.0  # by construction
 
     # ── Payoff ratio analysis ───────────────────────────────────────────────
     # Express in terms of win/loss payoff ratio r = w/l
-    r = W_WIN / L_LOSS
+    W_WIN / L_LOSS
     # Optimal win rate for given r to maximize SR_trade:
     # dSR/dp = 0 => comes from calculus (omit derivation, just state result)
     # SR_trade = (p*r - (1-p)) / (sqrt(p*(1-p)) * (r+1))  [normalized by l]
@@ -363,7 +362,7 @@ def write_report() -> None:
         "**Question:** Is Sharpe 6.0+ achievable with monthly credit spread strategies?  ",
         f"**Strategy:** ML-EXP305 (COMPASS) — {P_WIN*100:.0f}% win rate, +{W_WIN*100:.0f}% avg win, -{L_LOSS*100:.0f}% avg loss, {N_ANNUAL} trades/yr  ",
         f"**Observed Sharpe:** {OBS_SHARPE_MONTHLY:.2f} (annualized monthly, 50/30/20 blend + Safe Kelly)  ",
-        f"**Target Sharpe:** 6.0+  ",
+        "**Target Sharpe:** 6.0+  ",
         "",
     ]
 
@@ -403,26 +402,26 @@ def write_report() -> None:
         "",
         "**Per-trade stats:**",
         "",
-        f"```",
+        "```",
         f"μ_trade  =  {P_WIN}×{W_WIN} − {1-P_WIN}×{L_LOSS}",
         f"         =  {P_WIN*W_WIN:.4f} − {(1-P_WIN)*L_LOSS:.4f}",
         f"         =  {ts['mu']*100:.2f}% per trade",
-        f"",
+        "",
         f"σ_trade  =  √({P_WIN}×{1-P_WIN:.2f}) × ({W_WIN}+{L_LOSS})",
         f"         =  {math.sqrt(P_WIN*(1-P_WIN)):.4f} × {W_WIN+L_LOSS:.2f}",
         f"         =  {ts['sigma']*100:.2f}% per trade",
-        f"",
+        "",
         f"SR_trade =  {ts['mu']*100:.2f}% / {ts['sigma']*100:.2f}%  =  {ts['sr']:.4f}",
-        f"```",
+        "```",
         "",
         "**Scaling to annual Sharpe:**",
         "",
-        f"```",
-        f"SR_annual  =  SR_trade × √N_annual",
+        "```",
+        "SR_annual  =  SR_trade × √N_annual",
         f"           =  {ts['sr']:.4f} × √{N_ANNUAL}",
         f"           =  {ts['sr']:.4f} × {math.sqrt(N_ANNUAL):.2f}",
         f"           =  {sr_theoretical:.2f}",
-        f"```",
+        "```",
         "",
         f"> **Theoretical maximum: {sr_theoretical:.2f}** with {N_ANNUAL} i.i.d. trades/year.",
         f"> The 6.0 target requires SR_trade ≥ {sr_req_trade:.4f} — just {(sr_req_trade-ts['sr'])*100:.3f}pp more per trade.",
@@ -467,7 +466,7 @@ def write_report() -> None:
     L += [
         "",
         f"> Current avg win: +{W_WIN*100:.0f}%. For SR=6.0: avg win must reach **+{w_needed*100:.1f}%** (+{(w_needed-W_WIN)*100:.1f}pp).",
-        f"> Achieved simply by raising profit target from 50% to ~52-53% of max profit.",
+        "> Achieved simply by raising profit target from 50% to ~52-53% of max profit.",
         "",
         "### 2c. Trade Count (fixed: p=85%, w=+19%, l=−47%)",
         "",
@@ -533,17 +532,17 @@ def write_report() -> None:
         f"- Std:  {vd['std_annual']:.1f}% (high variance from 2023/2024 weak years)",
         "",
         "```",
-        f"Between-year contribution to monthly std:",
+        "Between-year contribution to monthly std:",
         f"  σ_annual = {vd['std_annual']:.1f}%",
         f"  σ_between_monthly = σ_annual / √12 = {vd['sigma_between_monthly']:.2f}%/month",
-        f"",
+        "",
         f"Total monthly std:     {vd['sigma_total_monthly']:.2f}%",
         f"Between-year component: {vd['sigma_between_monthly']:.2f}% ({vd['between_fraction']:.0f}% of variance)",
         f"Within-year component:  {vd['sigma_within_monthly']:.2f}% ({100-vd['between_fraction']:.0f}% of variance)",
         "```",
         "",
-        f"| Source of Volatility | Monthly Std | Variance Share |",
-        f"|----------------------|:-----------:|:--------------:|",
+        "| Source of Volatility | Monthly Std | Variance Share |",
+        "|----------------------|:-----------:|:--------------:|",
         f"| Between-year (regime drift) | {vd['sigma_between_monthly']:.2f}%/mo | {vd['between_fraction']:.0f}% |",
         f"| Within-year (trade randomness + correlation) | {vd['sigma_within_monthly']:.2f}%/mo | {100-vd['between_fraction']:.0f}% |",
         f"| **Total observed** | **{vd['sigma_total_monthly']:.2f}%/mo** | 100% |",
@@ -568,9 +567,9 @@ def write_report() -> None:
         "```",
         f"N_actual  = {N_ANNUAL} trades/year",
         f"N_eff     = (SR_observed / SR_trade)²  =  ({OBS_SHARPE_MONTHLY:.2f} / {ts['sr']:.3f})²  =  {n_eff:.0f}",
-        f"",
+        "",
         f"Independence ratio = N_eff / N_actual = {n_eff:.0f} / {N_ANNUAL} = {n_eff/N_ANNUAL:.0%}",
-        f"",
+        "",
         f"Implied avg intra-month trade correlation ≈ 1 - (N_eff/N_actual) ≈ {corr_impl:.2f}",
         "```",
         "",
@@ -752,7 +751,7 @@ def write_report() -> None:
         "2. OR per-trade improvements pushing SR_trade from 0.386 → 0.416+ (1pp win rate)",
         "3. AND elimination of the cross-year heterogeneity from 2023/2024 low-edge regimes",
         "",
-        f"---",
+        "---",
         f"*Generated by `scripts/sharpe_ceiling_analysis.py` — {now}*",
     ]
 
@@ -760,7 +759,7 @@ def write_report() -> None:
         f.write("\n".join(L))
 
     print(f"\nReport -> {OUTPUT_PATH}")
-    print(f"\nKey numbers:")
+    print("\nKey numbers:")
     print(f"  Per-trade SR (p={P_WIN}, w={W_WIN}, l={L_LOSS}): {ts['sr']:.4f}")
     print(f"  Theoretical annual SR (N={N_ANNUAL}): {sr_theoretical:.2f}")
     print(f"  Observed monthly SR: {OBS_SHARPE_MONTHLY:.2f}")

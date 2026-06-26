@@ -190,7 +190,7 @@ def main():
     # Headline — the TARGET scenario
     target = next(r for r in results if r["id"] == "commfree_plus_exec_opt")
     baseline = next(r for r in results if r["id"] == "ibkr_baseline")
-    gross_sc = next(r for r in results if r["id"] == "gross")
+    next(r for r in results if r["id"] == "gross")
 
     headline = {
         "target_drag_bps": target["drag_bps"],
@@ -262,7 +262,7 @@ def main():
 
 
 def _write_html(p: Dict) -> None:
-    g = p["gross"]
+    p["gross"]
     rows = ""
     for sc in p["scenarios"]:
         a = sc["variants"]["ledoit_only"]

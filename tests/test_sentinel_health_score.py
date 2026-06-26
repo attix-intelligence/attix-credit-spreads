@@ -10,10 +10,8 @@ Covers the bugs found in Phase 1:
 
 from __future__ import annotations
 
-import os
 from datetime import datetime, timedelta, timezone
 
-import pytest
 
 from sentinel.cadence import (
     DEFAULT_CADENCE_SECONDS,

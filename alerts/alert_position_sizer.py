@@ -434,7 +434,6 @@ class AlertPositionSizer:
         and weekly-loss breach reduction are removed (backtester has neither).
         """
         from compass.sizing import calculate_dynamic_risk, get_contract_size
-        from shared.constants import MAX_RISK_PER_TRADE
 
         dollar_risk = calculate_dynamic_risk(account_value, iv_rank, current_portfolio_risk)
 

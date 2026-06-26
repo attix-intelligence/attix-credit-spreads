@@ -15,9 +15,7 @@ Iron condors = one DB record with put_short/put_long/call_short/call_long.
 import hashlib
 import tempfile
 from datetime import datetime, timezone
-from unittest.mock import MagicMock, patch
 
-import pytest
 
 from shared.database import get_db, get_trade_by_id, get_trades, init_db, upsert_trade
 
@@ -162,7 +160,7 @@ def test_orphan_detection_no_duplicate_records():
     """
     db = _tmp_db()
     opp = _make_bull_put_opp()
-    client_id = _insert_spread_as_single_record(db, opp)
+    _insert_spread_as_single_record(db, opp)
 
     # The fix: orphan detection should check if a symbol matches ANY leg of
     # ANY open/pending trade before creating a synthetic record.

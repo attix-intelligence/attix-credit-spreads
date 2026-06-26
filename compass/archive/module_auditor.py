@@ -20,11 +20,10 @@ import ast
 import base64
 import io
 import logging
-import os
 import re
 import subprocess
 import sys
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
@@ -104,7 +103,7 @@ class ModuleAuditor:
             all_info.append(info)
 
         # Second pass: imported_by
-        name_set = {m.name for m in all_info}
+        {m.name for m in all_info}
         for m in all_info:
             for other in all_info:
                 if m.name != other.name and m.name in other.imports_compass:

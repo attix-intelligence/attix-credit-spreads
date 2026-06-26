@@ -13,10 +13,10 @@ Audit checks:
   5. Walk-forward: parameters from IS, tested OOS
 """
 
-import math, os, sys
+import math
+import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List
 
 import numpy as np
 import pandas as pd
@@ -362,9 +362,9 @@ def build_html(findings, test_results, wf):
     ts = datetime.now().strftime("%Y-%m-%d %H:%M")
 
     lagged = test_results.get("Lagged (t-1) VIX", {})
-    sameday = test_results.get("Same-day VIX", {})
-    static16 = test_results.get("Static 1.6x", {})
-    static10 = test_results.get("Static 1.0x", {})
+    test_results.get("Same-day VIX", {})
+    test_results.get("Static 1.6x", {})
+    test_results.get("Static 1.0x", {})
 
     # Look-ahead findings
     finding_rows = ""

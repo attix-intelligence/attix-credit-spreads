@@ -726,10 +726,10 @@ def _write_report(
         "# EXP-400 ML Ensemble Filter — Backtest Report",
         "",
         f"**Generated:** {now}  ",
-        f"**Strategy:** EXP-400 The Champion — SPY regime-adaptive credit spreads & iron condors  ",
-        f"**Config:** `configs/exp_400_champion_realdata.json`  ",
-        f"**ML Model:** EnsembleSignalModel (XGBoost + RandomForest + ExtraTrees, calibrated)  ",
-        f"**Validation:** Walk-forward expanding window (one year per fold)  ",
+        "**Strategy:** EXP-400 The Champion — SPY regime-adaptive credit spreads & iron condors  ",
+        "**Config:** `configs/exp_400_champion_realdata.json`  ",
+        "**ML Model:** EnsembleSignalModel (XGBoost + RandomForest + ExtraTrees, calibrated)  ",
+        "**Validation:** Walk-forward expanding window (one year per fold)  ",
         f"**Train period:** 2020–{TRAIN_END_YEAR}  |  **Test period (OOS):** {TEST_START_YEAR}–2025  ",
         "",
         "---",
@@ -756,8 +756,8 @@ def _write_report(
         "",
         "**Full 6-year period (2020–2025):**",
         "",
-        f"| Metric | Value |",
-        f"|--------|-------|",
+        "| Metric | Value |",
+        "|--------|-------|",
         f"| Total trades | {bt_summary.get('total_trades', len(df))} |",
         f"| Win rate | {bt_summary.get('win_rate', df['win'].mean() * 100):.1f}% |",
         f"| Total return | {_pct(bt_summary.get('return_pct'), plus=False)} |",
@@ -825,11 +825,11 @@ def _write_report(
 
     lines += [
         "",
-        f"**Internal train stats** *(note: uses random shuffle split — treat AUC with caution, "
-        f"use walk-forward AUC above for reliable OOS estimate)*:",
+        "**Internal train stats** *(note: uses random shuffle split — treat AUC with caution, "
+        "use walk-forward AUC above for reliable OOS estimate)*:",
         "",
-        f"| Metric | Value |",
-        f"|--------|-------|",
+        "| Metric | Value |",
+        "|--------|-------|",
         f"| Ensemble test AUC (shuffle split) | {train_stats.get('ensemble_test_auc', 0):.3f} |",
         f"| Accuracy | {train_stats.get('accuracy', 0):.3f} |",
         f"| Precision | {train_stats.get('precision', 0):.3f} |",
@@ -878,7 +878,7 @@ def _write_report(
     if best:
         wr_imp  = best.get("win_rate", 0)    - wr_base
         sh_imp  = best.get("sharpe", 0)      - sh_base
-        rt_imp  = best.get("total_return_pct", 0) - rt_base
+        best.get("total_return_pct", 0) - rt_base
         dd_base = baseline_metrics.get("max_drawdown", 0)
         dd_filt = best.get("max_drawdown", 0)
         lines += [

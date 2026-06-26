@@ -22,9 +22,7 @@ import pandas as pd
 import pytest
 
 from compass.correlation_breakdown import (
-    CALM_REGIMES,
     REGIMES,
-    STRESS_REGIMES,
     VOL_BUCKETS,
     ContagionEvent,
     ContagionRiskIndicator,
@@ -33,7 +31,6 @@ from compass.correlation_breakdown import (
     FragilityScore,
     FragilityTimepoint,
     RegimeCorrelation,
-    RollingCorrelation,
     VolCorrelation,
 )
 

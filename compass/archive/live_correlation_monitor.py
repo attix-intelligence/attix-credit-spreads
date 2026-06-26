@@ -29,7 +29,6 @@ from __future__ import annotations
 import base64
 import io
 import logging
-import math
 from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -37,7 +36,6 @@ from pathlib import Path
 from typing import Any, Deque, Dict, List, Optional, Tuple
 
 import numpy as np
-import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -472,7 +470,7 @@ class LiveCorrelationMonitor:
         ax.plot(range(len(scores)), scores, color="#2563eb", lw=1.5)
         ax.fill_between(range(len(scores)), scores, alpha=0.1, color="#2563eb")
         ax.axhline(1.0 / len(self.experiments) * self.min_effective_n if self.experiments else 0.5,
-                    color="#dc2626", ls="--", lw=1, label=f"Min threshold")
+                    color="#dc2626", ls="--", lw=1, label="Min threshold")
         ax.set_ylabel("Diversification Score")
         ax.set_xlabel("Observation")
         ax.set_title("Diversification Score Over Time (1.0 = maximum)", fontsize=11)

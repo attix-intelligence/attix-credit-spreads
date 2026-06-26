@@ -38,7 +38,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -46,7 +46,7 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from compass.metrics import annualized_sharpe, full_metrics
+from compass.metrics import full_metrics
 
 TRADING_DAYS = 252
 STARTING_CAPITAL = 100_000
@@ -99,7 +99,8 @@ def load_exp1660_xlf() -> pd.Series:
     contango (normal vol regime), flat when backwardation. This captures
     the same edge without the complex options model, and uses REAL data only.
     """
-    import urllib.request, json as json_mod
+    import urllib.request
+    import json as json_mod
 
     def _fetch(sym, start="2020-01-01", end="2026-01-01"):
         start_ts = int(pd.Timestamp(start).timestamp())
@@ -554,7 +555,7 @@ def main():
     combined, weight_history = walk_forward_risk_parity(df, config)
     combined_m = full_metrics(combined[combined != 0].values)
 
-    print(f"\n  COMBINED:")
+    print("\n  COMBINED:")
     print(f"    CAGR:   {combined_m['cagr_pct']:6.1f}%")
     print(f"    Sharpe: {combined_m['sharpe']:6.2f}")
     print(f"    DD:     {combined_m['max_dd_pct']:5.1f}%")
@@ -584,11 +585,11 @@ def main():
     solo_1220 = solo["exp1220"]
     sharpe_delta = combined_m["sharpe"] - solo_1220["sharpe"]
     print(f"\n{'━' * 60}")
-    print(f"  THE SHARPE GAP TEST:")
+    print("  THE SHARPE GAP TEST:")
     print(f"    EXP-1220 solo Sharpe: {solo_1220['sharpe']:.2f}")
     print(f"    Combined Sharpe:      {combined_m['sharpe']:.2f}")
     print(f"    Delta:                {sharpe_delta:+.2f}")
-    print(f"    Target:               6.00")
+    print("    Target:               6.00")
     gap_remaining = 6.0 - combined_m["sharpe"]
     print(f"    Gap remaining:        {gap_remaining:+.2f}")
     closed_pct = max(0, min(100, sharpe_delta / max(6.0 - solo_1220["sharpe"], 0.01) * 100))

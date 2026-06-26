@@ -19,10 +19,9 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
-import pandas as pd
 
 
 # ── Configuration ───────────────────────────────────────────────────────
@@ -443,8 +442,8 @@ class DynamicHedgingEngine:
         if n < 20:
             return BacktestResult(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, [], {})
 
-        vix = vix_series if vix_series is not None else np.full(n, 18.0)
-        prices = underlying_prices if underlying_prices is not None else np.full(n, 430.0)
+        vix_series if vix_series is not None else np.full(n, 18.0)
+        underlying_prices if underlying_prices is not None else np.full(n, 430.0)
 
         hedged_returns = portfolio_returns.copy()
         total_hedge_cost = 0.0

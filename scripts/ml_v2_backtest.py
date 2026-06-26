@@ -481,7 +481,7 @@ def main():
     # Update G6 with real sensitivity score
     for pname, presult in profile_results.items():
         g6 = presult["gates"]["g6_robust_score"]
-        old_robust = g6["score"]
+        g6["score"]
         # Recompute with real c_score
         yearly_rets = {y: presult["yearly"][str(y)]["return_pct"] for y in YEARS}
         years_prof = sum(1 for r in yearly_rets.values() if r > 0)
@@ -534,7 +534,7 @@ def main():
 
     best = profile_results[best_name]
     print(f"\n  Best profile: {best_name}")
-    print(f"  Gates:")
+    print("  Gates:")
     for gname, gval in best["gates"].items():
         if gname == "all_pass":
             continue

@@ -16,12 +16,11 @@ Walk-forward validated at $100M and $500M capital with realistic slippage.
 Target: $1B+ capacity.
 """
 
-import json
 import math
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict
 
 import numpy as np
 

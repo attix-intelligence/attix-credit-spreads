@@ -7,11 +7,9 @@ Alpaca Order/Position/Account objects are replaced with simple dataclass stubs.
 
 from __future__ import annotations
 
-import json
 import sqlite3
 from dataclasses import dataclass, field
-from datetime import date, datetime, timedelta, timezone
-from pathlib import Path
+from datetime import date, timedelta
 from typing import List, Optional
 from unittest.mock import MagicMock, patch
 
@@ -23,7 +21,6 @@ from attix_signal.trade_notifications import (
     _mark_notified,
     _daily_summary_sent_today,
     _mark_daily_summary_sent,
-    _get_db_connection,
     _SCHEMA,
     build_daily_summary,
     classify_mleg_order,
@@ -102,7 +99,7 @@ def _put_spread_order(order_id="order-open-001", credit=1.82, qty=2.0) -> Order:
     """A filled MLEG open bull-put-spread order."""
     return Order(
         id=order_id,
-        client_order_id=f"cs-SPY-abc12345",
+        client_order_id="cs-SPY-abc12345",
         status="filled",
         order_class="mleg",
         filled_avg_price=credit,
@@ -411,7 +408,7 @@ class TestPollNewOrders:
     def test_new_filled_open_sends_notification(self, db_conn):
         order = _put_spread_order()
         client = self._make_client([order])
-        with patch("attix_signal.trade_notifications.send_telegram") as mock_tg:
+        with patch("attix_signal.trade_notifications.send_telegram"):
             notified = poll_new_orders(client, db_conn, dry_run=True)
         assert len(notified) == 1
         assert notified[0] == "order-open-001"

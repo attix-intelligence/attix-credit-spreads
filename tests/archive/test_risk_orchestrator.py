@@ -1,12 +1,11 @@
 """Tests for compass.risk_orchestrator — 32 tests."""
 import numpy as np
 import pandas as pd
-import pytest
 from datetime import datetime
 from pathlib import Path
 from compass.risk_orchestrator import (
     RiskOrchestrator, EscalationLevel, RiskSnapshot, RiskLimit,
-    HedgeRecommendation, StressResult, DrawdownAlert, OrchestratorReport,
+    StressResult, OrchestratorReport,
 )
 
 def _returns(n=200, seed=42):

@@ -1,7 +1,7 @@
 """Tests for compass.rl_position_sizer."""
 import unittest
 from compass.rl_position_sizer import (
-    ACTIONS, N_ACTIONS, EnvState, QLearningAgent, RLSizerResult, SizerResult,
+    ACTIONS, N_ACTIONS, QLearningAgent, RLSizerResult, SizerResult,
     TradeStep, TrainResult, backtest_sizer, compare_all_sizers,
     compute_reward, discretise_state, fixed_size, generate_episodes,
     half_kelly_size, kelly_size, regime_size, run_full_analysis, train_agent,

@@ -414,7 +414,7 @@ class TestTier1FeaturesIntegration:
         return a result (or None from IV miss) — never raise an exception."""
         engine = FeatureEngine(data_provider=_cache_no_extras())
         try:
-            feat = engine.build_features(
+            engine.build_features(
                 ticker="SPY", current_price=450.0, options_chain=_options_df()
             )
         except Exception as exc:

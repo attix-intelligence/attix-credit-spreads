@@ -1,6 +1,4 @@
 """Tests for compass.test_health — 30 tests."""
-import numpy as np
-import pytest
 from pathlib import Path
 from compass.test_health import (
     TestHealthAnalyzer, TestFileInfo, ModuleCoverage, FlakynessRisk, HealthReport,

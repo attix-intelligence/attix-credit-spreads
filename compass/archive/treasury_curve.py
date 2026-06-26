@@ -369,7 +369,7 @@ def walk_forward_expanding(all_trades: List[Trade],
     out: List[Dict] = []
     first_year = years[0]
     for y in years[min_train_years:]:
-        train_years = list(range(first_year, y))
+        list(range(first_year, y))
         test_year = y
 
         train_returns = combined_daily[combined_daily.index.year < y]
@@ -806,7 +806,7 @@ if __name__ == "__main__":
     result = run_backtest()
 
     print(f"\n{'=' * 70}")
-    print(f"EXP-1730 Wave 2 — Summary")
+    print("EXP-1730 Wave 2 — Summary")
     print(f"{'=' * 70}")
     print(f"Date range:     {result.date_range}")
     print(f"Trades:         {result.n_trades}")
@@ -816,14 +816,14 @@ if __name__ == "__main__":
     print(f"Sharpe:         {result.sharpe:.2f}")
     print(f"Max DD:         {result.max_dd*100:.2f}%")
     print(f"Years:          {result.n_years:.1f}")
-    print(f"\nPer-pair:")
+    print("\nPer-pair:")
     for p in result.pair_results:
         m = p.metrics
         print(f"  {p.pair_id:<6} trades={m.get('n_trades', 0):<4} "
               f"cagr={m.get('cagr', 0)*100:+6.2f}%  "
               f"sharpe={m.get('sharpe', 0):+5.2f}  "
               f"maxDD={m.get('max_dd', 0)*100:5.2f}%")
-    print(f"\nCorrelations (KEY VALUE):")
+    print("\nCorrelations (KEY VALUE):")
     print(f"  SPY daily:        {result.spy_daily_correlation:+.3f}")
     print(f"  EXP-1220 yearly:  {result.exp1220_yearly_correlation:+.3f}")
     print(f"\nWalk-forward expanding window: {len(result.walk_forward)} test years")

@@ -7,9 +7,13 @@ Usage::
     python experiments/EXP-920-max/robustness_validation.py
 """
 from __future__ import annotations
-import json, math, os, random, time
-from dataclasses import dataclass, field
-from typing import Dict, List, Tuple, Optional
+import json
+import math
+import os
+import random
+import time
+from dataclasses import dataclass
+from typing import Dict, List
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 RESULTS_DIR = os.path.join(SCRIPT_DIR, "results")
@@ -144,7 +148,7 @@ def combinatorial_purged_cv(returns: List[float], n_groups: int = 6, embargo: in
     for test_group in range(n_groups):
         test_start = test_group * group_size
         test_end = min(test_start + group_size, n)
-        train = returns[:max(0, test_start - embargo)] + returns[min(n, test_end + embargo):]
+        returns[:max(0, test_start - embargo)] + returns[min(n, test_end + embargo):]
         test = returns[test_start:test_end]
         if len(test) < 3:
             continue
@@ -197,7 +201,7 @@ def walk_forward(returns: List[float], min_train: int = 24, test_size: int = 12,
     step = test_size
     for start in range(0, n - min_train - test_size + 1, step):
         if sliding:
-            train_start = max(0, start + min_train + test_size - min_train - test_size)
+            max(0, start + min_train + test_size - min_train - test_size)
             # Sliding: fixed window
             train = returns[start:start + min_train]
         else:

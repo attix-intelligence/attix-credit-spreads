@@ -22,7 +22,6 @@ import sqlite3
 import sys
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -270,7 +269,6 @@ def run_tlt_iron_condors(hd, tlt_df, vix_s):
     print("  Strategy 2: TLT Iron Condors (extended to Dec 2025)...")
     from compass.iron_condor_optimizer import (
         ICConfig, backtest_iron_condor, _compute_ic_result,
-        _find_expirations, VIX_FILTER_RANGES,
     )
 
     tlt_end = tlt_df.index.max().strftime("%Y-%m-%d")
@@ -299,7 +297,7 @@ def run_qqq_cross_asset(hd, spy_df, qqq_df, tlt_df):
 
     spy_close = spy_df["Close"]
     qqq_ret = qqq_df["Close"].pct_change()
-    spy_ret = spy_close.pct_change()
+    spy_close.pct_change()
     tlt_ret = tlt_df["Close"].pct_change()
 
     # TLT-QQQ correlation breakdown signal

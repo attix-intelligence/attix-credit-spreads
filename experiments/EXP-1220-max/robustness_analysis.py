@@ -18,10 +18,9 @@ import json
 import logging
 import math
 import sys
-from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -31,8 +30,6 @@ sys.path.insert(0, str(ROOT))
 
 from backtest.backtester import _yf_download_safe
 from compass.tail_risk_protector import (
-    LEVEL_ACTIONS,
-    THREAT_THRESHOLDS,
     TailRiskProtector,
     ThreatLevel,
     TailRiskState,
@@ -823,12 +820,12 @@ def generate_html_report(
     # Check: does protector help in crash/bear and not hurt too much in bull?
     crash_benefit = regime_results.get("crash", {}).get("dd_reduction_pp", 0)
     bear_benefit = regime_results.get("bear", {}).get("dd_reduction_pp", 0)
-    bull_cost = regime_results.get("bull", {}).get("dd_reduction_pp", 0)
+    regime_results.get("bull", {}).get("dd_reduction_pp", 0)
     if crash_benefit > 0 or bear_benefit > 0:
         html_parts.append(f'<div class="verdict verdict-pass">PASS: Protector reduces DD in '
                           f'crash ({crash_benefit:+.1f}pp) and/or bear ({bear_benefit:+.1f}pp) regimes</div>')
     else:
-        html_parts.append(f'<div class="verdict verdict-warn">WARN: No DD reduction in crash/bear</div>')
+        html_parts.append('<div class="verdict verdict-warn">WARN: No DD reduction in crash/bear</div>')
 
     # ── Section 4: Trade Count / Statistical Significance ──
     html_parts.append("<h2>4. Trade Count &amp; Statistical Significance</h2>")
@@ -990,7 +987,7 @@ def main():
     print(f"  Alpha (annual): {corr_results['alpha_annual_pct']:+.1f}%")
 
     # Generate report
-    print(f"\n  Generating HTML report...")
+    print("\n  Generating HTML report...")
     html = generate_html_report(
         wf_results, sensitivity, regime_results,
         trade_counts, corr_results, overall_metrics,

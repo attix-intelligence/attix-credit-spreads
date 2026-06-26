@@ -17,11 +17,9 @@ Includes 0.5% round-trip slippage on rebalance.
 from __future__ import annotations
 
 import json
-import math
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -112,7 +110,7 @@ def run_walk_forward(df: pd.DataFrame) -> dict:
 
         # Train metrics (unlevered, no slippage)
         train_rets = (train_df.values @ w)
-        train_metrics = calc_metrics(train_rets)
+        calc_metrics(train_rets)
 
         # Test: apply leverage + slippage on first day of OOS period
         test_matrix = test_df.values
@@ -578,7 +576,7 @@ def main():
     # Print summary
     agg = result["oos_aggregate"]
     print(f"\n{'─' * 50}")
-    print(f"OOS Aggregate (2022-2025 at 1.6× leverage):")
+    print("OOS Aggregate (2022-2025 at 1.6× leverage):")
     print(f"  CAGR:    {agg['cagr_pct']:.1f}%")
     print(f"  Sharpe:  {agg['sharpe']:.2f}")
     print(f"  Max DD:  {agg['max_dd_pct']:.1f}%")
@@ -587,7 +585,7 @@ def main():
     print(f"  Vol:     {agg['vol_pct']:.1f}%")
     print(f"  Return:  {agg['total_ret_pct']:.1f}%")
 
-    print(f"\nYear-by-Year OOS:")
+    print("\nYear-by-Year OOS:")
     for yr, m in sorted(result["yearly_oos"].items()):
         print(f"  {yr}: CAGR={m['cagr_pct']:6.1f}%  Sharpe={m['sharpe']:.2f}  MaxDD={m['max_dd_pct']:.1f}%")
 

@@ -4,9 +4,7 @@ from datetime import date
 
 from compass.events import (
     ALL_FOMC_DATES,
-    CPI_SCALING,
     FOMC_SCALING,
-    NFP_SCALING,
     _cpi_release_date,
     _first_friday_of_month,
     _iter_months,

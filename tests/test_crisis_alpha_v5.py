@@ -1,13 +1,10 @@
 """Tests for compass/crisis_alpha_v5.py."""
 
-import math
 import numpy as np
 import pandas as pd
-import pytest
 
 from compass.crisis_alpha_v5 import (
-    SAFE_HAVENS, EQUITIES, HedgeConfigV5, LeveragedHedgeTest,
-    compute_v5_weights, stress_gate, backtest_v5,
+    SAFE_HAVENS, EQUITIES, HedgeConfigV5, compute_v5_weights, stress_gate, backtest_v5,
     find_dd_periods, score_hedge,
     select_best_hedge,
 )
@@ -116,7 +113,7 @@ class TestHedgeScore:
 class TestComputeWeights:
     def test_equity_short_only_zeroes_longs(self):
         prices = _det_prices(800)
-        n = len(prices)
+        len(prices)
         # Build a constant POSITIVE signal for SPY (would normally be long)
         signal = pd.DataFrame(0.0, index=prices.index, columns=prices.columns)
         signal["SPY"] = 0.5

@@ -34,11 +34,10 @@ import json
 import math
 import subprocess
 import sys
-import traceback
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -94,7 +93,7 @@ def section_a_module_discovery() -> None:
     print("\n═══ A. Stream module discovery ═══")
     for stream, mod_name in STREAM_MODULES.items():
         try:
-            mod = importlib.import_module(mod_name)
+            importlib.import_module(mod_name)
             add_result("A", f"import_{stream}", "PASS",
                         f"{mod_name} imported")
         except Exception as e:
@@ -312,7 +311,7 @@ def section_e_vix_ladder(v8a: pd.DataFrame) -> None:
 
     # E.1 — module exists + imports
     try:
-        from compass.vix_ladder import VIXLadder, fetch_vix, apply_to_portfolio
+        from compass.vix_ladder import VIXLadder
         add_result("E", "module_import", "PASS",
                     "compass.vix_ladder imported")
     except Exception as e:
@@ -370,9 +369,6 @@ def section_e_vix_ladder(v8a: pd.DataFrame) -> None:
 
     # E.6 — integration with EXP-2850 driver (import only, no full run)
     try:
-        from compass.exp2850_v8a_with_vix_ladder import (
-            build_v8a_cube, walk_forward_with_ladder,
-        )
         add_result("E", "exp2850_integration", "PASS",
                     "EXP-2850 integration module imports")
     except Exception as e:

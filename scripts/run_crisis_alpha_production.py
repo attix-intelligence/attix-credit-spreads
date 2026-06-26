@@ -6,14 +6,13 @@ from datetime import datetime
 from pathlib import Path
 
 import numpy as np
-import pandas as pd
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from compass.crisis_alpha_production import (
-    PRODUCTION_CONFIG, load_universe, backtest,
-    find_optimal_allocation, build_exp1220_daily,
+    load_universe, backtest,
+    find_optimal_allocation,
 )
 
 
@@ -208,12 +207,12 @@ def main():
     print(f"  Max DD:         {pct(result.max_dd)}")
     print(f"  SPY ρ (overall): {result.corr_to_spy:+.3f}")
     print(f"  DD-period ρ:    {result.corr_during_dd:+.3f}")
-    print(f"  Crisis outperf: ", end="")
+    print("  Crisis outperf: ", end="")
     crisis_avg = np.mean(list(result.crisis_performance.values())) if result.crisis_performance else 0
     print(f"{crisis_avg:+.1f}% (avg)")
 
     # DD period returns
-    print(f"\n[3] Returns during EXP-1220 DD periods:")
+    print("\n[3] Returns during EXP-1220 DD periods:")
     print(f"  Found {len(result.dd_period_returns)} DD periods")
     total_outperf = 0
     for label, dd in sorted(result.dd_period_returns.items()):
@@ -243,7 +242,7 @@ def main():
         crisis_alpha_dates=result.dates,
         spy_rets=spy_rets,
     )
-    print(f"  Sweep across 0-50% allocation:")
+    print("  Sweep across 0-50% allocation:")
     for a in sweep:
         marker = " ← BEST" if a['sharpe'] == optimal['sharpe'] else ""
         print(f"    {a['ca_weight']*100:3.0f}% CA: CAGR {pct(a['cagr']):>8s} "

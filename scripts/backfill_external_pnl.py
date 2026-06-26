@@ -36,7 +36,7 @@ try:
 except ImportError:
     pass
 
-from shared.database import close_trade, get_db, get_trades, upsert_trade
+from shared.database import close_trade, get_db, get_trades
 
 logging.basicConfig(
     level=logging.INFO,

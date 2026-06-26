@@ -2,7 +2,6 @@
 
 from datetime import datetime, timezone
 
-import pytest
 
 from shared.signal_scorer import SCORING_WEIGHTS, score_signal
 from strategies.base import LegType, Signal, TradeLeg, TradeDirection

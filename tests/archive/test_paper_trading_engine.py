@@ -243,7 +243,7 @@ class TestReplay:
         assert perf.n_trades > 0; e.close()
     def test_replay_populates_closed(self):
         e = _engine(fill_rate=1.0)
-        perf = e.replay(_make_trades_df(30))
+        e.replay(_make_trades_df(30))
         assert len(e.closed_trades) > 0; e.close()
     def test_replay_slippage_nonzero(self):
         e = _engine(fill_rate=1.0, slippage_per_contract=0.05)

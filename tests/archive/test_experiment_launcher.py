@@ -18,7 +18,6 @@ from __future__ import annotations
 import copy
 import os
 import tempfile
-from pathlib import Path
 
 import pytest
 
@@ -457,7 +456,7 @@ class TestHTMLReport:
     def test_writes_file(self, launcher):
         with tempfile.TemporaryDirectory() as tmpdir:
             path = os.path.join(tmpdir, "launch.html")
-            report = launcher.generate_report_file(output_path=path)
+            launcher.generate_report_file(output_path=path)
             assert os.path.isfile(path)
             with open(path) as f:
                 assert "<!DOCTYPE html>" in f.read()

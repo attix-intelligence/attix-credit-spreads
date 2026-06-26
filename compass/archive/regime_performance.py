@@ -13,9 +13,9 @@ No synthetic option pricing.
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -656,8 +656,8 @@ def generate_report(
         cells = ""
         for sid in STRATEGY_IDS:
             w = rw.weights.get(sid, 0)
-            intensity = min(255, int(w * 500))
-            bg = f"rgba(34,197,94,{w*2})" if w > 0.15 else f"rgba(100,100,100,0.1)"
+            min(255, int(w * 500))
+            bg = f"rgba(34,197,94,{w*2})" if w > 0.15 else "rgba(100,100,100,0.1)"
             cells += f'<td style="background:{bg};text-align:center;font-weight:600">{w:.0%}</td>'
         wt_rows += f'<tr><td style="border-left:4px solid {rc};padding-left:8px">{regime}</td>{cells}</tr>'
 
@@ -751,17 +751,17 @@ def run_analysis(seed: int = 42) -> RegimeAnalysisResult:
     analyzer = RegimeAnalyzer(seed=seed)
     result = analyzer.analyze()
 
-    print(f"\n  Regime Distribution:")
+    print("\n  Regime Distribution:")
     for r in ALL_REGIMES:
         print(f"    {r:12s}: {result.regime_distribution.get(r, 0):5.1f}%")
 
-    print(f"\n  Strategy Failures:")
+    print("\n  Strategy Failures:")
     for sid, fails in result.failure_map.items():
         name = STRATEGY_PROFILES[sid]["name"]
         f_str = ", ".join(fails) if fails else "None"
         print(f"    {name:35s}: {f_str}")
 
-    print(f"\n  Regime-Adaptive Weights:")
+    print("\n  Regime-Adaptive Weights:")
     for regime in ALL_REGIMES:
         rw = result.regime_weights.get(regime)
         if rw:

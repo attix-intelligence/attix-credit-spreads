@@ -18,7 +18,6 @@ from compass.adaptive_stops import (
     STOP_STRATEGIES,
     AdaptiveStopOptimizer,
     RegimeOptimal,
-    StopResult,
     StrategyResult,
     atr_stop,
     backtest_strategy,

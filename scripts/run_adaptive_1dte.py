@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 """Adaptive 1DTE IC runner: rolling Sharpe monitor + portfolio combo."""
 
-import math, sys
+import sys
 from datetime import datetime
 from pathlib import Path
 
 import numpy as np
-import pandas as pd
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))

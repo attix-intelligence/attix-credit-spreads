@@ -1,13 +1,10 @@
 """Tests for compass/paper_trading_monitor.py — 50+ tests."""
 
 import json
-import math
 import os
 import sys
 from pathlib import Path
 
-import numpy as np
-import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))

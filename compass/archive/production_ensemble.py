@@ -20,7 +20,6 @@ Usage::
 
 from __future__ import annotations
 
-import json
 import logging
 import math
 from dataclasses import dataclass, field
@@ -562,7 +561,7 @@ class ProductionEnsemble:
         train_mask = df["year"].isin(years[:mid]).values
         test_mask = df["year"].isin(years[mid:]).values
         X_train, y_train = X_all[train_mask], y_all[train_mask]
-        X_test, y_test = X_all[test_mask], y_all[test_mask]
+        X_test, _y_test = X_all[test_mask], y_all[test_mask]
         if len(X_train) < 20 or len(X_test) < 5:
             return 0.0
         models = {n: f() for n, f in MODEL_FACTORIES.items()}
@@ -587,7 +586,6 @@ class ProductionEnsemble:
     def _run_retrained_no_disagreement(self, df, X_all, y_all, years, features):
         """Estimate Sharpe without disagreement scaling from existing predictions."""
         # Recalculate PnL as if disagreement_scale=False
-        cfg = self.config
         pnls = []
         for idx in range(len(df)):
             row = df.iloc[idx]
@@ -659,8 +657,10 @@ def _build_html(r: PipelineResult) -> str:
         y0, y1 = min(vals), max(vals)
         if y1 <= y0: y1 = y0 + 1
         pw, ph = w - 2*pad, h - 65
-        tx = lambda i: pad + i / max(n-1,1) * pw
-        ty = lambda v: 35 + (1-(v-y0)/(y1-y0)) * ph
+        def tx(i):
+            return pad + i / max(n-1,1) * pw
+        def ty(v):
+            return 35 + (1-(v-y0)/(y1-y0)) * ph
         d = " ".join(f"{'M' if i==0 else 'L'}{tx(i):.1f},{ty(vals[i]):.1f}" for i in range(n))
         eq_svg = f'<svg viewBox="0 0 {w} {h}" class="chart"><text x="{w//2}" y="20" text-anchor="middle" class="st">Portfolio Equity ($)</text><path d="{d}" fill="none" stroke="#3fb950" stroke-width="2"/></svg>'
 

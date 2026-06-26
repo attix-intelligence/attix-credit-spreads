@@ -9,10 +9,9 @@ Outputs: reports/master_strategy_dashboard.html
 from __future__ import annotations
 
 import json
-import math
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List
 
 ROOT = Path(__file__).resolve().parent.parent
 EXPERIMENTS = ROOT / "experiments"
@@ -477,9 +476,9 @@ def build_html(
     # ── North Star gap analysis ──────────────────────────────────────
     ns_rows = ""
     for e in ranked:
-        cagr_gap = NS_CAGR - e["cagr"]
+        NS_CAGR - e["cagr"]
         dd_gap = abs(e["max_dd"]) - NS_DD
-        sharpe_gap = NS_SHARPE - e["sharpe"]
+        NS_SHARPE - e["sharpe"]
 
         cagr_bar = min(100, max(0, e["cagr"] / NS_CAGR * 100))
         dd_bar = min(100, max(0, (1 - max(0, dd_gap) / 100) * 100))

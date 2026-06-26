@@ -43,10 +43,8 @@ from __future__ import annotations
 import argparse
 import math
 import os
-import sys
 import time
-from dataclasses import dataclass, field
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 import numpy as np
 
@@ -313,16 +311,16 @@ def generate_report(results: List[Dict], n_seeds: int) -> str:
     t3_pct = sum(1 for r in results if r["avg_sharpe"]   >= TARGET_ANNUAL_SHARPE)     / n_seeds * 100
 
     # percentile where all 3 are met
-    all3_met_idx = sorted(
+    sorted(
         (i for i, r in enumerate(results) if r["north_star"]),
         key=lambda i: results[i]["avg_annual"]
     )
-    ns_pct_threshold = 100 - ns_pct  # percentile above which all 3 are met
+    100 - ns_pct  # percentile above which all 3 are met
 
     A("# North Star Portfolio — Monte Carlo Simulation")
     A("")
     A(f"> **Generated:** {__import__('datetime').datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}")
-    A(f"> **Branch:** `main`")
+    A("> **Branch:** `main`")
     A(f"> **Seeds:** {n_seeds:,}  |  **Years per path:** {N_YEARS}  |  **Trades/year:** {N_TRADES}")
     A("")
     A("---")
@@ -333,8 +331,8 @@ def generate_report(results: List[Dict], n_seeds: int) -> str:
     A("")
     A("### Trade-level inputs")
     A("")
-    A(f"| Parameter | Value | Source |")
-    A(f"|-----------|:-----:|--------|")
+    A("| Parameter | Value | Source |")
+    A("|-----------|:-----:|--------|")
     A(f"| Trades per year | {N_TRADES} | SPY 208 + sector ETFs 72 (from `frequency_analysis.md`) |")
     A(f"| Win rate | {WIN_PROB*100:.0f}% | ML-filtered (exp_126 baseline 78.7% → +7pp ML uplift) |")
     A(f"| Avg win / risk | +{WIN_FRAC*100:.0f}% | Credit spreads: 19% avg credit kept on winners |")
@@ -343,8 +341,8 @@ def generate_report(results: List[Dict], n_seeds: int) -> str:
     A("")
     A("### Safe Kelly 4/7/9 regime sizing")
     A("")
-    A(f"| Regime | Probability | Risk / trade | Expected per-trade P&L |")
-    A(f"|--------|:-----------:|:------------:|:----------------------:|")
+    A("| Regime | Probability | Risk / trade | Expected per-trade P&L |")
+    A("|--------|:-----------:|:------------:|:----------------------:|")
     for label, prob, risk in zip(["Bull", "Neutral", "Bear"], REGIME_PROBS, REGIME_RISK):
         ev = prob * (WIN_PROB * WIN_FRAC * risk - (1 - WIN_PROB) * LOSS_FRAC * risk)
         A(f"| {label} | {prob*100:.0f}% | {risk*100:.0f}% | {pct_str(ev*100, 4)} portfolio |")
@@ -357,8 +355,8 @@ def generate_report(results: List[Dict], n_seeds: int) -> str:
     A("")
     A("### 3-tier circuit breakers")
     A("")
-    A(f"| Tier | Portfolio DD trigger | Action | Recovery |")
-    A(f"|------|:--------------------:|--------|---------|")
+    A("| Tier | Portfolio DD trigger | Action | Recovery |")
+    A("|------|:--------------------:|--------|---------|")
     A(f"| 1 | ≤ {CB_T1_THRESH*100:.0f}% | Size at 50% of normal | Automatic (DD improves) |")
     A(f"| 2 | ≤ {CB_T2_THRESH*100:.0f}% | Pause all new entries | DD recovers above {CB_RECOVERY*100:.0f}% |")
     A(f"| 3 | ≤ {CB_T3_THRESH*100:.0f}% | Full halt for {H_HALT_TRADES} trades | Time-based cooldown |")
@@ -369,8 +367,8 @@ def generate_report(results: List[Dict], n_seeds: int) -> str:
     A("")
     A("### 2a. Summary statistics")
     A("")
-    A(f"| Metric | Mean | Median | Std | P1 | P5 | P10 | P25 | P50 | P75 | P90 | P95 | P99 |")
-    A(f"|--------|:----:|:------:|:---:|:--:|:--:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|")
+    A("| Metric | Mean | Median | Std | P1 | P5 | P10 | P25 | P50 | P75 | P90 | P95 | P99 |")
+    A("|--------|:----:|:------:|:---:|:--:|:--:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|")
     A(percentile_row(avg_returns,  "Avg annual return"))
     A(percentile_row(cagrs,        "6yr CAGR"))
     A(percentile_row(cumulatives,  "6yr total return"))
@@ -384,8 +382,8 @@ def generate_report(results: List[Dict], n_seeds: int) -> str:
     A("")
     A(f"Distribution of annual returns across all {n_seeds:,} simulations, by year.")
     A("")
-    A(f"| Year | Mean | P5 | P10 | P25 | P50 | P75 | P90 | P95 | P(>0) | P(>100%) |")
-    A(f"|------|:----:|:--:|:---:|:---:|:---:|:---:|:---:|:---:|:-----:|:--------:|")
+    A("| Year | Mean | P5 | P10 | P25 | P50 | P75 | P90 | P95 | P(>0) | P(>100%) |")
+    A("|------|:----:|:--:|:---:|:---:|:---:|:---:|:---:|:---:|:-----:|:--------:|")
     year_labels = ["Y1", "Y2", "Y3", "Y4", "Y5", "Y6"]
     for yi, (label, arr) in enumerate(zip(year_labels, per_year_rets)):
         p5, p10, p25, p50, p75, p90, p95 = np.percentile(arr, [5, 10, 25, 50, 75, 90, 95])
@@ -396,8 +394,8 @@ def generate_report(results: List[Dict], n_seeds: int) -> str:
           f"{pct_str(p95)} | {p_pos:.1f}% | {p_100:.1f}% |")
 
     A("")
-    A(f"| Year | Max DD (median) | P5 DD | P95 DD | Avg Sharpe | P5 Sharpe | P95 Sharpe |")
-    A(f"|------|:---------------:|:-----:|:------:|:----------:|:---------:|:----------:|")
+    A("| Year | Max DD (median) | P5 DD | P95 DD | Avg Sharpe | P5 Sharpe | P95 Sharpe |")
+    A("|------|:---------------:|:-----:|:------:|:----------:|:---------:|:----------:|")
     for yi, label in enumerate(year_labels):
         dd_arr = per_year_dds[yi]
         sh_arr = per_year_sh[yi]
@@ -413,8 +411,8 @@ def generate_report(results: List[Dict], n_seeds: int) -> str:
     # ── 4. Circuit Breaker Analysis ────────────────────────────────────────
     A("## 4. Circuit Breaker Analysis")
     A("")
-    A(f"| CB events per 6-yr path | Mean | P5 | P25 | P50 | P75 | P95 |")
-    A(f"|------------------------|:----:|:--:|:---:|:---:|:---:|:---:|")
+    A("| CB events per 6-yr path | Mean | P5 | P25 | P50 | P75 | P95 |")
+    A("|------------------------|:----:|:--:|:---:|:---:|:---:|:---:|")
     p5, p25, p50, p75, p95 = np.percentile(cb_totals, [5, 25, 50, 75, 95])
     A(f"| Total CB triggers | {cb_totals.mean():.1f} | {p5:.0f} | {p25:.0f} | {p50:.0f} | {p75:.0f} | {p95:.0f} |")
     pct_any_cb = (cb_totals > 0).mean() * 100
@@ -428,10 +426,10 @@ def generate_report(results: List[Dict], n_seeds: int) -> str:
     # ── 5. North Star Achievement ──────────────────────────────────────────
     A("## 5. North Star Target Achievement")
     A("")
-    A(f"### Targets")
+    A("### Targets")
     A("")
-    A(f"| Target | Threshold | % of paths achieving | Notes |")
-    A(f"|--------|:---------:|:--------------------:|-------|")
+    A("| Target | Threshold | % of paths achieving | Notes |")
+    A("|--------|:---------:|:--------------------:|-------|")
     A(f"| T1: Avg annual return | ≥ {TARGET_AVG_ANNUAL_RETURN:.0f}% | **{t1_pct:.1f}%** | Avg over all 6 years |")
     A(f"| T2: Max portfolio DD | ≥ {TARGET_MAX_DD:.0f}% | **{t2_pct:.1f}%** | Worst single-year max DD |")
     A(f"| T3: Avg annual Sharpe | ≥ {TARGET_ANNUAL_SHARPE:.1f} | **{t3_pct:.1f}%** | Trade-level annual Sharpe |")
@@ -440,13 +438,13 @@ def generate_report(results: List[Dict], n_seeds: int) -> str:
 
     # Percentile heat map: find exact percentile from sorted returns
     sorted_avg = np.sort(avg_returns)
-    pctile_100 = np.searchsorted(sorted_avg, TARGET_AVG_ANNUAL_RETURN) / n_seeds * 100
-    pctile_dd  = np.searchsorted(np.sort(-worst_dds), -TARGET_MAX_DD) / n_seeds * 100  # reverse
+    np.searchsorted(sorted_avg, TARGET_AVG_ANNUAL_RETURN) / n_seeds * 100
+    np.searchsorted(np.sort(-worst_dds), -TARGET_MAX_DD) / n_seeds * 100  # reverse
 
-    A(f"### Percentile landscape (avg annual return)")
+    A("### Percentile landscape (avg annual return)")
     A("")
-    A(f"| Percentile | Avg Annual | Worst DD | Avg Sharpe | All 3 targets? |")
-    A(f"|:----------:|:----------:|:--------:|:----------:|:--------------:|")
+    A("| Percentile | Avg Annual | Worst DD | Avg Sharpe | All 3 targets? |")
+    A("|:----------:|:----------:|:--------:|:----------:|:--------------:|")
     for p in [5, 10, 25, 50, 75, 90, 95, 99]:
         idx = int(p / 100 * n_seeds)
         idx = min(idx, n_seeds - 1)
@@ -461,7 +459,7 @@ def generate_report(results: List[Dict], n_seeds: int) -> str:
     # Exact North Star percentile
     A(f"### North Star achievement: **{ns_pct:.1f}%** of simulations pass all 3 targets")
     A("")
-    A(f"The all-3-targets constraint is driven primarily by:")
+    A("The all-3-targets constraint is driven primarily by:")
     A("")
     # Which target is binding?
     t1_fail = 100 - t1_pct
@@ -473,7 +471,7 @@ def generate_report(results: List[Dict], n_seeds: int) -> str:
         A(f"- **{name}**: fails in **{fail_pct:.1f}%** of paths")
 
     A("")
-    A(f"### Percentile that simultaneously achieves all 3 targets")
+    A("### Percentile that simultaneously achieves all 3 targets")
     A("")
 
     if ns_pct > 0:
@@ -483,7 +481,7 @@ def generate_report(results: List[Dict], n_seeds: int) -> str:
         pctile_of_pass = np.searchsorted(sorted_avg, min_avg_pass) / n_seeds * 100
         A(f"All three targets are simultaneously achieved in the **top {100-pctile_of_pass:.0f}% ({ns_pct:.1f}%) of simulation paths**.")
         A("")
-        A(f"The minimum-return path that passes all 3 targets has:")
+        A("The minimum-return path that passes all 3 targets has:")
         best_marginal = min(pass_results, key=lambda r: r["avg_annual"]) if pass_results else None
         if best_marginal:
             A(f"- Avg annual: {pct_str(best_marginal['avg_annual'])}")
@@ -501,8 +499,8 @@ def generate_report(results: List[Dict], n_seeds: int) -> str:
     A("")
     A("How many paths pass if we relax individual targets?")
     A("")
-    A(f"| Return target | DD target | Sharpe target | % paths passing |")
-    A(f"|:-------------:|:---------:|:-------------:|:---------------:|")
+    A("| Return target | DD target | Sharpe target | % paths passing |")
+    A("|:-------------:|:---------:|:-------------:|:---------------:|")
     combos = [
         (100, -12, 2.0), (80, -12, 2.0), (60, -12, 2.0), (50, -12, 2.0),
         (100, -15, 2.0), (100, -20, 2.0), (100, -12, 1.5), (100, -12, 1.0),
@@ -522,8 +520,8 @@ def generate_report(results: List[Dict], n_seeds: int) -> str:
     A("")
     A("How do the headline metrics change with trade count and win rate?")
     A("")
-    A(f"| Trades/yr | Win rate | Avg annual (P50) | Worst DD (P50) | Sharpe (P50) | All-3 pass rate |")
-    A(f"|:---------:|:--------:|:----------------:|:--------------:|:------------:|:---------------:|")
+    A("| Trades/yr | Win rate | Avg annual (P50) | Worst DD (P50) | Sharpe (P50) | All-3 pass rate |")
+    A("|:---------:|:--------:|:----------------:|:--------------:|:------------:|:---------------:|")
 
     # Analytical approximation: arithmetic annual mean and CLT std
     # DD and pass rate are NOT analytically tractable with CBs — use * for those columns
@@ -578,7 +576,7 @@ def generate_report(results: List[Dict], n_seeds: int) -> str:
     A(f"- P50 avg annual Sharpe: **{sh_med:.2f}**")
     A(f"- P5/P95 range: {sh_p5:.2f} → {sh_p95:.2f}")
     A(f"- 280 trades × (1 - ρ={RHO_TARGET}) ≈ {N_TRADES*(1-RHO_TARGET):.0f} effective independent trades")
-    A(f"  → CLT stabilises returns; Sharpe scales with √N_eff")
+    A("  → CLT stabilises returns; Sharpe scales with √N_eff")
     A("")
     A("### Binding North Star constraint")
     A("")
@@ -588,11 +586,11 @@ def generate_report(results: List[Dict], n_seeds: int) -> str:
     A("")
     A(f"- To improve the all-3 pass rate, focus on **{bind_name}**")
     if t_bind[0][0].startswith("T2"):
-        A(f"- The DD constraint is primarily driven by correlated loss clusters")
-        A(f"  (multiple sector ETFs entering bear regime simultaneously)")
-        A(f"- Tier-2/Tier-3 CB thresholds can be tuned tighter to improve DD control at cost of return")
+        A("- The DD constraint is primarily driven by correlated loss clusters")
+        A("  (multiple sector ETFs entering bear regime simultaneously)")
+        A("- Tier-2/Tier-3 CB thresholds can be tuned tighter to improve DD control at cost of return")
     elif t_bind[0][0].startswith("T1"):
-        A(f"- The return target is most sensitive to win rate and trade count")
+        A("- The return target is most sensitive to win rate and trade count")
         A(f"- Increasing from {WIN_PROB*100:.0f}% to {WIN_PROB*100+2:.0f}% win rate adds ~"
           f"{N_TRADES * 2/100 * (WIN_FRAC + LOSS_FRAC) * _avg_risk * 100:.0f}pp expected annual return")
     A("")
@@ -604,22 +602,22 @@ def generate_report(results: List[Dict], n_seeds: int) -> str:
     A("which overstates returns vs the actual backtester (which also compounds, but")
     A("concurrent positions share the same capital pool). Calibration against exp_126:")
     A("")
-    A(f"| Metric | exp_126 actual | exp_126 MC model | Ratio |")
-    A(f"|--------|:--------------:|:----------------:|:-----:|")
-    A(f"| Avg annual return | +75.8% | ~117% (theoretical) | 0.65× |")
-    A(f"| Parameters | 203 trades, 78.7% WR, 8% risk | same | — |")
+    A("| Metric | exp_126 actual | exp_126 MC model | Ratio |")
+    A("|--------|:--------------:|:----------------:|:-----:|")
+    A("| Avg annual return | +75.8% | ~117% (theoretical) | 0.65× |")
+    A("| Parameters | 203 trades, 78.7% WR, 8% risk | same | — |")
     A("")
     A("**Calibration factor: ~0.65× (actual ÷ model).** Applying to North Star MC P50:")
     A("")
     ns_p50 = float(np.median(avg_returns))
     adj_p50 = ns_p50 * 0.65
-    A(f"```")
+    A("```")
     A(f"Model P50 avg annual:       {ns_p50:+.0f}%")
     A(f"Calibration-adjusted P50:   {adj_p50:+.0f}%  (×0.65)")
-    A(f"Alpha roadmap 200%+ target: +200%")
-    A(f"")
+    A("Alpha roadmap 200%+ target: +200%")
+    A("")
     A(f"→ North Star calibrated P50 ({adj_p50:+.0f}%) is {'ABOVE' if adj_p50 >= 200 else 'NEAR'} the 200% roadmap target")
-    A(f"```")
+    A("```")
     A("")
     A("The calibrated P50 reflects the expected real-world outcome given the same")
     A("concurrent-position dynamics as the actual backtester. The model is internally")
@@ -631,8 +629,8 @@ def generate_report(results: List[Dict], n_seeds: int) -> str:
     A("")
     A(f"*Simulation: `scripts/run_north_star_mc.py` | {n_seeds:,} paths × {N_YEARS} years × {N_TRADES} trades*  ")
     A(f"*Correlation model: ρ={RHO_TARGET} inter-trade (systematic market factor)*  ")
-    A(f"*Calibration factor 0.65× vs actual backtester (concurrent-position compounding correction)*  ")
-    A(f"*Not accounting for: slippage, margin calls, liquidity constraints*")
+    A("*Calibration factor 0.65× vs actual backtester (concurrent-position compounding correction)*  ")
+    A("*Not accounting for: slippage, margin calls, liquidity constraints*")
 
     return "\n".join(lines)
 
@@ -663,7 +661,7 @@ def main():
     p50_sh  = np.median([r["avg_sharpe"] for r in results])
     ns_pct  = sum(1 for r in results if r["north_star"]) / len(results) * 100
 
-    print(f"\nResults summary:")
+    print("\nResults summary:")
     print(f"  P50 avg annual:    {p50_ret:+.1f}%")
     print(f"  Mean avg annual:   {avg_ret:+.1f}%")
     print(f"  P50 worst DD:      {p50_dd:.1f}%")

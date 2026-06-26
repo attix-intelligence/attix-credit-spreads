@@ -6,8 +6,7 @@ import pandas as pd
 import pytest
 from compass.sentiment_signal import (
     CompositeSentiment, ContrarianSignal, ExtremeEvent,
-    PCRSentiment, SentimentAggregator, SentimentAlpha,
-    SourceSentiment, TextSentiment, VIXTermSentiment,
+    PCRSentiment, SentimentAggregator, SourceSentiment, TextSentiment, VIXTermSentiment,
     score_text,
 )
 

@@ -31,10 +31,9 @@ import argparse
 import json
 import logging
 import sys
-import time
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -684,7 +683,8 @@ def audit_dd_events(
 # ═════════════════════════════════════════════════════════════════════════════
 
 def _fetch_spy_vix() -> Tuple[pd.DataFrame, pd.Series]:
-    import subprocess, io
+    import subprocess
+    import io
     logger.info("Fetching SPY/VIX via yfinance…")
 
     def yf_curl(ticker: str) -> pd.DataFrame:
@@ -761,57 +761,57 @@ def write_report(
     L   = []
     A   = L.append
 
-    A(f"# Safe Kelly: Drawdown-Protected Full-Kelly Sizing — EXP-305 COMPASS")
-    A(f"")
+    A("# Safe Kelly: Drawdown-Protected Full-Kelly Sizing — EXP-305 COMPASS")
+    A("")
     A(f"**Generated:** {now}  ")
-    A(f"**Branch:** `experiment/safe-kelly`  ")
-    A(f"**Base:** `feature/kelly-ml-sizing` Kelly engine  ")
-    A(f"**Config:** `exp_305_compass_top2_strict.json`  ")
+    A("**Branch:** `experiment/safe-kelly`  ")
+    A("**Base:** `feature/kelly-ml-sizing` Kelly engine  ")
+    A("**Config:** `exp_305_compass_top2_strict.json`  ")
     A(f"**Period:** 2020–2025  |  **Base risk:** {base_risk_pct:.1f}%  |  **Trades:** {len(df)}  ")
-    A(f"")
-    A(f"---")
-    A(f"")
+    A("")
+    A("---")
+    A("")
 
     # ── 1. Problem ─────────────────────────────────────────────────────────────
-    A(f"## 1. Problem Statement")
-    A(f"")
-    A(f"The raw Full-Kelly sizing from `feature/kelly-ml-sizing` compounds aggressively and")
-    A(f"produces enormous returns — but with a catastrophic drawdown in 2020 that propagates")
-    A(f"through the entire compound equity curve:")
-    A(f"")
-    A(f"| Mode | Total Return (6yr compound) | Max Drawdown | Sharpe |")
-    A(f"|------|--------------------------:|:------------:|:------:|")
-    A(f"| Flat (8% fixed)  | +938.7% | −83.8% | 0.53 |")
-    A(f"| Full-Kelly (raw) | +4751.8% | −83.8% | 0.53 |")
-    A(f"")
-    A(f"Both modes share the same MaxDD because **2020 uses flat sizing** (no prior ML training data).")
-    A(f"The −83.8% comes from the COVID crash sequence in 2020 wiping the account before recovery.")
-    A(f"After 2020's −51.7% year, Full-Kelly's compounding advantage drives the large return gap.")
-    A(f"")
-    A(f"**Goal:** Keep MaxDD < −12% while preserving as much return boost as possible.")
-    A(f"")
+    A("## 1. Problem Statement")
+    A("")
+    A("The raw Full-Kelly sizing from `feature/kelly-ml-sizing` compounds aggressively and")
+    A("produces enormous returns — but with a catastrophic drawdown in 2020 that propagates")
+    A("through the entire compound equity curve:")
+    A("")
+    A("| Mode | Total Return (6yr compound) | Max Drawdown | Sharpe |")
+    A("|------|--------------------------:|:------------:|:------:|")
+    A("| Flat (8% fixed)  | +938.7% | −83.8% | 0.53 |")
+    A("| Full-Kelly (raw) | +4751.8% | −83.8% | 0.53 |")
+    A("")
+    A("Both modes share the same MaxDD because **2020 uses flat sizing** (no prior ML training data).")
+    A("The −83.8% comes from the COVID crash sequence in 2020 wiping the account before recovery.")
+    A("After 2020's −51.7% year, Full-Kelly's compounding advantage drives the large return gap.")
+    A("")
+    A("**Goal:** Keep MaxDD < −12% while preserving as much return boost as possible.")
+    A("")
 
     # ── 2. Mechanism ───────────────────────────────────────────────────────────
-    A(f"## 2. Safe Kelly Mechanism")
-    A(f"")
-    A(f"Three-tier circuit breaker applied **at each trade entry**, tracking portfolio DD from")
-    A(f"the running equity peak (live, not annual-reset):")
-    A(f"")
-    A(f"| Tier | DD Threshold | Action | Effective Scale |")
-    A(f"|------|:------------:|--------|:---------------:|")
+    A("## 2. Safe Kelly Mechanism")
+    A("")
+    A("Three-tier circuit breaker applied **at each trade entry**, tracking portfolio DD from")
+    A("the running equity peak (live, not annual-reset):")
+    A("")
+    A("| Tier | DD Threshold | Action | Effective Scale |")
+    A("|------|:------------:|--------|:---------------:|")
     A(f"| Normal  | > {dd_half_at*100:.0f}%  | Full Kelly (1.0× f*) | 0.25–2.00× base |")
     A(f"| Halved  | {dd_half_at*100:.0f}% to {dd_min_at*100:.0f}% | Half Kelly fraction (0.5× f*) | 0.25–1.50× base |")
     A(f"| Minimum | {dd_min_at*100:.0f}% to {dd_flat_at*100:.0f}% | Floor sizing | {KELLY_MIN_SCALE:.2f}× base |")
     A(f"| Flat    | ≤ {dd_flat_at*100:.0f}% | Skip trade (0× risk) | 0× base |")
-    A(f"")
-    A(f"**Recovery is automatic.** DD is recalculated before each trade from the live equity peak.")
-    A(f"As the portfolio recovers, tiers lift immediately — no lockout period.")
-    A(f"")
-    A(f"Kelly parameters:")
+    A("")
+    A("**Recovery is automatic.** DD is recalculated before each trade from the live equity peak.")
+    A("As the portfolio recovers, tiers lift immediately — no lockout period.")
+    A("")
+    A("Kelly parameters:")
     A(f"- Base win rate: **{base_win_rate:.1%}**  |  Empirical b: **{b:.3f}**")
     A(f"- Break-even win rate for raw Kelly: **{1/(1+b):.1%}**")
-    A(f"- At base win rate: scale = 1.0 (aligned with flat)")
-    A(f"")
+    A("- At base win rate: scale = 1.0 (aligned with flat)")
+    A("")
 
     # ── 3. Results ─────────────────────────────────────────────────────────────
     tot_flat = pct_return(eq_flat)
@@ -820,9 +820,9 @@ def write_report(
     dd_flat  = compute_max_dd(eq_flat)
     dd_fk    = compute_max_dd(eq_fk)
     dd_sk    = compute_max_dd(eq_sk)
-    sh_flat  = compute_sharpe(df["return_pct"])
-    sh_fk    = compute_sharpe(df["return_pct"])   # Sharpe same (identical trade returns)
-    sh_sk    = compute_sharpe(df["return_pct"])
+    compute_sharpe(df["return_pct"])
+    compute_sharpe(df["return_pct"])   # Sharpe same (identical trade returns)
+    compute_sharpe(df["return_pct"])
 
     n_normal  = sk_tiers.count("normal")
     n_halved  = sk_tiers.count("halved")
@@ -830,43 +830,43 @@ def write_report(
     n_flatted = sk_tiers.count("flat")
     n_protect = n_halved + n_minimum + n_flatted
 
-    A(f"## 3. Results Summary (6-year compound)")
-    A(f"")
-    A(f"| Metric | Flat | Full-Kelly | **Safe Kelly** | Δ vs Flat | Δ vs Full-Kelly |")
-    A(f"|--------|:----:|:----------:|:--------------:|:---------:|:--------------:|")
+    A("## 3. Results Summary (6-year compound)")
+    A("")
+    A("| Metric | Flat | Full-Kelly | **Safe Kelly** | Δ vs Flat | Δ vs Full-Kelly |")
+    A("|--------|:----:|:----------:|:--------------:|:---------:|:--------------:|")
     A(f"| Total Return  | {_s(tot_flat)} | {_s(tot_fk)} | **{_s(tot_sk)}** | "
       f"{_d(tot_sk, tot_flat)} | {_d(tot_sk, tot_fk)} |")
     A(f"| Max Drawdown  | {_s(dd_flat, plus=False)} | {_s(dd_fk, plus=False)} | "
       f"**{_s(dd_sk, plus=False)}** | {_d(dd_sk, dd_flat)} | {_d(dd_sk, dd_fk)} |")
-    A(f"| Avg Risk/Trade | $8,000 (flat 8%) | 8% × Kelly scale | 8% × safe scale | — | — |")
+    A("| Avg Risk/Trade | $8,000 (flat 8%) | 8% × Kelly scale | 8% × safe scale | — | — |")
     A(f"| Trades at Normal | — | 100% | {n_normal/len(sk_tiers)*100:.0f}% | — | — |")
     A(f"| Trades Halved  | — | 0% | {n_halved/len(sk_tiers)*100:.0f}% | — | — |")
     A(f"| Trades at Min  | — | 0% | {n_minimum/len(sk_tiers)*100:.0f}% | — | — |")
     A(f"| Trades Skipped | — | 0% | {n_flatted/len(sk_tiers)*100:.0f}% | — | — |")
-    A(f"")
+    A("")
 
     # Check goal
     goal_met = dd_sk > -12.0
     goal_str = "✅ MaxDD < −12% ACHIEVED" if goal_met else f"⚠️ MaxDD={dd_sk:.1f}% (goal: < −12%, near-miss by {abs(dd_sk)-12.0:.1f}pp)"
     A(f"**{goal_str}**")
-    A(f"")
+    A("")
     A(f"Safe Kelly return vs Flat: {_d(tot_sk, tot_flat)}  ")
     A(f"Safe Kelly return vs Full-Kelly: {_d(tot_sk, tot_fk)}  ")
-    A(f"")
+    A("")
     A(f"> **Compound vs Isolated dynamics:** The 6-year compound return ({_s(tot_sk)}) is lower than")
-    A(f"> the sum of per-year isolated returns because the circuit breaker tracks the **all-time equity peak**")
-    A(f"> across years. After 2020 compounded to a high equity peak, any subsequent losing streak is")
-    A(f"> measured against that higher peak — triggering brakes more easily than if DD were reset annually.")
-    A(f"> Per-year isolated results (§5) show the true year-by-year behaviour.")
-    A(f"")
+    A("> the sum of per-year isolated returns because the circuit breaker tracks the **all-time equity peak**")
+    A("> across years. After 2020 compounded to a high equity peak, any subsequent losing streak is")
+    A("> measured against that higher peak — triggering brakes more easily than if DD were reset annually.")
+    A("> Per-year isolated results (§5) show the true year-by-year behaviour.")
+    A("")
 
     # ── 4. Threshold sweep ─────────────────────────────────────────────────────
-    A(f"## 4. Threshold Sensitivity Sweep")
-    A(f"")
-    A(f"Testing five threshold configurations — how aggressively to apply brakes:")
-    A(f"")
-    A(f"| Config | Halve@DD | Min@DD | Flat@DD | Return | MaxDD | Sharpe | %Protected |")
-    A(f"|--------|:--------:|:------:|:-------:|-------:|:-----:|:------:|:----------:|")
+    A("## 4. Threshold Sensitivity Sweep")
+    A("")
+    A("Testing five threshold configurations — how aggressively to apply brakes:")
+    A("")
+    A("| Config | Halve@DD | Min@DD | Flat@DD | Return | MaxDD | Sharpe | %Protected |")
+    A("|--------|:--------:|:------:|:-------:|-------:|:-----:|:------:|:----------:|")
     for sr in sweep_results:
         best_marker = " ← user spec" if sr["label"] == "Default (5/8/10)" else (
                       " ← targets <−12%" if sr["label"] == "Custom (4/7/9)" else "")
@@ -874,15 +874,15 @@ def write_report(
           f"{sr['dd_min_at']*100:.0f}% | {sr['dd_flat_at']*100:.0f}% | "
           f"{_s(sr['total_return'])} | {sr['max_dd']:.1f}% | {sr['sharpe']:.2f} | "
           f"{sr['pct_protected']:.0f}% |")
-    A(f"")
-    A(f"*%Protected = fraction of trades where at least one tier was active.*")
-    A(f"")
+    A("")
+    A("*%Protected = fraction of trades where at least one tier was active.*")
+    A("")
 
     # ── 5. Per-year breakdown ──────────────────────────────────────────────────
-    A(f"## 5. Per-Year Performance (isolated, capital reset to $100k)")
-    A(f"")
-    A(f"| Year | N | Win% | Flat | Full-Kelly | **Safe Kelly** | SafeKelly DD | Protected Trades |")
-    A(f"|------|:-:|:----:|:----:|:----------:|:--------------:|:------------:|:----------------:|")
+    A("## 5. Per-Year Performance (isolated, capital reset to $100k)")
+    A("")
+    A("| Year | N | Win% | Flat | Full-Kelly | **Safe Kelly** | SafeKelly DD | Protected Trades |")
+    A("|------|:-:|:----:|:----:|:----------:|:--------------:|:------------:|:----------------:|")
     for row in yr_isolated:
         delta_vs_flat = row["safe_kelly"] - row["flat"]
         A(f"| {row['year']} | {row['n_trades']} | {row['win_rate']:.0f}% | "
@@ -894,16 +894,16 @@ def write_report(
     avg_sk   = sum(r["safe_kelly"] for r in yr_isolated) / len(yr_isolated)
     A(f"| **Avg** | — | — | **{_s(avg_flat)}** | **{_s(avg_fk)}** | "
       f"**{_s(avg_sk)}** ({avg_sk-avg_flat:+.1f}pp) | — | — |")
-    A(f"")
-    A(f"*Isolated view: each year resets capital to $100k. "
-      f"DD protection fires independently per year; prior-year losses don't carry over.*")
-    A(f"")
+    A("")
+    A("*Isolated view: each year resets capital to $100k. "
+      "DD protection fires independently per year; prior-year losses don't carry over.*")
+    A("")
 
     # ── 6. DD protection events ────────────────────────────────────────────────
-    A(f"## 6. Drawdown Protection Events")
-    A(f"")
-    A(f"Trades where the circuit breaker was active (compound simulation, running equity peak):")
-    A(f"")
+    A("## 6. Drawdown Protection Events")
+    A("")
+    A("Trades where the circuit breaker was active (compound simulation, running equity peak):")
+    A("")
     by_year = {}
     for ev in dd_events:
         by_year.setdefault(ev["year"], []).append(ev)
@@ -916,57 +916,57 @@ def write_report(
           f"{tier_counts.get('halved',0)} halved, "
           f"{tier_counts.get('minimum',0)} minimum, "
           f"{tier_counts.get('flat',0)} skipped)")
-        A(f"")
-        A(f"| Date | Ticker | Tier | DD | Capital | Win? | Return% |")
-        A(f"|------|--------|------|---:|--------:|:----:|--------:|")
+        A("")
+        A("| Date | Ticker | Tier | DD | Capital | Win? | Return% |")
+        A("|------|--------|------|---:|--------:|:----:|--------:|")
         for ev in evs[:20]:  # cap at 20 rows per year
             win_str = "✓" if ev["win"] else "✗"
             A(f"| {ev['date']} | {ev['ticker']} | {ev['tier']} | "
               f"{ev['dd_pct']:.1f}% | ${ev['capital']:,.0f} | {win_str} | {ev['return_pct']:+.1f}% |")
         if len(evs) > 20:
             A(f"| *(+{len(evs)-20} more)* | | | | | | |")
-        A(f"")
+        A("")
 
     if not dd_events:
-        A(f"*No protection events triggered (thresholds not reached).*")
-        A(f"")
+        A("*No protection events triggered (thresholds not reached).*")
+        A("")
 
     # ── 7. Scale distribution ──────────────────────────────────────────────────
-    A(f"## 7. Kelly Scale Distribution")
-    A(f"")
-    A(f"How sizing changed across all 1,251 trades:")
-    A(f"")
+    A("## 7. Kelly Scale Distribution")
+    A("")
+    A("How sizing changed across all 1,251 trades:")
+    A("")
     fk_arr = np.array(fk_scales)
     sk_arr = np.array(sk_scales)
 
-    A(f"| Percentile | Full-Kelly | Safe Kelly | Change |")
-    A(f"|:----------:|:----------:|:----------:|:------:|")
+    A("| Percentile | Full-Kelly | Safe Kelly | Change |")
+    A("|:----------:|:----------:|:----------:|:------:|")
     for p in [5, 25, 50, 75, 95]:
         fk_p = float(np.percentile(fk_arr, p))
         sk_p = float(np.percentile(sk_arr, p))
         A(f"| P{p} | {fk_p:.2f}× | {sk_p:.2f}× | {sk_p-fk_p:+.2f}× |")
     A(f"| Mean | {fk_arr.mean():.2f}× | {sk_arr.mean():.2f}× | "
       f"{sk_arr.mean()-fk_arr.mean():+.2f}× |")
-    A(f"")
-    A(f"| Direction | Full-Kelly | Safe Kelly |")
-    A(f"|-----------|:----------:|:----------:|")
+    A("")
+    A("| Direction | Full-Kelly | Safe Kelly |")
+    A("|-----------|:----------:|:----------:|")
     A(f"| Skipped (0×) | 0% | {(sk_arr == 0).mean()*100:.0f}% |")
     A(f"| Minimum (0.25×) | {(fk_arr == KELLY_MIN_SCALE).mean()*100:.0f}% | "
       f"{(sk_arr == KELLY_MIN_SCALE).mean()*100:.0f}% |")
     A(f"| Reduced (<1×) | {(fk_arr < 1).mean()*100:.0f}% | {(sk_arr < 1).mean()*100:.0f}% |")
     A(f"| Increased (>1×) | {(fk_arr > 1).mean()*100:.0f}% | {(sk_arr > 1).mean()*100:.0f}% |")
-    A(f"")
+    A("")
 
     # ── 8. Key findings ────────────────────────────────────────────────────────
-    A(f"## 8. Key Findings")
-    A(f"")
-    A(f"### What the DD Protection Buys")
-    A(f"")
+    A("## 8. Key Findings")
+    A("")
+    A("### What the DD Protection Buys")
+    A("")
 
     best_sweep = min(sweep_results, key=lambda x: x["max_dd"])
     A(f"1. **MaxDD control confirmed:** Default thresholds (5%/8%/10%) achieve MaxDD={dd_sk:.1f}%,")
     A(f"   well inside the −12% target. The tightest config (3%/5%/7%) achieves {best_sweep['max_dd']:.1f}%.")
-    A(f"")
+    A("")
 
     # 2020 specific
     yr_2020 = next((r for r in yr_isolated if r["year"] == 2020), None)
@@ -975,47 +975,47 @@ def write_report(
           f"{yr_2020['full_kelly']:+.1f}% (raw Kelly) to {yr_2020['safe_kelly']:+.1f}% — but cuts "
           f"MaxDD from {yr_2020['safe_dd']:.1f}% with brakes engaged. The flat year ({yr_2020['flat']:+.1f}%) "
           f"is the worst case that safe Kelly must preserve capital through.")
-    A(f"")
+    A("")
 
     # 2025 specific
     yr_2025 = next((r for r in yr_isolated if r["year"] == 2025), None)
     if yr_2025:
         A(f"3. **2025 high-signal year:** {yr_2025['safe_kelly']:+.1f}% safe Kelly vs "
           f"{yr_2025['full_kelly']:+.1f}% raw Kelly — protection rarely fires in high-win-rate years.")
-    A(f"")
+    A("")
 
-    A(f"4. **Annual DD reset recommended for production:** The compound simulation tracks DD from")
-    A(f"   the all-time equity peak. After a strong year, this creates a tight constraint for the")
-    A(f"   next year. Resetting the DD baseline annually (or after reaching a new all-time high for")
-    A(f"   30+ consecutive days) would prevent the 2020 peak from starving 2021+ of risk budget.")
-    A(f"")
+    A("4. **Annual DD reset recommended for production:** The compound simulation tracks DD from")
+    A("   the all-time equity peak. After a strong year, this creates a tight constraint for the")
+    A("   next year. Resetting the DD baseline annually (or after reaching a new all-time high for")
+    A("   30+ consecutive days) would prevent the 2020 peak from starving 2021+ of risk budget.")
+    A("")
     A(f"5. **Trade-off summary:** Safe Kelly gives up {_d(tot_sk, tot_fk)} vs raw Full-Kelly compound,")
-    A(f"   and per-year isolated returns show meaningful improvement vs Flat in most years.")
+    A("   and per-year isolated returns show meaningful improvement vs Flat in most years.")
     A(f"   The −12% MaxDD target is {('achieved' if goal_met else f'a near-miss at {dd_sk:.1f}%')}.")
-    A(f"   Custom (4/7/9) thresholds from §4 are the recommended production setting.")
-    A(f"")
-    A(f"### Limitations")
-    A(f"")
-    A(f"- **Sequential trade model:** Simultaneous open positions (COMPASS multi-ticker)")
-    A(f"  mean true portfolio DD differs from this sequential approximation. Real DD protection")
-    A(f"  would require live equity tracking across all open legs.")
-    A(f"")
-    A(f"- **2020 flat sizing:** 2020 receives ML baseline (mean win rate) since no prior training")
-    A(f"  data exists. DD protection fires on the correct trades but sizing wasn't ML-informed.")
-    A(f"")
-    A(f"- **Look-ahead:** The ML model was trained with 2020-prior walk-forward, but b and")
-    A(f"  base_win_rate are computed on the full dataset. A strict no-look-ahead version would")
-    A(f"  use only prior-year statistics, reducing b precision in early years.")
-    A(f"")
-    A(f"### Recommendation")
-    A(f"")
-    A(f"Deploy Safe Kelly with **Default thresholds (5%/8%/10%)** for production:")
+    A("   Custom (4/7/9) thresholds from §4 are the recommended production setting.")
+    A("")
+    A("### Limitations")
+    A("")
+    A("- **Sequential trade model:** Simultaneous open positions (COMPASS multi-ticker)")
+    A("  mean true portfolio DD differs from this sequential approximation. Real DD protection")
+    A("  would require live equity tracking across all open legs.")
+    A("")
+    A("- **2020 flat sizing:** 2020 receives ML baseline (mean win rate) since no prior training")
+    A("  data exists. DD protection fires on the correct trades but sizing wasn't ML-informed.")
+    A("")
+    A("- **Look-ahead:** The ML model was trained with 2020-prior walk-forward, but b and")
+    A("  base_win_rate are computed on the full dataset. A strict no-look-ahead version would")
+    A("  use only prior-year statistics, reducing b precision in early years.")
+    A("")
+    A("### Recommendation")
+    A("")
+    A("Deploy Safe Kelly with **Default thresholds (5%/8%/10%)** for production:")
     A(f"- Achieves MaxDD={dd_sk:.1f}% (inside −12% target)")
     A(f"- Preserves {(tot_sk/tot_flat-1)*100:.0f}% of Flat's return improvement from raw Kelly")
     A(f"- Only {n_protect}/{len(sk_tiers)} trades ({n_protect/len(sk_tiers)*100:.0f}%) are impacted by the circuit breaker")
-    A(f"- Automatic recovery — no manual reset required")
-    A(f"")
-    A(f"---")
+    A("- Automatic recovery — no manual reset required")
+    A("")
+    A("---")
     A(f"*Safe Kelly · `scripts/safe_kelly_backtest.py` · branch: experiment/safe-kelly · {now}*")
 
     REPORT_PATH.parent.mkdir(exist_ok=True)

@@ -248,7 +248,7 @@ def render_html(payload: Dict) -> str:
     ]
 
     # Pre-registered targets
-    t = payload["targets"]
+    payload["targets"]
     r = payload["combined"]["pooled"]
     check = payload["combined"]["targets"]
     h.append("<h2>Pre-registered targets</h2>")
@@ -325,14 +325,14 @@ def render_html(payload: Dict) -> str:
     # Methodology + honest caveats
     h.append("<h2>Methodology &amp; honest caveats</h2>")
     h.append("<ul>")
-    h.append(f"<li><b>7-stream cube</b> built via "
+    h.append("<li><b>7-stream cube</b> built via "
              "<code>compass.exp2360_robust_cov.build_seven_stream_cube</code> "
              "— same real-data streams used by EXP-2360 and (up to the "
              "vol_arb/cross_vol naming) EXP-2370.</li>")
-    h.append(f"<li><b>Covariance:</b> Ledoit-Wolf shrinkage estimator "
+    h.append("<li><b>Covariance:</b> Ledoit-Wolf shrinkage estimator "
              "from sklearn.covariance. Estimated on each 252-day training "
              "window; never peeks at OOS data.</li>")
-    h.append(f"<li><b>Weights:</b> equal-risk-contribution (risk parity) "
+    h.append("<li><b>Weights:</b> equal-risk-contribution (risk parity) "
              "solved from the Ledoit-Wolf Σ via the Chaves-Hsu-Li-Shakernia "
              "fixed-point iteration from EXP-2360.</li>")
     h.append(f"<li><b>Vol target:</b> {TARGET_VOL_ANNUAL*100:.0f}%/yr. Scale "

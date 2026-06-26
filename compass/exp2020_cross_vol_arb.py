@@ -117,7 +117,8 @@ def invert_iv(price: float, S: float, K: float, T: float, option_type: str,
         return None
     lo, hi = 0.05, 3.0
     try:
-        f = lambda sig: bs_price(S, K, T, r, sig, option_type) - price
+        def f(sig):
+            return bs_price(S, K, T, r, sig, option_type) - price
         if f(lo) > 0:
             return lo          # price below min → floor
         if f(hi) < 0:

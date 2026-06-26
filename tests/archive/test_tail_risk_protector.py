@@ -2,13 +2,11 @@
 
 import numpy as np
 import pandas as pd
-import pytest
 from datetime import datetime
 from pathlib import Path
 
 from compass.tail_risk_protector import (
-    TailRiskProtector, ThreatLevel, TailRiskState, SignalReading,
-    HedgeRecommendation, CrashEvent, ProtectionBacktestResult,
+    TailRiskProtector, ThreatLevel, TailRiskState, ProtectionBacktestResult,
     LEVEL_ACTIONS, generate_stress_data,
 )
 

@@ -17,9 +17,7 @@ import pytest
 from sklearn.tree import DecisionTreeClassifier
 
 from compass.walk_forward import (
-    CATEGORICAL_FEATURES,
     DATE_COL,
-    NUMERIC_FEATURES,
     RETURN_COL,
     TARGET_COL,
     FoldResult,

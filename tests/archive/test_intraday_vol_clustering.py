@@ -14,7 +14,6 @@ from compass.intraday_vol_clustering import (
     ClusterSignal,
     OverlayResult,
     SessionProfile,
-    VolBlock,
     VolClusterEngine,
     analyze_session,
     compute_block_vol,

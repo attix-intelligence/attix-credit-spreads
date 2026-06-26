@@ -35,7 +35,7 @@ import sys
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -544,7 +544,7 @@ def correlation_matrix(
         series_map["EXP-1220"] = exp1220_series
 
     names = list(series_map.keys())
-    n = len(names)
+    len(names)
     matrix = {}
 
     for i, a in enumerate(names):

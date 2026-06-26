@@ -18,14 +18,12 @@ NO synthetic pricing. NO np.random. Zero Rule Zero violations.
 
 from __future__ import annotations
 
-import json
 import math
-import sqlite3
 import sys
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List
 
 import numpy as np
 import pandas as pd
@@ -33,7 +31,7 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from compass.metrics import annualized_sharpe, full_metrics
+from compass.metrics import full_metrics
 from compass.zero_dte_ic import backtest_1_3_dte, ICTrade, CAPITAL
 
 TRADING_DAYS = 252
@@ -369,7 +367,7 @@ def generate_report(results: Dict) -> str:
 
     # Monthly distribution 1DTE
     m = monthly["1DTE"]
-    m2 = monthly["2DTE"]
+    monthly["2DTE"]
     month_list = sorted(m["monthly_pnl"].items())
     month_rows = ""
     for ym, pnl in month_list[:24]:  # show first 24

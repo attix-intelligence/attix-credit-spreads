@@ -13,14 +13,11 @@ integrated whole, not just individual unit tests.
 """
 
 import importlib
-import warnings
-from datetime import date, timedelta
 
-import pandas as pd
 import pytest
 
 import compass
-from compass.regime import Regime, RegimeClassifier, REGIME_INFO
+from compass.regime import Regime, RegimeClassifier
 from compass.events import (
     get_upcoming_events,
     compute_composite_scaling,
@@ -32,8 +29,6 @@ from compass.risk_gate import RiskGate
 
 from tests.compass_helpers import (
     mock_spy_prices,
-    mock_vix_series,
-    mock_spy_dataframe,
     mock_macro_db,
     KNOWN_FOMC_DATES,
     ACCOUNT_100K,

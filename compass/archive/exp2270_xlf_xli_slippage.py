@@ -52,10 +52,9 @@ import json
 import math
 import sqlite3
 import sys
-from dataclasses import asdict
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 import numpy as np
 import pandas as pd

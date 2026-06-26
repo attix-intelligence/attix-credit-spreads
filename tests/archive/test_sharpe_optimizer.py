@@ -1,15 +1,13 @@
 """Tests for compass/sharpe_optimizer.py — Sharpe attribution and optimization."""
 
-import math
 import numpy as np
 import pandas as pd
 import pytest
 
 from compass.sharpe_optimizer import (
-    SharpeAnalyzer, SharpeAttribution, OptimizationResult,
-    SharpeAnalysisResult, generate_report, _compute_metrics, _yearly_sharpe,
+    SharpeAnalyzer, SharpeAnalysisResult, generate_report, _compute_metrics, _yearly_sharpe,
 )
-from compass.production_portfolio_wf import STRATEGY_IDS, TRADING_DAYS
+from compass.production_portfolio_wf import STRATEGY_IDS
 
 
 @pytest.fixture

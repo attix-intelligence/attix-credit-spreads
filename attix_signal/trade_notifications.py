@@ -385,7 +385,7 @@ def format_close_message(
 def format_rejected_message(order) -> str:
     """Build an ❌ ORDER REJECTED message."""
     symbol = str(getattr(order, "symbol", "") or "")
-    reason = str(getattr(order, "failed_at", "") or "")
+    str(getattr(order, "failed_at", "") or "")
     cid = str(getattr(order, "client_order_id", "") or "")
     parsed = parse_occ(symbol)
 
@@ -570,7 +570,7 @@ def build_daily_summary(account, positions: List) -> str:
     lines = [
         f"📊 <b>Daily Portfolio Summary — {today.isoformat()}</b>",
         "",
-        f"<b>Account</b>",
+        "<b>Account</b>",
         f"  Equity:        ${equity:>10,.2f}",
         f"  Day P&L:       ${day_pnl:>+10,.2f}",
         f"  Buying Power:  ${buying_power:>10,.2f}",

@@ -16,7 +16,7 @@ import logging
 import math
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Dict, List
 
 import numpy as np
 import pandas as pd
@@ -129,7 +129,7 @@ def run_year(
     crisis_hedge: bool = True,
 ) -> YearResult:
     """Run one year of the combined portfolio."""
-    cs_alloc = capital * CS_WEIGHT
+    capital * CS_WEIGHT
     vol_alloc = capital * VOL_WEIGHT
 
     # ── CS leg ───────────────────────────────────────────────────────
@@ -363,7 +363,7 @@ def main():
 
     # ── Correlation stability ────────────────────────────────────────
 
-    print(f"\nCORRELATION STABILITY (at 2.5x)")
+    print("\nCORRELATION STABILITY (at 2.5x)")
     yrs_25 = all_results[2.5]
     for y in yrs_25:
         bar = "█" * int(abs(y.leg_correlation) * 50)
@@ -371,14 +371,14 @@ def main():
 
     # ── DD decomposition ─────────────────────────────────────────────
 
-    print(f"\nDD DECOMPOSITION (at 3.5x)")
+    print("\nDD DECOMPOSITION (at 3.5x)")
     yrs_35 = all_results[3.5]
     for y in yrs_35:
         print(f"  {y.year}: DD={y.max_dd_pct:.1f}% → CS caused {y.cs_dd_contribution:.0%}, Vol caused {y.vol_dd_contribution:.0%}")
 
     # ── Leverage stress ──────────────────────────────────────────────
 
-    print(f"\nLEVERAGE STRESS: What if ρ spikes to 0.5?")
+    print("\nLEVERAGE STRESS: What if ρ spikes to 0.5?")
     for lev in [2.5, 3.0, 3.5]:
         # Use average year DDs
         yrs_l = all_results[lev]
@@ -390,7 +390,7 @@ def main():
 
     # ── Margin analysis ──────────────────────────────────────────────
 
-    print(f"\nMARGIN ANALYSIS")
+    print("\nMARGIN ANALYSIS")
     for lev in LEVERAGE_LEVELS:
         margin = lev * 0.20 * 100
         feasible = margin <= 100
@@ -423,13 +423,13 @@ def main():
     html = build_report(output, all_results)
     (RESULTS_DIR / "report.html").write_text(html)
 
-    print(f"\nWritten: results/summary.json + results/report.html")
+    print("\nWritten: results/summary.json + results/report.html")
 
     # Recommendation
     r25 = summary_by_lev[2.5]
     r35 = summary_by_lev[3.5]
     print(f"\n{'='*60}")
-    print(f"  VALIDATION RESULT")
+    print("  VALIDATION RESULT")
     print(f"  2.5x: CAGR={r25['cagr']:.1f}%, DD={r25['worst_dd']:.1f}%, all years {'profitable' if r25['all_profitable'] else 'NOT all profitable'}")
     print(f"  3.5x: CAGR={r35['cagr']:.1f}%, DD={r35['worst_dd']:.1f}%, all years {'profitable' if r35['all_profitable'] else 'NOT all profitable'}")
     print(f"  Correlation: avg {output['correlation_stability']['avg']:+.3f} ± {output['correlation_stability']['std']:.3f}")
@@ -477,8 +477,10 @@ def build_report(output, all_results) -> str:
         y0, y1 = min(cum), max(cum)
         if y1 <= y0: y1 = y0 + 1
         pw, ph = w - 2*pad, h - 65
-        tx = lambda i: pad + i / max(n-1, 1) * pw
-        ty = lambda v: 35 + (1 - (v - y0) / (y1 - y0)) * ph
+        def tx(i):
+            return pad + i / max(n-1, 1) * pw
+        def ty(v):
+            return 35 + (1 - (v - y0) / (y1 - y0)) * ph
         d = " ".join(f"{'M' if i == 0 else 'L'}{tx(i):.1f},{ty(cum[i]):.1f}" for i in range(n))
         labels = "".join(f'<text x="{tx(i+1):.0f}" y="{h-5}" text-anchor="middle" font-size="9" fill="#8b949e">{yrs[i].year}</text>' for i in range(len(yrs)))
         eq_svg = f'<svg viewBox="0 0 {w} {h}" class="chart"><text x="{w//2}" y="20" text-anchor="middle" class="st">Equity at 2.5x ($)</text><path d="{d}" fill="none" stroke="#3fb950" stroke-width="2.5"/>{labels}</svg>'

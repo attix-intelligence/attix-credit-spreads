@@ -2,12 +2,11 @@
 
 import numpy as np
 import pandas as pd
-import pytest
 from pathlib import Path
 
 from compass.liquidity_sizer import (
-    LiquiditySizer, StrikeLiquidity, LiquidityScore, ImpactEstimate,
-    CapacityResult, AdaptiveSize, RollPath, SizingBacktestResult,
+    LiquiditySizer, StrikeLiquidity, ImpactEstimate,
+    CapacityResult, RollPath, SizingBacktestResult,
     generate_option_chain,
 )
 

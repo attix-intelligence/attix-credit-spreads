@@ -51,10 +51,10 @@ from __future__ import annotations
 
 import json
 import sys
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, asdict
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
@@ -379,7 +379,7 @@ def load_v8a_numbers() -> Dict:
     p = REPORT_DIR / "exp2740_sensitivity.json"
     if p.exists():
         d = json.loads(p.read_text())
-        baseline = d.get("baseline", {})
+        d.get("baseline", {})
         worst = d.get("worst_overall", {})
         numbers["checks"]["EXP-2740 sensitivity worst-case"] = {
             "value": worst.get("pooled_net_sharpe"),

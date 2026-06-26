@@ -898,7 +898,7 @@ def main():
     with open(txt_path, "w") as f:
         f.write(text_report)
 
-    print(f"\nReports written to:")
+    print("\nReports written to:")
     print(f"  JSON: {json_path}")
     print(f"  TXT:  {txt_path}")
     print()

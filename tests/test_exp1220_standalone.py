@@ -3,11 +3,9 @@
 import math
 import numpy as np
 import pandas as pd
-import pytest
 
 from compass.exp1220_standalone import (
-    sharpe_correct, MethodMetrics,
-    method_buggy, method_trade_level, method_with_real_hedge,
+    sharpe_correct, method_buggy, method_trade_level, method_with_real_hedge,
     generate_report, TRADING_DAYS,
 )
 

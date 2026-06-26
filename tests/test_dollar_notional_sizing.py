@@ -4,7 +4,6 @@ Tests for dollar-notional position sizing (Phase 9 prerequisite #5).
 Tests the ``compute_notional_contracts`` function and verifies that every
 stream-level signal generator in EXP-2830 uses it correctly.
 """
-import math
 import pytest
 import sys
 from pathlib import Path
@@ -16,8 +15,6 @@ if str(ROOT) not in sys.path:
 from compass.exp2830_paper_signal_generator import (
     compute_notional_contracts,
     StreamSignal,
-    CAPITAL_BASE,
-    MAX_LEVERAGE,
     STREAM_WEIGHTS,
 )
 

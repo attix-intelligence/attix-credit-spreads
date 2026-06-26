@@ -3,13 +3,11 @@
 from __future__ import annotations
 
 import json
-import math
 import tempfile
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
-import pytest
 
 from compass.gld_tlt_relval import (
     CAPITAL,

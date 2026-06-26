@@ -6,9 +6,8 @@
 import os
 import tempfile
 from datetime import datetime, timedelta, timezone
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import MagicMock, patch
 
-import pytest
 
 from execution.execution_engine import ExecutionEngine
 from execution.position_monitor import PositionMonitor, _STALE_CLOSE_MAX_RETRIES
@@ -97,7 +96,7 @@ class TestStraddlePartialFillRecovery:
         alpaca.cancel_order.side_effect = Exception("network error")
         engine = _engine(alpaca)
         with patch("time.sleep"), \
-             patch("shared.telegram_alerts.notify_api_failure") as mock_alert:
+             patch("shared.telegram_alerts.notify_api_failure"):
             result = engine._cancel_with_retry("oid-123", context="rollback", max_attempts=3)
         assert result is False
         assert alpaca.cancel_order.call_count == 3

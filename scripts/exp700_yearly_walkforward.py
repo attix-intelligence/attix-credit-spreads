@@ -13,7 +13,6 @@ import logging
 import sys
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -42,7 +41,6 @@ def main():
         extract_trade_features,
         build_price_features,
         build_vix_features,
-        subset_metrics,
         simulate_equity,
         compute_sharpe,
         compute_max_drawdown,
@@ -50,11 +48,11 @@ def main():
 
     # ── Run full backtest to get vix_by_date, iv_rank_by_date, regime_by_date
     logger.info("Running EXP-400 backtest to extract full feature data...")
-    
+
     config_path = ROOT / "configs" / "exp_400_champion_realdata.json"
     with open(config_path) as f:
         flat_params = json.load(f)
-    
+
     # Build nested config
     config = {
         "backtest": {
@@ -68,7 +66,7 @@ def main():
         "strategy": flat_params,
         "risk": {},
     }
-    
+
     _polygon_key = os.environ.get("POLYGON_API_KEY", "dummy")
     hist_data = HistoricalOptionsData(_polygon_key, offline_mode=True)
     _otm_pct = flat_params.get("otm_pct", 0.02)
@@ -79,12 +77,12 @@ def main():
         end_date=datetime(2025, 12, 31),
     )
     trades_list = full_results.get("trades", [])
-    
+
     price_data      = getattr(bt, "_price_data",      pd.DataFrame())
     vix_by_date     = getattr(bt, "_vix_by_date",     {})
     iv_rank_by_date = getattr(bt, "_iv_rank_by_date", {})
     regime_by_date  = getattr(bt, "_regime_by_date",  {})
-    
+
     logger.info("Backtest: %d trades", len(trades_list))
 
     # ── Build price/VIX features ──────────────────────────────────────────
@@ -112,7 +110,7 @@ def main():
 
     # ── Extract 37 features per trade ─────────────────────────────────────
     logger.info("Extracting 37 features per trade...")
-    df = extract_trade_features(trades_list, price_features, vix_features, 
+    df = extract_trade_features(trades_list, price_features, vix_features,
                                  vix_by_date, iv_rank_by_date, regime_by_date)
     df["year"] = df["entry_date"].dt.year
     logger.info("Feature matrix: %d trades × %d columns", len(df), len(df.columns))
@@ -128,14 +126,14 @@ def main():
 
         # Base metrics
         base_equity = simulate_equity(test_df)
-        base_pnl = test_df["return_pct"].sum()  # approx
+        test_df["return_pct"].sum()  # approx
         base_n = len(test_df)
         base_wr = float(test_df["win"].mean() * 100) if len(test_df) > 0 else 0
         base_sharpe = compute_sharpe(test_df["return_pct"]) if len(test_df) > 5 else 0
         base_dd = compute_max_drawdown(base_equity) if len(base_equity) > 1 else 0
 
         # Use actual PnL from trades
-        base_dollar_pnl = sum(t["pnl"] for t in trades_list 
+        base_dollar_pnl = sum(t["pnl"] for t in trades_list
                               if pd.Timestamp(t["entry_date"]).year == test_year)
 
         if len(train_df) < 50:
@@ -204,14 +202,13 @@ def main():
         # Filter at threshold
         mask = probs >= THRESHOLD
         filtered_df = test_df[mask].copy()
-        filtered_indices = test_df.index[mask]
+        test_df.index[mask]
 
         ml_n = int(mask.sum())
         ml_wr = float(filtered_df["win"].mean() * 100) if len(filtered_df) > 0 else 0
 
         # Get dollar PnL for filtered trades
         ml_dollar_pnl = 0
-        trade_idx = 0
         for i, (_, row) in enumerate(test_df.iterrows()):
             entry_str = str(row["entry_date"])
             # Match by index position

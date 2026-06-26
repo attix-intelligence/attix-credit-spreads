@@ -137,8 +137,8 @@ def _fetch_price_history(ticker: str, days: int = 220) -> pd.DataFrame:
 
 def _compute_technicals(df: pd.DataFrame) -> Dict:
     closes = df["Close"]
-    highs  = df["High"]
-    lows   = df["Low"]
+    df["High"]
+    df["Low"]
     n = len(closes)
     feats: Dict = {}
 

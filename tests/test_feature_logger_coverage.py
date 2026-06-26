@@ -1,6 +1,5 @@
 """Tests for shared/feature_logger.py — trade feature logging and extraction."""
 
-import pytest
 from shared.database import init_db
 from shared.feature_logger import FeatureLogger, _extract_features_from_opportunity
 

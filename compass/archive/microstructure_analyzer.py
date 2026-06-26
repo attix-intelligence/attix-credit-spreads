@@ -17,10 +17,10 @@ All methods work on pre-loaded data — no network calls.
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import List, Optional
 
 import numpy as np
 import pandas as pd
@@ -511,7 +511,7 @@ class MicrostructureAnalyzer:
         if not patterns:
             return []
 
-        n = len(patterns)
+        len(patterns)
         vols = [p.avg_volume for p in patterns]
         sprs = [p.avg_spread for p in patterns]
 

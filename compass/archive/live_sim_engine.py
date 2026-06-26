@@ -17,10 +17,9 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 import numpy as np
-import pandas as pd
 
 TRADING_DAYS = 252
 

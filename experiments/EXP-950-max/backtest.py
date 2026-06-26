@@ -13,7 +13,7 @@ import json
 import logging
 import math
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List
 
 import numpy as np
 import pandas as pd
@@ -246,7 +246,7 @@ def monte_carlo_at_leverage(
 ) -> Dict[str, float]:
     """Bootstrap MC at a given leverage level."""
     rng = np.random.RandomState(seed)
-    base_metrics = run_at_leverage(df, leverage, crisis_hedge=True)
+    run_at_leverage(df, leverage, crisis_hedge=True)
 
     # Use per-trade PnL distribution
     pnls = []
@@ -370,7 +370,7 @@ def main():
     }
 
     (RESULTS_DIR / "summary.json").write_text(json.dumps(summary, indent=2, default=str))
-    print(f"\nWritten: results/summary.json")
+    print("\nWritten: results/summary.json")
 
     # ── HTML report ──────────────────────────────────────────────────
     html = generate_report(summary, sweep, mc_results, regime_sweep)
@@ -427,8 +427,10 @@ def generate_report(summary, sweep, mc_results, regime_sweep) -> str:
         cy_min, cy_max = min(min(cagrs), 0), max(cagrs)
         if cx_max <= cx_min: cx_max = cx_min + 1
         if cy_max <= cy_min: cy_max = cy_min + 1
-        tx = lambda v: pad + (v - cx_min) / (cx_max - cx_min) * pw
-        ty = lambda v: 35 + (1 - (v - cy_min) / (cy_max - cy_min)) * ph
+        def tx(v):
+            return pad + (v - cx_min) / (cx_max - cx_min) * pw
+        def ty(v):
+            return 35 + (1 - (v - cy_min) / (cy_max - cy_min)) * ph
 
         dots = []
         for i in range(len(sweep)):

@@ -30,7 +30,7 @@ import json
 import logging
 import math
 import sqlite3
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -164,7 +164,7 @@ def compute_metrics(
 
     pnls = [t["pnl"] for t in closed_trades if t.get("pnl") is not None]
     credits = [t["credit"] for t in closed_trades if t.get("credit") is not None]
-    open_credits = [t["credit"] for t in open_trades if t.get("credit") is not None]
+    [t["credit"] for t in open_trades if t.get("credit") is not None]
 
     # Win rate
     wins = sum(1 for p in pnls if p > 0)
@@ -188,7 +188,7 @@ def compute_metrics(
     max_dd, max_dd_pct = _compute_max_drawdown(daily_pnl, starting_capital)
 
     # Current drawdown (from equity high-water mark)
-    current_equity = starting_capital + total_pnl
+    starting_capital + total_pnl
     current_dd_pct = None
     if daily_pnl:
         hwm = starting_capital

@@ -14,8 +14,6 @@ from compass.mc_portfolio_optimizer import (
     MCPortfolioOptimizer,
     OptimizationResult,
     PortfolioMetrics,
-    RegimeAllocation,
-    _build_html,
     _fmt_pct,
     _fmt_ratio,
     _weights_table,

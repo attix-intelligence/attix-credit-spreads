@@ -19,7 +19,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -105,7 +105,8 @@ class TransformerWeights:
 def init_weights(cfg: TransformerConfig, seed: int = 42) -> TransformerWeights:
     """Xavier-style initialization."""
     rng = np.random.RandomState(seed)
-    scale = lambda fan_in, fan_out: math.sqrt(2.0 / (fan_in + fan_out))
+    def scale(fan_in, fan_out):
+        return math.sqrt(2.0 / (fan_in + fan_out))
 
     w = TransformerWeights()
     s = scale(cfg.n_features, cfg.d_model)

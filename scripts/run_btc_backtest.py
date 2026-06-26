@@ -18,7 +18,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from backtest.btc_credit_spread_backtester import BTCCreditSpreadBacktester, DEFAULT_CONFIG
+from backtest.btc_credit_spread_backtester import BTCCreditSpreadBacktester
 
 
 def fmt_pct(v: float) -> str:
@@ -123,7 +123,7 @@ def main():
     n_pos = sum(1 for r in yr_rets if r > 0)
     print(f"{'Avg':<6} {fmt_pct(avg_ret):>8} {fmt_pct(worst_dd):>8} {'':>7}")
 
-    print(f"\nOverall:")
+    print("\nOverall:")
     print(f"  Total return:     {fmt_pct(results['return_pct'])}")
     print(f"  Max drawdown:     {fmt_pct(results['max_drawdown'])}")
     print(f"  Total trades:     {results['total_trades']}")
@@ -143,7 +143,7 @@ def main():
         reasons = {}
         for t in trades:
             reasons[t["exit_reason"]] = reasons.get(t["exit_reason"], 0) + 1
-        print(f"\nExit reasons:")
+        print("\nExit reasons:")
         for reason, count in sorted(reasons.items(), key=lambda x: -x[1]):
             pct = count / len(trades) * 100
             print(f"  {reason:<20} {count:>3}  ({pct:.0f}%)")

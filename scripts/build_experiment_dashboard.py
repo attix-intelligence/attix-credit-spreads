@@ -12,8 +12,6 @@ its data source (JSON file or commit hash).
 Output: reports/experiment_dashboard.html
 """
 
-import json
-import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional

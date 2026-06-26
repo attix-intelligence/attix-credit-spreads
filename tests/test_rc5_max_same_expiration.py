@@ -13,9 +13,8 @@ expiration and block if the count >= max_same_expiration.
 import tempfile
 from datetime import datetime, timezone
 
-import pytest
 
-from shared.database import get_db, get_trades, init_db, upsert_trade
+from shared.database import get_db, init_db, upsert_trade
 
 
 # ---------------------------------------------------------------------------

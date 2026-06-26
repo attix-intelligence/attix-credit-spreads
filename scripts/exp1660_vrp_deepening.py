@@ -28,10 +28,10 @@ import json
 import logging
 import math
 import sys
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -249,8 +249,8 @@ def run_vrp_backtest(
 
     # Rolling richness z-score for "premium_richness" method
     richness_series = pd.Series(dtype=float)
-    richness_mean = pd.Series(dtype=float)
-    richness_std = pd.Series(dtype=float)
+    pd.Series(dtype=float)
+    pd.Series(dtype=float)
 
     trades = []
     last_entry = None

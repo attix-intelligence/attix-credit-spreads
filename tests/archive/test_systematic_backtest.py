@@ -1,17 +1,16 @@
 from __future__ import annotations
 
-import math
 from dataclasses import fields
 
 import numpy as np
 import pandas as pd
 import pytest
 
-import sys, os
+import sys
+import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from compass.systematic_backtest import (
-    DEFAULT_CONFIG,
     BacktestResult,
     MonteCarloResult,
     SystematicBacktester,

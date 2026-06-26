@@ -26,7 +26,7 @@ try:
 except ImportError:
     pass
 
-from scripts.run_optimization import run_year, compute_summary
+from scripts.run_optimization import run_year
 
 YEARS = [2020, 2021, 2022, 2023, 2024, 2025]
 
@@ -105,7 +105,7 @@ def run_experiment(name: str, config_path: str, years: list) -> dict:
 
 
 def print_comparison_table(all_results: dict, years: list):
-    exp_names = list(all_results.keys())
+    list(all_results.keys())
 
     print("\n")
     print("╔" + "═"*78 + "╗")

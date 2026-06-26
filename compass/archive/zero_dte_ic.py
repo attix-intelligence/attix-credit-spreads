@@ -28,7 +28,7 @@ import sqlite3
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -262,11 +262,11 @@ def backtest_1_3_dte(
     Entry: market close of day (entry_day_of_week) before Friday expiration
     Exit: Friday expiration (or mid-week stop)
     """
-    print(f"  Loading SPY spot prices from Yahoo...")
+    print("  Loading SPY spot prices from Yahoo...")
     spy_spot = load_spy_spot_yfinance(start_date, end_date)
     print(f"    {len(spy_spot)} SPY bars")
 
-    print(f"  Finding SPY Friday expirations...")
+    print("  Finding SPY Friday expirations...")
     exps = find_friday_expirations(start_date, end_date)
     print(f"    {len(exps)} Friday expirations")
 

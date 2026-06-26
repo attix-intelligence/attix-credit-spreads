@@ -18,7 +18,6 @@ All option prices from IronVault (real Polygon data). Zero synthetic.
 import json
 import math
 import sys
-from dataclasses import asdict
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List
@@ -31,8 +30,8 @@ sys.path.insert(0, str(ROOT))
 
 from compass.iron_condor_optimizer import (
     ICConfig, backtest_iron_condor, _compute_ic_result,
-    _find_expirations, _get_underlying_prices, _get_vix,
-    CAPITAL, START_DATE, END_DATE,
+    _get_underlying_prices, _get_vix,
+    CAPITAL,
 )
 from shared.iron_vault import IronVault
 

@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from compass.vol_surface_trader import (
-    BacktestResult, ButterflySpread, IVPoint, IVSurface, SkewScore,
+    BacktestResult, IVSurface, SkewScore,
     SurfaceSignal, TermStructureSignal, VolSurfaceTrader,
     build_surface, generate_butterflies, score_skew, term_structure_signal,
 )

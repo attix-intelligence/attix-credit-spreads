@@ -55,7 +55,7 @@ import math
 import sqlite3
 import sys
 import urllib.request
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, asdict
 from datetime import datetime, timedelta
 from itertools import product
 from pathlib import Path

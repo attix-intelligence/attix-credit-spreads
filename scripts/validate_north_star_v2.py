@@ -28,11 +28,9 @@ All data sources cited. Zero synthetic.
 from __future__ import annotations
 
 import json
-import math
 import sys
-from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict
 
 import numpy as np
 import pandas as pd
@@ -40,7 +38,7 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from compass.metrics import annualized_sharpe, full_metrics
+from compass.metrics import annualized_sharpe
 
 REPORT_PATH = ROOT / "reports" / "north_star_v2_validation.html"
 
@@ -448,9 +446,9 @@ def main():
 
     print("\n[1/5] Loading v2 source data...")
     source = load_v2_source()
-    results = load_v2_results()
+    load_v2_results()
 
-    print(f"  Source: reports/better_portfolio.json")
+    print("  Source: reports/better_portfolio.json")
     print(f"  Data sources: {source['data_sources']}")
 
     print("\n[2/5] Auditing data lineage...")
@@ -489,12 +487,12 @@ def main():
     print(f"    Mean DD: {mc['dd_mean']}% (P95: {mc['dd_p95']}%)")
 
     print(f"\n{'━'*60}")
-    print(f"  VERDICT:")
-    print(f"    v2 claim:       CAGR 101.6%, Sharpe 4.48, DD 0.0%")
+    print("  VERDICT:")
+    print("    v2 claim:       CAGR 101.6%, Sharpe 4.48, DD 0.0%")
     print(f"    Daily reality:  CAGR ~98%, Sharpe {dd_check['daily_sharpe']}, DD {dd_check['max_daily_dd_pct']}%")
     print(f"    MC w/ noise:    Sharpe {mc['sharpe_mean']}")
-    print(f"    → The 4.48 Sharpe is a METHODOLOGY ARTIFACT (6 yearly obs)")
-    print(f"    → Deploy EXP-1220 solo at 1.5× — that's the real edge")
+    print("    → The 4.48 Sharpe is a METHODOLOGY ARTIFACT (6 yearly obs)")
+    print("    → Deploy EXP-1220 solo at 1.5× — that's the real edge")
     print(f"{'━'*60}")
 
     print("\nGenerating report...")

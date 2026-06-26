@@ -13,10 +13,8 @@ alert management, and gate precedence.
 """
 
 import json
-import os
 import sqlite3
 import sys
-import tempfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -575,7 +573,7 @@ class TestCLICheck:
             with patch("scripts.sentinel_cli._load_registry", return_value=sample_registry):
                 from scripts.sentinel_cli import cmd_check
                 args = MagicMock(experiment_id="EXP-400")
-                ret = cmd_check(args)
+                cmd_check(args)
                 # ret may be 0 or 1 depending on whether config file matches fixture fingerprint
                 output = capsys.readouterr().out
                 assert "G0: Registry Status" in output

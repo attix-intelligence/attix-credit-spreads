@@ -2,9 +2,8 @@
 from __future__ import annotations
 import numpy as np
 import pandas as pd
-import pytest
 from compass.walk_forward_portfolio import (
-    FoldResult, ValidationResult, WFConfig, WalkForwardValidator,
+    ValidationResult, WFConfig, WalkForwardValidator,
     _cagr, _max_dd, _sharpe,
 )
 

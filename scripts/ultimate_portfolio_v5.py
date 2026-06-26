@@ -22,7 +22,6 @@ import math
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List
 
 import numpy as np
 import pandas as pd
@@ -534,22 +533,22 @@ def main():
     for name, sr in sorted(scenarios.items()):
         print(f"  {sr['name']:24s}  {sr['hedged_dd']:5.1f}%  {'PASS' if sr['pass_12'] else 'MISS'}")
 
-    print(f"\n  Year-by-Year:")
+    print("\n  Year-by-Year:")
     for yr, ym in sorted(result["yearly"].items()):
         print(f"    {yr}: CAGR={ym['cagr_pct']:7.1f}%  Sharpe={ym['sharpe']:.2f}  DD={ym['max_dd_pct']:.1f}%  Vol={ym['vol_pct']:.1f}%")
 
-    print(f"\n  Per-Regime:")
+    print("\n  Per-Regime:")
     for r, rm in sorted(result["regime_metrics"].items()):
         days = result["regime_days"].get(r, 0)
         print(f"    {r:18s} {days:4d}d  Sharpe={rm['sharpe']:.2f}  CAGR={rm['cagr_pct']:.1f}%")
 
     covid = scenarios.get("COVID_2020", {})
     print(f"\n{'━'*56}")
-    print(f"  v4 → v5:")
+    print("  v4 → v5:")
     print(f"    CAGR:   101.0% → {m['cagr_pct']:.1f}%")
     print(f"    Sharpe:  3.94  → {m['sharpe']:.2f}")
     print(f"    Max DD:  8.0%  → {m['max_dd_pct']:.1f}%")
-    print(f"  TARGETS:")
+    print("  TARGETS:")
     print(f"    CAGR ≥90%:    {'PASS' if m['cagr_pct'] >= 90 else 'MISS'} ({m['cagr_pct']:.1f}%)")
     print(f"    DD   ≤12%:    {'PASS' if m['max_dd_pct'] <= 12 else 'MISS'} ({m['max_dd_pct']:.1f}%)")
     print(f"    COVID ≤12%:   {'PASS' if covid.get('hedged_dd', 99) <= 12 else 'MISS'} ({covid.get('hedged_dd', '?'):.1f}%)")

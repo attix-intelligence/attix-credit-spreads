@@ -188,7 +188,7 @@ def write_report(
 
     a("# Sector ETF Sharpe Boost — Backtest Report (EXP-307)")
     a("")
-    a(f"**Branch:** `experiment/sector-etf-sharpe-boost`  ")
+    a("**Branch:** `experiment/sector-etf-sharpe-boost`  ")
     a(f"**Date:** {datetime.now().strftime('%Y-%m-%d')}  ")
     a("**Underlyings:** SPY (33%) + XLI (33%) + XLF (33%)  ")
     a("**Regime:** ComboRegimeDetector on each ticker's OWN price/MA/RSI  ")
@@ -320,8 +320,8 @@ def write_report(
     sharpe_proj = project_sharpe(sr_per_trade, n_eff_combined)
     sharpe_spyonly_proj = project_sharpe(sr_per_trade, n_eff_spyonly)
 
-    a(f"| Config | Avg trades/yr | ρ_avg | N_eff | SR/trade | Projected Sharpe |")
-    a(f"|:-------|:-------------:|:-----:|:-----:|:--------:|:----------------:|")
+    a("| Config | Avg trades/yr | ρ_avg | N_eff | SR/trade | Projected Sharpe |")
+    a("|:-------|:-------------:|:-----:|:-----:|:--------:|:----------------:|")
     a(f"| SPY-only | {spy_only_avg_trades:.0f} | — | {n_eff_spyonly:.1f} | {sr_per_trade:.3f} | **{sharpe_spyonly_proj:.2f}** |")
     a(f"| SPY+XLI+XLF | {total_trades_yr:.0f} | {rho_avg:.3f} | {n_eff_str} | {sr_per_trade:.3f} | **{sharpe_proj:.2f}** |")
     a("")
@@ -411,10 +411,10 @@ def main():
     years = [int(y) for y in args.years.split(",")]
     params = load_params(Path(args.config))
 
-    print(f"\nEXP-307: Sector ETF Sharpe Boost")
+    print("\nEXP-307: Sector ETF Sharpe Boost")
     print(f"  Underlyings: {' + '.join(TICKERS)} (equal 1/3 allocation)")
-    print(f"  Regime: combo (per-ticker own prices)")
-    print(f"  Sizing: Safe Kelly 4/7/9 (bull=9%, neutral=7%, bear=4%)")
+    print("  Regime: combo (per-ticker own prices)")
+    print("  Sizing: Safe Kelly 4/7/9 (bull=9%, neutral=7%, bear=4%)")
     print(f"  Years: {years}")
     print(f"  Capital per ticker: ${TICKER_CAPITAL:,.0f}")
     print()
@@ -498,7 +498,7 @@ def main():
     rho_vals = [corr_matrix.loc[t1, t2] for t1, t2 in pairs]
     rho_avg_cross = sum(rho_vals) / len(rho_vals) if rho_vals else 0.5
 
-    total_trades_yr = sum(
+    sum(
         results_by_year_ticker.get(yr, {}).get(t, {}).get("total_trades", 0)
         for yr in years for t in TICKERS
     ) / max(len(years), 1)
@@ -535,7 +535,7 @@ def main():
 
     n_eff_combined = compute_effective_n(int(n_total), rho_blended)
 
-    print(f"\nSharpe Projection:")
+    print("\nSharpe Projection:")
     print(f"  SR/trade:         {SR_PER_TRADE:.3f}")
     print(f"  SPY-only trades:  {spy_only_total_trades:.0f}/yr  N_eff={n_eff_spyonly:.1f}")
     print(f"  Combined trades:  {n_total:.0f}/yr  ρ_blended={rho_blended:.3f}  N_eff={n_eff_combined:.1f}")

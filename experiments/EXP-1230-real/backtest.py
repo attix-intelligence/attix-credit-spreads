@@ -12,12 +12,10 @@ from __future__ import annotations
 
 import json
 import logging
-import math
 import sys
 from datetime import datetime, timedelta
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 
 # Add project root
@@ -317,7 +315,7 @@ def main():
 
     # Compare with synthetic claims
     print("\n  === COMPARISON WITH SYNTHETIC CLAIMS ===")
-    print(f"  Synthetic claim:  Standalone Sharpe -0.03, AUC 0.49, Overlay +21.4pp WR")
+    print("  Synthetic claim:  Standalone Sharpe -0.03, AUC 0.49, Overlay +21.4pp WR")
     print(f"  Real data result: Standalone Sharpe {sh:.3f}, AUC {auc:.3f}")
     if overlay:
         print(f"  Real overlay:     {overlay.improvement_pp:+.1f}pp WR improvement")

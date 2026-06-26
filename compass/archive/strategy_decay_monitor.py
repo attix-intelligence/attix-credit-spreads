@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import logging
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
@@ -210,7 +210,7 @@ def classify_lifecycle(
 
     # Linear trend
     x = np.arange(len(rolling_sharpe), dtype=float)
-    n = len(x)
+    len(x)
     x_mean = x.mean()
     y_mean = rolling_sharpe.mean()
     slope = float(

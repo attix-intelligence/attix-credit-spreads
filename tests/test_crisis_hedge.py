@@ -15,7 +15,6 @@ Coverage:
 
 from __future__ import annotations
 
-import math
 import pytest
 
 from compass.crisis_hedge import CrisisHedgeConfig, CrisisHedgeController
@@ -242,7 +241,7 @@ class TestPositionScaleFactor:
             vix_scale_floor=20.0, vix_scale_ceiling=50.0,
             vix_ts_backwardation_penalty=0.25, log_decisions=False
         ))
-        s_flat = ctrl.position_scale_factor(vix=25.0)     # vix=vix3m → no penalty
+        ctrl.position_scale_factor(vix=25.0)     # vix=vix3m → no penalty
         s_inv = ctrl.position_scale_factor(vix=25.0, vix3m=23.75)  # ratio=0.95
         # inversion_depth=0.05, penalty=min(0.25, 0.1)=0.10
         # scale = 0.75 * (1 - 0.10) = 0.675

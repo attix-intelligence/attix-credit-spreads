@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
-import pytest
 
 
 def _make_trades(n=60, seed=42):
@@ -39,10 +38,7 @@ def _make_trades(n=60, seed=42):
 class TestAliasImports:
     def test_all_names_importable(self):
         from compass.trade_clusters import (
-            TradeClusterAnalyzer, ClusterProfile, ActionableFilter,
-            StabilityResult, prepare_cluster_features, find_optimal_k,
-            cluster_kmeans, cluster_dbscan, profile_clusters,
-            extract_filters, assess_stability, DEFAULT_CLUSTER_FEATURES,
+            TradeClusterAnalyzer, DEFAULT_CLUSTER_FEATURES,
         )
         assert TradeClusterAnalyzer is not None
         assert len(DEFAULT_CLUSTER_FEATURES) > 0

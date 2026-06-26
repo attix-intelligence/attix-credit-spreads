@@ -17,10 +17,8 @@ import math
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
-import numpy as np
-import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -422,7 +420,7 @@ svg{{display:block;margin:0 auto}}
         pl, pb, pt = 60, 45, 20
         cw = w - pl
         ch = h - pb - pt
-        n = len(curve)
+        len(curve)
 
         max_sharpe = max(p.expected_sharpe for p in curve) or 1.0
         log_aums = [math.log10(max(p.aum, 1)) for p in curve]

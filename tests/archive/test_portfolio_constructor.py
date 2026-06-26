@@ -3,7 +3,6 @@
 import numpy as np
 import pandas as pd
 import pytest
-from datetime import datetime
 from pathlib import Path
 
 from compass.portfolio_constructor import (
@@ -18,7 +17,6 @@ from compass.portfolio_constructor import (
     RebalanceEvent,
     WalkForwardFold,
     ledoit_wolf_shrinkage,
-    TRADING_DAYS,
 )
 
 

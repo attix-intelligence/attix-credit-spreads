@@ -16,7 +16,7 @@ import sqlite3
 import sys
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -259,7 +259,7 @@ def run_backtest(hd: IronVault, spy_df: pd.DataFrame, vix_s: pd.Series,
             if pp2 is not None and cp2 is not None:
                 current_strangle = pp2 + cp2
                 current_hedge = hp2 if hp2 is not None else hedge_price
-                current_cost_to_close = current_strangle - current_hedge
+                current_strangle - current_hedge
 
                 # Profit = net_credit - cost_to_close (for the strangle+hedge combo)
                 unrealized_pnl = (net_credit - (current_strangle - current_hedge))
@@ -652,7 +652,7 @@ def main():
         print("  Computing stats...")
         stats = compute_stats(trades, spy_df)
 
-        print(f"\n  RESULTS:")
+        print("\n  RESULTS:")
         print(f"    Trades:      {stats['n_trades']}")
         print(f"    PnL:         ${stats['total_pnl']:,.0f}")
         print(f"    CAGR:        {stats['cagr']:.1%}")

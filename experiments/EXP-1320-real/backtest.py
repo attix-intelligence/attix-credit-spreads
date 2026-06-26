@@ -22,7 +22,7 @@ import sqlite3
 import sys
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -32,13 +32,11 @@ sys.path.insert(0, str(ROOT))
 
 from shared.iron_vault import IronVault
 from compass.intraday_vol_clustering import (
-    VolClusterEngine,
     SessionProfile,
     ClusterSignal,
     OverlayResult,
     analyze_session,
     generate_session_signal,
-    vol_autocorrelation,
     expansion_predicts_eod_auc,
 )
 
@@ -547,14 +545,14 @@ def main() -> None:
     yearly = _compute_yearly_stats(trades_df, trade_signals)
     overall = _compute_overall(trades_df)
 
-    print(f"\n── Yearly Performance (Real Trades) ──")
+    print("\n── Yearly Performance (Real Trades) ──")
     print(f"{'Year':>6} {'Trades':>7} {'P&L':>10} {'WinRate':>8} {'MaxDD':>8} {'Sharpe':>8} {'Return':>8}")
     for year in sorted(yearly.keys()):
         y = yearly[year]
         print(f"{year:>6} {y['n_trades']:>7} {y['total_pnl']:>10,.0f} "
               f"{y['win_rate']:>8.1%} {y['max_dd']:>8.1%} {y['sharpe']:>8.2f} {y['annual_return']:>8.1%}")
 
-    print(f"\n── Overall (Real Data) ──")
+    print("\n── Overall (Real Data) ──")
     print(f"Trades:    {overall['n_trades']}")
     print(f"Total P&L: ${overall['total_pnl']:,.0f}")
     print(f"CAGR:      {overall['cagr']:.1%}")
@@ -563,7 +561,7 @@ def main() -> None:
     print(f"Sharpe:    {overall['sharpe']:.2f}")
 
     # 6. Comparison to synthetic
-    print(f"\n── Comparison: Real vs Synthetic (EXP-1320-max) ──")
+    print("\n── Comparison: Real vs Synthetic (EXP-1320-max) ──")
     print(f"{'Metric':<25} {'Real':>12} {'Synthetic':>12}")
     print(f"{'Avg Autocorrelation':<25} {avg_autocorr:>12.4f} {'0.1258':>12}")
     print(f"{'Expansion→EOD AUC':<25} {auc:>12.4f} {'0.2916':>12}")

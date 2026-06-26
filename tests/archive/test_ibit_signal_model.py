@@ -15,13 +15,10 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
-import pytest
 
 from compass.ibit_signal_model import (
     IBIT_REGIME_CONFIG,
     IBITSignalModel,
-    IBITTrainingStats,
-    WalkForwardFold,
 )
 
 

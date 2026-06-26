@@ -18,11 +18,7 @@ import pytest
 
 from compass.auto_docs import (
     AutoDocGenerator,
-    ClassInfo,
-    CoverageInfo,
-    MethodInfo,
     ModuleInfo,
-    ParamInfo,
     build_dependency_graph,
     detect_test_coverage,
     parse_module,

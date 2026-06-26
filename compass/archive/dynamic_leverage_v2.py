@@ -26,13 +26,13 @@ Uses compass/metrics.py for correct Sharpe (arithmetic mean, not CAGR).
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Tuple
+from dataclasses import dataclass
+from typing import Dict, List, Optional
 
 import numpy as np
 import pandas as pd
 
-from compass.metrics import annualized_sharpe, full_metrics
+from compass.metrics import full_metrics
 
 TRADING_DAYS = 252
 
@@ -518,7 +518,7 @@ def main():
 
     print(f"\n  v1 → v2 impact: CAGR {v1['cagr_pct']-v2['cagr_pct']:+.1f}%, Sharpe {v1['sharpe']-v2['sharpe']:+.2f}")
 
-    print(f"\n  Walk-Forward OOS (per year):")
+    print("\n  Walk-Forward OOS (per year):")
     for w in results["windows"]:
         lm = w["leveraged"]
         print(f"    {w['year']}: CAGR={lm['cagr_pct']:7.1f}%  Sharpe={lm['sharpe']:.2f}  DD={lm['max_dd_pct']:.1f}%  Lev={w['avg_leverage']:.2f}×  VIX={w['config']['vix_low']:.0f}/{w['config']['vix_high']:.0f}")

@@ -14,7 +14,6 @@ Covers:
 
 import json
 import sqlite3
-import tempfile
 from pathlib import Path
 
 import numpy as np
@@ -22,7 +21,6 @@ import pandas as pd
 import pytest
 
 from compass.execution_analyzer import (
-    SlippageMetrics,
     compute_dimension_breakdowns,
     compute_outcome_metrics,
     compute_slippage,

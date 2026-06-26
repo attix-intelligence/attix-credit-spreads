@@ -30,12 +30,9 @@ Usage
 """
 
 import argparse
-import hashlib
 import json
 import logging
-import os
 import sys
-import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -62,8 +59,6 @@ except ImportError as e:
 from sentinel.state import (
     load_state as _load_state,
     save_state as _save_state,
-    compute_fingerprint as state_fingerprint,
-    record_health_check as _record_health_check,
     record_health_checks as _record_health_checks,
 )
 
@@ -708,7 +703,7 @@ def cmd_approve(args: argparse.Namespace) -> int:
     print(f"\n🛡️  {exp_id}: config change APPROVED")
     print(f"   New fingerprint: {new_fp}")
     print(f"   Reason: {reason}")
-    print(f"   Experiment re-armed in sentinel_state.json ✅")
+    print("   Experiment re-armed in sentinel_state.json ✅")
 
     return 0
 
@@ -779,7 +774,7 @@ def cmd_resume(args: argparse.Namespace) -> int:
     print(f"\n🛡️  {exp_id}: RESUMED (was {current_status})")
     print(f"   Reason: {reason}")
     print(f"   {resolved} alert(s) resolved")
-    print(f"   Guard re-armed in sentinel_state.json ✅")
+    print("   Guard re-armed in sentinel_state.json ✅")
 
     return 0
 
@@ -1004,7 +999,7 @@ def cmd_onboard(args: argparse.Namespace) -> int:
     # Show locked params
     strat = cfg.get("strategy", {})
     risk = cfg.get("risk", {})
-    print(f"   Locked parameters:")
+    print("   Locked parameters:")
     for label, val in [
         ("  direction", strat.get("direction", "?")),
         ("  regime_mode", strat.get("regime_mode", "?")),
@@ -1083,7 +1078,7 @@ def cmd_onboard(args: argparse.Namespace) -> int:
     env_file = getattr(args, "env_file", None)
 
     if _HAS_MONITOR and env_file:
-        from sentinel.monitor import check_experiment, _find_env_file
+        from sentinel.monitor import check_experiment
         from pathlib import Path as _Path
         env_path = _Path(env_file)
         health = check_experiment(exp_id, account_id, "paper_trading", env_path)
@@ -1127,7 +1122,7 @@ def cmd_onboard(args: argparse.Namespace) -> int:
     ]
 
     gates_passed = sum(1 for _, passed in gates_summary if passed)
-    print(f"\n   Pre-flight checklist:")
+    print("\n   Pre-flight checklist:")
     for check, passed in gates_summary:
         print(f"   {'✅' if passed else '❌'} {check}")
 
@@ -1136,7 +1131,7 @@ def cmd_onboard(args: argparse.Namespace) -> int:
         return 1
 
     # Write to DB
-    cert_id = db.record_deployment_cert(
+    db.record_deployment_cert(
         exp_id,
         fingerprint=fingerprint,
         gates_passed=gates_passed,
@@ -1205,7 +1200,7 @@ def cmd_retroactive(args: argparse.Namespace) -> int:
         if _is_live(v)
     }
 
-    print(f"\n🛡️  SENTINEL RETROACTIVE ONBOARDING")
+    print("\n🛡️  SENTINEL RETROACTIVE ONBOARDING")
     print(f"   Registering {len(active)} active experiments as GRANDFATHERED")
     print("=" * 56)
 
@@ -1222,7 +1217,7 @@ def cmd_retroactive(args: argparse.Namespace) -> int:
         # Skip if already fully certified (not grandfathered)
         existing_cert = db.get_latest_cert(exp_id)
         if existing_cert and not existing_cert.get("grandfathered"):
-            print(f"   ⏭  Already certified — skipping")
+            print("   ⏭  Already certified — skipping")
             results.append({"exp_id": exp_id, "status": "already_certified"})
             continue
 
@@ -1254,7 +1249,7 @@ def cmd_retroactive(args: argparse.Namespace) -> int:
         ]
 
         # Record deployment certificate
-        cert_id = db.record_deployment_cert(
+        db.record_deployment_cert(
             exp_id,
             fingerprint=fingerprint,
             gates_passed=0,          # Not through formal gates
@@ -1268,7 +1263,7 @@ def cmd_retroactive(args: argparse.Namespace) -> int:
         if not has_backtest:
             db.record_alert(
                 "warning",
-                f"GRANDFATHERED — no backtest config. Provide within 30 days to maintain deployment.",
+                "GRANDFATHERED — no backtest config. Provide within 30 days to maintain deployment.",
                 experiment_id=exp_id,
             )
 

@@ -70,10 +70,7 @@ import pandas as pd
 from compass.exp1960_skew_alpha import (
     bs_put_delta,
     fetch_contract_close,
-    fetch_put_chain,
-    find_target_expiration,
     implied_vol_put,
-    list_snapshot_dates,
     load_exp1220_yearly,
 )
 

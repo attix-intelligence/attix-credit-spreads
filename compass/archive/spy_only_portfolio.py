@@ -22,10 +22,10 @@ from __future__ import annotations
 
 import math
 import sqlite3
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List
 
 import numpy as np
 import pandas as pd
@@ -341,8 +341,8 @@ def walk_forward_validate(all_trades: List[Dict], spy_df: pd.DataFrame,
         d = str(t["exit_date"])[:10]
         daily_pnl[d] = daily_pnl.get(d, 0) + t["pnl"]
 
-    spy_close = spy_df["Close"]
-    trade_dates = sorted(daily_pnl.keys())
+    spy_df["Close"]
+    sorted(daily_pnl.keys())
     all_dates = spy_df.index
 
     # Convert to daily return series aligned with SPY dates
@@ -586,7 +586,7 @@ def run_analysis():
     print("  Walk-forward validation (expanding window)...")
     wf = walk_forward_validate(all_trades, spy_df, leverage=1.6)
 
-    print(f"\n  OOS Results:")
+    print("\n  OOS Results:")
     print(f"    CAGR:    {wf.combined_cagr:.1f}%")
     print(f"    Sharpe:  {wf.combined_sharpe:.2f} (correct formula)")
     print(f"    Max DD:  {wf.combined_dd:.1f}%")

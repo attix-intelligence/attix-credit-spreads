@@ -11,13 +11,9 @@ import pytest
 
 from compass.production_ensemble import (
     EnsembleConfig,
-    FeatureDrift,
     HealthAlert,
-    ModelPrediction,
     PipelineResult,
     ProductionEnsemble,
-    RetrainWindow,
-    TradeResult,
     apply_disagreement_scaling,
     compute_auc,
     compute_disagreement,

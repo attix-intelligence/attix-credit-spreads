@@ -40,7 +40,7 @@ import sqlite3
 import sys
 import urllib.request
 from collections import defaultdict
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
@@ -451,7 +451,7 @@ def main() -> int:
         "cagr_ge_100":  best["cagr_pct"] >= 100.0,
     }
     passed = all(targets.values())
-    print(f"  Target: ≥$200M soft cap, Sharpe ≥5.0, CAGR ≥100%")
+    print("  Target: ≥$200M soft cap, Sharpe ≥5.0, CAGR ≥100%")
     print(f"    soft cap  : ${soft_aum/1e6:,.0f}M  → "
           f"{'PASS' if targets['cap_ge_200m'] else 'FAIL'}")
     print(f"    Sharpe    : {best['sharpe']:.2f}         → "
@@ -470,7 +470,7 @@ def main() -> int:
             soft_aum / capacity_results["baseline_v6"]["soft_bottleneck_aum_usd"], 2
         ) if capacity_results["baseline_v6"].get("soft_bottleneck_aum_usd", 0) > 0 else None,
     }
-    print(f"\n  Trade-off vs baseline_v6:")
+    print("\n  Trade-off vs baseline_v6:")
     print(f"    ΔSharpe  = {trade_off['delta_sharpe']:+.2f}")
     print(f"    ΔCAGR    = {trade_off['delta_cagr_pct']:+.2f}%")
     print(f"    ΔMaxDD   = {trade_off['delta_dd_pct']:+.2f}%")

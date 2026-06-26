@@ -16,7 +16,6 @@ import argparse
 import json
 import logging
 import sqlite3
-import sys
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -274,7 +273,7 @@ def print_report(db_path: str) -> None:
     metrics = get_rolling_alignment(db_path)
     n = metrics["trade_count"]
     print(f"\n{'='*60}")
-    print(f"  INF-5 Deviation Tracker — Alignment Report")
+    print("  INF-5 Deviation Tracker — Alignment Report")
     print(f"{'='*60}")
     print(f"  Trades analyzed:    {n}")
     if n == 0:
@@ -288,7 +287,7 @@ def print_report(db_path: str) -> None:
           f"  {'✅' if metrics['credit_deviation'] <= _CREDIT_DEVIATION_THRESHOLD else '❌ ABOVE THRESHOLD'}")
 
     print(f"\n  {'─'*56}")
-    print(f"  Recent trades (newest first):")
+    print("  Recent trades (newest first):")
     print(f"  {'Trade ID':<20} {'Paper':>7} {'Expect':>7} {'Outcome':>8} {'Match':>6} {'Score':>6}")
     print(f"  {'─'*56}")
     for r in metrics["recent_deviations"][:20]:

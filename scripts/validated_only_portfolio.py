@@ -19,8 +19,6 @@ This script:
 
 from __future__ import annotations
 
-import json
-import math
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -31,11 +29,11 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from compass.metrics import annualized_sharpe, full_metrics
+from compass.metrics import full_metrics
 from scripts.ultimate_portfolio import (
     load_exp1220_dynamic, load_cross_asset_pairs,
     load_vol_term_structure, load_tlt_iron_condors,
-    _fetch, ACCOUNT,
+    _fetch,
 )
 
 TRADING_DAYS = 252
@@ -323,12 +321,12 @@ def main():
 
     print(f"  v6:        CAGR={v6_m['cagr_pct']:.1f}%  Sharpe={v6_m['sharpe']:.2f}  Vol={v6_m['vol_pct']:.1f}%")
 
-    print(f"\n  Attribution:")
+    print("\n  Attribution:")
     for name, pct in sorted(attribution.items(), key=lambda x: -abs(x[1])):
         print(f"    {name:25s}  {pct:+.1f}%")
 
     print(f"\n{'━'*60}")
-    print(f"  ROOT CAUSE:")
+    print("  ROOT CAUSE:")
     print(f"    v6 vol: {v6_m['vol_pct']:.1f}%  (synthetic, artificially low)")
     print(f"    Validated vol: {validated_m['vol_pct']:.1f}%  (real market data)")
     print(f"    SPY vol: {spy_m['vol_pct']:.1f}%  (real)")

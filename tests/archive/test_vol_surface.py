@@ -10,7 +10,6 @@ import pandas as pd
 import pytest
 
 from compass.vol_surface import (
-    ArbitrageCheck,
     SVIParams,
     SkewKurtosis,
     SurfaceDynamics,

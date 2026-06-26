@@ -6,10 +6,8 @@ import pandas as pd
 import pytest
 
 from compass.multi_timeframe_fusion import (
-    TIMEFRAMES,
     AttentionFusion,
     AttentionWeights,
-    BacktestComparison,
     FusedSignal,
     FusionResult,
     MultiTimeframeBacktest,

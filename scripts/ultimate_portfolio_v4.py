@@ -15,12 +15,10 @@ Target: >90% CAGR, <12% DD in ALL regimes including COVID.
 
 from __future__ import annotations
 
-import json
 import math
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -35,8 +33,7 @@ from scripts.ultimate_portfolio import (
 )
 from compass.dynamic_sizing import DynamicSizer, DynamicSizingConfig
 from compass.tail_risk_hedge import (
-    TailRiskHedgeConfig, get_crisis_scenarios, CrisisScenario, ScenarioResult,
-    HedgeDayState,
+    TailRiskHedgeConfig, get_crisis_scenarios,
 )
 
 TRADING_DAYS = 252
@@ -119,7 +116,6 @@ def load_all():
 
 def _crisis_score(vix, vix_ratio, dd, rvol, momentum):
     """Compute crisis score (0-1) for hedge allocation."""
-    cfg = HEDGE_CONFIG
     vix_s = min(1, max(0, (vix - 20) / 8)) if vix > 20 else 0
     ts_s = min(1, max(0, (vix_ratio - 1.0) / 0.15)) if vix_ratio > 1.0 else 0
     dd_s = min(1, max(0, (dd - 0.02) / 0.03)) if dd > 0.02 else 0
@@ -527,18 +523,18 @@ def main():
     for name, sr in sorted(scenarios.items()):
         print(f"  {sr['name']:24s}  {sr['hedged_dd']:5.1f}% (unhedged {sr['unhedged_dd']:.1f}%)  {'PASS' if sr['pass_12'] else 'MISS'}")
 
-    print(f"\n  Year-by-Year:")
+    print("\n  Year-by-Year:")
     for yr, ym in sorted(result["yearly"].items()):
         print(f"    {yr}: CAGR={ym['cagr_pct']:7.1f}%  Sharpe={ym['sharpe']:.2f}  DD={ym['max_dd_pct']:.1f}%")
 
-    print(f"\n  Per-Regime:")
+    print("\n  Per-Regime:")
     for r, rm in sorted(result["regime_metrics"].items()):
         days = result["regime_days"].get(r, 0)
         print(f"    {r:18s}  {days:4d} days  Sharpe={rm['sharpe']:.2f}  CAGR={rm['cagr_pct']:.1f}%")
 
     covid = scenarios.get("COVID_2020", {})
     print(f"\n{'━'*56}")
-    print(f"  TARGETS:")
+    print("  TARGETS:")
     print(f"    CAGR ≥90%:   {'PASS' if m['cagr_pct'] >= 90 else 'MISS'} ({m['cagr_pct']:.1f}%)")
     print(f"    DD   ≤12%:   {'PASS' if m['max_dd_pct'] <= 12 else 'MISS'} ({m['max_dd_pct']:.1f}%)")
     print(f"    COVID ≤12%:  {'PASS' if covid.get('hedged_dd', 99) <= 12 else 'MISS'} ({covid.get('hedged_dd', '?'):.1f}%)")

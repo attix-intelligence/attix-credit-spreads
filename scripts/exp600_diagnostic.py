@@ -13,10 +13,8 @@ Output: results/exp600/diagnostic.json + human-readable summary to stdout
 """
 
 import json
-import os
 import sqlite3
 import sys
-from collections import defaultdict
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -378,14 +376,14 @@ def main():
 
     # 1. Overall stats
     stats = overall_stats(conn)
-    print(f"\n--- DB Overview ---")
+    print("\n--- DB Overview ---")
     print(f"  Total contracts:   {stats['total_contracts']:,}")
     print(f"  Total daily bars:  {stats['total_daily_bars']:,}")
     print(f"  SPY contracts:     {stats['spy_contracts']:,}")
-    print(f"\n  By ticker:")
+    print("\n  By ticker:")
     for t in stats["by_ticker"]:
         print(f"    {t['ticker']:6s}  {t['contracts']:>8,} contracts  ({t['first_exp']} → {t['last_exp']})")
-    print(f"\n  SPY contracts by expiration year:")
+    print("\n  SPY contracts by expiration year:")
     for yr, cnt in sorted(stats["spy_contracts_by_year"].items()):
         print(f"    {yr}: {cnt:>8,}")
 
@@ -402,7 +400,7 @@ def main():
     all_probes = {}
     all_spread_tests = {}
 
-    print(f"\n--- Expiration & Strike Probes ---")
+    print("\n--- Expiration & Strike Probes ---")
     for sd in sample_dates:
         probe = probe_date(conn, "SPY", sd)
         all_probes[sd] = probe
@@ -430,7 +428,7 @@ def main():
                 break
 
     # 3. Spread matching simulation — test multiple configs
-    print(f"\n--- Spread Matching Simulation ---")
+    print("\n--- Spread Matching Simulation ---")
     test_configs = [
         {"target_dte": 15, "spread_width": 12, "otm_pct": 0.02, "label": "champion (15d, $12w, 2% OTM)"},
         {"target_dte": 30, "spread_width": 5, "otm_pct": 0.03, "label": "conservative (30d, $5w, 3% OTM)"},
@@ -479,7 +477,7 @@ def main():
         print(f"    → {ok_count}/{total} dates found trades")
 
     # 4. Deep dive: what does the DB actually have for daily bars by year?
-    print(f"\n--- Daily Bars Distribution by Year (SPY options) ---")
+    print("\n--- Daily Bars Distribution by Year (SPY options) ---")
     cur = conn.cursor()
     cur.execute("""
         SELECT substr(od.date, 1, 4) as yr, COUNT(*) as bar_count,
@@ -493,7 +491,7 @@ def main():
         print(f"    {row[0]}: {row[1]:>10,} bars across {row[2]:>8,} contracts")
 
     # 5. Check specific: how many UNIQUE dates have bars for SPY options per year?
-    print(f"\n--- Trading Days with SPY Option Bars by Year ---")
+    print("\n--- Trading Days with SPY Option Bars by Year ---")
     cur.execute("""
         SELECT substr(od.date, 1, 4) as yr, COUNT(DISTINCT od.date) as trading_days
         FROM option_daily od

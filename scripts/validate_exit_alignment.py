@@ -24,7 +24,7 @@ import os
 import sys
 import tempfile
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List
+from typing import Any, Dict
 from unittest.mock import MagicMock, patch
 
 import yaml
@@ -292,7 +292,7 @@ def main():
     ic_pt = float(config.get("strategy", {}).get("iron_condor", {}).get("profit_target_pct", 0.30))
     ss_pt = 0.50  # strategy default
 
-    print(f"\nExpected exit params:")
+    print("\nExpected exit params:")
     print(f"  CS: profit_target={cs_pt}, stop_loss={cs_sl}x")
     print(f"  IC: profit_target={ic_pt}, stop_loss={ic_sl}x")
     print(f"  SS: profit_target={ss_pt}, stop_loss={ss_sl}x + 3x hard stop")
@@ -416,7 +416,6 @@ def main():
             rsi={"SPY": 70.0},
         )
         # Mock spread value so cost_to_close = 16.0 (> 3 × 5.0 = 15.0)
-        from strategies.pricing import estimate_spread_value
         with patch("strategies.straddle_strangle.estimate_spread_value", return_value=-16.0):
             hard_stop_result = ss_strat.manage_position(hard_stop_pos, snap)
         hard_stop_fires = hard_stop_result == PositionAction.CLOSE_STOP

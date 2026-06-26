@@ -88,9 +88,9 @@ class TestSlippage:
         rng = np.random.RandomState(42)
         narrow = OrderRequest("A", "buy", 5.0, 10, spread_width=1.0, market_volume=1000)
         wide = OrderRequest("B", "buy", 5.0, 10, spread_width=10.0, market_volume=1000)
-        slip_narrow = compute_slippage_bps(cfg, narrow, rng)
+        compute_slippage_bps(cfg, narrow, rng)
         rng2 = np.random.RandomState(42)
-        slip_wide = compute_slippage_bps(cfg, wide, rng2)
+        compute_slippage_bps(cfg, wide, rng2)
         # Wide spread should produce more slippage on average (same seed for fair comparison)
         # Due to noise, test with many samples
         slips_n = [compute_slippage_bps(cfg, narrow, np.random.RandomState(s)) for s in range(200)]
@@ -380,8 +380,6 @@ class TestHTMLReport:
 from compass.execution_simulator import (
     CapitalScaleAnalyzer,
     CapitalLevelResult,
-    StrategyProfile,
-    TickerLiquidity,
     fill_probability,
     latency_impact_bps,
     _default_liquidity,

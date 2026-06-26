@@ -3,7 +3,6 @@
 import math
 
 import numpy as np
-import pandas as pd
 import pytest
 
 from compass.production_portfolio_wf import (
@@ -11,8 +10,6 @@ from compass.production_portfolio_wf import (
     STRATEGY_PROFILES,
     STRATEGY_CORRELATIONS,
     TRADING_DAYS,
-    FoldResult,
-    WalkForwardResult,
     ProductionWalkForward,
     generate_strategy_returns,
     generate_report,

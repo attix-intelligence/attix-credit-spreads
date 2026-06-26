@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import math
 
 import pytest
 
@@ -301,9 +300,9 @@ class TestExperimentOverrides:
             experiment_overrides={"EXP-401": exp401_cfg},
         )
         # Default experiment
-        r_default = sizer.compute(win_prob=0.75, win_return=0.40, loss_return=1.00)
+        sizer.compute(win_prob=0.75, win_return=0.40, loss_return=1.00)
         # EXP-401
-        r_401 = sizer.compute(win_prob=0.75, win_return=0.40, loss_return=1.00, experiment_id="EXP-401")
+        sizer.compute(win_prob=0.75, win_return=0.40, loss_return=1.00, experiment_id="EXP-401")
         # EXP-401 should have tighter cap
         assert sizer.get_config("EXP-401").max_position_pct == 5.0
         assert sizer.get_config().max_position_pct == 10.0

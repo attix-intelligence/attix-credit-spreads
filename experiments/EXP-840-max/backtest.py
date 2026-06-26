@@ -10,11 +10,10 @@ profiles of EXP-400 (champion), EXP-750 (CS+vol blend), EXP-740 (hedged).
 from __future__ import annotations
 
 import json
-import math
 from dataclasses import dataclass, asdict
-from datetime import date, timedelta
+from datetime import date
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -512,4 +511,4 @@ if __name__ == "__main__":
     print(f"  Calmar:     {summary['best_calmar']}")
     print(f"  Avg Lev:    {summary['best_avg_leverage']}x")
     print(f"  Qualifying: {summary['n_qualifying']} variants meet all criteria")
-    print(f"\nResults saved to results/summary.json and results/report.html")
+    print("\nResults saved to results/summary.json and results/report.html")

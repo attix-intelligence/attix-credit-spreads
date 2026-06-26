@@ -2,9 +2,8 @@
 from __future__ import annotations
 import pytest
 from compass.greeks_risk_engine import (
-    GammaScalpOpportunity, GreeksRiskEngine, HedgeSuggestion, LivePosition,
-    PortfolioSnapshot, PositionGreeks, RiskConfig, ThetaAttribution,
-    VegaAlert,
+    GreeksRiskEngine, LivePosition,
+    PortfolioSnapshot, PositionGreeks, RiskConfig,
 )
 
 # ── Helpers ──────────────────────────────────────────────────────────────

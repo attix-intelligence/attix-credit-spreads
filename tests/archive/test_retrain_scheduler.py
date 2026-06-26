@@ -16,12 +16,10 @@ Coverage:
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
 from typing import List, Optional
 from unittest.mock import MagicMock, patch
 
 import pandas as pd
-import pytest
 
 from compass.retrain_scheduler import RetrainScheduler
 from compass.online_retrain import ABResult, RetrainResult, RetrainTrigger

@@ -33,13 +33,12 @@ Sharpe via compass/metrics.py (correct arithmetic mean formula).
 from __future__ import annotations
 
 import json
-import math
 import sys
 import urllib.request
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -47,7 +46,7 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from compass.metrics import annualized_sharpe, full_metrics
+from compass.metrics import full_metrics
 
 TRADING_DAYS = 252
 REPORT_PATH = ROOT / "reports" / "dynamic_leverage_v3_report.html"
@@ -522,7 +521,7 @@ def main():
     print(f"  Dynamic:    CAGR={dynamic_m['cagr_pct']:.1f}%  Sharpe={dynamic_m['sharpe']:.2f}  DD={dynamic_m['max_dd_pct']:.1f}%")
 
     distribution = leverage_distribution(states)
-    print(f"\n  Leverage distribution:")
+    print("\n  Leverage distribution:")
     print(f"    Avg: {distribution['avg_leverage']}×  Median: {distribution['median_leverage']}×")
     print(f"    Range: {distribution['min_leverage']}× → {distribution['max_leverage']}×")
     for tier, pct in distribution["buckets_pct"].items():
@@ -550,9 +549,9 @@ def main():
     print(f"    Dynamic CAGR: {dynamic_m['cagr_pct']:.1f}%  ({'CLOSE' if cagr_close else 'BELOW'} 3× target)")
     print(f"    Dynamic DD:   {dynamic_m['max_dd_pct']:.1f}%  ({'BETTER' if dd_better else 'WORSE'} than 3× DD of {static3_m['max_dd_pct']:.1f}%)")
     if cagr_close and dd_better:
-        print(f"  ✓ WIN — dynamic leverage works")
+        print("  ✓ WIN — dynamic leverage works")
     else:
-        print(f"  ⚠ Tradeoff — review carefully")
+        print("  ⚠ Tradeoff — review carefully")
     print(f"{'━' * 70}")
 
     print("\n[4/4] Generating HTML report...")

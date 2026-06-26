@@ -7,8 +7,7 @@ import pytest
 
 from compass.exp1780_exp1220_integration import (
     BEST_V3_CONFIG, ALLOCATIONS, STRESS_PERIODS,
-    StressResult, AllocationResult, IntegrationResult,
-    compute_sharpe, compute_metrics,
+    StressResult, AllocationResult, compute_sharpe, compute_metrics,
     build_exp1220_daily_returns,
     find_optimal_allocation, stress_test,
     TRADING_DAYS,

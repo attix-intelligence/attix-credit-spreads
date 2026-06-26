@@ -15,7 +15,6 @@ Output: reports/exp1220_stress_test.html + JSON summary
 
 import json
 import logging
-import math
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -29,12 +28,7 @@ sys.path.insert(0, str(ROOT))
 from backtest.backtester import _yf_download_safe
 from compass.stress_test import (
     StressTester,
-    CRISIS_SCENARIOS,
     _returns_to_equity,
-    _max_drawdown,
-    _sharpe_ratio,
-    _cagr,
-    _calmar_ratio,
 )
 from compass.tail_risk_protector import TailRiskProtector
 

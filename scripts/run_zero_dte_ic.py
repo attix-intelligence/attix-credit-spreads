@@ -9,19 +9,17 @@ Walk-forward validation, corrected Sharpe, correlation to EXP-1220.
 """
 
 import json
-import math
 import sys
 from datetime import datetime
 from pathlib import Path
 
 import numpy as np
-import pandas as pd
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from compass.zero_dte_ic import (
-    backtest_1_3_dte, compute_metrics, corrected_sharpe, trade_sharpe, CAPITAL
+    backtest_1_3_dte, compute_metrics, CAPITAL
 )
 
 

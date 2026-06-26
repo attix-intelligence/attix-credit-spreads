@@ -27,9 +27,9 @@ from __future__ import annotations
 
 import logging
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -203,7 +203,7 @@ def compute_disagreement_features(
 
     # Disagreement = std of predictions across models per row
     row_std = vals.std(axis=1)
-    row_range = vals.max(axis=1) - vals.min(axis=1)
+    vals.max(axis=1) - vals.min(axis=1)
 
     # Unanimous: all models agree on direction (>0.5 or <0.5)
     binary = (vals > 0.5).astype(int)
@@ -456,11 +456,11 @@ class MetaLearner:
         # Fit final meta-weights on all data
         if self.meta_method == "logistic":
             w_full = logistic_fit(X, y)
-            final_preds = logistic_predict_proba(X, w_full)
+            logistic_predict_proba(X, w_full)
             weights_raw = w_full[:-1]
         else:
             w_full = ridge_fit(X, y, self.alpha)
-            final_preds = np.clip(ridge_predict(X, w_full), 0, 1)
+            np.clip(ridge_predict(X, w_full), 0, 1)
             weights_raw = w_full[:-1]
 
         # Normalize weights

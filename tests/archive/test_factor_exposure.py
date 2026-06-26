@@ -1,8 +1,6 @@
 """Tests for compass.factor_exposure — 30 tests."""
 
-import numpy as np
 import pandas as pd
-import pytest
 from pathlib import Path
 
 from compass.factor_exposure import (

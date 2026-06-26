@@ -16,7 +16,6 @@ Calls validate_params.py automatically after each run.
 import argparse
 import json
 import logging
-import os
 import sys
 import time
 import uuid
@@ -375,7 +374,7 @@ def main():
     print("═" * 72)
     print("  OPERATION CRACK THE CODE — Optimization Run")
     print(f"  Run ID  : {run_id}")
-    print(f"  Mode    : real data (Iron Vault)")
+    print("  Mode    : real data (Iron Vault)")
     print(f"  Years   : {years}")
     print(f"  Ticker  : {args.ticker}")
     print(f"  Note    : {args.note or '(none)'}")

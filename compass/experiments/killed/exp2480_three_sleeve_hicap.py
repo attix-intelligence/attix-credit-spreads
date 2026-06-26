@@ -621,7 +621,7 @@ def main() -> int:
         "net_cagr_positive": rec["net_metrics"]["cagr_pct"] > 0,
     }
     decision = "APPROVE" if all(targets.values()) else "REJECT"
-    print(f"\n  Target check:")
+    print("\n  Target check:")
     print(f"    soft cap ≥ $200M       : {fmt_usd(bot['soft_cap_aum'])}  "
           f"{'PASS' if targets['capacity_ge_200m'] else 'FAIL'}")
     print(f"    NET Sharpe ≥ 4.0       : {rec['net_metrics']['sharpe']:.2f}  "

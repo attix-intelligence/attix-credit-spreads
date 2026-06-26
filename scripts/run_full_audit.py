@@ -108,7 +108,7 @@ def audit_experiment(exp_id: str, summary: dict) -> AuditReport:
     has_comm = summary.get("commission_per_contract", 0) > 0 or "commission" in str(summary).lower()
     has_slip = summary.get("slippage", 0) > 0 or "slippage" in str(summary).lower()
 
-    n_trades = summary.get("n_trades", summary.get("total_trades", len(trades)))
+    summary.get("n_trades", summary.get("total_trades", len(trades)))
     n_days = summary.get("n_days", summary.get("trading_days", 1260))
 
     return auditor.audit(
@@ -148,7 +148,7 @@ def generate_full_report(results: list, output_path: str) -> str:
         for c in report.checks:
             ic = {"PASS": "#059669", "WARNING": "#d97706", "FAIL": "#dc2626", "CRITICAL": "#dc2626"}[c.severity]
             icon = {"PASS": "&#10003;", "WARNING": "!", "FAIL": "&#10007;", "CRITICAL": "!!"}[c.severity]
-            short = c.name.replace(" Check", "")[:8]
+            c.name.replace(" Check", "")[:8]
             check_icons += f'<span style="color:{ic}" title="{c.name}: {c.message}">{icon}</span> '
 
         # Get key issues

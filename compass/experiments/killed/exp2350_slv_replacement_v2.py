@@ -71,15 +71,11 @@ Run: python3 -m compass.exp2350_slv_replacement_v2
 from __future__ import annotations
 
 import json
-import math
-import os
 import pickle
 import sqlite3
 import sys
-from dataclasses import dataclass
-from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List
 
 import numpy as np
 import pandas as pd
@@ -212,7 +208,7 @@ def capacity_from_trades(trades: List[Dict], ticker: str,
     try:
         vols: List[int] = []
         for t in trades:
-            exp = t.get("expiration") or t.get("exit_date")
+            t.get("expiration") or t.get("exit_date")
             sk = t.get("short_strike")
             date = t.get("entry_date")
             if sk is None or date is None:

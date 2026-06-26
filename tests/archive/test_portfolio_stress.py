@@ -14,7 +14,6 @@ from compass.portfolio_stress import (
     PortfolioStressEngine,
     PortfolioStressResult,
     ReverseStressResult,
-    ScenarioOutcome,
     StressPnL,
     StressScenario,
     _shock_path,

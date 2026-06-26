@@ -35,7 +35,7 @@ import math
 import os
 import sys
 import urllib.request
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np

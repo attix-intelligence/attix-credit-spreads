@@ -20,9 +20,9 @@ import json
 import logging
 import math
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Tuple
 
 import numpy as np
 import pandas as pd
@@ -31,8 +31,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from backtest.backtester import _yf_download_safe
-from compass.tail_risk_protector import TailRiskProtector, ThreatLevel
-from compass.regime import Regime, RegimeClassifier
+from compass.tail_risk_protector import TailRiskProtector
 
 logger = logging.getLogger(__name__)
 TRADING_DAYS = 252
@@ -155,7 +154,7 @@ def load_blend_returns() -> pd.Series:
         yr = int(yr_str)
         annual_ret = metrics["return_pct"] / 100
         sharpe = metrics["sharpe_ratio"]
-        n_days = metrics.get("n_days", TRADING_DAYS)
+        metrics.get("n_days", TRADING_DAYS)
 
         # mu = annual_ret / TRADING_DAYS, std = mu / (Sharpe / sqrt(252))
         daily_mu = annual_ret / TRADING_DAYS
