@@ -19,9 +19,12 @@ import logging
 import os
 import threading
 import time
-from typing import List, Optional
+from typing import TYPE_CHECKING, List, Optional
 
 import requests
+
+if TYPE_CHECKING:
+    import pandas as pd
 
 from shared.exceptions import DataFetchError
 

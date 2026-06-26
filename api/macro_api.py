@@ -647,6 +647,8 @@ def get_regime(
         )
 
     try:
+        import sqlite3
+
         import pandas as pd
         from compass.regime import ComboRegimeDetector
 
