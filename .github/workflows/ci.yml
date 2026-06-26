@@ -97,7 +97,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: docker build -t attix-credit-spreads .
+      # Bare `docker build .` was looking for a root Dockerfile that was deliberately
+      # deleted in 122267e ("remove Dockerfile, use Nixpacks + Procfile for Railway").
+      # Build the real production scheduler image instead — Dockerfile.scheduler is the
+      # artifact attix-worker's compass-scheduler service references in deploy/.../railway.toml.
+      - run: docker build -t attix-credit-spreads-scheduler -f Dockerfile.scheduler .
 
   deploy-gate:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
