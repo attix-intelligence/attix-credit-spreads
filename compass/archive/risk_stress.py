@@ -7,10 +7,9 @@ from __future__ import annotations
 
 import datetime
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 import numpy as np
-import pandas as pd
 
 
 # ---------------------------------------------------------------------------
@@ -473,7 +472,7 @@ class RiskStressEngine:
             "padding:16px;border-radius:8px;margin:16px 0;}"
         )
         html_parts.append("</style></head><body>")
-        html_parts.append(f"<h1>Risk Stress Test Report</h1>")
+        html_parts.append("<h1>Risk Stress Test Report</h1>")
         html_parts.append(
             f"<p>Generated: {result.generated_at}</p>"
         )

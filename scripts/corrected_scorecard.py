@@ -19,7 +19,7 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from compass.metrics import annualized_sharpe, full_metrics, sortino_ratio
+from compass.metrics import annualized_sharpe, full_metrics
 
 REPORT_PATH = ROOT / "reports" / "corrected_scorecard.html"
 

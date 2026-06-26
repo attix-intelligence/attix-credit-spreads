@@ -28,8 +28,6 @@ sys.path.insert(0, str(ROOT))
 from backtest.backtester import _yf_download_safe
 from compass.tail_risk_protector import (
     TailRiskProtector,
-    ProtectionBacktestResult,
-    ThreatLevel,
 )
 from shared.iron_vault import IronVault
 
@@ -326,7 +324,7 @@ def main():
     print("\n[3/4] Running protection backtest...")
     result = protector.backtest(data, hedge_cost_annual=0.01)
 
-    print(f"\n  === RESULTS ===")
+    print("\n  === RESULTS ===")
     print(f"  Unprotected: return={result.unprotected_return:.1%}, "
           f"DD={result.unprotected_dd:.1%}, Sharpe={result.unprotected_sharpe:.2f}")
     print(f"  Protected:   return={result.protected_return:.1%}, "
@@ -349,7 +347,7 @@ def main():
 
     # Compare with synthetic claims
     print("\n  === COMPARISON WITH SYNTHETIC CLAIMS ===")
-    print(f"  Synthetic claim:  Sharpe 0.37 → 2.12 (overlay), DD reduction 19.4pp")
+    print("  Synthetic claim:  Sharpe 0.37 → 2.12 (overlay), DD reduction 19.4pp")
     print(f"  Real data result: Sharpe {result.unprotected_sharpe:.2f} → "
           f"{result.protected_sharpe:.2f}, DD reduction {result.dd_reduction:.1%}")
 

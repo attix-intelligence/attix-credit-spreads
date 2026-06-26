@@ -9,22 +9,19 @@ All with corrected Sharpe, walk-forward OOS, t-1 lagged signals.
 
 from __future__ import annotations
 
-import math
 import sys
 from datetime import datetime
 from pathlib import Path
 
 import numpy as np
-import pandas as pd
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from compass.metrics import annualized_sharpe, full_metrics
+from compass.metrics import full_metrics
 from scripts.ultimate_portfolio import load_exp1220_dynamic, _fetch
 from compass.dynamic_leverage_v2 import (
-    DynamicLeverageManagerV2, DynamicLeverageConfigV2,
-    calibrate_from_training, walk_forward_validate,
+    walk_forward_validate,
 )
 
 TRADING_DAYS = 252
@@ -100,7 +97,7 @@ def walk_forward_simple_regime(base, vix_s):
     agg = full_metrics(np.array(all_oos)) if all_oos else {}
     full = full_metrics(rets)
     return {"full": full, "oos_agg": agg, "windows": windows,
-            "leverage": f"regime", "avg_lev": round(float(levs.mean()), 2)}
+            "leverage": "regime", "avg_lev": round(float(levs.mean()), 2)}
 
 
 def generate_html(results, v2_results):

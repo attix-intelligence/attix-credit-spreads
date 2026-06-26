@@ -151,7 +151,7 @@ def run_health_check(config: dict) -> List[str]:
     from shared.database import get_db
 
     db_path = config.get("db_path") or os.environ.get("ATTIX_DB_PATH")
-    max_positions = config.get("risk", {}).get("max_positions", 0)
+    config.get("risk", {}).get("max_positions", 0)
     max_same_expiration = (
         config.get("risk", {})
         .get("portfolio_risk", {})

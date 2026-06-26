@@ -11,7 +11,7 @@ from __future__ import annotations
 import json
 import math
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Dict, List, Tuple
 
 import numpy as np
 
@@ -383,7 +383,7 @@ def main():
     html = generate_report(summary, lev_results, mc_results)
     (RESULTS_DIR / "report.html").write_text(html)
 
-    print(f"\nWritten: results/summary.json + results/report.html")
+    print("\nWritten: results/summary.json + results/report.html")
 
     # Final roadmap
     rm = summary["roadmap"]

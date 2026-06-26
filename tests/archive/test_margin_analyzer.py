@@ -14,13 +14,11 @@ from compass.margin_analyzer import (
     ExperimentEfficiency,
     MarginAnalyzer,
     MarginRequirement,
-    StressScenario,
     UtilizationSnapshot,
     compute_margin,
     compute_stressed_margin,
     _fmt_pct,
     _fmt_dollar,
-    _build_html,
 )
 
 

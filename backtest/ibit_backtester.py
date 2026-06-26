@@ -49,7 +49,7 @@ from __future__ import annotations
 import logging
 import math
 import sqlite3
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -538,7 +538,7 @@ class IBITBacktester:
         max_loss_per_contract = total_max_loss * MULTIPLIER
         n_contracts = self._size_contracts(max_loss_per_contract)
 
-        account_base = self.capital if self.cfg["compound"] else self.starting_capital
+        self.capital if self.cfg["compound"] else self.starting_capital
         position = {
             "entry_date":     entry_date,
             "expiry":         expiry,

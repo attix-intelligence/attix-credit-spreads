@@ -15,10 +15,8 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
-import pytest
 
 from compass.trade_clustering import (
-    DEFAULT_CLUSTER_FEATURES,
     ActionableFilter,
     ClusterProfile,
     StabilityResult,

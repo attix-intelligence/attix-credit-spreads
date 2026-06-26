@@ -24,8 +24,6 @@ Usage::
 from __future__ import annotations
 
 import logging
-import math
-from collections import Counter
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
@@ -907,7 +905,7 @@ def _signal_agreement_html(sa: SignalAgreement) -> str:
 
 def _pnl_deviation_html(pd_: PnLDeviation) -> str:
     color = "#3fb950" if abs(pd_.aggregate_deviation_pct) < 5 else "#d29922" if abs(pd_.aggregate_deviation_pct) < 10 else "#f85149"
-    alert_badge = f' <span class="alert-badge">ALERT</span>' if pd_.alert_triggered else ""
+    alert_badge = ' <span class="alert-badge">ALERT</span>' if pd_.alert_triggered else ""
     return f"""
     <div class="dimension-card">
       <div class="dim-score" style="color:{color}">{pd_.aggregate_deviation_pct:+.1f}%{alert_badge}</div>

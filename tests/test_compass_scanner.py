@@ -440,7 +440,6 @@ class TestAnalyzeTickerRegimeInjection:
         sys = self._make_system(_compass_config())
         captured_signals = {}
 
-        orig_build = mock_snapshot
         def capture_snapshot(**kwargs):
             captured_signals.update(kwargs.get('technical_signals', {}))
             return MM()

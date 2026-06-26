@@ -12,12 +12,11 @@ Verifies that:
 
 from __future__ import annotations
 
-import math
 
 import numpy as np
 import pytest
 
-from compass.crisis_hedge import CrisisHedgeConfig, CrisisHedgeController
+from compass.crisis_hedge import CrisisHedgeConfig
 from compass.stress_test import StressTester, CRISIS_SCENARIOS, _build_crash_path
 
 

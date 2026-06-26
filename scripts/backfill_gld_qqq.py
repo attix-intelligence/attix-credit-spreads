@@ -12,7 +12,11 @@ OCC symbol format: O:{TICKER}{YYMMDD}{C/P}{STRIKE*1000:08d}
 Example: O:GLD241220P00230000 = GLD Dec 20 2024 230 Put
 """
 
-import json, logging, os, sqlite3, sys, time
+import logging
+import os
+import sqlite3
+import sys
+import time
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import List, Tuple
@@ -207,7 +211,6 @@ def backfill_ticker(ticker: str, start_date: str, end_date: str, max_contracts: 
     conn = open_db()
     total_contracts = 0
     total_bars = 0
-    total_fetched = 0
     api_calls = 0
     empty = 0
 

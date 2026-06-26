@@ -10,7 +10,6 @@ Exit 1 = at least one failure (401/403/timeout/connection error)
 """
 
 import json
-import os
 import sys
 from pathlib import Path
 from urllib.request import Request, urlopen

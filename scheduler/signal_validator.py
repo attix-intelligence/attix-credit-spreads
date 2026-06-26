@@ -8,7 +8,7 @@ If validation fails, NO orders are submitted.
 from __future__ import annotations
 
 import math
-from typing import Dict, List, Tuple
+from typing import List, Tuple
 
 
 REQUIRED_TOP_FIELDS = {"experiment", "generated_at", "as_of", "market", "signals"}

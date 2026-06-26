@@ -39,7 +39,7 @@ import logging
 from datetime import date, datetime, timedelta
 from functools import lru_cache
 from pathlib import Path
-from typing import FrozenSet, Iterable, Optional
+from typing import FrozenSet
 
 LOG = logging.getLogger(__name__)
 

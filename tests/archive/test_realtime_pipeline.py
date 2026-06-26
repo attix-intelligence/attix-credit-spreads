@@ -5,7 +5,6 @@ import time
 
 import numpy as np
 import pandas as pd
-import pytest
 
 from compass.realtime_pipeline import (
     FEATURE_COLS,

@@ -10,12 +10,10 @@ Provides:
 """
 from __future__ import annotations
 
-import json
 import math
 from dataclasses import dataclass, field
-from datetime import date, datetime, timezone
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from datetime import datetime, timezone
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -254,7 +252,7 @@ class OvernightGapBacktest:
             d = dates[i] if dates and i < len(dates) else str(i)
 
             # Update gap model with expanding window
-            gap_dist = gap_model.fit(close_prices[:i], open_prices[:i])
+            gap_model.fit(close_prices[:i], open_prices[:i])
             gap_var = gap_model.gap_var(0.99)
 
             # Regime classification
@@ -335,7 +333,7 @@ class OvernightGapBacktest:
         # Metrics
         executed = [t for t in trades if not t.skipped]
         wins = sum(1 for t in executed if t.pnl > 0)
-        losses = len(executed) - wins
+        len(executed) - wins
         total_pnl_val = sum(t.pnl for t in executed)
         win_rate = wins / len(executed) * 100 if executed else 0
         avg_pnl = total_pnl_val / len(executed) if executed else 0

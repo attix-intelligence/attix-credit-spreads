@@ -22,10 +22,9 @@ Tail risk comparison: diversified vs concentrated (EXP-880 only)
 import json
 import math
 import sys
-import os
-from datetime import datetime, date
+from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 import numpy as np
 
@@ -761,7 +760,7 @@ def main():
         print(f"\n      {label}:")
         print(f"        CAGR={_pct(res['cagr']):>8s}  Sharpe={res['sharpe']:.2f}  "
               f"Max DD={_pct(res['max_dd'])}  Vol={res['annual_vol']*100:.1f}%")
-        print(f"        Weights: ", end="")
+        print("        Weights: ", end="")
         for name in strategy_names:
             w = res["weights"].get(name, 0)
             print(f"{name[:10]}={w*100:.0f}% ", end="")
@@ -823,7 +822,7 @@ def main():
     print("DIVERSIFIED PORTFOLIO SUMMARY")
     print("=" * 70)
     print(f"  Strategies: {len(STRATEGIES)}")
-    print(f"  Min weight enforced: 10%")
+    print("  Min weight enforced: 10%")
     print(f"  Risk Parity: CAGR={_pct(rp_result['cagr'])}  Sharpe={rp_result['sharpe']:.2f}  DD={_pct(rp_result['max_dd'])}")
     print(f"  Max Sharpe:  CAGR={_pct(ms_result['cagr'])}  Sharpe={ms_result['sharpe']:.2f}  DD={_pct(ms_result['max_dd'])}")
 

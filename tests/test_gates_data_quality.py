@@ -1,10 +1,9 @@
 """Tests for SENTINEL V2 data quality gates (10, 11, 12)."""
-import os
 import sqlite3
 import sys
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 import pytest
 
@@ -384,7 +383,6 @@ class TestGate12Parity:
 
     def test_matching_regimes_pass(self, tmp_path):
         """Scanner and shadow regime agree → PASS."""
-        import pandas as pd
         from sentinel.gates_data_quality import check_regime_parity
 
         sentinel_db = tmp_path / "sentinel.db"
@@ -421,7 +419,6 @@ class TestGate12Parity:
 
     def test_divergent_regimes_detected(self, tmp_path):
         """Scanner says bull, shadow says neutral → DIVERGED."""
-        import pandas as pd
         from sentinel.gates_data_quality import check_regime_parity
 
         sentinel_db = tmp_path / "sentinel.db"
@@ -454,7 +451,6 @@ class TestGate12Parity:
     def test_vix_extreme_neutral_flagged(self, tmp_path):
         """vix_extreme_regime='neutral' in config → ISSUE."""
         from sentinel.gates_data_quality import check_regime_parity
-        import pandas as pd
 
         sentinel_db = tmp_path / "sentinel.db"
         _create_sentinel_db(sentinel_db)
@@ -477,7 +473,6 @@ class TestGate12Parity:
     def test_missing_rsi_threshold_warned(self, tmp_path):
         """Config missing rsi_bull_threshold → WARNING."""
         from sentinel.gates_data_quality import check_regime_parity
-        import pandas as pd
 
         sentinel_db = tmp_path / "sentinel.db"
         _create_sentinel_db(sentinel_db)
@@ -499,7 +494,6 @@ class TestGate12Parity:
     def test_missing_cooldown_warned(self, tmp_path):
         """Config missing cooldown_days → WARNING about no hysteresis."""
         from sentinel.gates_data_quality import check_regime_parity
-        import pandas as pd
 
         sentinel_db = tmp_path / "sentinel.db"
         _create_sentinel_db(sentinel_db)
@@ -521,7 +515,6 @@ class TestGate12Parity:
     def test_parity_recorded_in_db(self, tmp_path):
         """Parity check results should be persisted."""
         from sentinel.gates_data_quality import check_regime_parity
-        import pandas as pd
 
         sentinel_db = tmp_path / "sentinel.db"
         _create_sentinel_db(sentinel_db)

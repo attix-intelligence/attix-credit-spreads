@@ -2,13 +2,9 @@
 
 from __future__ import annotations
 
-import json
-import tempfile
 from pathlib import Path
-from typing import Dict, List
-from unittest.mock import patch
+from typing import Dict
 
-import numpy as np
 import pandas as pd
 import pytest
 
@@ -21,7 +17,6 @@ from compass.benchmark_pruned_features import (
     generate_markdown,
     run_xgboost,
 )
-from compass.feature_pipeline import FeaturePipeline
 
 ROOT = Path(__file__).resolve().parent.parent
 DATA_PATH = ROOT / "compass" / "training_data_combined.csv"

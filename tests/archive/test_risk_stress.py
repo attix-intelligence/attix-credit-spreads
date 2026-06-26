@@ -4,7 +4,6 @@ from __future__ import annotations
 import datetime
 import math
 
-import numpy as np
 import pytest
 
 from compass.risk_stress import (

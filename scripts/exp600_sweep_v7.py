@@ -183,12 +183,12 @@ def make_combo_list():
 def run_sweep(combos, years, ticker="SPY"):
     total = len(combos)
     print(f"\n{'='*90}")
-    print(f"  EXP-600 Phase 8: Beat P0141 — Faster Trend Filters")
+    print("  EXP-600 Phase 8: Beat P0141 — Faster Trend Filters")
     print(f"  {total} combos × {len(years)} years = {total * len(years)} backtests")
-    print(f"  Each year: fresh $100K | compound=False | drawdown_cb=25%")
-    print(f"  Fixed: W=$5, OTM=5%, PT=50%, SL=2.5x, min_credit=5%")
-    print(f"  P0141 baseline: +3.7% avg, 6/6 profitable, -13.8% DD")
-    print(f"  TARGET: beat +3.7% avg with 5/6 or 6/6 profitable years")
+    print("  Each year: fresh $100K | compound=False | drawdown_cb=25%")
+    print("  Fixed: W=$5, OTM=5%, PT=50%, SL=2.5x, min_credit=5%")
+    print("  P0141 baseline: +3.7% avg, 6/6 profitable, -13.8% DD")
+    print("  TARGET: beat +3.7% avg with 5/6 or 6/6 profitable years")
     print(f"{'='*90}\n")
 
     results = []
@@ -304,8 +304,8 @@ def run_sweep(combos, years, ticker="SPY"):
 
     # Leaderboard
     print(f"\n{'='*90}")
-    print(f"  LEADERBOARD — Top 25 by Consistency Score")
-    print(f"  P0141 baseline: +3.7% avg, 6/6 profitable")
+    print("  LEADERBOARD — Top 25 by Consistency Score")
+    print("  P0141 baseline: +3.7% avg, 6/6 profitable")
     print(f"{'='*90}")
     print(f"  {'Rk':<3} {'ID':<7} {'Score':>5} {'Avg':>7} {'Trds':>5} {'Min/Y':>5} "
           f"{'Yr+':>4} {'WR':>5} {'DD':>7} {'Comp$':>10}  Config")
@@ -324,7 +324,7 @@ def run_sweep(combos, years, ticker="SPY"):
               f"${r['compound_final_capital']:>9,}  {r['label']}{flag}")
 
     # Summary by MA type
-    print(f"\n  === MA Type Summary ===")
+    print("\n  === MA Type Summary ===")
     for ma_key, ma_label in MA_LABELS.items():
         ma_type, ma_period = ma_key
         subset = [r for r in results
@@ -344,7 +344,7 @@ def run_sweep(combos, years, ticker="SPY"):
               f"avg={avg_all:>+6.1f}%, 5/6+={five_six}, 6/6={six_six}, beats={beats}")
 
     # Summary by direction
-    print(f"\n  === Direction Summary ===")
+    print("\n  === Direction Summary ===")
     for d in ["bull_put", "both"]:
         subset = [r for r in results
                   if r["params"].get("direction") == d
@@ -357,7 +357,7 @@ def run_sweep(combos, years, ticker="SPY"):
         print(f"  {d:12s}: {len(pos):>2}/{len(subset)} positive, avg={avg_all:>+6.1f}%, 5/6+={five_six}")
 
     # Summary by DTE
-    print(f"\n  === DTE Summary ===")
+    print("\n  === DTE Summary ===")
     for dte in [30, 45]:
         subset = [r for r in results
                   if r["params"].get("target_dte") == dte
@@ -390,7 +390,7 @@ def run_sweep(combos, years, ticker="SPY"):
                           f"({yr_data['trades']} trades, WR {yr_data['win_rate']:.0f}%)")
             print()
     else:
-        print(f"    None. P0141 remains champion.")
+        print("    None. P0141 remains champion.")
 
     print(f"\n  Elapsed: {elapsed:.0f}s ({elapsed/60:.1f} min)")
     print(f"  Results: {output_path}")

@@ -59,11 +59,9 @@ from .data import (
     get_positions,
     get_trades,
     query_all_live,
-    query_experiment,
     query_live_trading_experiments,
     summary_all,
     PUSHED_DATA_PATH,
-    load_pushed_data,
 )
 from experiments.manager import get_manager
 from experiments.registry import LIVE_STATUSES

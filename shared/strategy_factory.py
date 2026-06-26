@@ -48,7 +48,7 @@ def _extract_credit_spread_params(config: Dict) -> Dict[str, Any]:
 def _extract_iron_condor_params(config: Dict) -> Dict[str, Any]:
     """Extract IronCondorStrategy params from nested config."""
     strategy = config.get("strategy", {})
-    risk = config.get("risk", {})
+    config.get("risk", {})
     ic = strategy.get("iron_condor", {})
 
     return {
@@ -103,7 +103,7 @@ def _extract_straddle_strangle_params(config: Dict) -> Dict[str, Any]:
 def _extract_ml_enhanced_params(config: Dict) -> Dict[str, Any]:
     """Extract MLEnhancedStrategy params from nested config."""
     strategy = config.get("strategy", {})
-    risk = config.get("risk", {})
+    config.get("risk", {})
     ml_cfg = strategy.get("ml_enhanced", {})
 
     # Start with base credit-spread params so MLEnhancedStrategy can forward them

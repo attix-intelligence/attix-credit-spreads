@@ -20,12 +20,10 @@ Output: reports/ultimate_portfolio_hedged.html
 
 from __future__ import annotations
 
-import json
-import math
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Tuple
 
 import numpy as np
 import pandas as pd
@@ -44,9 +42,8 @@ from scripts.ultimate_portfolio import (
 from compass.tail_risk_hedge import (
     TailRiskHedgeEngine,
     TailRiskHedgeConfig,
-    get_crisis_scenarios,
 )
-from compass.stress_test import StressTester, CRISIS_SCENARIOS
+from compass.stress_test import StressTester
 
 TRADING_DAYS = 252
 ACCOUNT = 100_000
@@ -446,12 +443,11 @@ def generate_html(comp: dict, scenario_results: dict, stress_results: dict) -> s
 
     # Crisis scenario table
     scenario_rows = ""
-    all_survive = True
     for name in sorted(scenario_results.keys()):
         sr = scenario_results[name]
         survive = sr.survives_20pct
         if not survive:
-            all_survive = False
+            pass
         sc = "#4ade80" if survive else "#ef4444"
         badge = "PASS" if survive else "FAIL"
         scenario_rows += f"""<tr>
@@ -676,12 +672,12 @@ def main():
     h = comp["hedged"]
     u = comp["unhedged"]
     print(f"\n{'━' * 56}")
-    print(f"  HEDGED vs UNHEDGED:")
+    print("  HEDGED vs UNHEDGED:")
     print(f"    CAGR:   {h['cagr_pct']:6.1f}% vs {u['cagr_pct']:6.1f}%  (drag: {u['cagr_pct'] - h['cagr_pct']:+.1f}%)")
     print(f"    Sharpe: {h['sharpe']:6.2f}  vs {u['sharpe']:6.2f}")
     print(f"    MaxDD:  {h['max_dd_pct']:6.1f}% vs {u['max_dd_pct']:6.1f}%  (reduction: {u['max_dd_pct'] - h['max_dd_pct']:+.1f}%)")
     print(f"\n  KEY TEST — COVID DD:  {scenario_results.get('COVID_2020', None) and scenario_results['COVID_2020'].hedged_dd_pct:.1f}%  {'< 20% PASS' if covid_pass else '>= 20% FAIL'}")
-    print(f"\n  Targets:")
+    print("\n  Targets:")
     print(f"    CAGR ≥100%:  {'PASS' if h['cagr_pct'] >= 100 else 'MISS'} ({h['cagr_pct']:.1f}%)")
     print(f"    DD   ≤12%:   {'PASS' if h['max_dd_pct'] <= 12 else 'MISS'} ({h['max_dd_pct']:.1f}%)")
     print(f"    Sharpe ≥4:   {'PASS' if h['sharpe'] >= 4.0 else 'MISS'} ({h['sharpe']:.2f})")

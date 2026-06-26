@@ -56,7 +56,7 @@ import sys
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 LOG = logging.getLogger("alpaca_connector")
 ROOT = Path(__file__).resolve().parent.parent
@@ -469,7 +469,6 @@ class AlpacaConnector:
 
         # Try the multi-leg path
         try:
-            from alpaca.trading.requests import MarketOrderRequest, LimitOrderRequest
             # alpaca-py 0.43+ has OptionLegRequest + MultilegOrderRequest
             # (in alpaca.trading.requests). Import guarded in case the
             # SDK version differs.
@@ -517,7 +516,7 @@ class AlpacaConnector:
     def _submit_single_leg(self, leg: OptionLeg, client_id: str) -> Optional[str]:
         occ = build_occ_symbol(leg.ticker, leg.expiration, leg.strike, leg.option_type)
         if self._sdk == "alpaca-py":
-            from alpaca.trading.requests import MarketOrderRequest, LimitOrderRequest
+            from alpaca.trading.requests import LimitOrderRequest
             from alpaca.trading.enums import OrderSide, TimeInForce
             side = OrderSide.BUY if leg.side.upper() == "BUY" else OrderSide.SELL
             if leg.limit_price is None:

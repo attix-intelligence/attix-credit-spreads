@@ -46,7 +46,7 @@ from xgboost import XGBClassifier
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from backtest.ibit_backtester import IBITBacktester, DB_PATH, MULTIPLIER
+from backtest.ibit_backtester import IBITBacktester, DB_PATH
 
 logging.basicConfig(level=logging.WARNING, format="%(levelname)s %(name)s: %(message)s")
 log = logging.getLogger("exp601")
@@ -362,7 +362,6 @@ class IBITAdaptiveBacktester(IBITBacktester):
 
     def _run_loop(self, start_date: str, end_date: str) -> Dict[str, Any]:
         """Identical to parent run() but skips the _load_spots/reset (already done)."""
-        from datetime import timedelta
 
         conn = self._connect()
 
@@ -426,7 +425,7 @@ def extract_training_data() -> pd.DataFrame:
     print("\n" + "="*70)
     print("  PHASE 1: Extracting Training Data")
     print(f"  Period: {BACKTEST_START} → {BACKTEST_END}")
-    print(f"  Config: DTE=14, OTM=10%, W=$5, PT=30%, SL=2.5x, risk=15%, Kelly=1.0")
+    print("  Config: DTE=14, OTM=10%, W=$5, PT=30%, SL=2.5x, risk=15%, Kelly=1.0")
     print("="*70)
 
     bt = IBITAdaptiveBacktester(
@@ -474,7 +473,7 @@ def extract_training_data() -> pd.DataFrame:
     print(f"\n  Training data saved: {out_path}  ({len(df_out)} rows)")
 
     # Summary stats
-    print(f"\n  Feature coverage (non-null %):")
+    print("\n  Feature coverage (non-null %):")
     for col in ML_FEATURES:
         if col in df_out.columns:
             pct = df_out[col].notna().mean() * 100
@@ -512,7 +511,7 @@ def train_model(df: pd.DataFrame) -> Tuple[Optional[XGBClassifier], List[str]]:
 
     if len(df_model) < 20:
         print(f"  INSUFFICIENT DATA for ML (need ≥20 trades, got {len(df_model)})")
-        print(f"  Skipping model training. The EXP-600 backtest period may be too short.")
+        print("  Skipping model training. The EXP-600 backtest period may be too short.")
         _write_minimal_report(len(df_model), available_features)
         return None, available_features
 
@@ -644,7 +643,7 @@ def _write_minimal_report(n_samples: int, features: List[str]) -> None:
     report_path = ML_DIR / "ibit_model_report.md"
     with open(report_path, "w") as f:
         f.write("# EXP-601 IBIT ML Model Report\n\n")
-        f.write(f"**Status: INSUFFICIENT DATA**\n\n")
+        f.write("**Status: INSUFFICIENT DATA**\n\n")
         f.write(f"Only {n_samples} clean samples available (minimum 20 required).\n")
         f.write("IBIT options data starts 2024-11-19. More data needed for reliable ML.\n\n")
         f.write(f"Available features: {features}\n")
@@ -682,18 +681,18 @@ def _write_model_report(
     path = ML_DIR / "ibit_model_report.md"
     now = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
     with open(path, "w") as f:
-        f.write(f"# EXP-601 IBIT ML Signal Filter — Model Report\n\n")
+        f.write("# EXP-601 IBIT ML Signal Filter — Model Report\n\n")
         f.write(f"Generated: {now}\n\n")
-        f.write(f"## Summary\n\n")
-        f.write(f"- **Model**: XGBoost binary classifier (win/loss)\n")
+        f.write("## Summary\n\n")
+        f.write("- **Model**: XGBoost binary classifier (win/loss)\n")
         f.write(f"- **Training samples**: {n_samples}\n")
         f.write(f"- **Baseline win rate**: {win_rate:.1f}%\n")
         f.write(f"- **Features**: {len(features)}\n")
         f.write(f"- **CV**: TimeSeriesSplit (n_splits={n_splits}) — chronological only\n")
         f.write(f"- **Backtest period**: {BACKTEST_START} → {BACKTEST_END}\n\n")
-        f.write(f"## CV Results\n\n")
-        f.write(f"| Fold | Train | Val | Acc | AUC | Prec | Recall |\n")
-        f.write(f"|------|-------|-----|-----|-----|------|--------|\n")
+        f.write("## CV Results\n\n")
+        f.write("| Fold | Train | Val | Acc | AUC | Prec | Recall |\n")
+        f.write("|------|-------|-----|-----|-----|------|--------|\n")
         for m in fold_metrics:
             f.write(f"| {m['fold']} | {m['n_train']} | {m['n_val']} | "
                     f"{m['acc']:.3f} | {m['auc']:.3f} | "
@@ -701,23 +700,23 @@ def _write_model_report(
         if fold_metrics:
             f.write(f"| **Mean** | - | - | **{avg_acc:.3f}** | **{avg_auc:.3f}** | "
                     f"**{avg_prec:.3f}** | **{avg_rec:.3f}** |\n")
-        f.write(f"\n## XGBoost Parameters\n\n```\n")
+        f.write("\n## XGBoost Parameters\n\n```\n")
         for k, v in xgb_params.items():
             f.write(f"{k}: {v}\n")
-        f.write(f"```\n\n")
-        f.write(f"## Feature Importances\n\n")
-        f.write(f"| Rank | Feature | Importance |\n")
-        f.write(f"|------|---------|------------|\n")
+        f.write("```\n\n")
+        f.write("## Feature Importances\n\n")
+        f.write("| Rank | Feature | Importance |\n")
+        f.write("|------|---------|------------|\n")
         for rank, (feat, imp) in enumerate(feat_imp, 1):
             f.write(f"| {rank} | `{feat}` | {imp:.4f} |\n")
-        f.write(f"\n## Notes\n\n")
-        f.write(f"- IBIT options data available from 2024-11-19 only\n")
+        f.write("\n## Notes\n\n")
+        f.write("- IBIT options data available from 2024-11-19 only\n")
         f.write(f"- With {n_samples} samples, ML signal is preliminary — "
                 f"accumulate more trades before relying on filter\n")
-        f.write(f"- `btc_corr_30d` uses ETHA (Ethereum ETF) as BTC correlation proxy\n")
-        f.write(f"- `vix` is SPX VIX forward-filled from weekly macro_score readings\n")
-        f.write(f"- `credit_pct` = credit / spread_width × 100 (no Black-Scholes)\n")
-        f.write(f"- Threshold 0.5: skip trade if P(win) < 0.5\n")
+        f.write("- `btc_corr_30d` uses ETHA (Ethereum ETF) as BTC correlation proxy\n")
+        f.write("- `vix` is SPX VIX forward-filled from weekly macro_score readings\n")
+        f.write("- `credit_pct` = credit / spread_width × 100 (no Black-Scholes)\n")
+        f.write("- Threshold 0.5: skip trade if P(win) < 0.5\n")
     print(f"  Model report: {path}")
 
 
@@ -901,7 +900,7 @@ def register_exp601() -> None:
         ),
     }.items() if v is not None}
     mgr.register(entry)
-    print(f"  Registered EXP-601 in registry.json")
+    print("  Registered EXP-601 in registry.json")
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -934,9 +933,9 @@ def main():
     print(f"{'='*70}")
     print(f"  ml/ibit_training_data.csv      — {len(df)} trades with features")
     print(f"  ml/ibit_signal_model.joblib    — {'trained' if model else 'NOT trained (insufficient data)'}")
-    print(f"  ml/ibit_feature_importance.md  — feature ranking")
-    print(f"  ml/ibit_model_report.md        — full CV report")
-    print(f"  output/exp601_ml_comparison.json — backtest comparison")
+    print("  ml/ibit_feature_importance.md  — feature ranking")
+    print("  ml/ibit_model_report.md        — full CV report")
+    print("  output/exp601_ml_comparison.json — backtest comparison")
     if model is not None and comparison.get("best_threshold_result"):
         best = comparison["best_threshold_result"]
         v    = comparison["verdict"]

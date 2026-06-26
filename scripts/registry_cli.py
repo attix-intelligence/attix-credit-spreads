@@ -29,10 +29,9 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import json
 import re
 import sys
-from datetime import date, datetime, timezone
+from datetime import datetime, timezone
 from pathlib import Path
 
 # Ensure project root is on sys.path
@@ -43,7 +42,6 @@ if str(ROOT) not in sys.path:
 from experiments.registry import (  # noqa: E402
     CREATOR_RANGES,
     VALID_CREATORS,
-    VALID_STATUSES,
     VALID_TRANSITIONS,
     find_active_not_running,
     find_orphan_dbs,
@@ -232,7 +230,7 @@ def cmd_status(args: argparse.Namespace) -> int:
     if allowed:
         print(f"\n  Allowed transitions: {', '.join(sorted(allowed))}")
     else:
-        print(f"\n  Terminal state — no transitions allowed")
+        print("\n  Terminal state — no transitions allowed")
 
     print()
     return 0
@@ -346,7 +344,7 @@ def cmd_sync(args: argparse.Namespace) -> int:
     # Orphan .env files
     orphan_envs = find_orphan_env_files(registry)
     if orphan_envs:
-        print(f"\nOrphan .env files (no registry entry):")
+        print("\nOrphan .env files (no registry entry):")
         for f in orphan_envs:
             print(f"  \u2717 {f}")
         issues += len(orphan_envs)
@@ -354,7 +352,7 @@ def cmd_sync(args: argparse.Namespace) -> int:
     # Orphan DBs
     orphan_dbs = find_orphan_dbs(registry)
     if orphan_dbs:
-        print(f"\nOrphan databases (no registry entry):")
+        print("\nOrphan databases (no registry entry):")
         for f in orphan_dbs:
             print(f"  \u2717 {f}")
         issues += len(orphan_dbs)
@@ -362,7 +360,7 @@ def cmd_sync(args: argparse.Namespace) -> int:
     # Orphan processes
     orphan_procs = find_orphan_processes()
     if orphan_procs:
-        print(f"\nOrphan processes (running for non-active experiments):")
+        print("\nOrphan processes (running for non-active experiments):")
         for p in orphan_procs:
             print(f"  \u2717 {p['exp_id']}: {_trunc(p['process'], 80)}")
         issues += len(orphan_procs)
@@ -370,13 +368,13 @@ def cmd_sync(args: argparse.Namespace) -> int:
     # Active but not running
     missing = find_active_not_running(registry)
     if missing:
-        print(f"\nActive but no running process detected:")
+        print("\nActive but no running process detected:")
         for eid in missing:
             print(f"  \u26a0 {eid}")
         issues += len(missing)
 
     # Experiments with missing files
-    print(f"\nFile integrity check:")
+    print("\nFile integrity check:")
     file_issues = 0
     for exp_id, exp in registry.get("experiments", {}).items():
         if is_research_entry(exp_id) or exp.get("status") in ("retired", "completed"):

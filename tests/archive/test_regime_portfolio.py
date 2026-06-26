@@ -1,14 +1,12 @@
 """Tests for compass/regime_portfolio.py — Regime-Adaptive Portfolio."""
 
 import numpy as np
-import pandas as pd
 import pytest
 
 from compass.regime_portfolio import (
     STRATEGY_IDS, STATIC_WEIGHTS, STATIC_LEVERAGE, REGIME_ALLOCATION,
-    SHORT_NAMES, DayState, MethodResult, ComparisonResult,
     generate_data, run_method, run_comparison, generate_report,
-    _metrics, _yearly, _equity, _dynamic_leverage, TRADING_DAYS,
+    _metrics, _equity, _dynamic_leverage, TRADING_DAYS,
 )
 
 

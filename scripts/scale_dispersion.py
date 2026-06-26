@@ -15,11 +15,10 @@ Scaling approaches tested:
 Real IronVault data + Yahoo spot. Zero synthetic.
 """
 
-import math
 import sys
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List
 
 import numpy as np
 import pandas as pd
@@ -28,8 +27,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from compass.dispersion_strategy import (
-    DispersionStrategy, PRODUCTION_CONFIG, trade_sharpe, corrected_sharpe,
-    load_spot, _friday_exps, _strikes, _spread_close, find_put_spread,
+    PRODUCTION_CONFIG, trade_sharpe, load_spot, _friday_exps, _spread_close, find_put_spread,
     Trade, CAPITAL, COMMISSION,
 )
 
@@ -321,7 +319,7 @@ def leverage_sweep():
 
 def walk_forward_optimal(optimal_config):
     """Walk-forward on optimal config."""
-    print(f"\n[4] Walk-forward validation (optimal config):")
+    print("\n[4] Walk-forward validation (optimal config):")
     print(f"    sectors={optimal_config['sectors']}")
     print(f"    spacing={optimal_config['spacing']}d, leverage={optimal_config['leverage']}x")
 

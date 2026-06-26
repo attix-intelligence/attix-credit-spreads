@@ -23,7 +23,6 @@ from __future__ import annotations
 
 import json
 import logging
-import math
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -38,7 +37,7 @@ sys.path.insert(0, str(ROOT))
 from backtest.backtester import _yf_download_safe
 from compass.tail_risk_protector import TailRiskProtector
 from compass.portfolio_optimizer import PortfolioOptimizer
-from compass.stress_test import StressTester, CRISIS_SCENARIOS
+from compass.stress_test import StressTester
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
@@ -232,8 +231,8 @@ def load_tlt_iron_condors() -> pd.Series:
 
     total_pnl = tlt["total_pnl"]
     n_trades = tlt["n_trades"]
-    sharpe = tlt["sharpe"]
-    cagr = tlt["cagr"]
+    tlt["sharpe"]
+    tlt["cagr"]
 
     all_returns = []
     for yr in range(2020, 2026):
@@ -444,7 +443,7 @@ def generate_report(data: dict) -> str:
     mc = data["monte_carlo"]
     crisis = data["crisis"]
     lev = data["leverage_sweep"]
-    corr = data["correlations"]
+    data["correlations"]
     names = data["strategy_names"]
     best = data["best_portfolio"]
     target = data["target_check"]
@@ -683,7 +682,6 @@ def main():
 
     # Select best: highest CAGR with DD ≤ 12%, fallback to highest Sharpe
     best_method = None
-    best_sharpe = -999
     best_weights = None
     best_port_rets = None
     for name, (w, w_dict, port_rets, m) in all_opt_results.items():
@@ -726,7 +724,7 @@ def main():
         print(f"\n  OPTIMAL: {optimal_lev['leverage']:.1f}x → {optimal_lev['cagr_pct']:.1f}% CAGR, {optimal_lev['max_dd_pct']:.1f}% DD")
 
     # 5. Monte Carlo stress test
-    print(f"\n[5/6] Monte Carlo stress test (10K paths)...")
+    print("\n[5/6] Monte Carlo stress test (10K paths)...")
     tester = StressTester(best_port_rets, starting_capital=ACCOUNT,
                           n_simulations=10_000, block_size=5, seed=42)
     mc = tester.run_monte_carlo()
@@ -740,7 +738,7 @@ def main():
         print(f"  {c['name']}: DD={c['portfolio_drawdown_pct']:.1f}%")
 
     # 6. Build equity curves and generate report
-    print(f"\n[6/6] Generating report...")
+    print("\n[6/6] Generating report...")
     eq_curves = {}
     for name in strategy_names:
         eq = np.cumprod(1 + aligned[name]) * ACCOUNT

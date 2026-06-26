@@ -24,7 +24,7 @@ import re
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import numpy as np
 
@@ -414,7 +414,7 @@ def check_capacity(
         severity=severity,
         message=f"{avg_contracts} contracts vs {adv:,} ATM ADV ({ticker}) = "
                 f"{participation:.1%} participation",
-        details=(f"Exceeds 5% participation limit — market impact will degrade returns"
+        details=("Exceeds 5% participation limit — market impact will degrade returns"
                  if not passed else f"{ticker} has sufficient liquidity"),
         metric_value=round(participation, 4),
         threshold=0.05,

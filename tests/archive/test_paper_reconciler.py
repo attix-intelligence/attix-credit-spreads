@@ -11,7 +11,6 @@ import pandas as pd
 import pytest
 
 from compass.paper_reconciler import (
-    Alert,
     FillQuality,
     PaperReconcilerV2,
     PnLDeviation,
@@ -160,7 +159,7 @@ class TestMatchTrades:
         bt, pp = _make_trades(n=10, with_trade_id=True)
         # Remove some paper trades
         pp = pp.iloc[:7].reset_index(drop=True)
-        pp_ids = pp["trade_id"].tolist()
+        pp["trade_id"].tolist()
         pairs, unmatched_bt, unmatched_pp = match_trades(bt, pp)
         assert len(pairs) == 7
         assert len(unmatched_bt) == 3

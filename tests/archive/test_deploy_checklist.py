@@ -11,7 +11,6 @@ from compass.deploy_checklist import (
     CheckResult,
     DeployChecklist,
     DeployResult,
-    ManualCheck,
 )
 
 

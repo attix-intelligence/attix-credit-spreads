@@ -20,7 +20,6 @@ from compass.regime_forecast import (
     REGIME_NAMES,
     REGIME_TO_IDX,
     N_REGIMES,
-    CalibrationResult,
     RegimeForecast,
     RegimeForecaster,
     apply_adjustments,

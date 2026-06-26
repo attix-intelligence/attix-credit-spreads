@@ -32,10 +32,10 @@ from __future__ import annotations
 import json
 import math
 import sqlite3
-from dataclasses import dataclass, field, asdict
-from datetime import datetime, timedelta
+from dataclasses import dataclass, asdict
+from datetime import timedelta
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -495,7 +495,7 @@ def main():
     print()
     print(f"Δ Sharpe: {delta['sharpe']:+.3f}  | target +0.30  | "
           f"{'✅ MET' if delta['sharpe']>=0.30 else '❌ MISS'}")
-    print(f"Reports → compass/reports/exp1750_order_flow.json + .html")
+    print("Reports → compass/reports/exp1750_order_flow.json + .html")
     return payload
 
 

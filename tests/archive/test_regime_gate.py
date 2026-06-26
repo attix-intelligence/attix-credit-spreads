@@ -25,7 +25,6 @@ from compass.regime_gate import (
     LOW_VOL,
     NEUTRAL,
     HISTORICAL_WIN_RATES,
-    GateDecision,
     RegimeGate,
 )
 

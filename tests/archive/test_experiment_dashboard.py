@@ -6,7 +6,6 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-import pytest
 
 from compass.experiment_dashboard import (
     DEFAULT_TARGETS,

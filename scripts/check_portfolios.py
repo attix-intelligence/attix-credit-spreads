@@ -249,7 +249,7 @@ def print_full_report(results: list[dict]) -> None:
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     print(f"\n{'═'*W}")
-    print(f"  ATTIX — PAPER TRADING PORTFOLIO CHECK")
+    print("  ATTIX — PAPER TRADING PORTFOLIO CHECK")
     print(f"  {now}")
     print(f"{'═'*W}")
 
@@ -285,7 +285,7 @@ def print_full_report(results: list[dict]) -> None:
                 print(f"    {p['symbol']:<36}  {p['side']:<5}  ×{p['qty']:<5}"
                       f"  P&L: {_sign(pl)}${pl:>8,.2f}  ({_sign(plpc)}{plpc:.1f}%)")
         else:
-            print(f"\n  Open Positions : none")
+            print("\n  Open Positions : none")
 
         orders = r["open_orders"]
         if orders:
@@ -294,7 +294,7 @@ def print_full_report(results: list[dict]) -> None:
                 print(f"    {o['symbol']:<36}  {o['side']:<5}  ×{o['qty']:<5}"
                       f"  {o['type']:<10}  {o['status']}")
         else:
-            print(f"  Open Orders    : none")
+            print("  Open Orders    : none")
 
     _print_summary(results, W)
 
@@ -343,11 +343,11 @@ def _print_summary(results: list[dict], W: int, standalone: bool = False) -> Non
     print(f"  Open Orders          : {tot_orders}")
     print(f"  Accounts OK / Total  : {len(ok)} / {len(results)}")
     if err:
-        print(f"\n  Errors:")
+        print("\n  Errors:")
         for r in err:
             print(f"    ✗  {r['label']}: {r['error']}")
     if leg:
-        print(f"\n  Legacy/stale (not counted):")
+        print("\n  Legacy/stale (not counted):")
         for r in leg:
             print(f"    ~  {r['label']} ({r['env_file']}): {r['error']}")
     print(f"{'═'*W}\n")

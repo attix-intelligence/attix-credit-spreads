@@ -242,7 +242,7 @@ def _detect_regime_ma(price_df: pd.DataFrame, regime_cfg: Dict) -> str:
         return "neutral"
 
     closes = price_df["Close"]
-    n      = len(closes)
+    len(closes)
 
     fast_period = int(regime_cfg.get("ma_fast_period", 50))
     slow_period = int(regime_cfg.get("ma_slow_period_cross", 200))

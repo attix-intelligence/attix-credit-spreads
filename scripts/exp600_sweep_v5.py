@@ -129,10 +129,10 @@ def run_sweep(param_grid, years, ticker="SPY"):
     total = len(combos)
 
     print(f"\n{'='*80}")
-    print(f"  EXP-600 Phase 5: Consistency Sweep (W=$5, DTE=30, min_credit=5%)")
+    print("  EXP-600 Phase 5: Consistency Sweep (W=$5, DTE=30, min_credit=5%)")
     print(f"  {total} combos × {len(years)} years = {total * len(years)} backtests")
-    print(f"  Each year: fresh $100K | compound=False | drawdown_cb=25%")
-    print(f"  TARGET: 6/6 yrs profitable, >30 trades/yr, >5% avg return")
+    print("  Each year: fresh $100K | compound=False | drawdown_cb=25%")
+    print("  TARGET: 6/6 yrs profitable, >30 trades/yr, >5% avg return")
     print(f"{'='*80}\n")
 
     results = []
@@ -245,7 +245,7 @@ def run_sweep(param_grid, years, ticker="SPY"):
 
     # Leaderboard
     print(f"\n{'='*90}")
-    print(f"  LEADERBOARD — Top 20 by Consistency Score")
+    print("  LEADERBOARD — Top 20 by Consistency Score")
     print(f"{'='*90}")
     print(f"  {'Rk':<3} {'ID':<7} {'Score':>5} {'Avg':>7} {'Trds':>5} {'Min/Y':>5} "
           f"{'Yr+':>4} {'WR':>5} {'DD':>7} {'Comp$':>10}  Config")

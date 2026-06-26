@@ -3,11 +3,9 @@
 from __future__ import annotations
 
 import csv
-import os
 import tempfile
 from pathlib import Path
 from typing import List
-from unittest.mock import patch
 
 import numpy as np
 import pandas as pd

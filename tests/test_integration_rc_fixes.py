@@ -7,12 +7,9 @@ sequence of events that would expose the RC bugs in production.
 """
 
 import tempfile
-import threading
-import time
 from datetime import datetime, timedelta, timezone
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import MagicMock
 
-import pytest
 
 from shared.database import get_db, get_trade_by_id, get_trades, init_db, upsert_trade
 

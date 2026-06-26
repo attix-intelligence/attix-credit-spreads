@@ -3,10 +3,9 @@
 import math
 import numpy as np
 import pandas as pd
-import pytest
 
 from compass.intraday_mr import (
-    MRConfig, Trade, WFFold, BacktestResult,
+    MRConfig, Trade, BacktestResult,
     backtest, compute_sharpe, compute_metrics, walk_forward,
     corr_to_spy, correlation_to_reference,
     build_exp1220_reference, generate_report, TRADING_DAYS,

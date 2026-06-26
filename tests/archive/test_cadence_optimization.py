@@ -1,13 +1,11 @@
 """Tests for compass/cadence_optimization.py."""
 
-import math
 import numpy as np
 import pandas as pd
-import pytest
 
 from compass.cadence_optimization import (
-    CadenceMetrics, WFFold, compute_trade_metrics, walk_forward_cadence,
-    generate_report, TRADING_DAYS,
+    compute_trade_metrics, walk_forward_cadence,
+    generate_report,
 )
 
 

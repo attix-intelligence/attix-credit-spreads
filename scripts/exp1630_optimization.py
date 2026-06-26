@@ -15,11 +15,10 @@ from __future__ import annotations
 
 import json
 import logging
-import math
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List
+from typing import List
 
 import numpy as np
 import pandas as pd
@@ -104,7 +103,6 @@ def leverage_analysis(base_result: dict, leverages=None) -> List[dict]:
     base_pnl = base_result["total_pnl"]
     base_cagr = base_result["cagr"]
     base_dd = base_result["max_dd"]
-    capital = relval.CAPITAL
 
     results = []
     for lev in leverages:
@@ -294,7 +292,7 @@ def run_generic_pair(
     )[0, 1]) if len(ci) > 5 else 0.0
 
     # Walk-forward: IS < 2022, OOS >= 2022
-    is_pnls = pnls[entry_dates.year < 2022]
+    pnls[entry_dates.year < 2022]
     oos_pnls = pnls[entry_dates.year >= 2022]
     oos_sharpe = relval._sharpe(oos_pnls) if len(oos_pnls) > 1 else 0
 

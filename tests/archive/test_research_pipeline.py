@@ -4,8 +4,7 @@ import pandas as pd
 import pytest
 from pathlib import Path
 from compass.research_pipeline import (
-    ResearchPipeline, SignalHypothesis, TestResult, CorrectedResult,
-    SignalCluster, PipelineResult, ResearchLogEntry,
+    ResearchPipeline, SignalHypothesis, TestResult, PipelineResult, ResearchLogEntry,
 )
 
 def _features(n=300, seed=42):

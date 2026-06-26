@@ -19,7 +19,6 @@ from __future__ import annotations
 import json
 import logging
 import os
-import time
 import traceback
 from datetime import datetime, timedelta, date
 from pathlib import Path
@@ -388,16 +387,15 @@ def job_post_market() -> None:
         f.write(f"{today_str},{equity:.2f},{pnl:.2f},{pnl_pct:.4f},{len(positions)}\n")
 
     # Read today's signal for summary
-    signal_summary = "no signal file"
     signal_file = SIGNALS_DIR / f"{today_str}.json"
     if signal_file.exists():
         try:
             sigs = json.loads(signal_file.read_text())
             opens = [s["stream"] for s in sigs.get("signals", []) if s.get("action") == "OPEN"]
             no_trades = sum(1 for s in sigs.get("signals", []) if s.get("action") == "NO_TRADE")
-            signal_summary = f"{len(opens)} OPEN, {no_trades} NO_TRADE"
+            f"{len(opens)} OPEN, {no_trades} NO_TRADE"
         except Exception:
-            signal_summary = "parse error"
+            pass
 
     job_log("post_market", f"Complete: equity=${equity:,.2f} pnl={pnl_pct:+.2f}%")
 
@@ -425,7 +423,7 @@ def job_weekly_summary() -> None:
 
     if not lines:
         send_telegram(
-            f"--- Weekly Summary ---\nNo equity data available for this week."
+            "--- Weekly Summary ---\nNo equity data available for this week."
         )
         return
 

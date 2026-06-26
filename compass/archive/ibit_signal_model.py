@@ -21,11 +21,9 @@ from __future__ import annotations
 
 import base64
 import io
-import json
 import logging
-import math
 import os
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -41,7 +39,6 @@ from sklearn.metrics import (
 )
 from sklearn.model_selection import TimeSeriesSplit
 
-from compass.ibit_features import IBIT_FEATURE_NAMES, IBITFeatureEngine
 from shared.indicators import sanitize_features
 
 logger = logging.getLogger(__name__)

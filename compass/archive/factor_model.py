@@ -270,7 +270,7 @@ class FactorModel:
     @staticmethod
     def _factor_returns(F: pd.DataFrame, factor_names: List[str]) -> List[FactorReturn]:
         results: List[FactorReturn] = []
-        n = len(F)
+        len(F)
         for f in factor_names:
             vals = F[f].dropna()
             if len(vals) < 5:
@@ -533,14 +533,12 @@ class FactorModel:
         neutral_sec = self._html_neutral(r.neutral_portfolio)
 
         # New charts
-        exp_heatmap_b64 = self._chart_exposure_heatmap(r)
-        var_decomp_b64 = self._chart_variance_decomp(r)
-        exp_heatmap = f'<div style="background:#fff;border-radius:8px;padding:1em;margin:1em 0;text-align:center"><img src="data:image/png;base64,{exp_heatmap_b64}" style="max-width:100%"></div>' if exp_heatmap_b64 else ""
-        var_decomp = f'<div style="background:#fff;border-radius:8px;padding:1em;margin:1em 0;text-align:center"><img src="data:image/png;base64,{var_decomp_b64}" style="max-width:100%"></div>' if var_decomp_b64 else ""
+        self._chart_exposure_heatmap(r)
+        self._chart_variance_decomp(r)
 
         # Mimicking portfolios section
-        mim_sec = self._html_mimicking(r.mimicking_portfolios)
-        timing_sec = self._html_timing(r.timing_signals)
+        self._html_mimicking(r.mimicking_portfolios)
+        self._html_timing(r.timing_signals)
 
         return f"""<!DOCTYPE html>
 <html lang="en">

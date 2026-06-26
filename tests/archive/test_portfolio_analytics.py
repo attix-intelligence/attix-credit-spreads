@@ -8,7 +8,6 @@ generation, edge cases, and dataclasses.
 
 from __future__ import annotations
 
-import math
 import tempfile
 from pathlib import Path
 
@@ -639,7 +638,7 @@ class TestMultipleBenchmarks:
     def test_three_benchmarks(self, daily_returns):
         rs1 = np.random.RandomState(100)
         rs2 = np.random.RandomState(200)
-        rs3 = np.random.RandomState(300)
+        np.random.RandomState(300)
         dates = daily_returns.index
         benchmarks = {
             "SPY": pd.Series(rs1.normal(0.0003, 0.01, len(dates)), index=dates),

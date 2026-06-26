@@ -14,11 +14,9 @@ Output: reports/ultimate_portfolio_hedged_walkforward.html
 from __future__ import annotations
 
 import json
-import math
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -37,7 +35,6 @@ from scripts.ultimate_portfolio import (
 from compass.tail_risk_hedge import (
     TailRiskHedgeEngine,
     TailRiskHedgeConfig,
-    BacktestResult,
 )
 
 TRADING_DAYS = 252
@@ -140,7 +137,7 @@ def run_walk_forward(df, spy_ret, vix, vix3m):
     unhedged_capital = ACCOUNT
 
     for wf in WF_WINDOWS:
-        train_mask = (df.index >= wf["train"][0]) & (df.index <= wf["train"][1])
+        (df.index >= wf["train"][0]) & (df.index <= wf["train"][1])
         test_mask = (df.index >= wf["test"][0]) & (df.index <= wf["test"][1])
         test_df = df.loc[test_mask]
 
@@ -546,13 +543,13 @@ def main():
 
     ha = result["hedged_agg"]; ua = result["unhedged_agg"]
     print(f"\n{'━'*56}")
-    print(f"  OOS HEDGED (2022–2025):")
+    print("  OOS HEDGED (2022–2025):")
     print(f"    CAGR:   {ha['cagr_pct']:.1f}%   Sharpe: {ha['sharpe']:.2f}   Max DD: {ha['max_dd_pct']:.1f}%")
-    print(f"  OOS UNHEDGED:")
+    print("  OOS UNHEDGED:")
     print(f"    CAGR:   {ua['cagr_pct']:.1f}%   Sharpe: {ua['sharpe']:.2f}   Max DD: {ua['max_dd_pct']:.1f}%")
     print(f"  CAGR DRAG: {result['cagr_drag']:+.1f}%")
 
-    print(f"\n  Year-by-Year OOS (Hedged):")
+    print("\n  Year-by-Year OOS (Hedged):")
     for w in result["windows"]:
         hm = w["hedged"]
         print(f"    {w['label']}: CAGR={hm['cagr_pct']:7.1f}%  Sharpe={hm['sharpe']:.2f}  DD={hm['max_dd_pct']:.1f}%  "

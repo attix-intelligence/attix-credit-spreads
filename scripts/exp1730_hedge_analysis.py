@@ -40,10 +40,9 @@ ZERO SYNTHETIC DATA. All prices from Yahoo Finance.
 
 import json
 import logging
-import math
 import sys
 from collections import defaultdict
-from datetime import datetime, date
+from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Tuple
 
@@ -464,7 +463,7 @@ def analyze_allocation_scenarios(
     df["t1730_raw"] = build_t1730_daily_pnl(t1730_trades, spy)
 
     equity_total = float(df["equity_pnl"].sum())
-    t1730_total = float(df["t1730_raw"].sum())
+    float(df["t1730_raw"].sum())
 
     # Baseline equity-only metrics
     base_dd = compute_max_dd_daily(df["equity_pnl"], CAPITAL)
@@ -550,7 +549,6 @@ def generate_report(results: Dict, output_path: Path):
     wf = results["walk_forward"]
 
     # Stress vs normal table
-    stress_row = ""
     stress_pct = hedge["stress_pnl"] / CAPITAL * 100
     normal_pct = hedge["normal_pnl"] / CAPITAL * 100
     s_color = "#059669" if hedge["stress_pnl"] > 0 else "#dc2626"
@@ -846,12 +844,12 @@ def main():
     log.info("Analyzing hedge behavior...")
     hedge = analyze_hedge_behavior(spy, stress_months, exp1730_by_month)
 
-    print(f"\n--- Hedge Behavior ---")
+    print("\n--- Hedge Behavior ---")
     print(f"Stress months total:            {hedge['total_stress_months']}")
     print(f"  ...with EXP-1730 exits:       {hedge['stress_months_with_trades']} ({hedge['stress_coverage']:.0%} coverage)")
     print(f"  Stress PnL:                   ${hedge['stress_pnl']:,.2f}")
     print(f"  Stress win rate:              {hedge['stress_win_rate']:.0%}")
-    print(f"")
+    print("")
     print(f"Normal months with EXP-1730:    {hedge['normal_months_with_trades']}")
     print(f"  Normal PnL:                   ${hedge['normal_pnl']:,.2f}")
     print(f"  Normal win rate:              {hedge['normal_win_rate']:.0%}")
@@ -859,7 +857,7 @@ def main():
     # Yearly correlation
     log.info("Computing yearly correlation...")
     corr = compute_yearly_correlation(spy, equity_daily, exp1730_by_month)
-    print(f"\n--- Yearly Correlation ---")
+    print("\n--- Yearly Correlation ---")
     print(f"Equity vs EXP-1730:             {corr['correlation']:+.3f}")
 
     # Overlay improvement
@@ -875,14 +873,14 @@ def main():
     # Walk-forward
     log.info("Walk-forward analysis...")
     wf = walk_forward_hedge(spy, exp1730_by_month)
-    print(f"\n--- Walk-Forward ---")
+    print("\n--- Walk-Forward ---")
     print(f"IS ({wf['is_period']}):  stress PnL ${wf['is_stress_pnl']:,.0f} / total ${wf['is_total_pnl']:,.0f}")
     print(f"OOS ({wf['oos_period']}): stress PnL ${wf['oos_stress_pnl']:,.0f} / total ${wf['oos_total_pnl']:,.0f}")
 
     # Allocation scenarios & crash windows
     log.info("Allocation overlay analysis (5/7.5/10%)...")
     alloc_results = analyze_allocation_scenarios(equity_daily, trades, spy)
-    print(f"\n--- Allocation Scenarios ---")
+    print("\n--- Allocation Scenarios ---")
     print(f"Baseline equity-only:          CAGR {alloc_results['baseline']['cagr_pct']:+.2f}%, Max DD {alloc_results['baseline']['max_dd_pct']:.2f}%")
     for alloc_pct, r in alloc_results["allocations"].items():
         print(f"\nEquity + EXP-1730 @ {alloc_pct} (scale {r['scale_factor']:.1f}x):")
@@ -928,15 +926,15 @@ def main():
         print(f"  EXP-1730 contributes ${hedge['stress_pnl']:+,.0f} during stress months")
         print(f"  vs ${hedge['normal_pnl']:+,.0f} during normal months")
         print(f"  Yearly correlation to equity: {corr['correlation']:+.3f}")
-        print(f"\n  Structurally different from purchased puts (all net-negative):")
-        print(f"    Continuous puts drag:  -2.86%/yr")
-        print(f"    Selective puts drag:   -0.60%/yr")
-        print(f"    Collar drag:           -0.31%/yr")
+        print("\n  Structurally different from purchased puts (all net-negative):")
+        print("    Continuous puts drag:  -2.86%/yr")
+        print("    Selective puts drag:   -0.60%/yr")
+        print("    Collar drag:           -0.31%/yr")
         print(f"    EXP-1730 drag:         {(overlay['scenarios']['C_equity_plus_t1730_always']['annual_drag_pct']):+.2f}%/yr")
     else:
         print("VERDICT: NOT A HEDGE")
         print(f"  EXP-1730 stress PnL: ${hedge['stress_pnl']:,.0f} (not positive)")
-        print(f"  Does not meet the hedge criterion.")
+        print("  Does not meet the hedge criterion.")
     print(f"{'=' * 70}")
 
 

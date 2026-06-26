@@ -47,7 +47,6 @@ class ExperimentManager:
         """Re-read registry.json from disk."""
         if self._registry_path is not None:
             import json
-            from pathlib import Path
             try:
                 with open(self._registry_path, encoding="utf-8") as fh:
                     self._registry = json.load(fh)

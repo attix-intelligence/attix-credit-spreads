@@ -125,11 +125,11 @@ def run_sweep(param_grid, years, ticker="SPY"):
     total = len(combos)
 
     print(f"\n{'='*90}")
-    print(f"  EXP-600 Phase 7: Direction-Aware Sweep (regime_mode=none, MA50 filter)")
+    print("  EXP-600 Phase 7: Direction-Aware Sweep (regime_mode=none, MA50 filter)")
     print(f"  {total} combos × {len(years)} years = {total * len(years)} backtests")
-    print(f"  Each year: fresh $100K | compound=False | drawdown_cb=25%")
-    print(f"  Directions: bull_put (puts above MA), bear_call (calls below MA), both (trend-follow)")
-    print(f"  TARGET: 5/6+ yrs profitable, >20 trades/yr")
+    print("  Each year: fresh $100K | compound=False | drawdown_cb=25%")
+    print("  Directions: bull_put (puts above MA), bear_call (calls below MA), both (trend-follow)")
+    print("  TARGET: 5/6+ yrs profitable, >20 trades/yr")
     print(f"{'='*90}\n")
 
     results = []
@@ -242,7 +242,7 @@ def run_sweep(param_grid, years, ticker="SPY"):
 
     # Leaderboard
     print(f"\n{'='*90}")
-    print(f"  LEADERBOARD — Top 25 by Consistency Score")
+    print("  LEADERBOARD — Top 25 by Consistency Score")
     print(f"{'='*90}")
     print(f"  {'Rk':<3} {'ID':<7} {'Score':>5} {'Avg':>7} {'Trds':>5} {'Min/Y':>5} "
           f"{'Yr+':>4} {'WR':>5} {'DD':>7} {'Comp$':>10}  Config")
@@ -266,7 +266,7 @@ def run_sweep(param_grid, years, ticker="SPY"):
               f"${r['compound_final_capital']:>9,}  {cfg}{flag}")
 
     # Summary by direction
-    print(f"\n  === Direction Summary ===")
+    print("\n  === Direction Summary ===")
     for d in ["bull_put", "bear_call", "both"]:
         subset = [r for r in results if r["params"]["direction"] == d]
         pos = [r for r in subset if r["avg_return"] > 0]
@@ -277,7 +277,7 @@ def run_sweep(param_grid, years, ticker="SPY"):
               f"avg={avg_all:>+6.1f}%, 5/6+={five_six}, 6/6={six_six}")
 
     # Summary by DTE
-    print(f"\n  === DTE Summary ===")
+    print("\n  === DTE Summary ===")
     for dte in [30, 45]:
         subset = [r for r in results if r["params"]["target_dte"] == dte]
         pos = [r for r in subset if r["avg_return"] > 0]

@@ -1,10 +1,7 @@
 """Tests for scripts/daily_report.py (INF-4)."""
 
-import json
 import os
 import sqlite3
-import tempfile
-from datetime import datetime, timezone
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -24,7 +21,6 @@ from scripts.daily_report import (
     collect_report_data,
     generate_html,
     get_daily_summary_metrics,
-    load_config,
     load_env_file,
     send_html_report_telegram,
 )

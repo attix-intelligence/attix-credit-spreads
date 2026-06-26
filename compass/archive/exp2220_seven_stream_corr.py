@@ -34,12 +34,11 @@ much of the 7 streams' apparent diversification is real.
 from __future__ import annotations
 
 import json
-import math
 import sqlite3
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 import numpy as np
 import pandas as pd

@@ -17,7 +17,6 @@ Covers:
 
 from __future__ import annotations
 
-import math
 
 import numpy as np
 import pandas as pd
@@ -30,7 +29,6 @@ from compass.trade_cost_analyzer import (
     OpportunityCosts,
     OptimizationRec,
     StrategyAttribution,
-    TimeBucket,
     TradeCost,
     TradeCostAnalyzer,
     almgren_chriss_impact,

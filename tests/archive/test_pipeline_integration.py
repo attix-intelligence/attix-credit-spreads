@@ -13,10 +13,9 @@ Complements test_full_pipeline_integration.py with deeper coverage of:
 from __future__ import annotations
 
 import tempfile
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import numpy as np
 import pandas as pd
@@ -30,12 +29,11 @@ from compass.crisis_hedge import (
 )
 from compass.ensemble_signal_model import EnsembleSignalModel
 from compass.feature_pipeline import FeaturePipeline
-from compass.features import PRUNED_FEATURES, PRUNED_REMOVED
+from compass.features import PRUNED_FEATURES
 from compass.online_retrain import ModelRetrainer, RetrainResult
-from compass.regime import Regime, RegimeClassifier
 from compass.retrain_scheduler import RetrainScheduler
 from compass.signal_model import SignalModel
-from compass.sizing import PositionSizer, calculate_dynamic_risk, get_contract_size
+from compass.sizing import calculate_dynamic_risk, get_contract_size
 
 ROOT = Path(__file__).resolve().parent.parent
 TRAINING_CSV = ROOT / "compass" / "training_data_combined.csv"

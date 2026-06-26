@@ -20,19 +20,17 @@ Uses corrected Sharpe formula: arithmetic mean × sqrt(252) / std(daily, ddof=1)
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass, field
-from datetime import date
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List
 
 import numpy as np
-import pandas as pd
 
 ROOT = Path(__file__).resolve().parent.parent
 TRADING_DAYS = 252
 
 from compass.portfolio_optimizer import (
-    PortfolioOptimizer, EXPERIMENT_PROFILES, EXPERIMENT_IDS,
+    PortfolioOptimizer, EXPERIMENT_PROFILES,
 )
 
 

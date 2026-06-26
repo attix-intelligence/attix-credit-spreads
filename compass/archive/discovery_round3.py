@@ -18,9 +18,7 @@ from __future__ import annotations
 
 import json
 import logging
-import math
 import sqlite3
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
@@ -397,7 +395,7 @@ def main() -> int:
     survivors = []
     for k, v in results["ideas"].items():
         verdict = v.get("verdict", "?")
-        sharpe = v.get("sharpe", v.get("candidates", {}).get("daily_mean_reversion", {}).get("sharpe", "—"))
+        v.get("sharpe", v.get("candidates", {}).get("daily_mean_reversion", {}).get("sharpe", "—"))
         log.info("  %-35s  verdict=%s", k, verdict)
         if verdict == "RESEARCH":
             survivors.append(k)

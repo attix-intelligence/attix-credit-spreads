@@ -175,7 +175,7 @@ class TestWeightingMethods:
         np.testing.assert_allclose(w.sum(), 1.0)  # falls back to equal
 
     def test_correlation_deweight(self, signals):
-        base = equal_weights(signals.shape[1])
+        equal_weights(signals.shape[1])
         # Create highly correlated signals
         df = signals.copy()
         df["alpha_copy"] = df["alpha_0"] + np.random.RandomState(1).normal(0, 0.01, len(df))

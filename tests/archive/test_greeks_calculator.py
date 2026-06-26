@@ -22,14 +22,8 @@ import pandas as pd
 import pytest
 
 from compass.greeks_calculator import (
-    DecayPoint,
     GreeksCalculator,
-    OptionGreeks,
-    PortfolioGreeks,
     Position,
-    RiskLimit,
-    ScenarioResult,
-    SpreadGreeks,
     compute_option_greeks,
     compute_spread_greeks,
     _norm_cdf,

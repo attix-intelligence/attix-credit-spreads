@@ -39,7 +39,7 @@ import tempfile
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Protocol, Sequence, Tuple, runtime_checkable
+from typing import Dict, List, Optional, Protocol, Sequence, Tuple, runtime_checkable
 
 from compass.live.vrp_contracts import OrderIntent
 

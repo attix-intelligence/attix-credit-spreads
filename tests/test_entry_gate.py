@@ -6,7 +6,6 @@ import json
 from datetime import date
 from pathlib import Path
 
-import pytest
 
 from shared.entry_gate import (
     load_nfp_dates,

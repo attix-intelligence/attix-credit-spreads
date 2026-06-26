@@ -8,7 +8,7 @@ through the injected provider.
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import pytest
 
@@ -273,7 +273,7 @@ def test_no_trigger_when_within_band(tmp_path):
 
 def test_pending_close_is_not_re_evaluated(tmp_path):
     """If we already issued a close last cycle, don't fire a second close order."""
-    spread = _open_spread(credit=1.05)
+    _open_spread(credit=1.05)
     reg = VRPPositionRegistry(str(tmp_path / "r.json"))
     reg.record_open(_intent(), order_id="ord-1")
     # Now mark it pending — the next cycle should skip dispatch.

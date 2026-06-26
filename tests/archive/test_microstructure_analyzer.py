@@ -13,7 +13,6 @@ from compass.microstructure_analyzer import (
     ToxicityMetrics,
     IntradayPattern,
     OvernightGap,
-    ExecutionWindow,
     MakerTakerStats,
 )
 

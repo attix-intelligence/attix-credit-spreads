@@ -3,12 +3,9 @@
 from __future__ import annotations
 
 import json
-import math
 import tempfile
 from pathlib import Path
 
-import numpy as np
-import pytest
 
 from compass.walkforward_yearly import (
     DD_CAP,
@@ -20,12 +17,9 @@ from compass.walkforward_yearly import (
     STRATEGY_CORRELATIONS,
     STRATEGY_YEARLY,
     YEARS,
-    DDCappedYearMetrics,
-    LeveredYearMetrics,
     PortfolioYearMetrics,
     WalkForwardYearly,
     WalkForwardYearlyResult,
-    YearMetrics,
     _compound_cagr,
     _get_correlation,
     compute_dd_capped_year,

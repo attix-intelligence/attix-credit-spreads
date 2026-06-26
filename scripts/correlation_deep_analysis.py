@@ -15,7 +15,6 @@ Output: reports/strategy_correlation_deep.html + .json
 
 from __future__ import annotations
 
-import itertools
 import json
 import math
 import sys
@@ -30,7 +29,7 @@ sys.path.insert(0, str(ROOT))
 
 from compass.correlation_analyzer import (
     STRATEGIES, StrategySpec, build_daily_returns, compute_correlation_matrix,
-    TRADING_DAYS, N_YEARS,
+    TRADING_DAYS,
 )
 
 REPORT_PATH = ROOT / "reports" / "strategy_correlation_deep.html"

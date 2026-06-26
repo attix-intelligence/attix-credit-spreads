@@ -52,7 +52,7 @@ def _render_watchdog_banner() -> str:
         return _watchdog_banner_html(
             color="yellow",
             icon="⚠️",
-            message=f"Watchdog hasn't checked in",
+            message="Watchdog hasn't checked in",
             last_check_iso=last_check_iso,
             minutes_ago=minutes_ago,
         )

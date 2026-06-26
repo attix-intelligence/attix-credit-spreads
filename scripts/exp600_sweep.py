@@ -26,7 +26,6 @@ import argparse
 import itertools
 import json
 import logging
-import os
 import sys
 import time
 from datetime import datetime
@@ -126,10 +125,10 @@ def run_sweep(param_grid, years, ticker="SPY"):
     total = len(combos)
 
     print(f"\n{'='*80}")
-    print(f"  EXP-600: Real Data Credit Spread Sweep")
+    print("  EXP-600: Real Data Credit Spread Sweep")
     print(f"  {total} parameter combinations × {len(years)} years = {total * len(years)} backtests")
     print(f"  Ticker: {ticker}")
-    print(f"  Iron Vault: ACTIVE (real data only)")
+    print("  Iron Vault: ACTIVE (real data only)")
     print(f"{'='*80}\n")
 
     results = []
@@ -219,7 +218,7 @@ def run_sweep(param_grid, years, ticker="SPY"):
 
     # Print leaderboard
     print(f"\n{'='*80}")
-    print(f"  LEADERBOARD — Top 10")
+    print("  LEADERBOARD — Top 10")
     print(f"{'='*80}")
     print(f"  {'Rank':<5} {'ID':<7} {'AvgRet':>8} {'Trades':>7} {'Yrs+':>5} {'WR':>6} {'DD':>7}  Params")
     print(f"  {'-'*75}")
@@ -233,7 +232,7 @@ def run_sweep(param_grid, years, ticker="SPY"):
               f" {r['years_profitable']:>4} {r['avg_win_rate']:>5.0f}% {r['worst_drawdown']:>6.1f}%  {param_str}")
 
     # Print worst 5
-    print(f"\n  BOTTOM 5:")
+    print("\n  BOTTOM 5:")
     for rank, r in enumerate(results[-5:], len(results)-4):
         p = r["params"]
         param_str = (f"DTE={p['target_dte']} W=${p['spread_width']} "

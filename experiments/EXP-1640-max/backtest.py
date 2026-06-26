@@ -17,10 +17,10 @@ import math
 import os
 import sqlite3
 import sys
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -198,7 +198,7 @@ def find_trade(ticker: str, entry_date: str, prices: pd.DataFrame,
         return None
 
     # Find nearest expiration ~target_dte out
-    target_exp = entry_dt + timedelta(days=target_dte)
+    entry_dt + timedelta(days=target_dte)
     exps = get_real_expirations(ticker, entry_dt.year, entry_dt.year + 1)
     if not exps:
         return None
@@ -604,7 +604,7 @@ mean-reversion risk in weak sectors. Bi-weekly rebalancing captures regime shift
         parts.append(f'<div class="verdict verdict-warn">Walk-forward CAUTION: OOS Sharpe '
                      f'{s_m["sharpe"]:.2f} is {wf_ratio:.0%} of in-sample</div>')
     else:
-        parts.append(f'<div class="verdict verdict-fail">Walk-forward FAIL: negative OOS Sharpe</div>')
+        parts.append('<div class="verdict verdict-fail">Walk-forward FAIL: negative OOS Sharpe</div>')
 
     # ── Trade Log (sample) ──
     parts.append("<h2>Recent Trades (Last 15)</h2>")
@@ -636,7 +636,7 @@ mean-reversion risk in weak sectors. Bi-weekly rebalancing captures regime shift
         cls = "verdict-pass" if ok else "verdict-warn"
         parts.append(f'<div class="verdict {cls}">{"PASS" if ok else "MISS"}: {label}</div>')
 
-    parts.append(f"""
+    parts.append("""
 <div class="footer">
   EXP-1640: Sector Momentum with Options Overlay — Attix Credit Spreads<br>
   All prices from IronVault options_cache.db + Yahoo Finance. Zero synthetic data.<br>

@@ -19,10 +19,9 @@ All data from Yahoo Finance. Zero synthetic pricing.
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass, field
-from datetime import datetime
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -32,7 +31,7 @@ TRADING_DAYS = 252
 
 # Reuse v3 backtest primitives (the validated winner)
 from compass.crisis_alpha_v3 import (
-    UNIVERSE_V3, LOOKBACK_GRID, load_universe_v3,
+    LOOKBACK_GRID, load_universe_v3,
     compute_momentum, compute_vol_target_weights,
 )
 
@@ -541,7 +540,7 @@ def generate_report(
 
     # Standalone comparison
     opt = result.optimal_allocation
-    corr_spy_c = "#16a34a" if abs(result.exp1780_corr_spy) < 0.2 else "#d97706"
+    "#16a34a" if abs(result.exp1780_corr_spy) < 0.2 else "#d97706"
 
     html = f"""<!DOCTYPE html>
 <html><head><meta charset="UTF-8"><title>EXP-1780 + EXP-1220 Integration</title>

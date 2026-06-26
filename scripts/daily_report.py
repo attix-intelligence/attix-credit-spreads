@@ -13,11 +13,10 @@ import argparse
 import json
 import logging
 import os
-import sys
 import tempfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 import requests
 import yaml

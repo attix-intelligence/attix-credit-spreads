@@ -51,7 +51,7 @@ def main():
             if t.upper().startswith("I:")
             else "POLYGON_API_KEY"
         )
-        masked = (api_key[:4] + "…" + api_key[-4:]) if api_key else "<empty>"
+        (api_key[:4] + "…" + api_key[-4:]) if api_key else "<empty>"
         status, body = probe(t)
         marker = "✓" if status == 200 else "✗"
         print(f"{t:<10}{which:<22}{status:<6}{marker:<4}{body}")

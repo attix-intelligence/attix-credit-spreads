@@ -13,10 +13,8 @@ Each gate is tested with in-memory SQLite DBs. No external API calls.
 
 import sqlite3
 import sys
-import tempfile
-from datetime import date, timedelta
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 import pytest
 
@@ -30,13 +28,6 @@ from sentinel.gates_account import (
     check_account_gates,
     _parse_occ_symbol,
     _build_occ,
-    _build_expected_symbols,
-    AccountHealthResult,
-    ExpiredPositionResult,
-    ConcentrationResult,
-    OrphanV2Result,
-    DD_WARNING_PCT,
-    DD_HALT_PCT,
     DD_FLATTEN_PCT,
 )
 

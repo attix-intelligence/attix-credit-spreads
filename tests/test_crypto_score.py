@@ -23,8 +23,6 @@ from compass.crypto.risk_gate import (
     check_iv_percentile,
     check_weekend_risk,
     check_all_gates,
-    GAP_BLOCK_PCT,
-    IV_PERCENTILE_FLOOR,
     WEEKEND_DTE_MAX,
 )
 

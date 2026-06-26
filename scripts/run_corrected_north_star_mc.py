@@ -259,9 +259,9 @@ def generate_report(scenario_results: Dict[str, tuple], n_seeds: int) -> str:
     A("# North Star Portfolio — Monte Carlo Simulation")
     A("")
     A(f"> **Generated:** {now}")
-    A(f"> **Branch:** `main`")
+    A("> **Branch:** `main`")
     A(f"> **Seeds:** {n_seeds:,}  |  **Years per path:** {N_YEARS}")
-    A(f"> **⚠️ Win rate corrected to 93.4%** (from 86%) — see `output/win_rate_boost_report.md`")
+    A("> **⚠️ Win rate corrected to 93.4%** (from 86%) — see `output/win_rate_boost_report.md`")
     A("")
     A("---")
     A("")
@@ -269,9 +269,9 @@ def generate_report(scenario_results: Dict[str, tuple], n_seeds: int) -> str:
     A("")
     A("| Parameter | Original (REF) | Scenario A (corrected) | Scenario B (corrected) |")
     A("|-----------|:--------------:|:----------------------:|:----------------------:|")
-    A(f"| Win rate | 86.0% | **93.4%** | **93.4%** |")
-    A(f"| Trades/yr | 280 | 208 (SPY-only) | 280 (sector div.) |")
-    A(f"| Source | Prior MC | ML WFV OOS actuals | ML WFV OOS actuals |")
+    A("| Win rate | 86.0% | **93.4%** | **93.4%** |")
+    A("| Trades/yr | 280 | 208 (SPY-only) | 280 (sector div.) |")
+    A("| Source | Prior MC | ML WFV OOS actuals | ML WFV OOS actuals |")
     A("")
     A("### North Star achievement comparison")
     A("")
@@ -297,8 +297,8 @@ def generate_report(scenario_results: Dict[str, tuple], n_seeds: int) -> str:
         A("")
         A("### Parameters")
         A("")
-        A(f"| Parameter | Value | Source |")
-        A(f"|-----------|:-----:|--------|")
+        A("| Parameter | Value | Source |")
+        A("|-----------|:-----:|--------|")
         A(f"| Trades per year | {nt} | {'SPY-only' if nt == 208 else 'SPY 208 + sector ETFs 72'} |")
         A(f"| Win rate | {wp*100:.1f}% | ML-filtered OOS walk-forward (2021-2025) |")
         A(f"| Avg win / risk | +{WIN_FRAC*100:.0f}% | Credit spreads: 19% avg credit kept on winners |")
@@ -310,8 +310,8 @@ def generate_report(scenario_results: Dict[str, tuple], n_seeds: int) -> str:
         A("")
         A("### Distribution (10,000 simulations)")
         A("")
-        A(f"| Metric | Mean | Median | Std | P1 | P5 | P10 | P25 | P50 | P75 | P90 | P95 | P99 |")
-        A(f"|--------|:----:|:------:|:---:|:--:|:--:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|")
+        A("| Metric | Mean | Median | Std | P1 | P5 | P10 | P25 | P50 | P75 | P90 | P95 | P99 |")
+        A("|--------|:----:|:------:|:---:|:--:|:--:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|")
         A(p_row(st["avg_rets"],  "Avg annual return"))
         A(p_row(st["cagrs"],     "6yr CAGR"))
         A(p_row(st["worst_dds"], "Worst single-yr DD"))
@@ -323,8 +323,8 @@ def generate_report(scenario_results: Dict[str, tuple], n_seeds: int) -> str:
         per_yr_dds  = [np.array([r["year_dds"][y]  for r in results]) for y in range(N_YEARS)]
         A("#### Per-year return distribution")
         A("")
-        A(f"| Year | Mean | P5 | P25 | P50 | P75 | P95 | P(>0) | P(>100%) |")
-        A(f"|------|:----:|:--:|:---:|:---:|:---:|:---:|:-----:|:--------:|")
+        A("| Year | Mean | P5 | P25 | P50 | P75 | P95 | P(>0) | P(>100%) |")
+        A("|------|:----:|:--:|:---:|:---:|:---:|:---:|:-----:|:--------:|")
         for yi, lbl in enumerate(["Y1","Y2","Y3","Y4","Y5","Y6"]):
             arr = per_yr_rets[yi]
             p5,p25,p50,p75,p95 = np.percentile(arr, [5,25,50,75,95])
@@ -333,8 +333,8 @@ def generate_report(scenario_results: Dict[str, tuple], n_seeds: int) -> str:
         A("")
         A("#### Per-year drawdown distribution")
         A("")
-        A(f"| Year | P5 DD | P25 DD | P50 DD | P75 DD | P95 DD |")
-        A(f"|------|:-----:|:------:|:------:|:------:|:------:|")
+        A("| Year | P5 DD | P25 DD | P50 DD | P75 DD | P95 DD |")
+        A("|------|:-----:|:------:|:------:|:------:|:------:|")
         for yi, lbl in enumerate(["Y1","Y2","Y3","Y4","Y5","Y6"]):
             arr = per_yr_dds[yi]
             p5,p25,p50,p75,p95 = np.percentile(arr, [5,25,50,75,95])
@@ -344,14 +344,14 @@ def generate_report(scenario_results: Dict[str, tuple], n_seeds: int) -> str:
         # North Star targets
         A("### North Star Target Achievement")
         A("")
-        A(f"| Target | Threshold | % achieving |")
-        A(f"|--------|:---------:|:-----------:|")
+        A("| Target | Threshold | % achieving |")
+        A("|--------|:---------:|:-----------:|")
         A(f"| T1: Avg annual return | ≥ 100% | **{st['t1_pct']:.1f}%** |")
         A(f"| T2: Max portfolio DD  | ≥ -12% | **{st['t2_pct']:.1f}%** |")
         A(f"| T3: Avg annual Sharpe | ≥ 2.0  | **{st['t3_pct']:.1f}%** |")
         A(f"| **ALL THREE**         | —      | **{st['ns_pct']:.1f}%** |")
         A("")
-        A(f"- **Binding constraint:** "
+        A("- **Binding constraint:** "
           + ("T1 (return)" if min(st['t1_pct'],st['t2_pct'],st['t3_pct']) == st['t1_pct']
              else "T3 (Sharpe)" if min(st['t1_pct'],st['t2_pct'],st['t3_pct']) == st['t3_pct']
              else "T2 (drawdown)"))
@@ -363,8 +363,8 @@ def generate_report(scenario_results: Dict[str, tuple], n_seeds: int) -> str:
         # Sensitivity
         A("### Target Sensitivity")
         A("")
-        A(f"| Return target | DD target | Sharpe target | % passing |")
-        A(f"|:-------------:|:---------:|:-------------:|:---------:|")
+        A("| Return target | DD target | Sharpe target | % passing |")
+        A("|:-------------:|:---------:|:-------------:|:---------:|")
         for ret_t, dd_t, sh_t in [
             (100,-12,2.0),(80,-12,2.0),(60,-12,2.0),(200,-12,2.0),
             (300,-12,2.0),(400,-12,2.0),(500,-12,2.0),
@@ -384,8 +384,8 @@ def generate_report(scenario_results: Dict[str, tuple], n_seeds: int) -> str:
     A("## REF: Original Baseline (p=86%, N=280)")
     A("")
     _, ref_results, ref_st = sc_ref
-    A(f"| Metric | Mean | P50 | P5 | P95 |")
-    A(f"|--------|:----:|:---:|:--:|:---:|")
+    A("| Metric | Mean | P50 | P5 | P95 |")
+    A("|--------|:----:|:---:|:--:|:---:|")
     A(f"| Avg annual return | {pct(float(np.mean(ref_st['avg_rets'])))} | {pct(ref_st['p50_ret'])} | {pct(ref_st['p05_ret'])} | {pct(ref_st['p95_ret'])} |")
     A(f"| Worst DD (median) | — | {ref_st['p50_dd']:.1f}% | — | — |")
     A(f"| Avg annual Sharpe | — | {ref_st['p50_sh']:.2f} | — | — |")
@@ -442,15 +442,15 @@ def generate_report(scenario_results: Dict[str, tuple], n_seeds: int) -> str:
     A("")
     A("## Key Findings")
     A("")
-    A(f"### Win rate correction impact")
+    A("### Win rate correction impact")
     A("")
     p50_ref = st_ref['p50_ret']
-    p50_a   = st_a['p50_ret']
+    st_a['p50_ret']
     p50_b   = st_b['p50_ret']
-    A(f"Raising win rate from 86% → 93.4% (same N=280) improves P50 annual return:")
+    A("Raising win rate from 86% → 93.4% (same N=280) improves P50 annual return:")
     A(f"  {pct(p50_ref)} (REF) → {pct(p50_b)} (Sc-B) = {pct(p50_b-p50_ref, 1)} absolute ({(p50_b/p50_ref-1)*100:.1f}% relative)")
     A("")
-    A(f"### Binding North Star constraint (corrected)")
+    A("### Binding North Star constraint (corrected)")
     A("")
     for key, lbl in [("A_SPY_only","Sc-A"),("B_sector_div","Sc-B")]:
         _, _, st = scenario_results[key]
@@ -478,9 +478,9 @@ def generate_report(scenario_results: Dict[str, tuple], n_seeds: int) -> str:
     A("---")
     A("")
     A(f"*Simulation: `scripts/run_corrected_north_star_mc.py` | {n_seeds:,} paths × {N_YEARS} years*  ")
-    A(f"*Win rate 93.4% from `output/win_rate_boost_report.md` (ML OOS walk-forward 2021-2025)*  ")
+    A("*Win rate 93.4% from `output/win_rate_boost_report.md` (ML OOS walk-forward 2021-2025)*  ")
     A(f"*Correlation model: ρ={RHO} inter-trade | Calibration factor 0.65× vs actual backtester*  ")
-    A(f"*Not accounting for: slippage, margin calls, liquidity constraints*")
+    A("*Not accounting for: slippage, margin calls, liquidity constraints*")
 
     return "\n".join(lines)
 

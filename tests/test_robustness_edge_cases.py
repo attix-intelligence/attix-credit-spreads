@@ -6,13 +6,10 @@ division-by-zero, boundary conditions, and degenerate data that could
 cause incorrect behaviour in production without raising exceptions.
 """
 
-import math
 from datetime import datetime, timezone
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
-import numpy as np
 import pandas as pd
-import pytest
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # 1. shared/strike_selector.py — BS delta + delta-based strike selection

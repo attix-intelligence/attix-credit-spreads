@@ -55,7 +55,7 @@ import json
 import math
 import sys
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict
 
 import numpy as np
 import pandas as pd
@@ -214,7 +214,7 @@ def render_html(payload: Dict) -> str:
         "attribution, no P&L smearing). Then NET numbers via EXP-2420 "
         "cost drag.</p>",
         "<p><span class='pill'>Rule Zero ✓ real IronVault + Yahoo data only</span> "
-        f"<span class='pill warn'>Smeared-cube result (EXP-2400 Sharpe 11.73) "
+        "<span class='pill warn'>Smeared-cube result (EXP-2400 Sharpe 11.73) "
         "is retracted as proxy-inflated; this is the definitive number.</span></p>",
     ]
 
@@ -232,7 +232,7 @@ def render_html(payload: Dict) -> str:
         "<td>2.24%</td>"
         "<td>6.10%</td></tr>"
     )
-    lw = payload["variants"]["ledoit_only"]["pooled"]
+    payload["variants"]["ledoit_only"]["pooled"]
     h.append(
         "<tr><td class='l'>EXP-2390 (audit)</td>"
         "<td>sparse</td>"
@@ -292,8 +292,8 @@ def render_html(payload: Dict) -> str:
         tg = v["targets_gross"]; tn = v["targets_net"]
 
         def flag(ok: bool) -> str:
-            return (f"<span class='pill ok'>✓</span>" if ok
-                    else f"<span class='pill bad'>✗</span>")
+            return ("<span class='pill ok'>✓</span>" if ok
+                    else "<span class='pill bad'>✗</span>")
 
         h.append(
             f"<tr><td class='l'><b>{name}</b></td>"
@@ -336,11 +336,11 @@ def render_html(payload: Dict) -> str:
              "daily series, not smeared across the holding window. "
              "This is the convention used by EXP-2110 and EXP-2280 "
              "and matches the minute-bar truth better than smearing.</li>")
-    h.append(f"<li><b>Engine reuse:</b> the walk-forward engine is "
+    h.append("<li><b>Engine reuse:</b> the walk-forward engine is "
              "<code>compass.exp2400_combined_best_of.walk_forward_combined</code> "
              "called verbatim. The ONLY thing that changed vs EXP-2400 "
              "is the cube the engine operates on.</li>")
-    h.append(f"<li><b>Cost drag:</b> EXP-2420 reported 22.205%/yr total "
+    h.append("<li><b>Cost drag:</b> EXP-2420 reported 22.205%/yr total "
              "cost drag (bid-ask + commission + slippage) on the 7-stream "
              "portfolio using real IronVault spread proxies and real "
              "Yahoo ADV. This experiment subtracts that drag from the "

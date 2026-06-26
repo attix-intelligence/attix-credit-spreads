@@ -278,7 +278,7 @@ def generate_audit_report(output_path: str = "reports/oos_integrity_audit.html")
                       "NEEDS REWORK": "#d29922", "FAIL": "#f85149"}
 
     # Summary counts
-    grades = [e["grade"] for e in EXPERIMENTS]
+    [e["grade"] for e in EXPERIMENTS]
     n_pass = sum(1 for e in EXPERIMENTS if "PASS" in e["verdict"])
     n_rework = sum(1 for e in EXPERIMENTS if "REWORK" in e["verdict"])
     n_fail = sum(1 for e in EXPERIMENTS if e["verdict"] == "FAIL")
@@ -475,6 +475,6 @@ and strike selection. Cross-Asset Pairs use equity prices without option executi
 if __name__ == "__main__":
     path = generate_audit_report()
     print(f"Report: {path}")
-    print(f"\nSummary:")
+    print("\nSummary:")
     for e in EXPERIMENTS:
         print(f"  {e['grade']:>2} {e['verdict']:<20} {e['id']:<20} {e['name']}")

@@ -64,7 +64,7 @@ import json
 import math
 import sys
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 import numpy as np
 import pandas as pd
@@ -81,9 +81,8 @@ EXP2420_JSON = REPORT_DIR / "exp2420_transaction_costs.json"
 from compass.exp2390_robust_cov_audit import sparse_xlf_xli, build_cube
 from compass.exp2080_corr_regime import load_streams
 from compass.exp2400_combined_best_of import (
-    walk_forward_combined, metrics, check_targets,
+    walk_forward_combined, metrics,
 )
-from compass.exp2420_transaction_costs import net_sharpe_from_drag
 
 # Stream name mapping between cube column and EXP-2420 cost line.
 # The cube uses 'cross_vol' while EXP-2420 calls it 'vol_arb' — same
@@ -483,7 +482,6 @@ def main() -> int:
         loss = base_m["sharpe"] - run["pooled"]["sharpe"]
         if loss <= SHARPE_LOSS_BUDGET:
             selected.append(name)
-            best_run = run
         # Stop if we already hit the ~400 bps target
         sel_set = {STREAM_TO_EXP2420.get(n, n) for n in selected}
         comm_saved = base_comm_bps - commission_bps_after(breakdown, sel_set)

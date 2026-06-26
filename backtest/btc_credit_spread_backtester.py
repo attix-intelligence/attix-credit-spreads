@@ -143,7 +143,7 @@ class BTCCreditSpreadBacktester:
             return
 
         # Fetch all spot data from (min_date - ma_period trading days) to max_date
-        min_date = all_dates[0]
+        all_dates[0]
         max_date = all_dates[-1]
 
         rows = self._conn.execute(
@@ -152,7 +152,6 @@ class BTCCreditSpreadBacktester:
         ).fetchall()
 
         # Build a sliding window
-        prices: List[float] = []
         dates_prices: List[Tuple[str, float]] = [(r["date"], r["price_usd"]) for r in rows]
 
         # Build lookup: date -> MA
@@ -219,7 +218,7 @@ class BTCCreditSpreadBacktester:
         """
         otm_pct = self.cfg["otm_pct"]
         width_pct = self.cfg["spread_width_pct"]
-        min_credit_pct = self.cfg["min_credit_pct"]
+        self.cfg["min_credit_pct"]
 
         target_short = spot * (1 - otm_pct)
         strikes = [r["strike"] for r in puts]

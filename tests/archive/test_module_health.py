@@ -1,8 +1,6 @@
 """Tests for compass.module_health using temporary directories with dummy modules."""
 from __future__ import annotations
 
-import sys
-import tempfile
 import textwrap
 from pathlib import Path
 

@@ -12,7 +12,6 @@ from __future__ import annotations
 import json
 import math
 from datetime import datetime
-from itertools import combinations
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
@@ -189,7 +188,7 @@ def backtest_underlying(
     # Adapt base trades
     base_credits = base_trades["net_credit"].abs().values
     base_wins = base_trades["win"].values.astype(int)
-    base_pnls = base_trades["pnl"].values
+    base_trades["pnl"].values
     base_regimes = base_trades["regime"].values
 
     # Adjust credits

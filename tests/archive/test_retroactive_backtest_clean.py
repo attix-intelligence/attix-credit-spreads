@@ -10,8 +10,6 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT / "scripts"))
 
 from retroactive_backtest_clean import (
-    FOLDS,
-    LABEL_COL,
     LEGACY_RAW_FEATURES,
     prepare_clean_features,
     prepare_legacy_features,

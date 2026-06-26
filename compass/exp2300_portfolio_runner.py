@@ -164,7 +164,8 @@ def check_env(master_cfg: Dict) -> List[PreflightResult]:
 
 def check_alpaca(master_cfg: Dict) -> PreflightResult:
     try:
-        import urllib.request, urllib.error
+        import urllib.request
+        import urllib.error
         api = master_cfg["account"]["api"]
         key = os.environ.get(api["key_env"], "")
         secret = os.environ.get(api["secret_env"], "")
@@ -352,7 +353,7 @@ def run_dry(master_cfg: Dict, sleeves: List[Sleeve],
         log.info(f"  [{s.id}] weight={s.weight:.4f}  "
                  f"dollars=${s.weight * capital:,.0f}")
         if s.mode == "signal_only":
-            log.info(f"    mode=signal_only → log + telegram, no orders")
+            log.info("    mode=signal_only → log + telegram, no orders")
             s.last_signal = {"mode": "signal_only", "would_notify": True}
             s.status = "dry_signal"
             continue

@@ -22,14 +22,14 @@ No synthetic option pricing — portfolio-level overlay using documented strateg
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
 
-from compass.portfolio_optimizer import PortfolioOptimizer, OptimizationResult
+from compass.portfolio_optimizer import PortfolioOptimizer
 
 TRADING_DAYS = 252
 ROOT = Path(__file__).resolve().parent.parent

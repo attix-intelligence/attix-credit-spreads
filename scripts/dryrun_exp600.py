@@ -115,7 +115,7 @@ def test_champion_params(cfg: dict):
 def test_regime_config(cfg: dict):
     print("\n[4] Regime config — MA50 adaptive direction gate")
     strategy = cfg.get("strategy", {})
-    regime_config = strategy.get("regime_config", {})
+    strategy.get("regime_config", {})
     tech = strategy.get("technical", {})
 
     check("regime_mode = ma",        strategy.get("regime_mode") == "ma",

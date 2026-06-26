@@ -449,7 +449,6 @@ class StressTester:
             hedged_portfolio_drawdown_pct = None
             hedged_trough_value = None
             hedged_equity_path = None
-            hedged_peak_dd = None
 
             if hedge_controller is not None:
                 hedged_shocks = np.empty_like(shocks)
@@ -463,7 +462,7 @@ class StressTester:
                 hedged_equity = _returns_to_equity(hedged_shocks, self.starting_capital)
                 hedged_trough = float(np.min(hedged_equity))
                 hedged_trough_pct = (hedged_trough - self.starting_capital) / self.starting_capital
-                hedged_peak_dd = _max_drawdown(hedged_equity)
+                _max_drawdown(hedged_equity)
 
                 # Apply same spread_beta to hedged path
                 hedged_adjusted_trough_pct = hedged_trough_pct * spread_beta

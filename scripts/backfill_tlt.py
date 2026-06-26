@@ -24,7 +24,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta, timezone, date
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 import requests
 from requests.adapters import HTTPAdapter
@@ -234,7 +234,7 @@ def run_backfill(workers: int = 4, dry_run: bool = False):
 
     if dry_run:
         print("DRY RUN — no API calls or DB writes.")
-        print(f"\nSample symbols:")
+        print("\nSample symbols:")
         for sym, exp, ot, sk in all_symbols[:8]:
             print(f"  {sym}  exp={exp}  {ot}  strike=${sk:.0f}")
         return
@@ -274,7 +274,7 @@ def run_backfill(workers: int = 4, dry_run: bool = False):
 
     # Collect all rows, then batch-write from main thread (avoids DB lock contention)
     all_rows: List[Tuple] = []
-    rows_lock = threading.Lock()
+    threading.Lock()
 
     def process(item):
         sym, exp = item
@@ -316,11 +316,11 @@ def run_backfill(workers: int = 4, dry_run: bool = False):
         )
         write_conn.commit()
         write_conn.close()
-        print(f"  Written successfully.")
+        print("  Written successfully.")
 
     # Final report
     print(f"\n{'='*60}")
-    print(f"TLT BACKFILL COMPLETE")
+    print("TLT BACKFILL COMPLETE")
     print(f"  Symbols processed: {done}")
     print(f"  Bars fetched: {total_bars:,}")
     print(f"  Empty (no data): {empty}")

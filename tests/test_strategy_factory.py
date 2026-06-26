@@ -208,7 +208,6 @@ class TestExtractStraddleStrangleParams:
 
 class TestBuildStrategyListIntegration:
     def test_credit_spread_strategy_has_generate_signals(self):
-        from strategies.base import MarketSnapshot
         strategies = build_strategy_list(_base_config())
         for s in strategies:
             assert hasattr(s, "generate_signals"), f"{type(s).__name__} missing generate_signals"

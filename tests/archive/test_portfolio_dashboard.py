@@ -1,12 +1,10 @@
 """Tests for compass.portfolio_dashboard — 25+ tests covering all sections."""
 from __future__ import annotations
 
-import math
 import tempfile
 from pathlib import Path
 
 import numpy as np
-import pandas as pd
 import pytest
 
 from compass.portfolio_dashboard import (

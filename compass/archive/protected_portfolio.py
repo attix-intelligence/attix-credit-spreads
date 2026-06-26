@@ -14,12 +14,10 @@ Target: COVID DD < 12%, CAGR > 80%, Sharpe > 3.5.
 
 from __future__ import annotations
 
-import json
 import math
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -34,7 +32,7 @@ from scripts.ultimate_portfolio import (
 )
 from compass.tail_risk_hedge import (
     TailRiskHedgeEngine, TailRiskHedgeConfig,
-    get_crisis_scenarios, CrisisScenario, ScenarioResult,
+    ScenarioResult,
     _compute_full_metrics, _yearly_breakdown,
     BacktestResult, HedgeDayState,
 )
@@ -610,26 +608,26 @@ def main():
     unhedged_eq = [ACCOUNT] + unhedged_eq
 
     print(f"\n{'━'*56}")
-    print(f"  HEDGED v3:")
+    print("  HEDGED v3:")
     print(f"    CAGR:    {hedged.cagr_pct:.1f}%   Sharpe: {hedged.sharpe:.2f}")
     print(f"    Max DD:  {hedged.max_dd_pct:.1f}%  Avg Lev: {hedged.avg_leverage:.2f}×")
     print(f"    Cost:    {hedged.total_hedge_cost_pct:.2f}%/yr  Net: {hedged.net_hedge_cost_pct:+.2f}%")
-    print(f"  UNHEDGED:")
+    print("  UNHEDGED:")
     print(f"    CAGR:    {unhedged_m['cagr_pct']:.1f}%   Sharpe: {unhedged_m['sharpe']:.2f}")
     print(f"    Max DD:  {unhedged_m['max_dd_pct']:.1f}%")
 
-    print(f"\n  Crisis Scenarios:")
+    print("\n  Crisis Scenarios:")
     for name, sr in sorted(hedged.scenario_results.items()):
         status = "PASS" if sr.hedged_dd_pct <= 12 else ("WARN" if sr.hedged_dd_pct <= 20 else "FAIL")
         print(f"    {sr.scenario_name:24s}  {sr.hedged_dd_pct:5.1f}% hedged  {sr.unhedged_dd_pct:5.1f}% unhedged  [{status}]")
 
-    print(f"\n  Yearly:")
+    print("\n  Yearly:")
     for yr in sorted(hedged.yearly_returns.keys()):
         print(f"    {yr}: {hedged.yearly_returns[yr]:+.1f}%  DD={hedged.yearly_dd.get(yr, 0):.1f}%")
 
     covid = hedged.scenario_results.get("COVID_2020")
     covid_dd = covid.hedged_dd_pct if covid else 99
-    print(f"\n  TARGET CHECK:")
+    print("\n  TARGET CHECK:")
     print(f"    CAGR ≥80%:    {'PASS' if hedged.cagr_pct >= 80 else 'MISS'} ({hedged.cagr_pct:.1f}%)")
     print(f"    Max DD ≤12%:  {'PASS' if hedged.max_dd_pct <= 12 else 'MISS'} ({hedged.max_dd_pct:.1f}%)")
     print(f"    COVID ≤12%:   {'PASS' if covid_dd <= 12 else 'MISS'} ({covid_dd:.1f}%)")

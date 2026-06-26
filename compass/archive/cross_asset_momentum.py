@@ -17,9 +17,9 @@ Usage::
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -226,7 +226,7 @@ def detect_lead_lag(
     is_sig = abs(best_corr) > threshold
 
     meta = ASSETS.get(asset_name, {})
-    expected_dir = meta.get("spy_relation", "positive")
+    meta.get("spy_relation", "positive")
 
     return LeadLagResult(
         asset=asset_name,

@@ -19,7 +19,6 @@ import numpy as np
 import pytest
 
 from compass.risk_decomposition import (
-    DEFAULT_CONFIDENCE_LEVELS,
     DecompositionResult,
     FactorContribution,
     MarginalRisk,

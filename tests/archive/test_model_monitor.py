@@ -16,10 +16,8 @@ import numpy as np
 import pytest
 
 from compass.model_monitor import (
-    DriftAlert,
     ModelMonitor,
     MonitorSnapshot,
-    PredictionRecord,
     ks_critical_value,
     ks_statistic,
 )

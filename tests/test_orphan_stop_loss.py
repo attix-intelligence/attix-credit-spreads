@@ -10,12 +10,10 @@ Covers:
   - _reconcile_external_closes grace period (_EXTERNAL_CLOSE_GRACE_CYCLES)
   - _startup_reconciliation logging
 """
-import tempfile
 from datetime import datetime, timezone
 from typing import Dict, List, Optional
 from unittest.mock import MagicMock, patch
 
-import pytest
 
 from execution.position_monitor import (
     PositionMonitor,
@@ -372,7 +370,7 @@ class TestOrphanStopLoss:
     def test_stop_loss_fires_when_loss_exceeds_threshold(self, tmp_path):
         """Stop-loss fires when spread value >= (1 + sl_mult) * credit."""
         db = _setup_db(tmp_path)
-        sym = _occ("SPY", "2099-12-31", 668.0, "call")
+        _occ("SPY", "2099-12-31", 668.0, "call")
         credit = 2.50
         sl_mult = 1.25
         contracts = 5
@@ -453,7 +451,7 @@ class TestSingleLegClose:
     def test_single_leg_calls_submit_single_leg(self, tmp_path):
         """_close_position with no long_strike uses submit_single_leg, not close_spread."""
         db = _setup_db(tmp_path)
-        sym = _occ("SPY", "2026-04-17", 668.0, "call")
+        _occ("SPY", "2026-04-17", 668.0, "call")
         alpaca = _make_alpaca()
         mon = _monitor(alpaca=alpaca, db_path=db)
 

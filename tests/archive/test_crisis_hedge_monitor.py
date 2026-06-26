@@ -7,7 +7,6 @@ from pathlib import Path
 import pytest
 
 from compass.crisis_hedge_monitor import (
-    ANNUAL_HEDGE_BUDGET_PCT,
     TIER_ELEVATED,
     TIER_EXTREME,
     TIER_HIGH,
@@ -15,7 +14,6 @@ from compass.crisis_hedge_monitor import (
     CrisisHedgeMonitor,
     DailySummary,
     DDControllerState,
-    HedgeCostEntry,
     MonitorState,
     RecoveryState,
     ScaleAdjustment,

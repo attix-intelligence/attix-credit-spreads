@@ -1,6 +1,5 @@
 """Tests for compass/module_auditor.py"""
 from __future__ import annotations
-from pathlib import Path
 import pytest
 from compass.module_auditor import AuditSummary, DuplicateGroup, ModuleAuditor, ModuleInfo
 

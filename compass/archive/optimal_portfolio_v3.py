@@ -14,10 +14,9 @@ Usage::
 
 from __future__ import annotations
 
-import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -348,7 +347,7 @@ def find_north_star(
 
     # Leverage analysis
     lev_100 = 100 / cagr if cagr > 0.1 else 99
-    dd_at_lev = dd * lev_100
+    dd * lev_100
     cagr_at_dd12 = cagr * (12 / dd) if dd > 0.1 else 0
     achieves = cagr_at_dd12 >= 100
 

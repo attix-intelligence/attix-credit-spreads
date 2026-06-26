@@ -23,7 +23,7 @@ Event scaling (from compass.events):
 import logging
 from dataclasses import dataclass, field
 from datetime import date
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Optional
 
 import numpy as np
 

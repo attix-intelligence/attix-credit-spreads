@@ -3,7 +3,6 @@
 import numpy as np
 import pandas as pd
 import pytest
-from datetime import datetime
 from pathlib import Path
 
 from compass.experiment_manager import (
@@ -12,12 +11,7 @@ from compass.experiment_manager import (
     Experiment,
     BacktestResult,
     SuccessCriteria,
-    NorthStarComparison,
     ABTestResult,
-    LeaderboardEntry,
-    ExperimentVersion,
-    NORTH_STAR,
-    VALID_TRANSITIONS,
 )
 
 

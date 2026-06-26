@@ -17,10 +17,10 @@ Data calibrated from EXP-850, capacity_analysis.json, and
 exp1220_slippage_analysis.py.
 """
 
-import math, sys
+import math
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict
 
 import numpy as np
 
@@ -218,7 +218,7 @@ def simulate_portfolio_with_costs(aum: float, seed: int = 7000) -> Dict:
     VIX varies across the 6-year period to capture regime-dependent costs.
     """
     rng = np.random.RandomState(seed)
-    n_days = 6 * TRADING_DAYS  # 2020-2025
+    6 * TRADING_DAYS  # 2020-2025
 
     # EXP-1220 yearly returns (real data)
     yearly_rets = {
@@ -488,11 +488,11 @@ def main():
     for aum in aum_levels:
         c = annual_cost_at_aum(aum, vix=20)
         # Aggregate across strategies
-        spread = sum(s["annual_cost"] * 0.4 for s in c["breakdown"].values())  # ~40% is spread
-        impact = sum(s["annual_cost"] * 0.25 for s in c["breakdown"].values())
+        sum(s["annual_cost"] * 0.4 for s in c["breakdown"].values())  # ~40% is spread
+        sum(s["annual_cost"] * 0.25 for s in c["breakdown"].values())
         toxicity_c = annual_cost_at_aum(aum, vix=35)
         tox = toxicity_c["total_annual_cost"] - c["total_annual_cost"]
-        comm = sum(s["annual_cost"] * 0.35 for s in c["breakdown"].values())
+        sum(s["annual_cost"] * 0.35 for s in c["breakdown"].values())
         max_part = max(s["participation"] for s in c["breakdown"].values())
         min_fill = min(s["fill_rate"] for s in c["breakdown"].values())
 

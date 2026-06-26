@@ -16,9 +16,9 @@ Usage::
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -346,7 +346,6 @@ def generate_butterflies(
 
     wing_widths = wing_widths or [5.0, 10.0]
     price = surface.underlying_price
-    atm_iv = surface.atm_iv
     results: List[ButterflySpread] = []
 
     for width in wing_widths:

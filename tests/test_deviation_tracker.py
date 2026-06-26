@@ -6,13 +6,12 @@ Covers both:
 """
 
 from datetime import datetime, timedelta
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 import pytest
 
 from shared.database import init_db
 from shared.deviation_tracker import (
-    _ensure_trade_deviations_table,
     _upsert_snapshot,
     check_deviation_alerts,
     get_deviation_history,

@@ -18,9 +18,8 @@ import logging
 import os
 import sys
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Set, Tuple
+from typing import Any, Dict, List, Tuple
 
-import numpy as np
 import pandas as pd
 import yaml
 
@@ -30,7 +29,6 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from engine.portfolio_backtester import PortfolioBacktester
 from shared.snapshot_builder import build_live_market_snapshot
 from shared.strategy_factory import build_strategy_list
-from strategies.base import Signal
 
 logger = logging.getLogger(__name__)
 
@@ -144,7 +142,6 @@ def collect_live_scanner_signals(
     from compass.regime import RegimeClassifier
     from shared.economic_calendar import EconomicCalendar
     from shared.indicators import calculate_iv_rank as _calc_ivr
-    from strategies.pricing import calculate_rsi
 
     strat_instances = build_strategy_list(config)
 
@@ -213,14 +210,12 @@ def collect_live_scanner_signals(
 
         # Get VIX for this date
         vix_val = 20.0
-        vix_history = None
         if vix_data is not None and not vix_data.empty:
             vix_close = vix_data["Close"].dropna()
             mask = vix_close.index <= date_ts
             vix_slice = vix_close[mask]
             if not vix_slice.empty:
                 vix_val = float(vix_slice.iloc[-1])
-                vix_history = vix_slice
 
         # IV rank
         iv_rank_val = 25.0
@@ -413,7 +408,7 @@ def main():
     start_date = end_date - timedelta(days=args.days)
 
     print(f"\n{'='*70}")
-    print(f"SIGNAL ALIGNMENT VALIDATION")
+    print("SIGNAL ALIGNMENT VALIDATION")
     print(f"{'='*70}")
     print(f"Config:    {args.config}")
     print(f"Tickers:   {tickers}")
@@ -454,7 +449,7 @@ def main():
     for s in live_signals:
         live_by_strat.setdefault(s["strategy"], []).append(s)
 
-    print(f"\nPer-strategy signal counts:")
+    print("\nPer-strategy signal counts:")
     all_strats = sorted(set(bt_by_strat.keys()) | set(live_by_strat.keys()))
     for strat in all_strats:
         bt_n = len(bt_by_strat.get(strat, []))
@@ -462,7 +457,7 @@ def main():
         print(f"  {strat:30s}  BT={bt_n:4d}  Live={live_n:4d}  diff={live_n - bt_n:+d}")
 
     # Exit param alignment check
-    print(f"\nPer-trade exit param spot-check:")
+    print("\nPer-trade exit param spot-check:")
     for source_name, sigs in [("Backtester", bt_signals), ("Live", live_signals)]:
         if not sigs:
             continue

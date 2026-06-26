@@ -4,16 +4,13 @@ from __future__ import annotations
 import tempfile
 from pathlib import Path
 
-import numpy as np
-import pytest
 
 # Add scripts to path
-import sys, os
+import sys
+import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'scripts'))
 
 from monitor_exp880 import (
-    DD_CRIT_PCT,
-    DD_WARN_PCT,
     AlpacaReader,
     EXP880Monitor,
     HedgeEvent,
@@ -177,8 +174,8 @@ class TestEXP880Monitor:
 
     def test_multiple_snapshots(self):
         monitor = EXP880Monitor()
-        s1 = monitor.take_snapshot()
-        s2 = monitor.take_snapshot()
+        monitor.take_snapshot()
+        monitor.take_snapshot()
         assert len(monitor._snapshots) == 2
 
     def test_generate_report(self):

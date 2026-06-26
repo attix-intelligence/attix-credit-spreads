@@ -338,7 +338,7 @@ def main():
     results = []
 
     # ── Q1: C015 + PT=40% ──
-    print(f"\n  Q1: C015 + PT=40% (was 50%)")
+    print("\n  Q1: C015 + PT=40% (was 50%)")
     print(f"  {'─'*60}")
     q1_params = {**C015_BASE, "profit_target": 40}
     yr1, cap1 = run_compound_years("SPY", q1_params, YEARS)
@@ -349,7 +349,7 @@ def main():
           f"DD {s1['worst_drawdown']:.1f}%\n")
 
     # ── Q2: C015 + max_contracts=50 ──
-    print(f"  Q2: C015 + max_contracts=50 (was 25)")
+    print("  Q2: C015 + max_contracts=50 (was 25)")
     print(f"  {'─'*60}")
     q2_params = {**C015_BASE, "max_contracts": 50}
     yr2, cap2 = run_compound_years("SPY", q2_params, YEARS)
@@ -360,7 +360,7 @@ def main():
           f"DD {s2['worst_drawdown']:.1f}%\n")
 
     # ── Q3: A003 + PT=40% ──
-    print(f"  Q3: A003 (balanced) + PT=40% (was 50%)")
+    print("  Q3: A003 (balanced) + PT=40% (was 50%)")
     print(f"  {'─'*60}")
     q3_params = {**A003_BASE, "profit_target": 40}
     yr3, cap3 = run_compound_years("SPY", q3_params, YEARS)
@@ -371,7 +371,7 @@ def main():
           f"DD {s3['worst_drawdown']:.1f}%\n")
 
     # ── Q4: B010 + compound=True ──
-    print(f"  Q4: B010 (risk=5% SL=2.5x PT=40%) + compound=True")
+    print("  Q4: B010 (risk=5% SL=2.5x PT=40%) + compound=True")
     print(f"  {'─'*60}")
     q4_params = {**B010_BASE}  # compound already True
     yr4, cap4 = run_compound_years("SPY", q4_params, YEARS)
@@ -382,7 +382,7 @@ def main():
           f"DD {s4['worst_drawdown']:.1f}%\n")
 
     # ── Q5: Hybrid DTE (IC@15 + Directional@35) ──
-    print(f"  Q5: Hybrid DTE — IC-focused DTE=15 (60%) + Directional DTE=35 (40%)")
+    print("  Q5: Hybrid DTE — IC-focused DTE=15 (60%) + Directional DTE=35 (40%)")
     print(f"  {'─'*60}")
     # IC leg: DTE=15, high IC rate, OTM=5%
     q5_ic_params = {**C015_BASE}
@@ -409,7 +409,7 @@ def main():
     # ── Comparison Table ──
     total_elapsed = time.time() - t_total
     print(f"\n{'='*110}")
-    print(f"  EXP-603 QUICK WINS — COMPARISON TABLE")
+    print("  EXP-603 QUICK WINS — COMPARISON TABLE")
     print(f"{'='*110}")
     print(f"  {'ID':<5} {'Config':<50} {'Avg':>7} {'Total':>8} {'Final$':>12} "
           f"{'Yr+':>4} {'DD':>7} {'IC%':>5}  {'vs C015'}")

@@ -36,11 +36,10 @@ Usage::
 from __future__ import annotations
 
 import logging
-import math
-from collections import Counter, defaultdict
-from dataclasses import dataclass, field
+from collections import defaultdict
+from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Sequence, Tuple
+from typing import Dict, List, Optional
 
 import numpy as np
 import pandas as pd

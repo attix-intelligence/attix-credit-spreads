@@ -21,7 +21,6 @@ import argparse
 import json
 import sys
 import time
-import traceback
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -128,7 +127,7 @@ def run_backtest(config: Dict[str, Any], years: List[int]) -> Optional[Dict[str,
     try:
         bt = BTCCreditSpreadBacktester(config=config)
         return bt.run(years)
-    except Exception as e:
+    except Exception:
         return None
 
 
@@ -264,7 +263,7 @@ def main():
     combos    = FULL_SWEEP[start_idx : end_idx + 1]
 
     print(f"\n{'='*60}")
-    print(f"BTC/IBIT Credit Spread Parameter Sweep")
+    print("BTC/IBIT Credit Spread Parameter Sweep")
     print(f"Combos: {start_idx} - {end_idx}  ({len(combos)} runs)")
     print(f"Years:  {YEARS}")
     print(f"Train:  {TRAIN_YEARS}  |  Test: {TEST_YEARS}")
@@ -422,7 +421,7 @@ def main():
         print("\nNo Gate 2 passes found in this range.")
         # Show top 10 overall
         top10 = sorted(records, key=lambda r: r.get("avg_return", -999), reverse=True)[:10]
-        print(f"\nTop 10 overall (regardless of Gate 2):")
+        print("\nTop 10 overall (regardless of Gate 2):")
         print(f"{'Rank':<5} {'Idx':>5} {'DTE':>4} {'Delta':>6} {'PT%':>4} {'SL':>4} "
               f"{'Regime':<12} {'AvgRet':>8} {'MaxDD':>8} {'Ovf':>6}")
         print("-" * 75)

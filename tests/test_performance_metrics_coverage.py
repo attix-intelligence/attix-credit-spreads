@@ -1,6 +1,5 @@
 """Tests for backtest/performance_metrics.py — report generation and formatting."""
 
-import pytest
 
 
 def _sample_results(**overrides):

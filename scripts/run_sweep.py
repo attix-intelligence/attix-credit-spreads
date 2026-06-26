@@ -24,7 +24,6 @@ import sys
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(ROOT))
@@ -37,7 +36,6 @@ except ImportError:
 
 from scripts.run_optimization import (
     YEARS,
-    _build_config,
     append_to_leaderboard,
     compute_summary,
     load_leaderboard,
@@ -59,7 +57,7 @@ def _verify_ironvault():
         assert getattr(hd._hd, "offline_mode", False), (
             "IronVault is NOT in offline_mode — live API calls would fire during sweep!"
         )
-        print(f"  IronVault: OK  (offline_mode=True, DB connected)")
+        print("  IronVault: OK  (offline_mode=True, DB connected)")
         return hd
     except IronVaultError as e:
         print(f"\n  ERROR: {e}")
@@ -299,7 +297,7 @@ def main():
     print(f"\n  Generated {len(combos)} parameter combinations")
 
     if args.dry_run:
-        print(f"\n  DRY RUN — first 5 combos:")
+        print("\n  DRY RUN — first 5 combos:")
         for i, c in enumerate(combos[:5]):
             print(f"    [{i+1}] {json.dumps({k: v for k, v in c.items() if not k.startswith('_')})}")
         if len(combos) > 5:
@@ -371,7 +369,7 @@ def main():
     if results:
         # Sort results by avg return
         sorted_results = sorted(results, key=lambda r: r["summary"]["avg_return"], reverse=True)
-        print(f"\n  Top 10 results:")
+        print("\n  Top 10 results:")
         print(f"  {'Avg':>8}  {'DD':>7}  {'Yrs':>5}  Params")
         print("  " + "─" * 68)
         for r in sorted_results[:10]:
@@ -390,7 +388,7 @@ def main():
             print(f"  Best params: {json.dumps({k: v for k, v in best_combo.items() if not k.startswith('_')})}")
 
     print()
-    print(f"  All results saved to output/leaderboard.json")
+    print("  All results saved to output/leaderboard.json")
     print("═" * 72)
     print()
 

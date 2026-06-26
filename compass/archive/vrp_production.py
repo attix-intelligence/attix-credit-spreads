@@ -41,7 +41,6 @@ sys.path.insert(0, str(ROOT))
 
 from shared.iron_vault import IronVault
 from backtest.backtester import _yf_download_safe
-from compass.metrics import annualized_sharpe, max_drawdown as _mdd, cagr as _cagr
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger("vrp_production")

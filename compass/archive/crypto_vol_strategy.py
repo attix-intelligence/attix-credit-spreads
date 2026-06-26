@@ -51,9 +51,9 @@ import json
 import logging
 import math
 import sqlite3
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Tuple, Optional
+from typing import List, Optional
 
 import numpy as np
 import pandas as pd
@@ -389,7 +389,7 @@ def main() -> int:
     log.info("HONEST VERDICT")
     log.info("=" * 70)
 
-    edge_iv = (ibit_iv - ibit_required_prem * math.sqrt(365 / 7) * math.sqrt(2 * math.pi) / 2
+    (ibit_iv - ibit_required_prem * math.sqrt(365 / 7) * math.sqrt(2 * math.pi) / 2
                if ibit_iv else None)
     # The break-even IV equivalent: required_premium ≈ IV * sqrt(T/2pi) * S
     # → IV_breakeven ≈ required_prem_pct / sqrt(T/(2*pi))

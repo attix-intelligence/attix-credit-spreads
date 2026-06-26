@@ -35,10 +35,10 @@ import json
 import math
 import sys
 import urllib.request
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List
 
 import numpy as np
 import pandas as pd
@@ -46,7 +46,7 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from compass.metrics import annualized_sharpe, full_metrics
+from compass.metrics import full_metrics
 
 TRADING_DAYS = 252
 STARTING_CAPITAL = 100_000
@@ -192,7 +192,6 @@ def backtest_ibit_credit_spreads(
     all_dates = spot.index.tolist()
     monday_entries = [d for d in all_dates if d.weekday() == 0]
 
-    rf = 0.045
     risk_pct = risk_pct_base * leverage
 
     for entry_dt in monday_entries:
@@ -575,22 +574,22 @@ def main():
                    else "HIGH — not a diversifier")
         print(f"  Daily correlation: {correlation:+.3f} ({interp})")
     else:
-        print(f"  Correlation: N/A")
+        print("  Correlation: N/A")
 
-    print(f"\n  Year-by-year (1.5×):")
+    print("\n  Year-by-year (1.5×):")
     for w in r15["yearly"]:
         print(f"    {w['year']}: {w['n_trades']} trades, {w['win_rate']}% win, "
               f"${w['total_pnl']:,.0f} ({w['return_pct']:+.1f}%), Sharpe {w['sharpe']}")
 
     print(f"\n{'━'*60}")
-    print(f"  HONEST VERDICT (feasibility simulation):")
+    print("  HONEST VERDICT (feasibility simulation):")
     best_lev = max([1.0, 1.5, 2.0], key=lambda l: results_by_lev[l]["metrics"].get("sharpe", 0))
     bm = results_by_lev[best_lev]["metrics"]
     print(f"    Best leverage: {best_lev}×")
     print(f"    Sharpe: {bm.get('sharpe', 0):.2f}")
     print(f"    CAGR: {bm.get('cagr_pct', 0):.1f}%")
     print(f"    Corr to EXP-1220: {correlation if not math.isnan(correlation) else 'N/A'}")
-    print(f"  NOTE: Requires REAL IBIT options data to validate.")
+    print("  NOTE: Requires REAL IBIT options data to validate.")
     print(f"{'━'*60}")
 
     # Build summary

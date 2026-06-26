@@ -16,13 +16,10 @@ Covers:
 from __future__ import annotations
 
 import numpy as np
-import pandas as pd
 import pytest
 
 from compass.live_correlation_monitor import (
     AllocationAdjustment,
-    CorrelationAlert,
-    CorrelationSnapshot,
     LiveCorrelationMonitor,
     classify_correlation_regime,
     compute_effective_n,

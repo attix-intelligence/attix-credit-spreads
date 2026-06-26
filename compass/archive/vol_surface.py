@@ -24,9 +24,9 @@ from __future__ import annotations
 
 import logging
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -265,7 +265,7 @@ def check_butterfly(surface: pd.DataFrame) -> List[ArbitrageCheck]:
 def check_calendar(surface: pd.DataFrame) -> List[ArbitrageCheck]:
     """Check total variance is non-decreasing in expiry."""
     violations: List[ArbitrageCheck] = []
-    expiries = sorted(surface.columns)
+    sorted(surface.columns)
     for k in surface.index:
         row = surface.loc[k].dropna()
         if len(row) < 2:

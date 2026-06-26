@@ -21,7 +21,7 @@ import math
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, Tuple
 
 import numpy as np
 import pandas as pd
@@ -137,7 +137,7 @@ def load_tlt_iron_condors() -> pd.Series:
         # Target annual return matching CAGR
         annual_ret = cagr
         daily_mu = annual_ret / TRADING_DAYS
-        daily_std = abs(daily_mu) / (sharpe / math.sqrt(TRADING_DAYS)) if sharpe > 0.01 else 0.002
+        abs(daily_mu) / (sharpe / math.sqrt(TRADING_DAYS)) if sharpe > 0.01 else 0.002
 
         # Distribute PnL at trade exit points (evenly spaced)
         n_tr = max(1, int(round(trades_per_yr)))
@@ -191,7 +191,7 @@ def load_xli_spy_pairs() -> pd.Series:
 
         pnl = data["pnl"]
         n_trades = data["n"]
-        sharpe = data.get("sharpe", 1.0)
+        data.get("sharpe", 1.0)
 
         # Distribute PnL at trade exit points
         daily_pnl = np.zeros(n)
@@ -298,7 +298,7 @@ def run_optimizer(returns_dict: Dict[str, np.ndarray]) -> Dict[str, Tuple[np.nda
 def walk_forward(returns_dict: Dict[str, np.ndarray], dates: list,
                  train_end_yr: int = 2023) -> dict:
     """Walk-forward: train weights on 2020-train_end_yr, test on remainder."""
-    n = len(dates)
+    len(dates)
     train_mask = np.array([d.year <= train_end_yr for d in dates])
     test_mask = np.array([d.year > train_end_yr for d in dates])
 

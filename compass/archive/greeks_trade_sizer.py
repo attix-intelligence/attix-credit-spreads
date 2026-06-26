@@ -15,9 +15,8 @@ Usage::
 
 from __future__ import annotations
 
-import math
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -321,7 +320,7 @@ class GreeksTradeSizer:
             n_fixed = fixed_contracts
 
             # Kelly sizing
-            win_rate = float(row.get("win", 0.5))
+            float(row.get("win", 0.5))
             avg_win = abs(base_pnl) * 1.2 if base_pnl > 0 else 100
             avg_loss = abs(base_pnl) if base_pnl < 0 else 80
             n_kelly = self.size_kelly(0.65, avg_win, avg_loss)

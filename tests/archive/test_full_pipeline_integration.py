@@ -17,8 +17,7 @@ from __future__ import annotations
 
 import tempfile
 from pathlib import Path
-from typing import Any, Dict
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import numpy as np
 import pandas as pd
@@ -26,7 +25,7 @@ import pytest
 
 # ── Module imports ───────────────────────────────────────────────────────
 
-from compass.advanced_sizing import AdvancedPositionSizer, SizingConfig, SizingResult
+from compass.advanced_sizing import AdvancedPositionSizer, SizingResult
 from compass.crisis_hedge import (
     CrisisHedgeConfig,
     CrisisHedgeController,
@@ -36,7 +35,7 @@ from compass.ensemble_signal_model import EnsembleSignalModel
 from compass.feature_pipeline import FeaturePipeline
 from compass.features import PRUNED_FEATURES, PRUNED_REMOVED
 from compass.online_retrain import ModelRetrainer, RetrainResult, RetrainTrigger
-from compass.regime import Regime, RegimeClassifier
+from compass.regime import RegimeClassifier
 from compass.retrain_scheduler import RetrainScheduler
 from compass.signal_model import SignalModel
 from compass.sizing import PositionSizer, calculate_dynamic_risk, get_contract_size
@@ -523,7 +522,7 @@ class TestCrossCuttingIntegration:
         prob = float(model.predict_batch(pipeline_features[:1])[0])
 
         sizer = AdvancedPositionSizer()
-        sizing = sizer.compute(
+        sizer.compute(
             win_prob=prob, win_return=0.40, loss_return=1.0,
             regime="bull", current_dd_pct=5.0,
         )

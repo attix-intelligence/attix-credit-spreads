@@ -16,12 +16,11 @@ Leverage: 1.0x, 1.5x, 2.0x
 Walk-forward: expanding-window (2y IS → 1y OOS, rolling)
 """
 
-import json
 import math
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict
 
 import numpy as np
 
@@ -411,7 +410,7 @@ def build_html(
 
     # ── Weight allocation table ─────────────────────────────
     weight_rows = ""
-    weight_rows += f"""<tr style="background:#1a1a2e">
+    weight_rows += """<tr style="background:#1a1a2e">
         <td style="text-align:left;font-weight:600">Concentrated</td>"""
     conc_w = {"EXP-1220 Dynamic": 0.95, "Cross-Asset Pairs": 0.02,
               "Vol Term Structure": 0.02, "TLT Iron Condors": 0.01}
@@ -778,7 +777,7 @@ def main():
     print(f"    Sortino: {best_blend['sortino']:.1f}")
     print()
     conc1 = concentrated["1.0x"]
-    print(f"  vs Concentrated (95% EXP-1220, 1x):")
+    print("  vs Concentrated (95% EXP-1220, 1x):")
     print(f"    CAGR:    {pct(conc1['cagr'])}")
     print(f"    Sharpe:  {conc1['sharpe']:.2f}")
     print(f"    Max DD:  {pct(conc1['max_dd'])}")

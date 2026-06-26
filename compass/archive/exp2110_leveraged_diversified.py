@@ -56,11 +56,10 @@ Run: python3 -m compass.exp2110_leveraged_diversified
 from __future__ import annotations
 
 import json
-import math
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -77,7 +76,6 @@ from compass.exp2080_corr_regime import (
     load_streams,
     metrics,
     static_portfolio,
-    TRADING_DAYS,
 )
 
 LEVERAGES: List[float] = [1.0, 1.5, 2.0, 2.5, 3.0]
@@ -253,8 +251,8 @@ def render_html(sweep: Dict[float, Dict], sweet: Dict,
         t = sweep[L]["targets"]
 
         def flag(ok: bool) -> str:
-            return (f"<span class='pill ok'>YES</span>" if ok
-                    else f"<span class='pill bad'>no</span>")
+            return ("<span class='pill ok'>YES</span>" if ok
+                    else "<span class='pill bad'>no</span>")
 
         h.append(
             f"<tr><td class='l'><b>{L:.1f}×</b></td>"

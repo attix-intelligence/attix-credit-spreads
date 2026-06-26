@@ -6,15 +6,12 @@ import tempfile
 from pathlib import Path
 
 import numpy as np
-import pytest
 
 from compass.position_risk import (
     LimitCheck,
-    MarginEstimate,
     Position,
     PositionGreeks,
     PositionRiskAnalyzer,
-    PortfolioGreeks,
     RiskLimits,
     RiskReport,
     aggregate_greeks,

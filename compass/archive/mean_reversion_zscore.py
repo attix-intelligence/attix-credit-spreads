@@ -13,10 +13,9 @@ Provides:
 """
 from __future__ import annotations
 
-import math
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -298,7 +297,7 @@ class MeanReversionBacktest:
                 if should_exit:
                     # Credit spread P&L: profit if SPY stayed above short strike
                     # Mean reversion entry → expect SPY to bounce → put spread profitable
-                    price_change = (prices[i] - prices[trade_entry_idx]) / prices[trade_entry_idx]
+                    (prices[i] - prices[trade_entry_idx]) / prices[trade_entry_idx]
                     notional = capital * self.trade_size
 
                     if reason == "mean_reversion":
@@ -344,7 +343,7 @@ class MeanReversionBacktest:
 
         # Metrics
         wins = sum(1 for t in trades if t.pnl > 0)
-        total_pnl = sum(t.pnl for t in trades)
+        sum(t.pnl for t in trades)
         total_return = (capital - self.starting_capital) / self.starting_capital * 100
         years = (n - warmup) / TRADING_DAYS
         cagr = ((capital / self.starting_capital) ** (1 / years) - 1) * 100 if years > 0 and capital > 0 else 0

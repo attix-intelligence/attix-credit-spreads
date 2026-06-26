@@ -11,7 +11,6 @@ from compass.rl_executor import (
     ACTION_LABELS,
     N_ACTIONS,
     BenchmarkComparison,
-    EpisodeResult,
     ExecutionEnvironment,
     Experience,
     QLearningAgent,

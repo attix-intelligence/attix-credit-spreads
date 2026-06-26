@@ -1,17 +1,15 @@
 """Tests for compass/earnings_iv_crush.py — EXP-1800."""
 
 import math
-from datetime import datetime
 import numpy as np
 import pandas as pd
-import pytest
 
 from compass.earnings_iv_crush import (
-    EventIVConfig, EventTrade, WFFold, BacktestResult,
+    EventIVConfig, EventTrade, BacktestResult,
     build_event_calendar, compute_sharpe, compute_metrics,
     build_daily_returns, walk_forward, correlation_to,
     build_exp1220_reference, generate_report,
-    _next_td, _prev_td, TRADING_DAYS, CAPITAL,
+    _next_td, _prev_td, TRADING_DAYS,
 )
 
 
@@ -216,7 +214,7 @@ class TestPrevTd:
 class TestReport:
     def test_generates(self, tmp_path):
         idx = pd.bdate_range("2020-01-02", periods=500)
-        spy = pd.DataFrame({"Close": 100 * np.cumprod(1 + np.random.RandomState(1).normal(0, 0.01, 500))}, index=idx)
+        pd.DataFrame({"Close": 100 * np.cumprod(1 + np.random.RandomState(1).normal(0, 0.01, 500))}, index=idx)
         result = BacktestResult(
             trades=[], n_trades=0, n_wins=0, win_rate=0,
             cagr=0, sharpe=0, sortino=0, max_dd=0, calmar=0,

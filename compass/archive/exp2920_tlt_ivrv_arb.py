@@ -22,25 +22,22 @@ import json
 import math
 import pickle
 import re
-import sqlite3
 import sys
 import warnings
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict
 
 import numpy as np
 import pandas as pd
-from sklearn.covariance import LedoitWolf
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from compass.metrics import (
-    annualized_sharpe, cagr, max_drawdown, full_metrics,
-    TRADING_DAYS, DEFAULT_RF_ANNUAL,
+    full_metrics,
+    TRADING_DAYS,
 )
-from compass.vix_ladder import VIXLadder, fetch_vix
 
 CACHE_DIR = ROOT / "compass" / "cache"
 REPORT_DIR = ROOT / "compass" / "reports"
@@ -427,7 +424,7 @@ def approach_e_move_tlt_daily(data: dict) -> Dict:
     This is a daily-rebalanced strategy that produces a return series
     suitable for inclusion in the multi-stream cube.
     """
-    spread_z = data["spread_z"]
+    data["spread_z"]
     tlt = data["tlt"]
     tlt_ret = (tlt / tlt.shift(1) - 1).dropna()
     move = data["move"]
@@ -538,7 +535,7 @@ def portfolio_integration(data: dict, best_signal: pd.Series,
 
     # Walk-forward both
     from compass.exp2910_tlt_credit_spreads import (
-        walk_forward_portfolio, risk_parity_weights,
+        walk_forward_portfolio,
     )
 
     pooled_9, folds_9 = walk_forward_portfolio(
@@ -794,7 +791,7 @@ def main():
     individual_pass = best_sharpe >= 1.0
     portfolio_pass = (integration_result is not None and
                       integration_result["nine_stream_net"]["sharpe"] >= 6.0)
-    sharpe_improved = (integration_result is not None and
+    (integration_result is not None and
                        integration_result["sharpe_delta_net"] > 0)
 
     if individual_pass and portfolio_pass:

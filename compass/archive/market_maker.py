@@ -24,9 +24,9 @@ from __future__ import annotations
 
 import logging
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import List, Optional
 
 import numpy as np
 import pandas as pd
@@ -337,7 +337,6 @@ class MarketMakerSimulator:
         quotes: List[QuoteState] = []
         fills: List[FillEvent] = []
         inventory_path = np.zeros(n, dtype=int)
-        pnl_running = 0.0
         pnl_path = np.zeros(n)
         cash = 0.0
 

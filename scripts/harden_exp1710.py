@@ -11,7 +11,8 @@ Hardening steps:
   4. Walk-forward on 1DTE with optimal params
 """
 
-import itertools, json, math, sqlite3, sys
+import math
+import sys
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -24,7 +25,7 @@ sys.path.insert(0, str(ROOT))
 
 from compass.zero_dte_ic import (
     find_friday_expirations, find_condor_spread, get_spread_close,
-    load_spy_spot_yfinance, trade_sharpe, corrected_sharpe, CAPITAL
+    load_spy_spot_yfinance, trade_sharpe, CAPITAL
 )
 
 DB_PATH = ROOT / "data" / "options_cache.db"

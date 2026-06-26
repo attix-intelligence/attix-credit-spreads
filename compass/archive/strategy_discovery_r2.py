@@ -24,7 +24,7 @@ import sys
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -123,7 +123,6 @@ def _walk_spread(
     min_dte: int = 7,
 ) -> Tuple[Optional[str], str, float, int]:
     """Walk forward through real prices for exit. Returns (exit_date, reason, exit_val, hold_days)."""
-    exit_date = exit_reason = None
     exit_val = entry_credit
     hold_days = 0
     current = entry_dt + timedelta(days=1)
@@ -694,7 +693,7 @@ def _gen_html(all_strats: List[Stats], output: Path) -> Path:
         border = "#f85149" if s.killed else ("#d29922" if s.oos_sharpe > 1.5 else "#3fb950")
         status = f'<span style="color:#f85149">✗ KILLED: {s.kill_reason}</span>' if s.killed else (
             f'<span style="color:#d29922">★ OOS Sharpe {s.oos_sharpe:.2f}</span>' if s.oos_sharpe > 1.5 else
-            f'<span style="color:#3fb950">✓ Survived</span>')
+            '<span style="color:#3fb950">✓ Survived</span>')
 
         cards += f"""
         <div class="card" style="border-color:{border}">

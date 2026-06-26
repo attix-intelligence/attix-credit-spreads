@@ -17,10 +17,8 @@ from compass.sizing import calculate_dynamic_risk, get_contract_size
 
 from tests.compass_helpers import (
     ACCOUNT_100K,
-    ACCOUNT_10K,
     SPREAD_WIDTH_5,
     CREDIT_065,
-    MAX_LOSS_PER_CONTRACT_5_065,
 )
 
 

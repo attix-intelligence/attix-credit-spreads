@@ -1,7 +1,5 @@
 """Tests for compass.perf_benchmark — 18 tests."""
 import numpy as np
-import pandas as pd
-import pytest
 from pathlib import Path
 from compass.perf_benchmark import PerfBenchmark, BenchmarkResult, BenchmarkSuite
 

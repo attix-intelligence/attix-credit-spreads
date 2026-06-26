@@ -10,13 +10,8 @@ GAP-8: compass/__init__.py exports EnsembleSignalModel.
 """
 
 import importlib
-import os
-import sys
-import tempfile
-import types
 from pathlib import Path
-from typing import Dict
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -67,12 +62,12 @@ class TestGap6RegimeModelRouterInMlStrategy:
 
     def test_signal_model_path_loads_signal_model(self, tmp_path):
         """Paths named signal_model_* must use SignalModel, not EnsembleSignalModel."""
-        from compass.ml_strategy import RegimeModelRouter, _load_model_from_path
+        from compass.ml_strategy import _load_model_from_path
 
         fake_path = str(tmp_path / "signal_model_20260217.joblib")
         Path(fake_path).write_bytes(b"")  # create empty file so basename detection works
 
-        default = self._make_mock_signal_model()
+        self._make_mock_signal_model()
 
         with patch("compass.ml_strategy.SignalModel") as MockSM, \
              patch("compass.ml_strategy.EnsembleSignalModel") as MockEM:
@@ -324,5 +319,5 @@ class TestBackwardCompat:
         sm.predict.return_value = {"probability": 0.6, "confidence": 0.2, "prediction": 1}
 
         router = RegimeModelRouter(default_model=sm, regime_model_paths=None)
-        result = router.predict({"vix": 20.0})
+        router.predict({"vix": 20.0})
         sm.predict.assert_called_once()

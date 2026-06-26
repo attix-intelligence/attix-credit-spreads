@@ -13,7 +13,6 @@ from compass.slippage_model import (
     BudgetAllocation,
     CalibrationResult,
     InstrumentProfile,
-    ModelComparison,
     SlippageEngine,
     SlippageResult,
     TimeOfDayPattern,

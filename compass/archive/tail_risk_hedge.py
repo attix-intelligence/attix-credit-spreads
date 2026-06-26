@@ -18,8 +18,8 @@ No IronVault calls (this is a portfolio-level overlay, not options pricing).
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Tuple
+from dataclasses import dataclass
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -968,12 +968,11 @@ def generate_report(
         yearly_rows += f"<tr><td>{yr}</td><td style='color:{color};font-weight:700'>{ret:+.1f}%</td><td style='color:#ef4444'>{dd:.1f}%</td></tr>"
 
     scenario_rows = ""
-    all_survive = True
     for name, sr in sorted(result.scenario_results.items()):
         si = "PASS" if sr.survives_20pct else "FAIL"
         sc = "#22c55e" if sr.survives_20pct else "#ef4444"
         if not sr.survives_20pct:
-            all_survive = False
+            pass
         scenario_rows += f"<tr><td style='text-align:left'>{name}</td><td>{sr.hedged_dd_pct:.1f}%</td><td>{sr.unhedged_dd_pct:.1f}%</td><td style='color:#22c55e;font-weight:700'>{sr.dd_reduction_pct:+.1f}%</td><td>{sr.hedged_return_pct:+.1f}%</td><td style='color:{sc};font-weight:700'>{si}</td></tr>"
 
     total = result.n_days

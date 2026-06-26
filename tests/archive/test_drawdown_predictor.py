@@ -2,8 +2,6 @@
 
 import numpy as np
 import pandas as pd
-import pytest
-from datetime import datetime
 from pathlib import Path
 
 from compass.drawdown_predictor import (
@@ -11,11 +9,8 @@ from compass.drawdown_predictor import (
     DrawdownSeverity,
     DrawdownEpisode,
     RecoveryEstimate,
-    RegimeRecoveryProfile,
     MonteCarloRecovery,
-    EarlyWarning,
     DrawdownPrediction,
-    SEVERITY_THRESHOLDS,
     SEVERITY_SIZE_MULT,
 )
 

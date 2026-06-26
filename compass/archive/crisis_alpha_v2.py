@@ -16,9 +16,9 @@ Rule Zero: 100% REAL data from Yahoo Finance. Zero synthetic pricing.
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List
 
 import numpy as np
 import pandas as pd
@@ -28,7 +28,7 @@ TRADING_DAYS = 252
 
 # Reuse primitives from v1
 from compass.crisis_alpha import (
-    CRISIS_PERIODS, CrisisMetrics, WFFold, _sharpe, _compute_metrics,
+    CRISIS_PERIODS, CrisisMetrics, WFFold, _compute_metrics,
 )
 
 
@@ -610,7 +610,7 @@ def run_analysis():
     print(f"\n  Grid Results ({len(result.all_configs)} configs):")
     # Top 10 by CAGR
     sorted_cfgs = sorted(result.all_configs, key=lambda c: -c.cagr)
-    print(f"\n  Top 10 by CAGR:")
+    print("\n  Top 10 by CAGR:")
     print(f"    {'Config':<35} {'CAGR':>7} {'Sharpe':>7} {'DD':>6} {'Corr':>7} {'Pass':>5}")
     for c in sorted_cfgs[:10]:
         tag = "✓" if c.passes_target else "-"
@@ -634,7 +634,7 @@ def run_analysis():
             print(f"    ✓ {c.name}: CAGR {c.cagr:+.1f}%, "
                   f"Sharpe {c.sharpe:.2f}, Corr {c.corr_to_spy:+.3f}")
 
-    print(f"\n  Crisis Attribution (best config):")
+    print("\n  Crisis Attribution (best config):")
     for c in result.crisis_metrics_best:
         tag = "OUT" if c.outperformance > 0 else "UNDER"
         print(f"    {c.name:<25s}: strat {c.strategy_return:+6.1f}% | "

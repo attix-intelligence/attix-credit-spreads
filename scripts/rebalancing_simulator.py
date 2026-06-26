@@ -15,15 +15,13 @@ Analyses:
 Uses real IronVault trade data for strategy returns.
 """
 
-import json
 import math
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict
 
 import numpy as np
-import pandas as pd
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
@@ -95,7 +93,6 @@ def build_daily_returns(seed: int = 42) -> Dict[str, np.ndarray]:
     """Build daily return series for all 4 strategies from yearly targets."""
     rng = np.random.RandomState(seed)
     returns = {}
-    total_days = 0
 
     for name, profile in STRATEGY_PROFILES.items():
         daily = []
@@ -111,7 +108,7 @@ def build_daily_returns(seed: int = 42) -> Dict[str, np.ndarray]:
             days = rng.normal(daily_mean, daily_vol, n)
             daily.extend(days)
         returns[name] = np.array(daily)
-        total_days = len(daily)
+        len(daily)
 
     return returns
 

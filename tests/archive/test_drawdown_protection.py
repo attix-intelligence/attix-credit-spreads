@@ -9,16 +9,12 @@ from pathlib import Path
 from compass.drawdown_protection import (
     DrawdownProtection,
     ProtectionLevel,
-    DrawdownState,
     StrategyDrawdown,
     DrawdownVelocity,
     RecoveryEstimate,
     CorrelationProtection,
     ProtectionEvent,
     ProtectionEffectiveness,
-    DEFAULT_THRESHOLDS,
-    LEVEL_ACTIONS,
-    LEVEL_SIZE_MULT,
 )
 
 

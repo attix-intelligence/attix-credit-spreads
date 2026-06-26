@@ -11,12 +11,11 @@ from __future__ import annotations
 
 import math
 import sqlite3
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List
 
-import numpy as np
 
 ROOT = Path(__file__).resolve().parent.parent
 TRADING_DAYS = 252

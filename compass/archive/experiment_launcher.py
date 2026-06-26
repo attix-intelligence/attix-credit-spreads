@@ -25,13 +25,12 @@ Usage:
 from __future__ import annotations
 
 import copy
-import json
 import logging
 import os
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional
 
 import numpy as np
 
@@ -902,7 +901,6 @@ class ExperimentLauncher:
         if self._previous_config is None:
             raise RuntimeError("No previous config to rollback to")
 
-        old = self.config
         self.config = copy.deepcopy(self._previous_config)
 
         if self._state == "running":

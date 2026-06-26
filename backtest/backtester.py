@@ -2484,7 +2484,8 @@ class Backtester:
                 bs_ret = (bs_total_pnl / self.starting_capital) * 100
                 _bs_returns.append(bs_ret)
             _bs_sorted = sorted(_bs_returns)
-            _pct = lambda p: _bs_sorted[min(len(_bs_sorted) - 1, int(len(_bs_sorted) * p / 100))]
+            def _pct(p):
+                return _bs_sorted[min(len(_bs_sorted) - 1, int(len(_bs_sorted) * p / 100))]
             bootstrap_stats = {
                 'P5': round(_pct(5), 1),
                 'P25': round(_pct(25), 1),

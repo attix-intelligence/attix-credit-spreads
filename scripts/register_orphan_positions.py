@@ -488,7 +488,7 @@ def insert_order_record(db_path: Path, order: dict, ticker: str,
     client_id  = order.get("client_order_id", "")
     status     = order.get("status", "")
     legs       = order.get("legs") or []
-    symbol     = order.get("symbol", "")
+    order.get("symbol", "")
 
     if status not in ("filled", "partially_filled"):
         return None   # don't register unfilled orders

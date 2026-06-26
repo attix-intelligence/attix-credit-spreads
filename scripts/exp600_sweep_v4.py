@@ -112,9 +112,9 @@ def run_sweep(param_grid, years, ticker="SPY"):
     total = len(combos)
 
     print(f"\n{'='*80}")
-    print(f"  EXP-600 Phase 4: Independent-Year Sweep (max_contracts=25)")
+    print("  EXP-600 Phase 4: Independent-Year Sweep (max_contracts=25)")
     print(f"  {total} combos × {len(years)} years = {total * len(years)} backtests")
-    print(f"  Each year: fresh $100K | compound=False | drawdown_cb=25%")
+    print("  Each year: fresh $100K | compound=False | drawdown_cb=25%")
     print(f"{'='*80}\n")
 
     results = []
@@ -208,7 +208,7 @@ def run_sweep(param_grid, years, ticker="SPY"):
 
     # Leaderboard
     print(f"\n{'='*80}")
-    print(f"  LEADERBOARD — Top 20")
+    print("  LEADERBOARD — Top 20")
     print(f"{'='*80}")
     print(f"  {'Rk':<3} {'ID':<7} {'Avg':>7} {'Trds':>5} {'Yr+':>4} {'WR':>5} {'DD':>7} {'Comp$':>10}  Config")
     print(f"  {'-'*90}")

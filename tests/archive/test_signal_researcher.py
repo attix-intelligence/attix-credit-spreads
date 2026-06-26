@@ -1,10 +1,9 @@
 """Tests for compass.signal_researcher — 30 tests."""
 import numpy as np
 import pandas as pd
-import pytest
 from pathlib import Path
 from compass.signal_researcher import (
-    SignalResearcher, SignalMetrics, SignalResearchResult, SignalDefinition,
+    SignalResearcher, SignalMetrics, SignalResearchResult,
 )
 
 def _prices(n=500, seed=42):

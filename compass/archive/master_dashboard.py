@@ -20,12 +20,10 @@ from __future__ import annotations
 
 import json
 import logging
-import os
 import subprocess
-from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -80,7 +78,7 @@ def load_git_log(n: int = 25) -> List[Dict]:
     """Get recent git commits as phase milestones."""
     try:
         result = subprocess.run(
-            ["git", "log", f"--oneline", f"-{n}", "--format=%h|%s|%ai"],
+            ["git", "log", "--oneline", f"-{n}", "--format=%h|%s|%ai"],
             capture_output=True, text=True, cwd=str(ROOT), timeout=10,
         )
         commits = []
@@ -274,7 +272,7 @@ def generate_html() -> str:
 
     # ── Section 5: Model diagnostics ──────────────────────────────────
     # Pruned benchmark comparison
-    bench_meta = pruned_bench.get("metadata", {})
+    pruned_bench.get("metadata", {})
     xgb_full = pruned_bench.get("xgboost_full", {}).get("aggregate", {})
     xgb_pruned = pruned_bench.get("xgboost_pruned", {}).get("aggregate", {})
     ens_full = pruned_bench.get("ensemble_full", {}).get("aggregate", {})

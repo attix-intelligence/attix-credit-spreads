@@ -15,9 +15,8 @@ Usage::
 from __future__ import annotations
 
 import logging
-import math
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -173,8 +172,6 @@ def _train_ml(X_train, y_train, X_test, seed=42):
     prob = 0.5 * xgb_prob + 0.5 * rf_prob
 
     # AUC
-    from sklearn.metrics import roc_auc_score
-    y_test_for_auc = y_train  # placeholder — real AUC computed on test labels
     auc = 0.0  # will be set by caller with actual test labels
 
     return prob, auc

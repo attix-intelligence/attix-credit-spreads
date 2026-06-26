@@ -21,7 +21,6 @@ import pandas as pd
 import pytest
 
 from compass.multi_timeframe import (
-    TIMEFRAMES,
     AggregatedSignal,
     ConfirmationScore,
     DivergenceAlert,
@@ -285,7 +284,7 @@ class TestDivergence:
         """Create data where short and long TF must diverge."""
         # Short-term rise, but longer-term decline
         n = 5000
-        rng = np.random.RandomState(99)
+        np.random.RandomState(99)
         close = np.zeros(n)
         close[:4000] = np.arange(4000, dtype=float) * -0.1 + 450
         close[4000:] = np.arange(1000, dtype=float) * 0.3 + close[3999]

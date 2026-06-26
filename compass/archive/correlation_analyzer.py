@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import itertools
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
@@ -142,7 +142,7 @@ def _annual_vol(spec: StrategySpec) -> float:
 def build_daily_returns(seed_base: int = 3000) -> Dict[str, np.ndarray]:
     """Build correlated daily return series for all strategies."""
     names = sorted(STRATEGIES.keys())
-    n = len(names)
+    len(names)
 
     # First pass: independent returns per strategy
     indep = {}
@@ -217,7 +217,7 @@ def hierarchical_cluster(corr: np.ndarray, names: List[str]) -> List[dict]:
     dist = 1.0 - corr.copy()
     np.fill_diagonal(dist, np.inf)
 
-    labels = list(range(n))
+    list(range(n))
     label_names = {i: names[i] for i in range(n)}
     active = set(range(n))
     merges = []

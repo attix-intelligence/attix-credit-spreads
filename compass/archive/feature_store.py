@@ -28,11 +28,10 @@ import io
 import json
 import logging
 import sqlite3
-import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -599,7 +598,7 @@ class FeatureStore:
         fig, ax = plt.subplots(figsize=(max(6, len(names) * 0.8), max(4, len(names) * 0.5)))
 
         # Layout: simple layered positioning
-        name_to_idx = {n: i for i, n in enumerate(names)}
+        {n: i for i, n in enumerate(names)}
         # Determine depth: features with no parents are depth 0
         depths: Dict[str, int] = {}
         for n in names:
@@ -611,7 +610,7 @@ class FeatureStore:
                 if e.parent in depths and e.child in depths:
                     depths[e.child] = max(depths[e.child], depths[e.parent] + 1)
 
-        max_depth = max(depths.values()) if depths else 0
+        max(depths.values()) if depths else 0
         by_depth: Dict[int, List[str]] = {}
         for n, d in depths.items():
             by_depth.setdefault(d, []).append(n)

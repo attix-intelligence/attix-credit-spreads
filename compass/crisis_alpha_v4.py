@@ -20,14 +20,13 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 import numpy as np
 import pandas as pd
 
 from compass.crisis_alpha_v3 import (
     LOOKBACK_GRID, load_universe_v3,
-    compute_momentum,
 )
 from compass.exp1780_exp1220_integration import build_exp1220_daily_returns
 
@@ -472,7 +471,7 @@ def run_v4_pipeline() -> Dict:
     # Key question: does 10% v4 cut 2022 DD below 10%?
     pure = next(a for a in allocs if a.crisis_pct == 0.0)
     ten = next(a for a in allocs if a.crisis_pct == 0.10)
-    print(f"\nKEY METRIC — 2022 DD with 10% v4 hedge:")
+    print("\nKEY METRIC — 2022 DD with 10% v4 hedge:")
     print(f"  Pure EXP-1220 (0% hedge): {pure.dd_2022:.2f}%")
     print(f"  90% EXP-1220 + 10% v4:    {ten.dd_2022:.2f}%")
     delta = pure.dd_2022 - ten.dd_2022

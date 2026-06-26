@@ -1,9 +1,9 @@
 """Tests for compass.vix_term_structure."""
-import math, unittest
+import math
+import unittest
 from compass.vix_term_structure import (
-    BacktestResult, MeanReversionSignal, RegimeStats, SizingRecommendation,
-    TermStructureMetrics, VIXCurvePoint, VIXCurveSnapshot, VIXTermEngine,
-    VIXTermResult, compute_regime_stats, compute_sizing,
+    BacktestResult, VIXCurvePoint, VIXCurveSnapshot, VIXTermEngine,
+    VIXTermResult, compute_sizing,
     compute_term_structure, generate_mean_reversion_signals,
     generate_sample_data, run_backtest,
 )

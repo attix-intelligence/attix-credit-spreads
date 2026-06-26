@@ -1,14 +1,12 @@
 """Tests for compass.regime_hmm — 25 tests."""
 
 import numpy as np
-import pandas as pd
-import pytest
 from pathlib import Path
 
 from compass.regime_hmm import (
     GaussianHMM, RegimeTransitionEngine, HMMParams,
-    RegimeState, TransitionEvent, BacktestResult,
-    generate_regime_data, STATE_NAMES, N_STATES,
+    RegimeState, BacktestResult,
+    generate_regime_data,
 )
 
 

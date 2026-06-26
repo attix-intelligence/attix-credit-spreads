@@ -3,7 +3,6 @@
 import numpy as np
 import pandas as pd
 import pytest
-from datetime import datetime
 from pathlib import Path
 
 from compass.signal_backtester import (
@@ -12,9 +11,7 @@ from compass.signal_backtester import (
     DirectionalResult,
     RegimePerformance,
     SignalCombination,
-    WalkForwardFold,
     WalkForwardResult,
-    TRADING_DAYS,
 )
 
 

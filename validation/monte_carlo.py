@@ -8,7 +8,6 @@ original script is unchanged and continues to work standalone.
 
 from __future__ import annotations
 
-import math
 import sys
 from datetime import datetime
 from pathlib import Path

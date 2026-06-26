@@ -14,10 +14,11 @@ Analyses:
 All option prices from IronVault (Polygon). Zero synthetic.
 """
 
-import json, math, os, sys, sqlite3
+import math
+import os
+import sys
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List
 
 import numpy as np
 import pandas as pd
@@ -26,8 +27,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from compass.iron_condor_optimizer import (
-    ICConfig, backtest_iron_condor, _compute_ic_result,
-    _find_expirations, _get_underlying_prices, _get_vix,
+    ICConfig, _find_expirations, _get_underlying_prices, _get_vix,
     CAPITAL, START_DATE, END_DATE, VIX_FILTER_RANGES,
 )
 from shared.iron_vault import IronVault

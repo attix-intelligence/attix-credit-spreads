@@ -18,10 +18,8 @@ from __future__ import annotations
 import math
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 import numpy as np
-import pandas as pd
 
 ROOT = Path(__file__).resolve().parent.parent
 TRADING_DAYS = 252

@@ -1,13 +1,11 @@
 """Tests for sentinel/orchestrator.py — Gate 21 config parity + orchestrator."""
 
-import pytest
 from unittest.mock import patch
 
 from sentinel.orchestrator import (
     GateResult,
     GateOutcome,
     ExperimentAudit,
-    ParityDiff,
     check_config_parity,
     _compute_health_score,
     _get_nested,
@@ -16,7 +14,6 @@ from sentinel.orchestrator import (
     audit_experiment,
     audit_all_experiments,
     format_audit_report,
-    RESULT_LABEL,
 )
 
 

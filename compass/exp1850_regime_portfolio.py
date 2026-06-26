@@ -40,7 +40,7 @@ import sys
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -49,7 +49,7 @@ ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from compass.metrics import full_metrics, annualized_sharpe
+from compass.metrics import full_metrics
 from compass.regime import Regime, RegimeClassifier
 
 CACHE_DIR = ROOT / "compass" / "cache"
@@ -454,7 +454,6 @@ def walk_forward_portfolio(
 # ═══════════════════════════════════════════════════════════════════════════
 
 def reference_2x_5pct_hedge(returns: pd.DataFrame) -> WFResult:
-    common = returns.index
     e = returns["exp1220"]
     h = returns["v5_hedge"]
     combined = (0.95) * e * 2.0 + 0.05 * h

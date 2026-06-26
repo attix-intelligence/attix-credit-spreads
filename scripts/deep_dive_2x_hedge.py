@@ -18,10 +18,8 @@ from __future__ import annotations
 import base64
 import io
 import json
-import math
 import sys
 import urllib.request
-from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Tuple
@@ -736,7 +734,7 @@ def main():
     ca_inspect = inspect_crisis_alpha(weights_df, prices, common)
     print(f"  Avg long positions: {ca_inspect['avg_long_positions']:.1f}")
     print(f"  Avg short positions: {ca_inspect['avg_short_positions']:.1f}")
-    print(f"  Top 5 assets by avg weight:")
+    print("  Top 5 assets by avg weight:")
     for asset, w in sorted(ca_inspect["avg_abs_weight"].items(), key=lambda x: -x[1])[:5]:
         print(f"    {asset}: {w*100:.1f}%")
 

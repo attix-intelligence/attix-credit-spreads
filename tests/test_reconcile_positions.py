@@ -17,9 +17,7 @@ import json
 import sqlite3
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock, patch
 
-import pytest
 
 # Make scripts/ importable
 PROJECT_ROOT = Path(__file__).resolve().parents[1]

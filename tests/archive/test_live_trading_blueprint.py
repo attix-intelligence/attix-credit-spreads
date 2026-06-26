@@ -1,14 +1,10 @@
 """Tests for compass.live_trading_blueprint — 38 tests."""
 
-import pytest
-from datetime import datetime
 
 from compass.live_trading_blueprint import (
-    LiveTradingBlueprint, SimulatedBroker, BrokerAdapter,
-    StrategySignal, Order, Position, RiskLimits,
+    LiveTradingBlueprint, SimulatedBroker, StrategySignal, Order, RiskLimits,
     OrderSide, OrderType, OrderStatus, RiskCheckResult,
-    KillSwitchState, AlertLevel, RiskCheckReport,
-    PnLSnapshot, ReconciliationResult, AuditEntry,
+    KillSwitchState, AlertLevel, PnLSnapshot, ReconciliationResult,
 )
 
 

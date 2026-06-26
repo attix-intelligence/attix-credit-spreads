@@ -11,7 +11,7 @@ All methods work on pre-loaded data — no network calls.
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from itertools import combinations
 from pathlib import Path

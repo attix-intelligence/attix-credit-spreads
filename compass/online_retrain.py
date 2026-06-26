@@ -17,7 +17,6 @@ GAP fixes (phase4_integration_plan.md §3.2 Step 1):
 """
 
 import logging
-import os
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path

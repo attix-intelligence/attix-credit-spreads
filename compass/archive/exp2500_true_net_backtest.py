@@ -44,10 +44,9 @@ import json
 import math
 import pickle
 import sys
-from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -311,7 +310,7 @@ def build_net_cube() -> Tuple[pd.DataFrame, pd.DataFrame, Dict]:
 
     # Daily series from trades
     idx = base.index
-    ca_gross_daily = trades_to_daily(ca_trades, idx, pnl_field="gross_pnl")
+    trades_to_daily(ca_trades, idx, pnl_field="gross_pnl")
     ca_net_daily = trades_to_daily(ca_trades, idx, pnl_field="pnl")
 
     # ── GROSS cube (reference — reproduce EXP-2450 Ledoit-Wolf gross)
@@ -451,8 +450,8 @@ def main() -> None:
     print("\n" + "=" * 72)
     print("VERDICT")
     print("=" * 72)
-    print(f"  EXP-2450 gross ledoit_only (baseline):   SR 6.87  CAGR 101.8%  DD 4.2%")
-    print(f"  EXP-2420 published net (static params):  SR 4.49  CAGR 124.0%  DD n/a")
+    print("  EXP-2450 gross ledoit_only (baseline):   SR 6.87  CAGR 101.8%  DD 4.2%")
+    print("  EXP-2420 published net (static params):  SR 4.49  CAGR 124.0%  DD n/a")
     print(f"  EXP-2500 NET gross (sanity check):       SR {gross_m['sharpe']}  "
           f"CAGR {gross_m['cagr_pct']}%  DD {gross_m['max_dd_pct']}%")
     print(f"  EXP-2500 NET net (cost-aware):           SR {net_m['sharpe']}  "

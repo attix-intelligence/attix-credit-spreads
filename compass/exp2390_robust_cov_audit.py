@@ -41,14 +41,12 @@ from __future__ import annotations
 
 import json
 import math
-import pickle
 import sqlite3
 import sys
 import warnings
-from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, Tuple
 
 import numpy as np
 import pandas as pd
@@ -58,9 +56,8 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from compass.exp2360_robust_cov import (
-    cov_sample, cov_ledoit_wolf, cov_oas, cov_one_factor,
-    risk_parity_weights, walk_forward as wf_2360,
-    TRAIN_DAYS, TEST_DAYS, TARGET_VOL_ANNUAL, TRADING_DAYS,
+    cov_sample, cov_ledoit_wolf, cov_oas, walk_forward as wf_2360,
+    TRADING_DAYS,
 )
 
 REPORT_JSON = ROOT / "compass" / "reports" / "exp2390_robust_cov_audit.json"
@@ -234,7 +231,7 @@ def main() -> None:
     print(f"  manual rebuild  (μ/σ × √252):       {sharpe_rebuild:.4f}")
     print(f"  mean daily:    {mu_check*10000:.3f} bps")
     print(f"  vol annual:    {vol_check*100:.3f}%")
-    print(f"  (Sharpe formula is correct; numbers are self-consistent.)")
+    print("  (Sharpe formula is correct; numbers are self-consistent.)")
 
     # 7. Verdict
     print("\n" + "=" * 72)

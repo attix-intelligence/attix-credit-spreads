@@ -13,7 +13,6 @@ from compass.data_pipeline import (
     DataPipeline,
     DataSource,
     DataVersion,
-    DependencyNode,
     FeatureDef,
     PipelineResult,
     QualityCheck,

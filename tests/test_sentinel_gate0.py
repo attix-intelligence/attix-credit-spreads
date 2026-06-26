@@ -1,5 +1,4 @@
 """Tests for sentinel guard Gate 0 — registry status enforcement."""
-import json
 import os
 import sys
 from pathlib import Path

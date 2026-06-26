@@ -21,7 +21,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -360,7 +360,7 @@ class CorrelationMonitor:
         snapshots = self.monitor(returns)
         n = len(returns)
         cols = returns.columns
-        k = len(cols)
+        len(cols)
 
         static_rets = np.zeros(n)
         adaptive_rets = np.zeros(n)

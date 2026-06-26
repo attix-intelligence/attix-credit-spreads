@@ -5,15 +5,12 @@ from __future__ import annotations
 import tempfile
 from pathlib import Path
 
-import numpy as np
 import pytest
 
 from compass.north_star_validator import (
-    BootstrapCI,
     CPCVResult,
     NorthStarValidator,
     PortfolioConfig,
-    TestResult,
     ValidationResult,
     portfolio_return_dd,
     run_bootstrap,

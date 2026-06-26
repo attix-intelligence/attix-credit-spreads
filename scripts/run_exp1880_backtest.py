@@ -155,7 +155,7 @@ def main():
 
 
 def _write_html(p: Dict) -> None:
-    base = p["baseline"]
+    p["baseline"]
     rows = "".join(
         f"<tr><td>{name}</td><td>{p[name]['n']}</td><td>{p[name]['wr']*100:.1f}%</td>"
         f"<td>{p[name]['sharpe']:.2f}</td><td>{p[name]['cagr_pct']:.2f}%</td>"

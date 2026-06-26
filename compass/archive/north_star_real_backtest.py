@@ -24,13 +24,12 @@ from __future__ import annotations
 import json
 import logging
 import math
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
-import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -783,7 +782,7 @@ def _build_report_html(result: NorthStarRealResult) -> str:
 
     # Comparison table
     syn = sc.get("synthetic", {})
-    real = sc.get("real", {})
+    sc.get("real", {})
     cagr_delta = sc.get("cagr_delta", 0)
     sharpe_delta = sc.get("sharpe_delta", 0)
 

@@ -13,7 +13,6 @@ Output: output/paper_trading_report.html
 """
 
 import argparse
-import json
 import sqlite3
 import sys
 from datetime import datetime, timedelta, timezone
@@ -535,7 +534,7 @@ def _exp_card(stats: dict, idx: int) -> str:
     # Week trades badge
     wk = stats["trades_week"]
     wk_badge = f'<span class="badge badge-blue">{wk} this week</span>' if wk > 0 else \
-               f'<span class="badge badge-gray">0 this week</span>'
+               '<span class="badge badge-gray">0 this week</span>'
 
     return f"""
 <div class="exp-card {color}">
@@ -674,7 +673,7 @@ def _recent_trades_section(all_stats: list[dict]) -> str:
         exp_id = s["id"]
         exp_name = s["name"]
 
-        parts.append(f'<div class="trades-wrap">')
+        parts.append('<div class="trades-wrap">')
         parts.append(f'<div class="trades-header">'
                      f'<div class="trades-header-title">{exp_id} — {exp_name}</div>'
                      f'<div class="trades-header-sub">{_ticker_badge(s["ticker"])}</div>'
@@ -723,7 +722,7 @@ def _open_positions_section(all_stats: list[dict]) -> str:
         exp_id = s["id"]
         exp_name = s["name"]
 
-        parts.append(f'<div class="open-pos-wrap">')
+        parts.append('<div class="open-pos-wrap">')
         parts.append(f'<div class="trades-header">'
                      f'<div class="trades-header-title">{exp_id} — {exp_name}</div>'
                      f'<div class="trades-header-sub">{len(open_trades)} open &nbsp; {_ticker_badge(s["ticker"])}</div>'

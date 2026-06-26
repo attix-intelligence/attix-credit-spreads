@@ -22,9 +22,9 @@ Cost model:
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -661,7 +661,7 @@ def main():
     result = run_full_analysis()
     print(f"    {result.n_trades} trades executed")
 
-    print(f"\n  [3/4] Results:")
+    print("\n  [3/4] Results:")
     print(f"    CAGR:    {result.cagr:+.1f}%")
     print(f"    Sharpe:  {result.sharpe:.2f} (corrected formula)")
     print(f"    Sortino: {result.sortino:.2f}")
@@ -672,7 +672,7 @@ def main():
     print(f"    Costs:     ${result.total_costs:,.0f}")
     print(f"    Net PnL:   ${result.net_pnl:,.0f}")
 
-    print(f"\n  Correlations:")
+    print("\n  Correlations:")
     print(f"    vs SPY:      {result.corr_to_spy:+.3f}")
     print(f"    vs EXP-1220: {result.corr_to_exp1220 if result.corr_to_exp1220 is not None else 'N/A'}")
     print(f"    vs EXP-1780: {result.corr_to_exp1780 if result.corr_to_exp1780 is not None else 'N/A'}")

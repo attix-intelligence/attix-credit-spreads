@@ -98,13 +98,13 @@ class TestLeverageSweep:
         assert len(data["leverage_sweep"]) >= 8
 
     def test_100_cagr_achievable(self, data):
-        cagrs = [l["cagr_pct"] for l in data["leverage_sweep"]]
+        cagrs = [row["cagr_pct"] for row in data["leverage_sweep"]]
         assert max(cagrs) >= 100, "100% CAGR not achievable at any leverage"
 
     def test_target_exists(self, data):
         """At least one leverage point has CAGR >= 100% AND DD <= 12%."""
-        hits = [l for l in data["leverage_sweep"]
-                if l["cagr_pct"] >= 100 and l["max_dd_pct"] <= 12]
+        hits = [row for row in data["leverage_sweep"]
+                if row["cagr_pct"] >= 100 and row["max_dd_pct"] <= 12]
         assert len(hits) >= 1, "No leverage point hits both targets"
 
 

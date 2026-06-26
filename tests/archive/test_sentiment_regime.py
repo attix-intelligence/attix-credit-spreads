@@ -1,11 +1,9 @@
 """Tests for compass.sentiment_regime."""
 import unittest
 from compass.sentiment_regime import (
-    SENTIMENT_REGIMES, CUSUMChangepoint, ContrarianSignal,
-    NormalisedComponents, SentimentObs, SentimentRegimeEngine,
+    SENTIMENT_REGIMES, NormalisedComponents, SentimentObs, SentimentRegimeEngine,
     SentimentRegimeResult, TimingBacktest, VsVIXComparison,
-    backtest_timing_filter, classify_sentiment, compare_vs_vix,
-    detect_cusum_changepoints, generate_contrarian_signals,
+    backtest_timing_filter, classify_sentiment, detect_cusum_changepoints, generate_contrarian_signals,
     generate_test_data, normalise_observation,
 )
 

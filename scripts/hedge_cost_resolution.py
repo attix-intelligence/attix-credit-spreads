@@ -26,7 +26,7 @@ import numpy as np
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from compass.smart_hedge import VIX_TO_PUT_COST, COLLAR_OFFSET_RATIO, _interp_put_cost
+from compass.smart_hedge import VIX_TO_PUT_COST, COLLAR_OFFSET_RATIO
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -525,7 +525,7 @@ def main():
               f"{opt['break_even_alpha_pct']:>13.2f}%")
 
     # Crisis DDs per option
-    print(f"\nCrisis Drawdowns (1.5x credit spread beta):")
+    print("\nCrisis Drawdowns (1.5x credit spread beta):")
     print(f"{'Crisis':<20}", end="")
     for opt in options:
         print(f"{opt['name'][:15]:>17}", end="")
@@ -538,7 +538,7 @@ def main():
         print()
 
     # Alpha sensitivity
-    print(f"\nAlpha Sensitivity (when does each hedge become viable?):")
+    print("\nAlpha Sensitivity (when does each hedge become viable?):")
     print(f"{'Gross Alpha':<15}{'Continuous':>15}{'Selective':>15}{'Collar':>15}")
     print("-" * 60)
     for alpha_val in [0.01, 0.015, 0.02, 0.025, 0.035, 0.05]:
@@ -560,7 +560,7 @@ def main():
         print(f"  - {item}")
 
     # Generate HTML
-    print(f"\nGenerating HTML report...")
+    print("\nGenerating HTML report...")
     output_path = ROOT / "reports" / "hedge_cost_resolution.html"
 
     # Build alpha_sens dict for HTML

@@ -40,7 +40,7 @@ import time
 from dataclasses import asdict
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple
+from typing import Any, Callable, Dict, Iterable, List, Optional
 
 from compass.orchestrator.portfolio_state import PortfolioState
 from compass.orchestrator.types import (

@@ -4,8 +4,8 @@ import numpy as np
 import pandas as pd
 import pytest
 from compass.order_flow_alpha import (
-    BacktestResult, FilterResult, FlowSignal, OFISnapshot, OrderFlowAlpha,
-    TickImbalanceBar, accumulation_distribution, close_location_value,
+    BacktestResult, FilterResult, OFISnapshot, OrderFlowAlpha,
+    accumulation_distribution, close_location_value,
     compute_tick_imbalance_bars, cumulative_delta, generate_signals,
     volume_weighted_ofi,
 )
@@ -253,7 +253,7 @@ class TestBacktest:
     def test_auto_computes_signals(self):
         e = _engine()
         assert e.signals is None
-        bt = e.backtest()
+        e.backtest()
         assert e.signals is not None
 
     def test_sharpe_finite(self):

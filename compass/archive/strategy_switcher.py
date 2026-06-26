@@ -345,7 +345,7 @@ class StrategySwitcher:
         self.reset()
 
         dates = regime_series.index.sort_values()
-        n_strats = len(strategy_returns)
+        len(strategy_returns)
 
         # Build aligned return DataFrame
         ret_df = pd.DataFrame(strategy_returns).reindex(dates).fillna(0.0)
@@ -534,7 +534,6 @@ class StrategySwitcher:
         # Build bh cumulative list for chart
         bh_cum = []
         c = 1.0
-        bh_rets_list = []
         for d in result.days:
             # reconstruct from switcher days — we don't store bh per-day, but we can approximate
             bh_cum.append(0.0)

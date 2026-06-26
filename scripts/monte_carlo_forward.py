@@ -14,7 +14,6 @@ from datetime import datetime
 from pathlib import Path
 
 import numpy as np
-import pandas as pd
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
@@ -210,7 +209,7 @@ def _svg_fan_chart(sim_results, w=920, h=380):
 
     # Build percentile paths for longest horizon
     longest = max(HORIZONS.values())
-    rets_data = sim_results["5yr"]["terminal"]  # just for reference
+    sim_results["5yr"]["terminal"]  # just for reference
 
     # We need to track equity at each time step for the 5yr sim
     # Rerun a small MC just for the fan chart

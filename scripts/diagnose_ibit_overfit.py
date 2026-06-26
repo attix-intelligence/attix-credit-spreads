@@ -297,7 +297,6 @@ class IBITBacktester:
         if idx is None or idx < period:
             return None
         prices = [self.all_spots[all_dates[j]] for j in range(idx - period, idx + 1)]
-        import math
         log_returns = [math.log(prices[i+1]/prices[i]) for i in range(len(prices)-1)]
         mean = sum(log_returns) / len(log_returns)
         variance = sum((r - mean)**2 for r in log_returns) / len(log_returns)
@@ -1179,7 +1178,7 @@ def step5_adaptive_sweep(conn: sqlite3.Connection, all_spots: Dict) -> Dict:
             if overfit > best_overfit["overfit"] and full_ann >= 30:
                 best_overfit = {"overfit": overfit, "label": str(p)}
 
-        except Exception as e:
+        except Exception:
             pass  # skip errors silently
 
     # Sort by gate2 then by overfit score for misses
@@ -1189,7 +1188,7 @@ def step5_adaptive_sweep(conn: sqlite3.Connection, all_spots: Dict) -> Dict:
           f"out of {len(results)} evaluated")
 
     if gate2_passes:
-        print(f"\nGATE 2 PASSES:")
+        print("\nGATE 2 PASSES:")
         for r in sorted(gate2_passes, key=lambda r: r["full_ann"], reverse=True):
             p = r["params"]
             print(f"  DTE={p['dte']} OTM={p['otm_pct']*100:.0f}% PT={p['profit_target']*100:.0f}% "
@@ -1206,7 +1205,7 @@ def step5_adaptive_sweep(conn: sqlite3.Connection, all_spots: Dict) -> Dict:
         key=lambda r: r["overfit"], reverse=True
     )[:10]
 
-    print(f"\nTop 10 by overfit score (full_ann >= 30%):")
+    print("\nTop 10 by overfit score (full_ann >= 30%):")
     for rank, r in enumerate(top_by_overfit, 1):
         p = r["params"]
         print(f"  #{rank}: DTE={p['dte']} OTM={p['otm_pct']*100:.0f}% "
@@ -1297,11 +1296,11 @@ def main():
 
         if best_valid:
             bv = best_valid[0]
-            print(f"\nBest achievable configuration:")
+            print("\nBest achievable configuration:")
             if "config" in bv:
-                p = bv["config"]
+                bv["config"]
             else:
-                p = bv.get("params", {})
+                bv.get("params", {})
             print(f"  Full ann return: {bv.get('full_ann', bv.get('ann_return', '?')):+.1f}%")
             print(f"  Max drawdown:    {bv['max_dd']:+.1f}%")
             print(f"  Overfit score:   {bv['overfit']:.2f}")

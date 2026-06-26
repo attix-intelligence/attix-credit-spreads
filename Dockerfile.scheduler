@@ -1,3 +1,9 @@
+# syntax=docker/dockerfile:1.4
+# BuildKit frontend 1.4+ is required to parse the multi-line `RUN python -c "..."`
+# heredoc-style block below (lines ~38-53). Without this directive the default
+# parser treats line 39 (`import numpy, pandas, ...`) as a new instruction and
+# errors with `unknown instruction: import`. Railway/Railpack already uses
+# BuildKit; this directive is needed for the plain `docker build` CI smoke test.
 FROM python:3.11-slim AS builder
 
 WORKDIR /build
@@ -34,8 +40,10 @@ COPY main.py utils.py ./
 
 RUN mkdir -p /data/logs /data/signals
 
-# Verify critical imports at build time — catches broken deps before 09:25 ET
-RUN python -c "
+# Verify critical imports at build time — catches broken deps before 09:25 ET.
+# Uses BuildKit heredoc syntax (requires `# syntax=docker/dockerfile:1.4` at top
+# of this file). The Python script is the heredoc body; python reads it from stdin.
+RUN python <<'PY'
 import numpy, pandas, apscheduler, fastapi, uvicorn, pytz
 import requests
 try:
@@ -48,9 +56,9 @@ from execution.execution_engine import ExecutionEngine
 from execution.position_monitor import PositionMonitor
 from strategies.base import MarketSnapshot, PositionAction
 from strategies.credit_spread import CreditSpreadStrategy
-from shared.strategy_factory import build_strategy
+from shared.strategy_factory import build_strategy_list  # was 'build_strategy' — function was renamed (or only ever existed under this name); main.py:55 + 3 scripts use _list
 print('All imports OK')
-"
+PY
 
 RUN useradd -m -u 1001 compass
 USER compass

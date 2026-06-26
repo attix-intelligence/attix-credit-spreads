@@ -12,8 +12,6 @@ import pytest
 
 from compass.portfolio_simulator import (
     DailySnapshot,
-    ExperimentContribution,
-    PortfolioMetrics,
     PortfolioSimulator,
     RebalanceEntry,
     SimulationResult,

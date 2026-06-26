@@ -1,13 +1,10 @@
 """Tests for sentinel/alerting.py — rate limiting, dedup, delivery."""
 
-import time
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 from sentinel.alerting import (
-    Alert,
     Severity,
-    SEVERITY_LABEL,
     send_alert,
     send_alerts,
     gate_alert,

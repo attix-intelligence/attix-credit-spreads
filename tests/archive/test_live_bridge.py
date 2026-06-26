@@ -17,8 +17,6 @@ Covers:
 
 from __future__ import annotations
 
-import time
-from unittest.mock import MagicMock
 
 import pytest
 
@@ -277,7 +275,7 @@ class TestExecution:
         broker = MockBroker(fill=False)
         bridge = LiveBridge(":memory:", dry_run=False, broker=broker)
         bridge.ingest_signal("EXP-400", "SPY", 1, 2, confidence=0.85)
-        orders = bridge.run_cycle()
+        bridge.run_cycle()
         # broker returns rejected, but bridge still recorded it
         assert len(bridge.get_orders()) >= 1
         bridge.close()

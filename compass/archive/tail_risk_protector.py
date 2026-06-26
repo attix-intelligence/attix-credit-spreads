@@ -26,7 +26,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -402,7 +402,7 @@ class TailRiskProtector:
         def _metrics(rets):
             eq = np.cumprod(1 + rets)
             total = float(eq[-1] - 1)
-            n_yr = len(rets) / TRADING_DAYS
+            len(rets) / TRADING_DAYS
             mu = float(rets.mean())
             std = float(rets.std())
             sharpe = mu / std * math.sqrt(TRADING_DAYS) if std > 1e-12 else 0

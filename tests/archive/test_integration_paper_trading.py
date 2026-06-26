@@ -10,8 +10,6 @@ model disagreement, stale model, feature drift.
 """
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pandas as pd
@@ -22,9 +20,6 @@ from compass.signal_pipeline import (
     PipelineConfig,
     PipelineSignal,
     SignalPipeline,
-    compute_position_scale,
-    compute_stop_loss_mult,
-    detect_regime,
     extract_features,
 )
 from compass.crisis_hedge import CrisisHedgeConfig, CrisisHedgeController
@@ -573,7 +568,7 @@ class TestMultiTradeSequence:
         engine.step("2024-06-10")
         engine.step("2024-06-20")
 
-        perf = engine.get_performance()
+        engine.get_performance()
         report = health_monitor.get_report()
         assert report.n_predictions >= 1
 

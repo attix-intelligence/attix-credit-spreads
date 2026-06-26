@@ -40,14 +40,13 @@ Run::
 from __future__ import annotations
 
 import json
-import math
 import sqlite3
 import sys
 import urllib.request
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 import numpy as np
 import pandas as pd

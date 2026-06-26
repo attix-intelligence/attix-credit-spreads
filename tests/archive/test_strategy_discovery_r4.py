@@ -1,12 +1,11 @@
 """Tests for compass/strategy_discovery_r4.py — Strategy Discovery Round 4."""
 
-import math
 import numpy as np
 import pandas as pd
 import pytest
 
 from compass.strategy_discovery_r4 import (
-    Stats, _compute, _exp_dt, generate_report, CAPITAL, OOS_START_YEAR,
+    Stats, _compute, _exp_dt, generate_report,
 )
 
 

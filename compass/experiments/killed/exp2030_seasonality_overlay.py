@@ -37,10 +37,10 @@ from __future__ import annotations
 import json
 import math
 import sys
-from dataclasses import dataclass, asdict, field
-from datetime import date, datetime, timedelta
+from dataclasses import dataclass, field
+from datetime import date, timedelta
 from pathlib import Path
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -530,7 +530,7 @@ def main():
     out.mkdir(parents=True, exist_ok=True)
     (out / "exp2030_seasonality_overlay.json").write_text(json.dumps(payload, indent=2, default=str))
     write_html(payload, out / "exp2030_seasonality_overlay.html")
-    print(f"\nReports → exp2030_seasonality_overlay.{{json,html}}")
+    print("\nReports → exp2030_seasonality_overlay.{json,html}")
     return payload
 
 

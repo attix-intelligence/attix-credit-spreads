@@ -16,7 +16,6 @@ from compass.meta_learner import (
     MetaLearner,
     MetaLearnerResult,
     RegimeWeights,
-    WalkForwardFold,
     compute_disagreement_features,
     compute_lift,
     evaluate_base_model,

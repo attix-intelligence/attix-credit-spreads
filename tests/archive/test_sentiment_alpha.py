@@ -6,8 +6,7 @@ import pytest
 from pathlib import Path
 
 from compass.sentiment_alpha import (
-    SentimentAlpha, SentimentReading, ContrarianSignal,
-    SentimentBacktestResult,
+    SentimentAlpha, SentimentReading, SentimentBacktestResult,
 )
 
 

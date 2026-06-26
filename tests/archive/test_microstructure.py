@@ -3,7 +3,6 @@
 import numpy as np
 import pandas as pd
 import pytest
-from datetime import datetime
 from pathlib import Path
 
 from compass.microstructure import (
@@ -17,7 +16,6 @@ from compass.microstructure import (
     InformedTradingEstimate,
     LiquidityMetrics,
     MicrostructureSummary,
-    TRADING_DAYS,
 )
 
 

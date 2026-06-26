@@ -23,12 +23,11 @@ Usage::
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
-import pandas as pd
 
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_OUTPUT = ROOT / "reports" / "adaptive_stoploss.html"
@@ -438,7 +437,6 @@ class StopLossOptimizer:
 
                     pres = ret / no_stop_ret * 100 if abs(no_stop_ret) > 0.01 else 100.0
                     # DD reduction vs fixed 5% non-adaptive
-                    fixed_ref_dd = no_stop_dd  # will update below
 
                     avg_dist = param * np.mean([get_regime_multiplier(v, adaptive) for v in self.vix])
 

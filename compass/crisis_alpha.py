@@ -19,10 +19,9 @@ Yahoo is a real market data provider — not synthetic generation.
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass, field
-from datetime import datetime
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List
 
 import numpy as np
 import pandas as pd
@@ -504,7 +503,7 @@ def run_analysis():
     print("\n  [2/3] Running backtest...")
     result = backtest_crisis_alpha(prices)
 
-    print(f"\n  [3/3] Results (2015-2025, post-warmup):")
+    print("\n  [3/3] Results (2015-2025, post-warmup):")
     print(f"    CAGR:    {result.cagr:+.1f}%")
     print(f"    Sharpe:  {result.sharpe:.2f} (corrected arithmetic formula)")
     print(f"    Sortino: {result.sortino:.2f}")
@@ -512,7 +511,7 @@ def run_analysis():
     print(f"    Calmar:  {result.calmar:.1f}")
     print(f"    Corr to SPY: {result.corr_to_spy:+.3f}")
 
-    print(f"\n  Crisis Period Performance:")
+    print("\n  Crisis Period Performance:")
     for c in result.crisis_metrics:
         tag = "OUTPERFORM" if c.outperformance > 0 else "UNDERPERFORM"
         print(f"    {c.name:<25s}: strat {c.strategy_return:+6.1f}% | "

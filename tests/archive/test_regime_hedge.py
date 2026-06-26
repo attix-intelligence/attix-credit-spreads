@@ -10,7 +10,6 @@ from compass.regime_hedge import (
     RegimeHedgeEngine,
     HedgeParams,
     HedgeState,
-    RegimeTransition,
     HedgeCostSummary,
     BacktestComparison,
     GridSweepResult,

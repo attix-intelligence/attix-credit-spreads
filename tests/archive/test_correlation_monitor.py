@@ -2,7 +2,6 @@
 
 import numpy as np
 import pandas as pd
-import pytest
 from pathlib import Path
 
 from compass.correlation_monitor import (
@@ -29,7 +28,7 @@ class TestSyntheticData:
         # Use wider windows to smooth noise
         calm = df.iloc[100:200].corr()
         crisis = df.iloc[50:80].corr()
-        c_avg = CorrelationMonitor.avg_pairwise_corr(calm)
+        CorrelationMonitor.avg_pairwise_corr(calm)
         cr_avg = CorrelationMonitor.avg_pairwise_corr(crisis)
         # At minimum, crisis period has some correlation structure
         assert isinstance(cr_avg, float)

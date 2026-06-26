@@ -4,21 +4,18 @@
 success criteria, AutoPipeline, BatchQueue, HTML reports, edge cases.
 """
 
-import math
 from pathlib import Path
 
 import numpy as np
-import pandas as pd
 import pytest
 
 from compass.experiment_auto import (
-    ExperimentSpec, ExperimentResult, NorthStarCheck, WalkForwardFold,
-    QueueItem, Status, AutoPipeline, BatchQueue,
+    ExperimentSpec, ExperimentResult, QueueItem, Status, AutoPipeline, BatchQueue,
     compute_sharpe, compute_cagr, compute_max_dd, compute_sortino,
     compute_profit_factor, walk_forward_validate,
     evaluate_north_star, evaluate_criteria,
     build_experiment_html, build_batch_html,
-    NORTH_STAR, TRADING_DAYS,
+    NORTH_STAR,
 )
 
 

@@ -18,12 +18,11 @@ from __future__ import annotations
 import ast
 import html as html_mod
 import logging
-import os
 import textwrap
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Set
 
 logger = logging.getLogger(__name__)
 

@@ -13,7 +13,6 @@ The correct result: $500 / $100,000 * 100 = 0.5% (applied ONCE)
 These tests verify the formula is applied exactly once.
 """
 
-import pytest
 
 
 # ---------------------------------------------------------------------------

@@ -21,7 +21,7 @@ import sys
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -842,7 +842,6 @@ def _generate_html(strategies: List[StrategyStats], output_path: Path) -> Path:
         oos_flag = s.oos_sharpe > 1.5 and s.oos_n_trades >= 5
         flag = f" ★ OOS Sharpe {s.oos_sharpe:.2f}" if oos_flag else ""
         border = "#d29922" if oos_flag else "#30363d"
-        oos_note = f" (OOS: {s.oos_sharpe:.2f} on {s.oos_n_trades} trades)" if s.oos_n_trades > 0 else ""
         summary_cards += f"""
         <div class="strat-card" style="border-color:{border}">
           <h3>{s.name}{f'<span class="flag">{flag}</span>' if flag else ''}</h3>

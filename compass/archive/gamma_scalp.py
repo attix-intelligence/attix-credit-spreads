@@ -34,7 +34,7 @@ import sqlite3
 import sys
 import urllib.request
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
@@ -44,7 +44,7 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from compass.metrics import annualized_sharpe, full_metrics
+from compass.metrics import full_metrics
 
 DB_PATH = ROOT / "data" / "options_cache.db"
 TRADING_DAYS = 252
@@ -218,7 +218,7 @@ def backtest_gamma_scalp(
     Hedge: each day, rehedge delta → realize 0.5 × Γ × (ΔS)² P&L
     Exit:  after hold_days or if premium doubles
     """
-    print(f"  Loading SPY spot prices...")
+    print("  Loading SPY spot prices...")
     spy = load_spy_spot(start_date, end_date)
     print(f"    {len(spy)} SPY bars")
 

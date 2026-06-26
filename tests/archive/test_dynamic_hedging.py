@@ -3,9 +3,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 from compass.dynamic_hedging import (
-    BacktestResult, CrossHedge, DynamicHedgingEngine, HedgeAction,
-    HedgeConfig, HedgePlan, PortfolioState, TailHedge,
-    compute_var, kelly_rebalance_trigger, optimal_hedge_ratio,
+    BacktestResult, DynamicHedgingEngine, HedgeConfig, HedgePlan, PortfolioState, compute_var, kelly_rebalance_trigger, optimal_hedge_ratio,
     price_otm_put,
 )
 

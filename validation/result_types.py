@@ -2,7 +2,7 @@
 TypedDicts for validation results — no logic, pure data shapes.
 """
 
-from typing import Dict, List, Optional
+from typing import Dict, List
 try:
     from typing import TypedDict
 except ImportError:

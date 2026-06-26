@@ -243,6 +243,7 @@ class StraddleStrangleStrategy(BaseStrategy):
                         event_date_str = event.get("date", "")
                         try:
                             from datetime import datetime as dt_cls
+                            from datetime import timezone
                             event_dt = dt_cls.fromisoformat(event_date_str)
                             if event_dt.tzinfo is None:
                                 event_dt = event_dt.replace(tzinfo=timezone.utc)

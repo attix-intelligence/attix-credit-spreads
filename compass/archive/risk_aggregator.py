@@ -385,7 +385,7 @@ class RiskAggregator:
             .section { background: white; padding: 16px; border-radius: 6px; margin: 12px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         """)
         parts.append("</style></head><body>")
-        parts.append(f"<h1>Risk Aggregation Report</h1>")
+        parts.append("<h1>Risk Aggregation Report</h1>")
         parts.append(f"<p>Generated: {html.escape(result.generated_at)}</p>")
 
         # --- VaR / CVaR heatmap table ---

@@ -13,7 +13,6 @@ Provides:
 from __future__ import annotations
 
 import logging
-import math
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
@@ -21,7 +20,6 @@ from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
-from sklearn.linear_model import LinearRegression
 
 logger = logging.getLogger(__name__)
 

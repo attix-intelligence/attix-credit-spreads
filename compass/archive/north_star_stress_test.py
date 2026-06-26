@@ -71,8 +71,8 @@ import math
 import os
 import sys
 import urllib.request
-from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Tuple
+from dataclasses import dataclass
+from typing import Dict, List, Tuple
 
 import numpy as np
 import pandas as pd

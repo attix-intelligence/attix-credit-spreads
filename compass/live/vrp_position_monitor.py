@@ -55,7 +55,7 @@ import os
 import tempfile
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional
 
 from compass.live.vrp_contracts import OrderIntent
 from compass.live.vrp_sinks import stream_client_order_id

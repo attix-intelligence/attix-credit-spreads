@@ -149,10 +149,10 @@ def run_adaptive_hedged_real(df, spy_ret_s, vix_s, vix3m_s, lag_signals=True):
         # LAG SIGNALS by 1 day to prevent look-ahead
         if lag_signals and i > 0:
             v = float(vix[i - 1]); v3m = float(vix3m[i - 1])
-            sr = float(spy_r[i - 1])
+            float(spy_r[i - 1])
         else:
             v = float(vix[i]); v3m = float(vix3m[i])
-            sr = float(spy_r[i])
+            float(spy_r[i])
 
         vr = v / max(v3m, 1.0)
         pr = float(port_raw[i])
@@ -294,7 +294,7 @@ def generate_html(issues, claimed, validated, wf_results, mc, v4_comparison):
         m = w["metrics"]
         wf_rows += f'<tr><td style="font-weight:700">{w["label"]}</td><td>{m["cagr_pct"]:.1f}%</td><td style="font-weight:700">{m["sharpe"]:.2f}</td><td>{m["sharpe_incorrect"]:.2f}</td><td>{m["max_dd_pct"]:.1f}%</td><td>{w["avg_lev"]:.2f}×</td></tr>'
 
-    sharpe_correct = validated["sharpe"] >= 3.5
+    validated["sharpe"] >= 3.5
     cagr_valid = validated["cagr_pct"] >= 80
 
     return f"""<!DOCTYPE html>
@@ -461,10 +461,10 @@ def main():
     print(f"  Median Sharpe: {mc['median_sharpe']:.2f}  P95 DD: {mc['p95_dd']:.1f}%")
 
     print(f"\n{'━'*56}")
-    print(f"  VERDICT:")
+    print("  VERDICT:")
     print(f"    CAGR 102% claim:   {'CONFIRMED' if abs(validated['cagr_pct']-102) < 15 else 'DIFFERENT'} (validated: {validated['cagr_pct']:.1f}%)")
     print(f"    Sharpe 9.09 claim: INFLATED — correct Sharpe is {validated['sharpe']:.2f}")
-    print(f"    Cause: CAGR-based Sharpe formula (geometric >> arithmetic at high returns)")
+    print("    Cause: CAGR-based Sharpe formula (geometric >> arithmetic at high returns)")
     print(f"    DD 7.5% claim:     {'CONFIRMED' if abs(validated['max_dd_pct']-7.5) < 5 else 'DIFFERENT'} (validated: {validated['max_dd_pct']:.1f}%)")
     print(f"{'━'*56}")
 

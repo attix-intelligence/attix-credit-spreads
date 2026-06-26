@@ -1,10 +1,8 @@
 """Tests for compass.live_sim_engine — realistic trade simulation."""
 from __future__ import annotations
 
-import math
 
 import numpy as np
-import pytest
 
 from compass.live_sim_engine import (
     FillResult,
@@ -14,7 +12,6 @@ from compass.live_sim_engine import (
     MarketImpactModel,
     PartialFillModel,
     QueueModel,
-    SimulatedTrade,
     SpreadDynamics,
     SpreadModel,
     StrategySimResult,

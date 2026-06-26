@@ -31,9 +31,9 @@ from __future__ import annotations
 
 import logging
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List
 
 import numpy as np
 import pandas as pd
@@ -582,7 +582,7 @@ def _model_comparison_svg(comps: List[ModelComparison]) -> str:
     """Bar chart comparing model RMSE."""
     if not comps:
         return ""
-    w, h = 500, 200
+    w, _h = 500, 200
     pad = 100
     n = len(comps)
     max_rmse = max(c.rmse for c in comps) * 1.2

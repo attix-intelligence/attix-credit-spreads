@@ -6,8 +6,7 @@ import pandas as pd
 import pytest
 
 from compass.crisis_alpha import (
-    ASSET_UNIVERSE, LOOKBACKS, SIGNAL_WEIGHTS, VOL_TARGET_ANNUAL,
-    CRISIS_PERIODS, CrisisMetrics, WFFold, BacktestResult,
+    ASSET_UNIVERSE, LOOKBACKS, SIGNAL_WEIGHTS, CRISIS_PERIODS, BacktestResult,
     compute_momentum_signal, compute_vol_target_weights,
     _sharpe, _compute_metrics, backtest_crisis_alpha, generate_report,
     TRADING_DAYS,

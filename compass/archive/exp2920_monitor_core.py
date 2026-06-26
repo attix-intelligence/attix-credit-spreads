@@ -37,11 +37,9 @@ from __future__ import annotations
 
 import json
 import math
-import os
 import sys
-import urllib.request
 from dataclasses import asdict, dataclass, field
-from datetime import date, datetime, timedelta, timezone
+from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
@@ -188,7 +186,7 @@ def correlation_matrix(per_stream_returns: Dict[str, Sequence[float]],
     names = list(per_stream_returns.keys())
     if not names:
         return CorrelationSnapshot(window_days=window)
-    mat = np.zeros((len(names), len(names)))
+    np.zeros((len(names), len(names)))
     cols = []
     min_n = window
     for n in names:

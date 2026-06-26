@@ -25,7 +25,6 @@ from tests.compass_helpers import (
     mock_spy_prices,
     mock_vix_series,
     mock_spy_dataframe,
-    RegimeScenario,
     REGIME_SCENARIOS,
 )
 
@@ -209,17 +208,17 @@ class TestIsDeclining:
 
     def test_sharp_decline_detected(self, classifier, crash_prices):
         """>5% drop in last 10 trading days -> True."""
-        assert classifier._is_declining(crash_prices) == True
+        assert classifier._is_declining(crash_prices)
 
     def test_gentle_decline_not_detected(self, classifier, bear_prices):
         """Gradual decline (not >5% in 10 days) -> False."""
         # -25% annual = ~1% per 10 trading days, well under 5%
-        assert classifier._is_declining(bear_prices) == False
+        assert not classifier._is_declining(bear_prices)
 
     def test_insufficient_data(self, classifier):
         """Fewer than 10 data points -> False."""
         short = mock_spy_prices(days=5, trend=-50.0, base=450.0)
-        assert classifier._is_declining(short) == False
+        assert not classifier._is_declining(short)
 
 
 # ══════════════════════════════════════════════════════════════════════════════

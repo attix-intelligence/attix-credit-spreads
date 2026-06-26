@@ -9,10 +9,7 @@ import pandas as pd
 import pytest
 
 from compass.tail_risk import (
-    DEFAULT_CONFIDENCE_LEVELS,
-    ExperimentTailContrib,
     GPDFit,
-    StressVaR,
     TailRiskAnalyzer,
     TailRiskResult,
     VaRCVaR,

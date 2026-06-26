@@ -1,9 +1,8 @@
 """Tests for compass.monte_carlo_north_star."""
-import math, unittest
+import unittest
 from compass.monte_carlo_north_star import (
     DEFAULT_PORTFOLIO, DEFAULT_SCENARIOS, MCNorthStarResult, PathResult,
-    Scenario, ScenarioResult, StrategySpec,
-    run_full_stress_test, run_quick_test, run_scenario, simulate_path,
+    ScenarioResult, run_quick_test, run_scenario, simulate_path,
 )
 import random
 

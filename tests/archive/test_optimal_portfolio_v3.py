@@ -6,11 +6,9 @@ import tempfile
 from pathlib import Path
 
 import numpy as np
-import pandas as pd
 import pytest
 
 from compass.optimal_portfolio_v3 import (
-    HRPCluster,
     NorthStarResult,
     OptimisationResult,
     PortfolioOptimiserV3,
@@ -59,7 +57,7 @@ class TestCatalog:
 
 class TestCorrelation:
     def test_shape(self, strategies, corr):
-        n = len([s for s in strategies if s.cagr != 0 or s.sharpe > 0])
+        len([s for s in strategies if s.cagr != 0 or s.sharpe > 0])
         assert corr.shape[0] == corr.shape[1]
 
     def test_diagonal_one(self, corr):

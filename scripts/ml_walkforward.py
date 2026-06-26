@@ -24,12 +24,11 @@ Usage:
 
 import json
 import logging
-import math
 import sys
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -231,7 +230,7 @@ XGB_PARAMS = {
 
 def _prepare_xy(df: pd.DataFrame) -> Tuple[pd.DataFrame, np.ndarray]:
     """Extract feature matrix X and label vector y from DataFrame."""
-    available = [c for c in FEATURE_COLS if c in df.columns]
+    [c for c in FEATURE_COLS if c in df.columns]
     missing = [c for c in FEATURE_COLS if c not in df.columns]
     if missing:
         logger.warning("Missing feature columns (will be zero-filled): %s", missing)

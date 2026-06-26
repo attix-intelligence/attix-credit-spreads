@@ -2,15 +2,11 @@
 from __future__ import annotations
 
 import numpy as np
-import pandas as pd
-import pytest
 
 from compass.dispersion_trader import (
     CorrelationSnapshot,
     DispersionBacktest,
     DispersionResult,
-    DispersionSignal,
-    DispersionTrade,
     PnLAttribution,
     VegaSizing,
     attribute_pnl,

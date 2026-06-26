@@ -1,7 +1,6 @@
 """Tests for compass.signal_decay – signal decay analyzer."""
 from __future__ import annotations
 
-import math
 import tempfile
 from pathlib import Path
 
@@ -13,7 +12,6 @@ from compass.signal_decay import (
     DecayAnalysis,
     HalfLifeResult,
     ICResult,
-    RegimeDecayResult,
     SignalDecayAnalyzer,
     TurnoverResult,
 )

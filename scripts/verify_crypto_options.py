@@ -248,7 +248,7 @@ def print_section(title: str):
 
 
 def main():
-    print(f"\nGATE 1 VERIFICATION — Crypto ETF Options on Polygon")
+    print("\nGATE 1 VERIFICATION — Crypto ETF Options on Polygon")
     print(f"Date: {TODAY}")
     print(f"API Key: {API_KEY[:6]}...{API_KEY[-4:]}")
 
@@ -257,17 +257,17 @@ def main():
     for ticker in TICKERS:
         print_section(f"{ticker}")
 
-        print(f"  Fetching active contracts...")
+        print("  Fetching active contracts...")
         active = fetch_contracts(ticker)
         print(f"  → {len(active)} active contracts found")
 
-        print(f"  Fetching expired contracts (historical range)...")
+        print("  Fetching expired contracts (historical range)...")
         expired = fetch_historical_contracts(ticker)
         print(f"  → {len(expired)} expired contracts found")
 
         contract_analysis = analyze_contracts(ticker, active, expired)
 
-        print(f"  Fetching live snapshot (bid/ask/volume/OI)...")
+        print("  Fetching live snapshot (bid/ask/volume/OI)...")
         snapshots = fetch_snapshot(ticker, limit=50)
         print(f"  → {len(snapshots)} snapshot records found")
 
@@ -281,7 +281,7 @@ def main():
         # Print summary for this ticker
         ca = contract_analysis
         sa = snapshot_analysis
-        print(f"\n  CONTRACT COVERAGE:")
+        print("\n  CONTRACT COVERAGE:")
         print(f"    Total contracts:     {ca['total_contracts']} ({ca['active_contracts']} active, {ca['expired_contracts']} expired)")
         print(f"    Date range:          {ca['earliest_expiration']} → {ca['latest_expiration']}")
         print(f"    Unique expirations:  {ca['unique_expirations']} ({ca['weekly_expiries']} weekly, {ca['monthly_expiries']} monthly)")
@@ -289,7 +289,7 @@ def main():
         print(f"    Avg strikes/expiry:  {ca['avg_strikes_per_expiry']}  (max: {ca['max_strikes_per_expiry']})")
         print(f"    Verdict:             {ca['verdict']}")
 
-        print(f"\n  LIQUIDITY (live snapshot):")
+        print("\n  LIQUIDITY (live snapshot):")
         print(f"    Snapshot records:    {sa['snapshot_count']}")
         print(f"    Avg bid-ask spread:  {sa['avg_bid_ask_spread_pct']}%")
         print(f"    Total volume:        {sa['total_volume']:,}")
@@ -298,7 +298,7 @@ def main():
         print(f"    Verdict:             {sa['verdict']}")
 
         if sa.get("samples"):
-            print(f"\n  SAMPLE CONTRACTS:")
+            print("\n  SAMPLE CONTRACTS:")
             for s in sa["samples"]:
                 print(f"    {s['symbol']}")
                 print(f"      type={s['type']}, strike={s['strike']}, expiry={s['expiry']}")
@@ -319,7 +319,7 @@ def main():
     out_path.parent.mkdir(exist_ok=True)
     with open(out_path, "w") as f:
         json.dump(all_results, f, indent=2)
-    print(f"\n  Full results saved to: output/crypto_options_gate1.json")
+    print("\n  Full results saved to: output/crypto_options_gate1.json")
 
 
 if __name__ == "__main__":

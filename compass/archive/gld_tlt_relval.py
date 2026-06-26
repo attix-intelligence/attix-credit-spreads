@@ -20,10 +20,10 @@ import logging
 import math
 import sqlite3
 import sys
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -242,8 +242,8 @@ def run_backtest(
     spy_close = spy_df["Close"].reindex(common).ffill()
     spy_ret = spy_close.pct_change().fillna(0)
 
-    td_set_gld = set(gld_df.index.strftime("%Y-%m-%d"))
-    td_set_tlt = set(tlt_df.index.strftime("%Y-%m-%d"))
+    set(gld_df.index.strftime("%Y-%m-%d"))
+    set(tlt_df.index.strftime("%Y-%m-%d"))
 
     # GLD/TLT ratio z-score
     ratio = gld_close / tlt_close.replace(0, np.nan)
@@ -288,7 +288,7 @@ def run_backtest(
             continue
 
         # Find matching expiration ~35 days out
-        target_exp_dt = date + timedelta(days=35)
+        date + timedelta(days=35)
         # Pick closest GLD exp
         gld_exp = None
         for e in sorted(gld_exps):
@@ -481,7 +481,7 @@ def _compute_exp1220_corr(trade_series: pd.Series) -> float:
         # Since EXP-1220 has corr=0.14 with SPY, and our strategy has low SPY corr,
         # the cross-correlation is approximately spy_corr_ours × spy_corr_1220
         # This is a rough proxy — exact requires daily return series
-        exp1220_spy_corr = data.get("correlation", {}).get("overall", 0.142)
+        data.get("correlation", {}).get("overall", 0.142)
         # Approximate
         return 0.0  # Report as 0 (unknown) rather than fabricate
     except Exception:

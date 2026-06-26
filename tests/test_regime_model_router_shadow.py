@@ -15,9 +15,8 @@ from __future__ import annotations
 import tempfile
 from pathlib import Path
 from typing import Any, Dict, Optional
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
-import joblib
 import numpy as np
 import pytest
 
@@ -310,7 +309,6 @@ class TestWrapShadowPicksLatest:
     """_wrap_shadow should pick the most-recently-modified ensemble_model_*.joblib."""
 
     def test_latest_file_selected(self):
-        from compass.shadow_ensemble import ShadowEnsemble
 
         primary = _StubPrimary()
         router = _router_no_model()
@@ -328,7 +326,8 @@ class TestWrapShadowPicksLatest:
             older.write_bytes(b"x")
             newer.write_bytes(b"x")
             # Make newer actually newer
-            import os, time
+            import os
+            import time
             os.utime(older, (time.time() - 100, time.time() - 100))
             os.utime(newer, (time.time(), time.time()))
 

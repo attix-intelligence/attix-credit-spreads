@@ -54,16 +54,12 @@ from __future__ import annotations
 
 import argparse
 import json
-import logging
-import math
 import sys
 import uuid
-from dataclasses import asdict, dataclass, field
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
-import numpy as np
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
@@ -71,7 +67,6 @@ sys.path.insert(0, str(ROOT))
 from compass.exp2830_paper_signal_generator import (
     generate_all_signals,
     get_logger,
-    STREAM_WEIGHTS,
 )
 from compass.exp2820_flash_crash_protection import vix_leverage_factor, VIX_LADDER
 
@@ -98,7 +93,7 @@ def _occ_option_symbol(underlier: str, expiry: str, option_type: str,
 
 def _put_credit_spread_legs(signal: Dict) -> List[Dict]:
     """Two legs: sell short-strike put, buy long-strike put."""
-    qty = signal["target_contracts_after_vix"]
+    signal["target_contracts_after_vix"]
     expiry = signal["expiry"]
     under = signal["underlier"]
     return [

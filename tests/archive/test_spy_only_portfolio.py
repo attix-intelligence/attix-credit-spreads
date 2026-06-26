@@ -3,10 +3,9 @@
 import math
 import numpy as np
 import pandas as pd
-import pytest
 
 from compass.spy_only_portfolio import (
-    sharpe_correct, compute_metrics, FoldResult, WFResult,
+    sharpe_correct, compute_metrics, WFResult,
     walk_forward_validate, build_multi_asset_estimate, Comparison,
     generate_report, TRADING_DAYS,
 )

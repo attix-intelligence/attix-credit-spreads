@@ -3,14 +3,10 @@ from __future__ import annotations
 from dataclasses import asdict, fields
 from datetime import time
 
-import numpy as np
-import pytest
 
 from compass.smart_router import (
     DEFAULT_VENUES,
-    AdverseSelectionEstimate,
     CostAttribution,
-    QueueEstimate,
     RoutingDecision,
     RoutingResult,
     SmartRouter,

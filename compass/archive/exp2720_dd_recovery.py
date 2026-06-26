@@ -47,7 +47,7 @@ from __future__ import annotations
 import json
 import math
 import sys
-from dataclasses import dataclass, asdict, field
+from dataclasses import dataclass, asdict
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
@@ -271,7 +271,6 @@ def write_html(payload: Dict, path: Path) -> None:
     # Build per-bucket comparison rows
     bucket_rows = ""
     for depth_pct in [1.0, 3.0, 5.0, 8.0]:
-        key = f"{depth_pct:.1f}"
         b = next((x for x in base_st if x["threshold_pct"] == depth_pct), None)
         v = next((x for x in vt_st   if x["threshold_pct"] == depth_pct), None)
         if b is None or v is None:
@@ -280,8 +279,8 @@ def write_html(payload: Dict, path: Path) -> None:
         v_avg = v.get("avg_recovery_days", 0)
         delta = v_avg - b_avg if isinstance(b_avg,(int,float)) and isinstance(v_avg,(int,float)) else 0
         color = _color_for_delta(delta)
-        b_worst = b.get("max_recovery_days", "—")
-        v_worst = v.get("max_recovery_days", "—")
+        b.get("max_recovery_days", "—")
+        v.get("max_recovery_days", "—")
         bucket_rows += (
             f"<tr><td><strong>&gt;{depth_pct:.0f}%</strong></td>"
             f"<td>{b.get('n_episodes',0)}</td>"

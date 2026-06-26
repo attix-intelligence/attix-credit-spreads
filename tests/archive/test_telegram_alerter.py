@@ -1,13 +1,10 @@
 """Tests for compass.telegram_alerter — 35 tests."""
 
-import time
-import pytest
 
 from compass.telegram_alerter import (
     TelegramAlerter, Priority, AlertMessage,
     TradeAlert, RiskAlert, ModelAlert,
     DailySummary, WeeklyReport,
-    PRIORITY_EMOJI, DEFAULT_COOLDOWNS,
 )
 
 

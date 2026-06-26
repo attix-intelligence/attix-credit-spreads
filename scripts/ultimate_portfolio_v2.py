@@ -18,11 +18,10 @@ Target: CAGR >55.6% (beat v1), DD <12%, maintain high Sharpe.
 from __future__ import annotations
 
 import json
-import math
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict
 
 import numpy as np
 import pandas as pd
@@ -226,7 +225,7 @@ def optimize_weights(df: pd.DataFrame) -> Dict[str, float]:
                 best_weights = {names[i]: round(float(w[i]), 4) for i in range(len(names))}
                 best_metrics = m
 
-    print(f"\n  Optimized weights (max Sharpe at 1.6× leverage):")
+    print("\n  Optimized weights (max Sharpe at 1.6× leverage):")
     for name, wt in best_weights.items():
         print(f"    {name:25s}  {wt*100:5.1f}%")
     print(f"  → CAGR={best_metrics['cagr_pct']:.1f}%  Sharpe={best_metrics['sharpe']:.2f}  DD={best_metrics['max_dd_pct']:.1f}%")
@@ -464,7 +463,7 @@ def _svg_heatmap(monthly, w=920):
 # ═══════════════════════════════════════════════════════════════════════════
 
 def generate_html(data, weights):
-    ha = data["hedged_agg"]; ua = data["unhedged_agg"]; v1 = data["v1_metrics"]
+    ha = data["hedged_agg"]; data["unhedged_agg"]; v1 = data["v1_metrics"]
     wins = data["windows"]; full = data["full_hedged"]
     drag = data["cagr_drag"]
 
@@ -637,11 +636,11 @@ def main():
 
     ha = result["hedged_agg"]; ua = result["unhedged_agg"]; v1 = result["v1_metrics"]
     print(f"\n{'━'*56}")
-    print(f"  V1 (4 strats, unhedged, full period):")
+    print("  V1 (4 strats, unhedged, full period):")
     print(f"    CAGR: {v1['cagr_pct']:.1f}%  Sharpe: {v1['sharpe']:.2f}  DD: {v1['max_dd_pct']:.1f}%")
-    print(f"  V2 OOS HEDGED (6 strats, 5 folds):")
+    print("  V2 OOS HEDGED (6 strats, 5 folds):")
     print(f"    CAGR: {ha['cagr_pct']:.1f}%  Sharpe: {ha['sharpe']:.2f}  DD: {ha['max_dd_pct']:.1f}%")
-    print(f"  V2 OOS UNHEDGED:")
+    print("  V2 OOS UNHEDGED:")
     print(f"    CAGR: {ua['cagr_pct']:.1f}%  Sharpe: {ua['sharpe']:.2f}  DD: {ua['max_dd_pct']:.1f}%")
     print(f"  CAGR drag: {result['cagr_drag']:+.1f}%")
 
@@ -649,7 +648,7 @@ def main():
     covid = full["scenarios"].get("COVID_2020", {})
     print(f"\n  COVID: {covid.get('hedged_dd_pct', '?')}% hedged / {covid.get('unhedged_dd_pct', '?')}% unhedged")
 
-    print(f"\n  Year-by-Year OOS (Hedged):")
+    print("\n  Year-by-Year OOS (Hedged):")
     for w in result["windows"]:
         hm = w["hedged"]
         print(f"    {w['label']}: CAGR={hm['cagr_pct']:7.1f}%  Sharpe={hm['sharpe']:.2f}  DD={hm['max_dd_pct']:.1f}%  Drag={w['cagr_drag']:+.1f}%")

@@ -35,7 +35,7 @@ import sys
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 import numpy as np
 import pandas as pd
@@ -55,7 +55,6 @@ from sklearn.metrics import roc_auc_score
 from scripts.ml_walkforward import (
     FEATURE_COLS,
     FOLDS,
-    TARGET_COL,
     XGB_PARAMS,
     enrich_dataframe,
     _prepare_xy,

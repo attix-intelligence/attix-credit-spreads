@@ -1,15 +1,12 @@
 """Tests for compass/experiment_runner.py — the automated experiment pipeline."""
 
 import json
-import math
 import sys
 from datetime import datetime
 from pathlib import Path
-from unittest.mock import patch, MagicMock
 
 import numpy as np
 import pandas as pd
-import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
@@ -18,8 +15,6 @@ from compass.experiment_runner import (
     ExperimentSpec,
     ExperimentResult,
     ExperimentRunner,
-    NorthStarCheck,
-    WalkForwardWindow,
     SweepResult,
     BatchRunner,
     ParameterSweep,

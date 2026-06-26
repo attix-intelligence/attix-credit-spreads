@@ -11,19 +11,14 @@ import pytest
 
 from compass.momentum_crash_protector import (
     AnalysisResult,
-    CrashEpisode,
-    CrashIndicators,
     MomentumCrashProtector,
-    ProtectionResult,
     classify_risk,
     compute_crowding_score,
     compute_momentum,
-    detect_episodes,
     mean_reversion_trigger,
     momentum_dispersion,
     return_autocorrelation,
     short_interest_proxy,
-    simulate_protection,
     winner_loser_spread,
     wl_spread_acceleration,
 )

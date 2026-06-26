@@ -15,12 +15,11 @@ Outputs net CAGR after all costs, breakeven capital, capacity ceiling.
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
-import numpy as np
 
 TRADING_DAYS = 252
 WEEKS_PER_YEAR = 52
@@ -865,7 +864,7 @@ restructure away from illiquid options toward futures or swap-based execution.</
 
 def run_analysis():
     print("Running execution cost analysis across AUM levels...")
-    print(f"  Leverage: 1.6x | Margin rate: 5.5% | Rebalance: weekly\n")
+    print("  Leverage: 1.6x | Margin rate: 5.5% | Rebalance: weekly\n")
 
     results = run_aum_sweep()
 

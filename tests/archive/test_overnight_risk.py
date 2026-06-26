@@ -4,26 +4,15 @@
 """
 from __future__ import annotations
 
-import math
 from dataclasses import asdict, fields
-from datetime import date, timedelta
+from datetime import date
 
-import numpy as np
 import pytest
 
 from compass.overnight_risk import (
     OVERNIGHT_GAP_STD,
-    STRESS_MARGIN_MULTIPLIER,
-    VIX_HIGH,
-    VIX_LOW,
-    Z_95,
-    Z_99,
-    CorrelationExposure,
-    DTEBucket,
-    EarningsExposure,
     GapRiskResult,
     HedgeRecommendation,
-    MarginBuffer,
     MaxLossScenario,
     OvernightResult,
     OvernightRiskReport,

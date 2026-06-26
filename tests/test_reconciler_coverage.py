@@ -11,9 +11,8 @@ All tests use mock Alpaca providers and in-memory SQLite — no real API calls.
 
 from __future__ import annotations
 
-import json
 from datetime import datetime, timedelta, timezone
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -28,7 +27,6 @@ from shared.reconciler import (
     PositionReconciler,
     ReconciliationResult,
     _DEFAULT_COMMISSION_PER_CONTRACT,
-    _PENDING_MAX_AGE_HOURS,
     _TERMINAL_ORDER_STATES,
 )
 
@@ -537,7 +535,7 @@ class TestReconcileEOD:
         rec = PositionReconciler(alpaca=alpaca, db_path=db_path)
         result = rec.reconcile_eod()
         assert result.expirations_processed == 1
-        closed = get_trades(status="closed_profit", path=db_path) + \
+        get_trades(status="closed_profit", path=db_path) + \
                  get_trades(status="closed_loss", path=db_path)
         # The trade should no longer be open
         open_trades = get_trades(status="open", path=db_path)
@@ -617,7 +615,7 @@ class TestReconcileFromActivities:
     def test_opexp_activity_closes_trade(self, tmp_path):
         """OPEXP activity closes an open trade."""
         db_path = _db(tmp_path)
-        trade = _open_trade(db_path, trade_id="cs-opexp", credit=1.50,
+        _open_trade(db_path, trade_id="cs-opexp", credit=1.50,
                            contracts=1, expiration="2026-05-16")
         occ_short = "SPY   20260516P00540000"
         occ_long = "SPY   20260516P00535000"

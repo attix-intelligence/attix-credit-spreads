@@ -18,7 +18,6 @@ Correlation computed vs SPY returns AND vs EXP-1220 proxy.
 
 from __future__ import annotations
 
-import json
 import logging
 import math
 import sqlite3
@@ -26,7 +25,7 @@ import sys
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -688,7 +687,7 @@ def strat_correlation_breakout(hd: IronVault, spy_df: pd.DataFrame,
     print("  [5] Correlation Breakout: XLF/XLI pair divergence trade")
     xlf_close = xlf_df["Close"]
     xli_close = xli_df["Close"]
-    td_set = set(spy_df.index.strftime("%Y-%m-%d"))
+    set(spy_df.index.strftime("%Y-%m-%d"))
 
     # Rolling correlation and spread
     xlf_ret = xlf_close.pct_change()

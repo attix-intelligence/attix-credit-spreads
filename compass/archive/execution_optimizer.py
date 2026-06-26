@@ -9,7 +9,6 @@ from datetime import datetime, timezone
 from typing import Dict, List, Literal, Optional
 
 import numpy as np
-import pandas as pd
 
 # ---------------------------------------------------------------------------
 # Data classes

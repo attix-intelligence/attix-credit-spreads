@@ -14,10 +14,7 @@ from compass.north_star_backtest import (
     NorthStarBacktest,
     NorthStarResult,
     NorthStarTargets,
-    RegimeMetrics,
-    TradeResult,
     WalkForwardFold,
-    YearMetrics,
     apply_costs,
     compute_contracts,
     compute_max_drawdown_pct,
@@ -26,7 +23,6 @@ from compass.north_star_backtest import (
     compute_signal_score,
     compute_sortino,
     risk_gate,
-    walk_forward_by_year,
 )
 
 

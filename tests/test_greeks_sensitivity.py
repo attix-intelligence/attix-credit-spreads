@@ -11,11 +11,8 @@ import pandas as pd
 import pytest
 
 from compass.greeks_sensitivity import (
-    GreekProfile,
     GreeksSensitivityAnalyzer,
     GreeksSnapshot,
-    OptimalEntry,
-    ScenarioCell,
     SensitivitySummary,
     bs_call_price,
     bs_put_price,

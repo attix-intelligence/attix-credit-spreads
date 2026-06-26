@@ -7,7 +7,7 @@ from compass.phase5_optimization import (
     generate_returns, compute_metrics, apply_weights,
     run_single_experiment, run_equal_weight, run_optimized,
     run_full_comparison, generate_report,
-    EXPERIMENT_RETURNS_PROFILE, EXPERIMENT_CORRELATIONS, TRADING_DAYS,
+    TRADING_DAYS,
 )
 
 
@@ -131,7 +131,7 @@ class TestOptimized:
         assert bear.weights["EXP-600"] >= bull.weights["EXP-600"]
 
     def test_event_scaling(self, returns):
-        normal = run_optimized(returns, "max_sharpe", "NEUTRAL_MACRO", event_scaling=1.0)
+        run_optimized(returns, "max_sharpe", "NEUTRAL_MACRO", event_scaling=1.0)
         scaled = run_optimized(returns, "max_sharpe", "NEUTRAL_MACRO", event_scaling=0.85)
         # Scaled weights should sum to ~0.85
         assert abs(sum(scaled.scaled_weights.values()) - 0.85) < 0.01

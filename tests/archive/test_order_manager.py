@@ -8,8 +8,6 @@ import pytest
 
 from compass.order_manager import (
     Aggression,
-    BatchedOrder,
-    CostSummary,
     ExecutionCost,
     FillStats,
     Order,

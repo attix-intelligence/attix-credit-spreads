@@ -69,7 +69,6 @@ sys.path.insert(0, str(ROOT))
 from compass.exp2080_corr_regime import (
     STATIC_WEIGHTS,
     load_streams,
-    metrics as portfolio_metrics,
     TRADING_DAYS,
 )
 

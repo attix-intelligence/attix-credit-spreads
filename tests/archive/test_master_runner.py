@@ -1,10 +1,9 @@
 """Tests for compass.master_runner — 36 tests."""
 import numpy as np
 import pandas as pd
-import pytest
 from pathlib import Path
 from compass.master_runner import (
-    MasterRunner, RunConfig, StageStatus, StageResult, MasterRunResult, STAGE_NAMES,
+    MasterRunner, RunConfig, StageStatus, MasterRunResult,
 )
 
 def _prices(n=252, seed=42):

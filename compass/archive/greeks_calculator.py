@@ -24,7 +24,7 @@ import base64
 import io
 import logging
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
@@ -383,7 +383,6 @@ class GreeksCalculator:
         if dte_shifts is None:
             dte_shifts = [0, 5, 10, 20]
 
-        base_price = self.portfolio.total_delta if self.portfolio else 0
         results: List[ScenarioResult] = []
 
         for u_shift in underlying_shifts:
@@ -587,7 +586,7 @@ class GreeksCalculator:
         fig, ax = plt.subplots(figsize=(7, 4))
         strikes = [pos.strike for pos, _ in self.position_greeks]
         gammas = [sg.gamma for _, sg in self.position_greeks]
-        labels = [pos.experiment for pos, _ in self.position_greeks]
+        [pos.experiment for pos, _ in self.position_greeks]
         exp_colors = {}
         palette = ["#3b82f6", "#16a34a", "#f59e0b", "#dc2626", "#8b5cf6"]
         for pos, _ in self.position_greeks:

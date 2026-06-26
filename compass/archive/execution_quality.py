@@ -19,11 +19,10 @@ from __future__ import annotations
 
 import logging
 import math
-from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 import numpy as np
 import pandas as pd
@@ -117,7 +116,7 @@ def estimate_slippage_bps(
     if spread_width <= 0 or net_credit <= 0:
         return 0.0
 
-    notional = spread_width * 100 * max(contracts, 1)
+    spread_width * 100 * max(contracts, 1)
 
     # Base bid-ask spread cost (wider in high VIX)
     vix_factor = max(vix, 10.0) / 20.0  # normalise: VIX 20 = 1.0x

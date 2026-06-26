@@ -11,9 +11,8 @@ import logging
 import tempfile
 from datetime import datetime, timezone
 from typing import Dict, List, Optional
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
-import pytest
 
 from execution.position_monitor import (
     PositionMonitor,

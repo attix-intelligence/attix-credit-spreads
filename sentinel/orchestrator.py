@@ -32,8 +32,6 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from sentinel.gates_data_quality import (
     check_data_freshness,
-    audit_signal_votes,
-    check_regime_parity,
 )
 from sentinel.gates_account import check_account_gates
 from sentinel.gates_execution import check_execution_gates
@@ -864,7 +862,7 @@ def _record_gate_runs(
         db = SentinelDB()
 
         # Record as a snapshot note with all gate results
-        notes = json.dumps({
+        json.dumps({
             "health_score": health_score,
             "gates": [o.to_dict() for o in outcomes],
         })
@@ -1041,7 +1039,6 @@ def audit_all_experiments(
     ]
 
     results: List[ExperimentAudit] = []
-    alerts_to_send: List = []
 
     for exp_id in sorted(active_ids):
         logger.info("Auditing %s...", exp_id)
@@ -1118,7 +1115,7 @@ def format_audit_report(audits: List[ExperimentAudit]) -> str:
     elif avg_score < 70:
         header = f"\u26a0\ufe0f <b>SENTINEL AUDIT — Avg Score {avg_score}</b>"
     else:
-        header = f"\u2705 <b>SENTINEL AUDIT — All Clear</b>"
+        header = "\u2705 <b>SENTINEL AUDIT — All Clear</b>"
 
     lines = [header, f"<i>{now_str}</i>", ""]
 

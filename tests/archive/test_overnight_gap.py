@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import numpy as np
-import pytest
 
 from compass.overnight_gap import (
     BacktestResult,
@@ -197,7 +196,7 @@ class TestBacktest:
 
     def test_custom_risk(self):
         close, open_n, vix, dates = _make_data(300)
-        conservative = OvernightGapBacktest(max_risk_pct=0.005).run(close, open_n, vix, dates)
+        OvernightGapBacktest(max_risk_pct=0.005).run(close, open_n, vix, dates)
         aggressive = OvernightGapBacktest(max_risk_pct=0.04).run(close, open_n, vix, dates)
         # Aggressive should have larger absolute P&L swings
         assert abs(aggressive.total_pnl) >= 0  # just verify it runs

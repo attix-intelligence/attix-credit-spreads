@@ -44,11 +44,10 @@ from __future__ import annotations
 
 import json
 import math
-import os
 import sqlite3
 import sys
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
@@ -69,7 +68,7 @@ from compass.exp1960_skew_alpha import (
 )
 from compass.exp2160_high_capacity_alts import (
     fetch_yahoo_close, list_snapshot_dates, pick_expiration,
-    fetch_chain, coverage_stats, implied_vol_call, bs_call_delta,
+    fetch_chain, coverage_stats,
 )
 
 START = "2020-01-01"

@@ -609,7 +609,7 @@ def main() -> int:
           f"DD={qqq_m['max_dd_pct']:.2f}%  "
           f"avg credit ${qqq_m['avg_credit']:.2f}  "
           f"hold {qqq_m['avg_hold_days']}d")
-    print(f"\n  Year-by-year walk-forward:")
+    print("\n  Year-by-year walk-forward:")
     for y in qqq_yearly:
         print(f"    {y['year']}  n={y['n_trades']:3d}  "
               f"WR={y['win_rate']*100:4.0f}%  "
@@ -639,8 +639,8 @@ def main() -> int:
           f"DD={metrics8['max_dd_pct']}%  Vol={metrics8['vol_pct']}%")
 
     # Correlation check
-    qqq_nz = qqq_daily[qqq_daily != 0]
-    exp1220_nz = streams7["exp1220"][qqq_daily != 0]
+    qqq_daily[qqq_daily != 0]
+    streams7["exp1220"][qqq_daily != 0]
     common_mask = (qqq_daily != 0) & (streams7["exp1220"] != 0)
     if common_mask.sum() > 10:
         corr_qqq_spy = float(np.corrcoef(
@@ -663,7 +663,7 @@ def main() -> int:
     print(f"  8-stream bottleneck: {bot8['name']}  "
           f"soft {fmt_usd(bot8['soft_cap_aum'])}  hard {fmt_usd(bot8['hard_cap_aum'])}")
 
-    print(f"\n  QQQ capacity detail:")
+    print("\n  QQQ capacity detail:")
     qqq_cap = cap8["qqq_cs"]
     print(f"    ADV: {fmt_usd(qqq_cap['adv_notional_usd'])}/day")
     print(f"    soft cap AUM: {fmt_usd(qqq_cap['soft_cap_aum'])}")

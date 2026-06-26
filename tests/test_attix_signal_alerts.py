@@ -6,10 +6,8 @@ All tests are pure (no network, no real DB) unless stated otherwise.
 
 import json
 from datetime import date
-from pathlib import Path
 from unittest.mock import patch
 
-import pytest
 
 from attix_signal.alerts import (
     _load_mover_cooldown,

@@ -76,7 +76,6 @@ Outputs
 from __future__ import annotations
 
 import json
-import math
 import sys
 from dataclasses import dataclass, field, asdict
 from pathlib import Path

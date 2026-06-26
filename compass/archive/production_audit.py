@@ -13,8 +13,8 @@ import ast
 import importlib
 import os
 import sys
-from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Set, Tuple
+from dataclasses import dataclass
+from typing import Dict, List, Set, Tuple
 
 COMPASS_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(COMPASS_DIR)

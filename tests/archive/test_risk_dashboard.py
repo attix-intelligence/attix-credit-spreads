@@ -6,13 +6,8 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-import pytest
 
 from compass.risk_dashboard import (
-    STRESS_SCENARIOS,
-    ConcentrationRisk,
-    GreeksExposure,
-    MarginState,
     RiskDashboard,
     RiskDashboardResult,
     StressResult,

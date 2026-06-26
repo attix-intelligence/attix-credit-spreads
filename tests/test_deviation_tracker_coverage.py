@@ -1,9 +1,7 @@
 """Tests for shared/deviation_tracker.py — per-trade deviation and rolling alignment."""
 
 from datetime import datetime, timezone
-from unittest.mock import patch
 
-import pytest
 
 from shared.database import init_db
 from shared.deviation_tracker import (

@@ -1,12 +1,9 @@
 """Tests for compass.execution_analytics — 42 tests."""
-import numpy as np
-import pandas as pd
-import pytest
 from pathlib import Path
 from compass.execution_analytics import (
     ExecutionAnalytics, SlippageEstimate, MarketImpactEstimate,
-    SpreadWidthAnalysis, OrderRoutingRec, CapacityEstimate,
-    ShortfallResult, QualityScore, VenueResult, ExecutionReport,
+    SpreadWidthAnalysis, CapacityEstimate,
+    ExecutionReport,
 )
 
 

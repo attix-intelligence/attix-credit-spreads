@@ -13,7 +13,6 @@ import pytest
 from compass.exp2920_monitor_core import (
     AbortCode,
     AbortSeverity,
-    AbortTriggerConfig,
     AbortTriggerEvaluator,
     AggregatorConfig,
     FillQuality,

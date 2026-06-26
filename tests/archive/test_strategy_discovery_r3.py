@@ -4,7 +4,6 @@ Tests helpers, stats computation, and report generation.
 Strategy backtests require IronVault DB + yfinance and are tested via integration.
 """
 
-import math
 
 import numpy as np
 import pandas as pd
@@ -15,8 +14,6 @@ from compass.strategy_discovery_r3 import (
     _compute,
     _exp_dt,
     generate_report,
-    CAPITAL,
-    OOS_START_YEAR,
 )
 
 

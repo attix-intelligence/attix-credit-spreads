@@ -25,9 +25,8 @@ import json
 import logging
 import math
 import sys
-from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Dict, List, Optional, Any
 
 import numpy as np
 import pandas as pd
@@ -38,8 +37,7 @@ sys.path.insert(0, str(ROOT))
 # Reuse the existing VRP backtest infrastructure
 from scripts.exp1660_vrp_deepening import (
     VRPConfig, run_vrp_backtest, compute_metrics,
-    _fetch_yahoo, _build_regime, _build_trend, _find_exps,
-    load_exp1220_daily_returns, UNDERLYINGS, CAPITAL, OOS_START,
+    _fetch_yahoo, _build_regime, _build_trend, load_exp1220_daily_returns, CAPITAL,
 )
 from shared.iron_vault import IronVault
 

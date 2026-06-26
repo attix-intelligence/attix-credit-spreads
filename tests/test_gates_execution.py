@@ -13,7 +13,6 @@ Each gate is tested with in-memory SQLite DBs. No external API calls.
 
 import sqlite3
 import sys
-import tempfile
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
@@ -32,18 +31,10 @@ from sentinel.gates_execution import (
     is_market_holiday,
     _easter,
     _get_market_holidays,
-    SL_WARNING_RATIO,
-    SL_CRITICAL_RATIO,
-    SL_HALT_RATIO,
     STREAK_WARNING,
     STREAK_CRITICAL,
     STREAK_HALT,
-    PNL_WARN_DISCREPANCY,
-    PNL_CRIT_DISCREPANCY,
     StopLossQualityResult,
-    RepeatedFailureResult,
-    MarketCalendarResult,
-    PnlReconciliationResult,
     ExecutionGatesResult,
 )
 
@@ -147,7 +138,7 @@ class TestGate17StopLossQuality:
         conn.close()
 
         result = check_stop_loss_quality("EXP-TEST", db_file)
-        assert not result.passed is False or len(result.events) > 0
+        assert result.passed is not False or len(result.events) > 0
         assert len(result.events) == 1
         assert result.events[0].severity == "warning"
         assert result.events[0].slippage_ratio == pytest.approx(1.3, abs=0.01)

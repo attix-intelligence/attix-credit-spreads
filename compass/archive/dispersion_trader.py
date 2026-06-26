@@ -17,7 +17,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -401,7 +401,7 @@ class DispersionBacktest:
         # Metrics
         executed = trades
         wins = sum(1 for t in executed if t.pnl > 0)
-        total_pnl = sum(t.pnl for t in executed)
+        sum(t.pnl for t in executed)
         total_return = (capital - self.starting_capital) / self.starting_capital * 100
         years = (n - self.lookback) / TRADING_DAYS
         cagr = ((capital / self.starting_capital) ** (1 / years) - 1) * 100 if years > 0 and capital > 0 else 0

@@ -15,7 +15,6 @@ Reference bugs:
 import tempfile
 from datetime import datetime, timezone
 
-import pytest
 
 from shared.database import get_db, get_trades, init_db, upsert_trade
 

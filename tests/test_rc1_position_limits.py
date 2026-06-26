@@ -9,11 +9,9 @@ all 7 through instead of blocking after the first fills the limit.
 
 import tempfile
 from datetime import datetime, timezone
-from unittest.mock import MagicMock, patch
 
-import pytest
 
-from shared.database import get_db, get_trades, init_db, upsert_trade
+from shared.database import get_db, init_db, upsert_trade
 
 
 # ---------------------------------------------------------------------------

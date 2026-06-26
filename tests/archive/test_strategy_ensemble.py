@@ -21,8 +21,6 @@ import pandas as pd
 import pytest
 
 from compass.strategy_ensemble import (
-    COMBINE_METHODS,
-    REGIMES,
     DisagreementEvent,
     EnsembleConfidence,
     PerformanceAttribution,

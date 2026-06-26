@@ -22,17 +22,13 @@ Usage::
 from __future__ import annotations
 
 import logging
-import math
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
-import numpy as np
 
 from compass.greeks_sensitivity import (
-    bs_put_price,
-    bs_call_price,
     compute_greeks,
     put_spread_value,
     call_spread_value,

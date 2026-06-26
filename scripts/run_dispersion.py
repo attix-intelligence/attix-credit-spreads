@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """EXP-1820 Dispersion runner — real IronVault data."""
 
-import math, sys
+import sys
 from datetime import datetime
 from pathlib import Path
 
@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from compass.dispersion import (
-    backtest_dispersion, compute_metrics, corrected_sharpe, CAPITAL,
+    backtest_dispersion, compute_metrics, CAPITAL,
 )
 
 
@@ -200,7 +200,7 @@ def main():
         return
 
     metrics = compute_metrics(trades)
-    print(f"\n[2] Overall metrics:")
+    print("\n[2] Overall metrics:")
     print(f"  Trades: {metrics['n']}")
     print(f"  PnL: ${metrics['pnl']:,.0f}")
     print(f"  Win rate: {metrics['wr']*100:.0f}%")
@@ -210,13 +210,13 @@ def main():
     print(f"  CAGR: {pct(metrics['cagr'])}")
     print(f"  Max DD: {pct(metrics['max_dd'])}")
 
-    print(f"\n[3] Per-sector breakdown:")
+    print("\n[3] Per-sector breakdown:")
     for tk, d in metrics["ticker_stats"].items():
         print(f"  {tk}: n={d['n']:3d} PnL=${d['pnl']:>8,.0f} "
               f"WR={d['wr']*100:.0f}% Sharpe={d['sharpe']:5.2f} "
               f"avg_ratio={d['avg_vol_ratio']:.2f}")
 
-    print(f"\n[4] Correlation with EXP-1220:")
+    print("\n[4] Correlation with EXP-1220:")
     corr = compute_exp1220_correlation(trades)
     print(f"  Yearly correlation: {corr:+.3f}")
 

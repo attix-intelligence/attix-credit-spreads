@@ -10,9 +10,6 @@ import pandas as pd
 import pytest
 
 from compass.sentiment_engine import (
-    ContrarianSignal,
-    HeadlineScore,
-    RegimeConditionedSignal,
     SentimentEngine,
     SentimentMomentum,
     SentimentResult,

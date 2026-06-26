@@ -12,15 +12,14 @@ Uses REAL IronVault trade-level data from EXP-400 (246 trades, 82% win).
 
 from __future__ import annotations
 
-import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List
 
 import numpy as np
 import pandas as pd
 
-from compass.metrics import annualized_sharpe, full_metrics
+from compass.metrics import full_metrics
 
 ROOT = Path(__file__).resolve().parent.parent
 TRADING_DAYS = 252
@@ -274,7 +273,7 @@ def walk_forward_oos(trades: pd.DataFrame, starting_capital: float = 100_000):
     """Expanding walk-forward: train 2020-N, test N+1."""
     windows = []
     for test_yr in range(2022, 2026):
-        train = trades[trades["entry_date"].dt.year < test_yr]
+        trades[trades["entry_date"].dt.year < test_yr]
         test = trades[trades["entry_date"].dt.year == test_yr]
         if len(test) < 3:
             continue
@@ -290,7 +289,7 @@ def walk_forward_oos(trades: pd.DataFrame, starting_capital: float = 100_000):
 # ═══════════════════════════════════════════════════════════════════════════
 
 def _svg_equity(result, w=920, h=360):
-    eq = result.equity_curve; dates = result.dates
+    eq = result.equity_curve; 
     pl, pr, pt, pb = 80, 25, 42, 58; pw, ph = w-pl-pr, h-pt-pb
     ymin, ymax = min(eq)*0.92, max(eq)*1.08
     if ymax <= ymin: ymax = ymin+1
@@ -449,7 +448,7 @@ def main():
     print(f"\n{'━'*56}")
     bm = best.metrics
     dm = comparison["1 position (no T-bill)"].metrics
-    print(f"  DILUTION FIX IMPACT:")
+    print("  DILUTION FIX IMPACT:")
     print(f"    Single position: CAGR={dm['cagr_pct']:.1f}%  Sharpe={dm['sharpe']:.2f}  Util={comparison['1 position (no T-bill)'].capital_utilization_pct:.0f}%")
     print(f"    4 concurrent:    CAGR={bm['cagr_pct']:.1f}%  Sharpe={bm['sharpe']:.2f}  Util={best.capital_utilization_pct:.0f}%")
     print(f"{'━'*56}")

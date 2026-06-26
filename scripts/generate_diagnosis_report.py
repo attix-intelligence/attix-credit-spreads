@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Generate diagnosis report for IBIT crypto backtester bugs and fixes."""
-import sys, json
+import sys
+import json
 sys.path.insert(0, '.')
 import warnings
 warnings.filterwarnings('ignore')

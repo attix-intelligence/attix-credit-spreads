@@ -17,7 +17,6 @@ Loads credentials from .env.expNNN files. Never hardcodes API keys.
 
 import argparse
 import sys
-from datetime import datetime, timedelta
 from pathlib import Path
 
 import requests
@@ -199,7 +198,7 @@ def _print_detailed(results: list) -> None:
 
         # Show position details (top 10)
         if r["positions"]:
-            print(f"\n    Top positions:")
+            print("\n    Top positions:")
             for p in r["positions"][:10]:
                 sym = p.get("symbol", "?")
                 qty = p.get("qty", "?")
@@ -211,7 +210,7 @@ def _print_detailed(results: list) -> None:
 
         # Show recent orders (last 5 filled)
         if o.get("filled_list"):
-            print(f"\n    Recent filled orders:")
+            print("\n    Recent filled orders:")
             for ord in o["filled_list"][:5]:
                 t = (ord.get("filled_at") or ord.get("submitted_at") or "")[:19]
                 sym = ord.get("symbol", "?")
@@ -221,7 +220,7 @@ def _print_detailed(results: list) -> None:
                 print(f"      {t}  {side.upper():<4} {sym:<22} qty={qty} @ {price}")
 
     if dead:
-        print(f"\n  --- FAILED ACCOUNTS ---")
+        print("\n  --- FAILED ACCOUNTS ---")
         for r in dead:
             print(f"    {r['exp']:<10} {r['error']}")
 

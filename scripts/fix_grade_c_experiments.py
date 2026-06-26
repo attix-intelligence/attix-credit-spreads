@@ -23,10 +23,12 @@ Addresses specific weaknesses identified in OOS integrity audit:
 All using real IronVault data. Zero synthetic.
 """
 
-import json, math, os, sys
-from datetime import datetime, timedelta
+import json
+import math
+import os
+import sys
+from datetime import datetime
 from pathlib import Path
-from typing import Dict, List
 
 import numpy as np
 import pandas as pd
@@ -35,8 +37,8 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from compass.iron_condor_optimizer import (
-    ICConfig, _find_expirations, _get_underlying_prices, _get_vix,
-    CAPITAL, START_DATE, END_DATE, VIX_FILTER_RANGES,
+    ICConfig, _get_underlying_prices, _get_vix,
+    CAPITAL,
 )
 from shared.iron_vault import IronVault
 
@@ -148,7 +150,7 @@ def fix_xli_ic(hd, xli_prices, vix):
     print(f"\n    OOS trades: {n_oos}, param:trade ratio: {param_ratio:.2f}")
     print(f"    OOS/IS stability: {oos_stability:.2f}")
     print(f"    NEW GRADE: {new_grade} (was C+)")
-    print(f"    KEY CHANGE: Removed selection bias by locking to pre-optimization baseline")
+    print("    KEY CHANGE: Removed selection bias by locking to pre-optimization baseline")
 
     return {
         "experiment": "XLI-IC",
@@ -242,7 +244,7 @@ def fix_exp1650():
     else:
         new_grade = "C+"
 
-    print(f"\n    Params reduced: 7 → 3 (ticker=XLF, sizing=1.5%, Q3_filter=structural)")
+    print("\n    Params reduced: 7 → 3 (ticker=XLF, sizing=1.5%, Q3_filter=structural)")
     print(f"    OOS trades: {n_oos}, param:trade ratio: {param_ratio:.2f}")
     print(f"    NEW GRADE: {new_grade} (was C)")
 
@@ -317,7 +319,7 @@ def fix_exp1640():
         new_grade = "C"
         verdict = "Marginal improvement but still questionable"
 
-    print(f"\n    Params reduced: 5 → 3")
+    print("\n    Params reduced: 5 → 3")
     print(f"    OOS trades: {n_oos}, param:trade ratio: {param_ratio:.2f}")
     print(f"    {oos_positive_count}/{len(windows)} OOS windows positive")
     print(f"    NEW GRADE: {new_grade} (was C-)")
@@ -381,7 +383,7 @@ def fix_exp1230():
     avg_oos_auc = np.mean([w["oos_auc"] for w in windows])
 
     print(f"    Overall AUC: {overall_auc}")
-    print(f"    Walk-forward AUC per year:")
+    print("    Walk-forward AUC per year:")
     for w in windows:
         status = "ABOVE 0.52" if w["above_random"] else "BELOW 0.52"
         print(f"      {w['is_years']} → {w['oos_year']}: IS={w['is_auc']} OOS={w['oos_auc']} {status}")

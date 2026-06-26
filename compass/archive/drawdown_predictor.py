@@ -20,7 +20,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -195,7 +195,7 @@ class DrawdownPredictor:
                 start_idx = max(0, i - 1)
                 peak_eq = float(hwm.iloc[i])
             elif in_dd and dd.iloc[i] < min_drawdown * 0.1:
-                trough_idx = int(dd.iloc[start_idx:i + 1].idxmax()
+                int(dd.iloc[start_idx:i + 1].idxmax()
                                  if hasattr(dd.iloc[start_idx:i + 1].idxmax(), '__index__')
                                  else dd.iloc[start_idx:i + 1].values.argmax() + start_idx)
                 # Find actual trough position

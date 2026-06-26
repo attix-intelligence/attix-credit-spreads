@@ -7,7 +7,7 @@ import pytest
 
 from compass.momentum_rotation import (
     SECTOR_ETFS, OTHER_ASSETS, UNIVERSE,
-    MomentumConfig, WFFold, VariantResult,
+    MomentumConfig, VariantResult,
     compute_momentum_signal, compute_weights, apply_rebalance_hold,
     backtest, compute_sharpe, compute_metrics, walk_forward,
     corr_to, build_exp1220_reference, run_variant,

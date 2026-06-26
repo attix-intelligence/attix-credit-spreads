@@ -6,7 +6,6 @@ import json
 import tempfile
 from pathlib import Path
 
-import numpy as np
 import pytest
 
 from compass.prod_monitor import (
@@ -17,7 +16,6 @@ from compass.prod_monitor import (
     GreeksExposure,
     ModelMetrics,
     MonitorConfig,
-    MonitorSnapshot,
     PnLState,
     ProductionMonitor,
     Severity,

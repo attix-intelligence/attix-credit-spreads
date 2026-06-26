@@ -8,9 +8,8 @@ Fix 4: Recovery path — failed_open with live Alpaca position → promoted to o
 Fix 5: Periodic orphan detection from reconcile_pending_only() (30-min throttle)
 """
 
-import tempfile
 from datetime import datetime, timedelta, timezone
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 

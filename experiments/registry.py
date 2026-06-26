@@ -17,12 +17,11 @@ from __future__ import annotations
 import fcntl
 import json
 import logging
-import os
 import re
 import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Optional
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 

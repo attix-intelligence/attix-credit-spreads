@@ -393,7 +393,7 @@ def main():
     print(f"  Blended total return: {total_return * 100:+.2f}% ({cagr * 100:+.2f}% CAGR over {years:.1f} years)")
 
     # Run stress tester
-    print(f"\nRunning StressTester (10,000 MC paths, block=5)...")
+    print("\nRunning StressTester (10,000 MC paths, block=5)...")
     tester = StressTester(
         daily_returns=blended,
         starting_capital=STARTING_CAPITAL,
@@ -406,7 +406,7 @@ def main():
 
     # Print summary
     mc = results["monte_carlo"]
-    print(f"\n--- Monte Carlo Results ---")
+    print("\n--- Monte Carlo Results ---")
     print(f"  Median terminal: ${mc['terminal_wealth']['median']:,.0f}")
     print(f"  Mean terminal:   ${mc['terminal_wealth']['mean']:,.0f}")
     print(f"  P5 drawdown:     {mc['max_drawdown']['percentiles_pct']['p5']:.2f}%")
@@ -416,7 +416,7 @@ def main():
     print(f"  Prob profit:     {mc['prob_profit']:.1%}")
     print(f"  Prob ruin(50%):  {mc['prob_ruin_50pct']:.3%}")
 
-    print(f"\n--- Crisis Scenarios ---")
+    print("\n--- Crisis Scenarios ---")
     for c in results["crisis_scenarios"]:
         name = c.get("name", "?")
         under_dd = c.get("underlying_drawdown_pct", 0)
@@ -424,7 +424,7 @@ def main():
         trough = c.get("trough_value", 0)
         print(f"  {name}: underlying {under_dd:+.2f}%, portfolio {port_dd:+.2f}% (1.5x β), trough ${trough:,.0f}")
 
-    print(f"\n--- Sensitivity (baselines) ---")
+    print("\n--- Sensitivity (baselines) ---")
     for pname in ["position_size_pct", "stop_loss_multiplier", "spread_width"]:
         if pname in results["sensitivity"]:
             pdata = results["sensitivity"][pname]
@@ -435,7 +435,7 @@ def main():
                       f"CAGR {baseline['cagr_pct']:+.1f}%")
 
     # Threshold check
-    print(f"\n--- Threshold Checks ---")
+    print("\n--- Threshold Checks ---")
     checks = check_thresholds(results)
     print(f"  MC P5 DD <= {MC_DD_5PCT_THRESHOLD}%: {checks['mc_p5_dd_pct']:.2f}% - "
           f"{'PASS' if checks['mc_pass'] else 'FAIL'}")

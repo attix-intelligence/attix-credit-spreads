@@ -15,10 +15,11 @@ Rule Zero: all option prices from IronVault (Polygon real), spot/VIX
 from Yahoo Finance. Zero synthetic data.
 """
 
-import math, sys
+import math
+import sys
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import List
 
 import numpy as np
 import pandas as pd
@@ -27,7 +28,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from compass.zero_dte_ic import (
-    ICTrade, backtest_1_3_dte, load_spy_spot_yfinance, trade_sharpe, CAPITAL
+    ICTrade, backtest_1_3_dte, trade_sharpe, CAPITAL
 )
 from compass.adaptive_1dte import load_vix
 
@@ -514,7 +515,7 @@ def synthesize_verdict(crowding, rolling, regime_filters, regime_corr, yearly_tr
         f"Crowding: {crowding_finding}",
         f"Regime filter: {filter_finding}",
         f"Correlation: {correlation_finding}",
-        f"Yearly Sharpe trajectory: " +
+        "Yearly Sharpe trajectory: " +
             " → ".join(f"{t['year']}: {t['sharpe']:.2f}" for t in yearly_traj),
     ]
 

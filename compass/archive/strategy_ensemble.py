@@ -22,7 +22,7 @@ from __future__ import annotations
 import base64
 import io
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -239,7 +239,7 @@ class StrategyEnsemble:
             sig = self.signals[strat]
             # Strategy return: signal * actual return (correct direction = positive)
             strat_ret = sig * self.returns
-            weighted_ret = strat_ret * exp_weights
+            strat_ret * exp_weights
 
             recent = strat_ret.iloc[-self.lookback:] if len(strat_ret) >= self.lookback else strat_ret
             sharpe = self._sharpe(recent)
@@ -294,7 +294,7 @@ class StrategyEnsemble:
             weights = {s: raw[s] / total for s in self.strategies}
 
             # Ensemble Sharpe for this regime
-            w_arr = np.array([weights[s] for s in self.strategies])
+            np.array([weights[s] for s in self.strategies])
             combined = sum(
                 weights[s] * regime_sig[s] * regime_ret
                 for s in self.strategies

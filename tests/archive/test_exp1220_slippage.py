@@ -7,7 +7,6 @@ import tempfile
 from pathlib import Path
 
 import numpy as np
-import pytest
 
 from compass.exp1220_slippage_analysis import (
     CAPITAL_LEVELS,

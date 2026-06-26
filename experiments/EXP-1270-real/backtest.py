@@ -17,7 +17,7 @@ import math
 import sys
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -28,8 +28,6 @@ sys.path.insert(0, str(ROOT))
 from shared.iron_vault import IronVault
 from compass.adaptive_stops import (
     AdaptiveStopOptimizer,
-    STOP_STRATEGIES,
-    backtest_strategy,
 )
 
 logger = logging.getLogger(__name__)
@@ -448,7 +446,7 @@ def main() -> None:
         print(f"{year:>6} {y['n_trades']:>7} {y['total_pnl']:>10,.0f} "
               f"{y['win_rate']:>8.1%} {y['max_dd']:>8.1%} {y['sharpe']:>8.2f} {y['annual_return']:>8.1%}")
 
-    print(f"\n── Overall (Real Data) ──")
+    print("\n── Overall (Real Data) ──")
     print(f"Trades:    {overall['n_trades']}")
     print(f"Total P&L: ${overall['total_pnl']:,.0f}")
     print(f"CAGR:      {overall['cagr']:.1%}")
@@ -457,7 +455,7 @@ def main() -> None:
     print(f"Sharpe:    {overall['sharpe']:.2f}")
 
     # Run AdaptiveStopOptimizer on real trades
-    print(f"\n── Adaptive Stop Optimization (Real Data) ──")
+    print("\n── Adaptive Stop Optimization (Real Data) ──")
     optimizer = AdaptiveStopOptimizer(trades_df)
     opt_results = optimizer.optimize()
 
@@ -472,7 +470,7 @@ def main() -> None:
     print(f"  Premature:  {best.premature_stop_rate:.1%}")
 
     # Comparison to synthetic
-    print(f"\n── Comparison: Real vs Synthetic (EXP-1270-max) ──")
+    print("\n── Comparison: Real vs Synthetic (EXP-1270-max) ──")
     print(f"{'Metric':<20} {'Real':>12} {'Synthetic':>12}")
     print(f"{'Sharpe':<20} {overall['sharpe']:>12.2f} {'5.25':>12}")
     print(f"{'Max DD':<20} {overall['max_dd']:>12.1%} {'3.2%':>12}")

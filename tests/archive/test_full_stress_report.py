@@ -1,10 +1,9 @@
 """Tests for compass/full_stress_report.py — Phase 6 stress testing."""
 from __future__ import annotations
 import numpy as np
-import pytest
 from compass.full_stress_report import (
     CrisisResult, FullStressReport, HardCheck, MCResult,
-    SensitivityPoint, StressTestSummary,
+    StressTestSummary,
 )
 
 def _make_returns(n=500, seed=42):

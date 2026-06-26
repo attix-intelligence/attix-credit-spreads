@@ -12,7 +12,7 @@ from __future__ import annotations
 import math
 import random
 from collections import defaultdict
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Dict, List, Optional, Tuple
 
 
@@ -281,7 +281,7 @@ def generate_early_warnings(
     regimes: List[str] = []
 
     for i, obs in enumerate(observations):
-        posterior = detector.update(obs)
+        detector.update(obs)
         regimes.append(detector.current_regime)
 
         tp5 = detector.transition_probability(5)

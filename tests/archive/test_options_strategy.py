@@ -1,11 +1,8 @@
 """Tests for compass.options_strategy — 32 tests."""
-import numpy as np
-import pandas as pd
 import pytest
 from pathlib import Path
 from compass.options_strategy import (
-    OptionsStrategyEngine, StrategyType, Direction, Strategy, OptionLeg,
-    RollSignal, ScenarioResult, StrategyRecommendation,
+    OptionsStrategyEngine, StrategyType, Direction, Strategy, ScenarioResult, StrategyRecommendation,
 )
 
 

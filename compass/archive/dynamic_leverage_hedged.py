@@ -22,9 +22,8 @@ from __future__ import annotations
 import math
 import sys
 from dataclasses import dataclass, field
-from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -33,9 +32,9 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from compass.dynamic_leverage_v3 import (
-    fetch_yahoo_close, vix_band_leverage, term_structure_adjustment,
+    fetch_yahoo_close, term_structure_adjustment,
     drawdown_brake, regime_classify, regime_adjustment,
-    leverage_to_tier, DailyState,
+    DailyState,
 )
 from compass.crisis_alpha_v3 import load_universe_v3
 from compass.crisis_alpha_v4 import ConfigV4, backtest_v4

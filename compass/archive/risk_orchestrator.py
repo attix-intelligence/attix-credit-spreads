@@ -12,7 +12,7 @@ All methods work on pre-loaded data — no broker connections.
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
@@ -236,7 +236,6 @@ class RiskOrchestrator:
         snapshot: RiskSnapshot,
         available_instruments: Optional[List[str]] = None,
     ) -> List[HedgeRecommendation]:
-        instruments = available_instruments or ["SPY_put", "VIX_call", "TLT"]
         recs: List[HedgeRecommendation] = []
         if abs(snapshot.total_delta) > 30:
             inst = "SPY_put" if snapshot.total_delta > 0 else "SPY_call"

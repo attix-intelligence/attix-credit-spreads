@@ -120,7 +120,7 @@ class TestSignalModelPipeline:
         features, labels = _make_features_and_labels(200)
         model = SignalModel(model_dir=str(tmp_path))
         model.train(features, labels, save_model=True)
-        original_auc = model.training_stats["test_auc"]
+        model.training_stats["test_auc"]
 
         loaded = SignalModel(model_dir=str(tmp_path))
         success = loaded.load()
@@ -427,10 +427,10 @@ class TestRegimeToRouterPipeline:
 
     def test_classify_bull_market(self):
         spy = _make_spy_prices(100, start=400, seed=42)
-        vix = _make_vix_series(100, seed=42)
+        _make_vix_series(100, seed=42)
         classifier = RegimeClassifier(trend_window=20, trend_threshold=3.0)
         # Force bull conditions: low VIX + uptrend
-        vix_low = pd.Series(15.0, index=spy.index[:100], name="VIX")
+        pd.Series(15.0, index=spy.index[:100], name="VIX")
         regime = classifier.classify(15.0, spy[:60], spy.index[59])
         assert isinstance(regime, Regime)
 

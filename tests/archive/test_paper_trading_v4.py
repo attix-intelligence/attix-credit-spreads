@@ -7,11 +7,10 @@ portfolio state, circuit breaker, edge cases, report generation.
 
 import pytest
 from compass.paper_trading_v4 import (
-    StrategyId, STRATEGY_META, REGIME_WEIGHTS, DEFAULT_WEIGHTS, DEFAULT_LEVERAGE,
-    MarketState, PortfolioState, AllocationDecision, Signal, HealthCheck,
+    StrategyId, STRATEGY_META, REGIME_WEIGHTS, MarketState, PortfolioState, AllocationDecision, Signal, HealthCheck,
     ReadinessItem, AllocationEngine, PaperTradingHarness,
     build_readiness_checklist, expected_trade_frequency,
-    generate_readiness_report, TRADING_DAYS,
+    generate_readiness_report,
 )
 
 

@@ -1,9 +1,7 @@
 """Tests for compass.feature_analysis."""
-import math, unittest
+import unittest
 from compass.feature_analysis import (
-    FeatureAnalyser, FeatureAnalysisResult, FeatureCluster, FeatureImportance,
-    FeatureVector, RegimeImportance, SelectionResult, SignalHalfLife,
-    cluster_features, compute_interaction_scores, compute_permutation_importance,
+    FeatureAnalyser, FeatureAnalysisResult, SelectionResult, cluster_features, compute_interaction_scores, compute_permutation_importance,
     compute_regime_importance, compute_shap_importance, compute_signal_half_lives,
     generate_test_data, sequential_forward_selection,
 )

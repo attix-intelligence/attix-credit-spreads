@@ -220,8 +220,8 @@ def generate_markdown(
         "# Pruned Features Benchmark",
         "",
         f"**Date:** {time.strftime('%Y-%m-%d')}",
-        f"**Dataset:** `compass/training_data_combined.csv` (428 trades, 2020-2025)",
-        f"**Validation:** 5-fold walk-forward (year-based expanding window)",
+        "**Dataset:** `compass/training_data_combined.csv` (428 trades, 2020-2025)",
+        "**Validation:** 5-fold walk-forward (year-based expanding window)",
         "",
         "## Feature Pruning Summary",
         "",
@@ -258,7 +258,6 @@ def generate_markdown(
         ("Brier Score", "brier_score_mean", "brier_score_std", False),
         ("Signal Sharpe", "signal_sharpe_mean", "signal_sharpe_std", True),
     ]
-    xgb_improved = False
     for label, mean_k, std_k, higher_better in metrics:
         fv = fa.get(mean_k, 0)
         pv = pa.get(mean_k, 0)
@@ -266,7 +265,7 @@ def generate_markdown(
         ps = pa.get(std_k, 0)
         delta = pv - fv
         if label == "AUC" and delta > 0.001:
-            xgb_improved = True
+            pass
         sign = "+" if delta > 0 else ""
         lines.append(
             f"| {label} | {fv:.4f} +/- {fs:.4f} | {pv:.4f} +/- {ps:.4f} | {sign}{delta:.4f} |"
@@ -397,7 +396,7 @@ def main() -> None:
 
     # Print summary
     print(f"\n{'='*60}")
-    print(f"PRUNED FEATURE BENCHMARK COMPLETE")
+    print("PRUNED FEATURE BENCHMARK COMPLETE")
     print(f"{'='*60}")
     print(f"  XGBoost AUC: {full_auc:.4f} (full) → {pruned_auc:.4f} (pruned) | Δ={delta_auc:+.4f}")
     if full_ens and pruned_ens:

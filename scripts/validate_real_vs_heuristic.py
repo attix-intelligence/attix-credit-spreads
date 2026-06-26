@@ -236,10 +236,10 @@ def print_comparison(exp_name: str, known: Dict, heuristic: Dict, real: Dict):
     print(f"\n  {'VERDICT':}")
     if abs(diff_avg) <= 3:
         print(f"  ✅ Results are CONSISTENT (avg diff {diff_avg:+.1f}%)")
-        print(f"     Heuristic BS pricing was accurate enough.")
+        print("     Heuristic BS pricing was accurate enough.")
     elif diff_avg > 3:
         print(f"  ⚠️  Real data OUTPERFORMS heuristic by {diff_avg:+.1f}% avg")
-        print(f"     Possible reason: BS underpriced options in cache strikes.")
+        print("     Possible reason: BS underpriced options in cache strikes.")
     else:
         print(f"  ❌ Real data UNDERPERFORMS heuristic by {diff_avg:+.1f}% avg")
         print(f"     Heuristic was overstating edge.  Trade count reduced by "

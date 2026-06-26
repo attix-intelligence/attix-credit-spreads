@@ -10,20 +10,13 @@ import numpy as np
 import pytest
 
 from compass.execution_optimizer import (
-    DARK_POOL,
     DEFAULT_VENUES,
-    IEX,
     ISDecomposition,
-    NASDAQ,
     NYSE,
-    AlgoName,
     ExecutionOptimizer,
     ExecutionResult,
-    PostTradeTCA,
     PreTradeEstimate,
-    TimeRecommendation,
     TradeMonitor,
-    VenueAllocation,
     VenueDef,
 )
 

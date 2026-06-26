@@ -7,20 +7,19 @@ Each strategy audited individually, then combined portfolio built from
 audit-passing strategies. Walk-forward validated. Corrected Sharpe.
 """
 
-import math, os, sys
+import os
+import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List
 
 import numpy as np
-import pandas as pd
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from compass.backtest_auditor import BacktestAuditor, AuditReport
+from compass.backtest_auditor import BacktestAuditor
 from compass.multi_asset_portfolio_v2 import (
-    _dl, _all_exps, trades_to_daily, corrected_sharpe, trade_sharpe,
+    _dl, trades_to_daily, corrected_sharpe, trade_sharpe,
     run_gld_tlt_relval, run_tlt_iron_condors, run_qqq_cross_asset, run_spy_vts,
     CAPITAL, TRADING_DAYS, compute_metrics,
 )

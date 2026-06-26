@@ -34,7 +34,7 @@ import sys
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -394,7 +394,7 @@ def render_html(folds: List[FoldDetail], pooled_net: pd.Series,
 
     # Pooled view
     pooled_m = fold_metrics(pooled_net)
-    pooled_roll60 = rolling_sharpe(pooled_net, window=60)
+    rolling_sharpe(pooled_net, window=60)
 
     pooled_equity_svg = svg_equity_curve(
         pooled_net, width=1100, height=180,
@@ -508,8 +508,8 @@ def render_html(folds: List[FoldDetail], pooled_net: pd.Series,
 
     # Distribution stats
     sharpes = [f.metrics["sharpe"] for f in folds]
-    dds = [f.metrics["max_dd_pct"] for f in folds]
-    cagrs = [f.metrics["cagr_pct"] for f in folds]
+    [f.metrics["max_dd_pct"] for f in folds]
+    [f.metrics["cagr_pct"] for f in folds]
     sharpe_dist = {
         "min": round(min(sharpes), 3),
         "p25": round(float(np.percentile(sharpes, 25)), 3),

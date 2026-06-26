@@ -57,10 +57,9 @@ import math
 import pickle
 import sys
 import urllib.request
-from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict
 
 import numpy as np
 import pandas as pd
@@ -137,7 +136,7 @@ def fetch_yahoo_close(symbol: str, start: str, end: str) -> pd.Series:
 
 
 def load_vix_term(start: str, end: str) -> pd.DataFrame:
-    print(f"  loading ^VIX and ^VIX3M (Yahoo, real)...")
+    print("  loading ^VIX and ^VIX3M (Yahoo, real)...")
     vix = fetch_yahoo_close("^VIX", start, end).rename("vix")
     vix3m = fetch_yahoo_close("^VIX3M", start, end).rename("vix3m")
     df = pd.concat([vix, vix3m], axis=1).dropna()
@@ -171,7 +170,7 @@ def rolling_mean_pairwise_corr(df: pd.DataFrame, window: int) -> pd.Series:
     """Rolling mean of the off-diagonal correlation entries across alpha streams."""
     cols = list(ALPHA_WEIGHTS.keys())
     n = len(cols)
-    pair_count = n * (n - 1) // 2
+    n * (n - 1) // 2
 
     out = pd.Series(np.nan, index=df.index)
     sub = df[cols]

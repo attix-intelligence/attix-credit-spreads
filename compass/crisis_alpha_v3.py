@@ -16,9 +16,9 @@ Rule Zero: 100% REAL Yahoo data. Zero synthetic.
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -210,7 +210,7 @@ def corr_during_dd(strategy_returns: np.ndarray,
     if mask.sum() < 10:
         return 0.0
 
-    strat_dd = strategy_returns[mask[:len(strategy_returns)]]
+    strategy_returns[mask[:len(strategy_returns)]]
     # Need to also get SPY returns for DD periods
     return float(mask.sum())  # placeholder — actual corr computed in backtest
 

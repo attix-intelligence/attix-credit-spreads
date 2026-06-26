@@ -1,7 +1,6 @@
 """Tests for compass.scenario_analyzer – what-if scenario analysis engine."""
 from __future__ import annotations
 
-import math
 import tempfile
 from pathlib import Path
 

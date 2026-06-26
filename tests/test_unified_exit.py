@@ -11,7 +11,6 @@ Covers:
   - CLOSE_DTE enum value
 """
 
-import pytest
 from datetime import datetime, timedelta, timezone
 from unittest.mock import MagicMock, patch
 

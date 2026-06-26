@@ -11,7 +11,7 @@ Covers:
 import os
 import tempfile
 import unittest
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, patch
 
 from shared.database import init_db, upsert_trade, get_trade_by_id
 from execution.execution_engine import ExecutionEngine
