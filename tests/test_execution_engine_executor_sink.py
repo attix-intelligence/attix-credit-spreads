@@ -211,6 +211,35 @@ def test_executor_path_blocks_when_contracts_exceed_phase1_cap(tmp_path):
     sink.submit.assert_not_called()
 
 
+# ── 4b) Unsupported structure (iron condor) — executor route refuses ───────
+
+def test_executor_path_refuses_unsupported_structure_iron_condor(tmp_path):
+    """Phase-1 deliberate scope limit: ExecutorOrderSink supports only
+    bull_put / bear_call. The engine refuses iron_condor BEFORE building
+    an OrderIntent or calling the sink, so the rejection surfaces as a
+    structured 'error' result with the structure in the message — not
+    the sink's NotImplementedError. Same shape for any future unsupported
+    structure (straddle, calendar, …)."""
+    from execution.execution_engine import ExecutionEngine
+
+    sink = _build_mock_sink()
+    engine = ExecutionEngine(
+        alpaca_provider=None,
+        db_path=str(tmp_path / "test.db"),
+        config=_config(live_submit=True, max_contracts=1),
+        executor_sink=sink,
+    )
+    with patch("execution.market_hours.is_rth_now", return_value=True):
+        result = engine.submit_opportunity(_opp(contracts=1, spread_type="iron_condor"))
+
+    assert result["status"] == "error"
+    assert "structure" in result["message"].lower()
+    assert "iron_condor" in result["message"]
+    # Critical: the executor sink must NOT see an unsupported structure —
+    # the engine's guard fires before _build_executor_intent runs.
+    sink.submit.assert_not_called()
+
+
 # ── 5) Alpaca path is BYTE-IDENTICAL when no executor sink wired ────────────
 
 def test_alpaca_path_unchanged_when_no_executor_sink(tmp_path):
