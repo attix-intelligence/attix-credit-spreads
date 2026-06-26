@@ -56,7 +56,7 @@ from execution.execution_engine import ExecutionEngine
 from execution.position_monitor import PositionMonitor
 from strategies.base import MarketSnapshot, PositionAction
 from strategies.credit_spread import CreditSpreadStrategy
-from shared.strategy_factory import build_strategy
+from shared.strategy_factory import build_strategy_list  # was 'build_strategy' — function was renamed (or only ever existed under this name); main.py:55 + 3 scripts use _list
 print('All imports OK')
 PY
 
