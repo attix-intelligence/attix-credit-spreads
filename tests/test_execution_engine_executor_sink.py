@@ -14,7 +14,6 @@ The Alpaca-path-unchanged test is the load-bearing safety claim of the PR.
 
 from __future__ import annotations
 
-import os
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 from unittest.mock import MagicMock, patch
