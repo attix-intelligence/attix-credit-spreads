@@ -148,6 +148,16 @@ tradier_live:
   sink_type: executor
 
 # ============================================================================
+# Live submit gate — Carlos's per-session "go".
+# When false (default), ExecutionEngine logs `[DRY RUN — live_submit=false]`
+# and never calls executor_sink.submit(). When true, the next 5-min cycle
+# inside NYSE RTH will fire a real ExecutorOrderSink.submit() against
+# tradier_6YA42569. Phase-1 cap (risk.max_contracts=1) still applies.
+# Toggle ONLY after Carlos's explicit per-session go.
+# ============================================================================
+live_submit: true
+
+# ============================================================================
 # Alerts / Logging
 # ============================================================================
 alerts:
