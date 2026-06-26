@@ -1,3 +1,9 @@
+# syntax=docker/dockerfile:1.4
+# BuildKit frontend 1.4+ is required to parse the multi-line `RUN python -c "..."`
+# heredoc-style block below (lines ~38-53). Without this directive the default
+# parser treats line 39 (`import numpy, pandas, ...`) as a new instruction and
+# errors with `unknown instruction: import`. Railway/Railpack already uses
+# BuildKit; this directive is needed for the plain `docker build` CI smoke test.
 FROM python:3.11-slim AS builder
 
 WORKDIR /build
