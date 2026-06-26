@@ -9,7 +9,6 @@ Covers:
   - AlertRouter dedup key includes alert_type
 """
 
-import pytest
 from datetime import datetime, timezone
 from unittest.mock import MagicMock, patch
 
@@ -283,18 +282,18 @@ class TestAlertStraddleHandling:
         from alerts.alert_schema import Alert
         alert = Alert.from_opportunity(self._straddle_opp())
         assert len(alert.legs) == 2
-        types = {l.option_type for l in alert.legs}
+        types = {leg.option_type for leg in alert.legs}
         assert types == {"call", "put"}
 
     def test_short_straddle_legs_are_sell(self):
         from alerts.alert_schema import Alert
         alert = Alert.from_opportunity(self._straddle_opp("short_straddle"))
-        assert all(l.action == "sell" for l in alert.legs)
+        assert all(leg.action == "sell" for leg in alert.legs)
 
     def test_long_straddle_legs_are_buy(self):
         from alerts.alert_schema import Alert
         alert = Alert.from_opportunity(self._straddle_opp("long_straddle", is_debit=True))
-        assert all(l.action == "buy" for l in alert.legs)
+        assert all(leg.action == "buy" for leg in alert.legs)
 
     def test_strangle_type(self):
         from alerts.alert_schema import Alert, AlertType
@@ -310,7 +309,6 @@ class TestDedupKeyIncludesType:
     def test_ic_and_straddle_dont_collide(self):
         """An iron condor and a straddle for the same ticker should not dedup each other."""
         from alerts.alert_router import AlertRouter
-        from alerts.alert_schema import Alert, AlertType, Direction, Leg
 
         router = AlertRouter(
             risk_gate=MagicMock(),

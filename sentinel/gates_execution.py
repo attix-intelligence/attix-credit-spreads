@@ -72,7 +72,7 @@ import sqlite3
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Optional, Set, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -509,7 +509,7 @@ def _easter(year: int) -> date:
     g = (b - f + 1) // 3
     h = (19 * a + b - d - g + 15) % 30
     i, k = divmod(c, 4)
-    l = (32 + 2 * e + 2 * i - h - k) % 7
+    l = (32 + 2 * e + 2 * i - h - k) % 7  # noqa: E741 — `l` is canonical in the Gauss/Anonymous-Gregorian Easter algorithm
     m = (a + 11 * h + 22 * l) // 451
     month = (h + l - 7 * m + 114) // 31
     day = ((h + l - 7 * m + 114) % 31) + 1
@@ -892,12 +892,10 @@ def format_execution_report(results: Dict[str, ExecutionGatesResult]) -> str:
 
         # Gate 17
         if r.gate17 and r.gate17.events:
-            worst = r.gate17.worst_severity or "warning"
             issues.append(f"G17: {len(r.gate17.events)} slippage event(s)")
 
         # Gate 18
         if r.gate18 and r.gate18.streaks:
-            worst = r.gate18.worst_severity or "warning"
             issues.append(
                 f"G18: {r.gate18.current_loss_streak}-loss streak"
             )

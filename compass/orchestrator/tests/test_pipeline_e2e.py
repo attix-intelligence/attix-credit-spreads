@@ -13,16 +13,14 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Dict, List
 
 import pytest
 
-from compass.orchestrator import pipeline
 from compass.orchestrator.pipeline import cleanup, reconcile, run
 from compass.orchestrator.types import (
     GatedSignal,
     PipelineResult,
-    SignalIntent,
     SizedOrder,
 )
 
@@ -185,14 +183,14 @@ class TestRunHappyPath:
                        "03_sized.jsonl", "04_orders.jsonl"):
             assert (root / name).exists(), f"missing {name}"
 
-        intent_rows = [json.loads(l) for l in (root / "01_intent.jsonl").read_text().splitlines()]
+        intent_rows = [json.loads(line) for line in (root / "01_intent.jsonl").read_text().splitlines()]
         assert len(intent_rows) == 8
         assert {r["stream"] for r in intent_rows} == {
             "exp1220", "xlf_cs", "xli_cs", "qqq_cs",
             "gld_cal", "slv_cal", "cross_vol", "v5_hedge",
         }
 
-        orders_rows = [json.loads(l) for l in (root / "04_orders.jsonl").read_text().splitlines()]
+        orders_rows = [json.loads(line) for line in (root / "04_orders.jsonl").read_text().splitlines()]
         assert len(orders_rows) == 6
 
 

@@ -25,7 +25,6 @@ import logging
 import os
 import signal
 import sys
-import threading
 from datetime import datetime
 
 import pytz
@@ -99,7 +98,6 @@ def live_experiment_jobs() -> list[tuple[str, str, str | None]]:
 def on_job_error(event) -> None:
     job_id = event.job_id
     exc    = event.exception
-    tb     = event.traceback
     LOG.error("JOB ERROR: %s — %s", job_id, exc)
     send_telegram(
         f"SCHEDULER: job '{job_id}' crashed\n"

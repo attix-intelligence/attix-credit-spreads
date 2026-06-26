@@ -294,8 +294,8 @@ class AlertRouter:
 
         # --- straddle/strangle: extract call/put strikes from legs ---
         if "straddle" in alert_type_val or "strangle" in alert_type_val:
-            call_leg = next((l for l in legs if l.get("option_type") == "call"), None)
-            put_leg = next((l for l in legs if l.get("option_type") == "put"), None)
+            call_leg = next((leg for leg in legs if leg.get("option_type") == "call"), None)
+            put_leg = next((leg for leg in legs if leg.get("option_type") == "put"), None)
             if call_leg:
                 d["call_strike"] = call_leg["strike"]
             if put_leg:
