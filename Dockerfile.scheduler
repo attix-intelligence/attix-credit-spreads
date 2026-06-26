@@ -40,8 +40,10 @@ COPY main.py utils.py ./
 
 RUN mkdir -p /data/logs /data/signals
 
-# Verify critical imports at build time — catches broken deps before 09:25 ET
-RUN python -c "
+# Verify critical imports at build time — catches broken deps before 09:25 ET.
+# Uses BuildKit heredoc syntax (requires `# syntax=docker/dockerfile:1.4` at top
+# of this file). The Python script is the heredoc body; python reads it from stdin.
+RUN python <<'PY'
 import numpy, pandas, apscheduler, fastapi, uvicorn, pytz
 import requests
 try:
@@ -56,7 +58,7 @@ from strategies.base import MarketSnapshot, PositionAction
 from strategies.credit_spread import CreditSpreadStrategy
 from shared.strategy_factory import build_strategy
 print('All imports OK')
-"
+PY
 
 RUN useradd -m -u 1001 compass
 USER compass
