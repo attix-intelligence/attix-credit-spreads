@@ -6,14 +6,13 @@ import fs from 'fs'
 import path from 'path'
 
 describe('Production Readiness', () => {
-  it('Dockerfile exists with multi-stage build', () => {
-    const dockerPath = path.resolve(__dirname, '../../Dockerfile')
-    expect(fs.existsSync(dockerPath)).toBe(true)
-    const content = fs.readFileSync(dockerPath, 'utf-8')
-    expect(content).toContain('FROM')
-    expect(content).toContain('npm')
-    expect(content).toContain('EXPOSE')
-  })
+  // The previous 'Dockerfile exists with multi-stage build' test was removed.
+  // The repo deliberately deleted the root Dockerfile in commit 122267e
+  // ("remove Dockerfile, use Nixpacks + Procfile for Railway"); production
+  // deployment of the registry-driven worker uses Railpack (per Railway
+  // serviceManifest.build.builder=RAILPACK), and service-specific Dockerfiles
+  // like Dockerfile.scheduler live at repo root with explicit names. The web
+  // app is not built from a root Dockerfile.
 
   it('.dockerignore exists', () => {
     const ignorePath = path.resolve(__dirname, '../../.dockerignore')
