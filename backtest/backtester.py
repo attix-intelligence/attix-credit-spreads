@@ -302,6 +302,45 @@ def _nearest_weekday_expiration(
     return after  # unreachable in practice
 
 
+def enumerate_position_legs(pos):
+    """Yield (expiration, strike, option_type, direction) tuples for every leg of
+    a position dict.  direction is 'S' (short/sell) or 'L' (long/buy).
+
+    A real broker nets per OCC option symbol, so this is the canonical leg view
+    used to detect collisions when V8A stacks spreads on the same expiration.
+    """
+    exp = pos.get('expiration')
+    legs = []
+    if pos.get('type') == 'iron_condor' or pos.get('option_type') == 'IC':
+        legs.append((exp, pos.get('short_strike'), 'P', 'S'))
+        legs.append((exp, pos.get('long_strike'), 'P', 'L'))
+        legs.append((exp, pos.get('call_short_strike'), 'C', 'S'))
+        legs.append((exp, pos.get('call_long_strike'), 'C', 'L'))
+    else:
+        ot = 'C' if pos.get('option_type') == 'C' else 'P'
+        legs.append((exp, pos.get('short_strike'), ot, 'S'))
+        legs.append((exp, pos.get('long_strike'), ot, 'L'))
+    for exp_, strike, ot, direction in legs:
+        if exp_ is None or strike is None:
+            continue
+        yield (exp_, float(strike), ot, direction)
+
+
+def position_leg_collision(candidate, occupied_legs):
+    """Return True if opening ``candidate`` would collide with any held leg in
+    ``occupied_legs`` (a set of (expiration, strike, option_type, direction)).
+
+    Collision = candidate's short leg matches a held long leg, or candidate's
+    long leg matches a held short leg, on the same expiration+option_type.
+    This is the broker rule the simulator must respect (Option B fix).
+    """
+    for exp, strike, ot, direction in enumerate_position_legs(candidate):
+        opposite = 'L' if direction == 'S' else 'S'
+        if (exp, strike, ot, opposite) in occupied_legs:
+            return True
+    return False
+
+
 class Backtester:
     """
     Backtest credit spread strategies on historical data.
@@ -855,6 +894,33 @@ class Backtester:
                         _k = (_exp, _op['short_strike'], _t)
                     _open_key_counts[_k] = _open_key_counts.get(_k, 0) + 1
 
+                # --- Leg-collision guard (Option B: enforce broker per-symbol netting) ---
+                # A real broker nets positions per OCC option symbol: you cannot
+                # sell-to-open a strike you already hold long (or buy-to-open one you
+                # already hold short).  When V8A stacks spreads on the same expiration,
+                # a new spread's short leg can equal a prior spread's long leg (or
+                # vice-versa).  The broker rejects such orders, so the trade never opens
+                # live.  We mirror that here: record every occupied leg as
+                # (expiration, strike, option_type, direction) where direction is
+                # 'S' (short/sell) or 'L' (long/buy), across ALL open positions.
+                _occupied_legs: set = set()
+                for _op in open_positions:
+                    for _leg in enumerate_position_legs(_op):
+                        _occupied_legs.add(_leg)
+
+                def _leg_collision(pos) -> bool:
+                    """True if opening pos would collide with a held leg (candidate
+                    short == held long, or long == held short) on the same
+                    expiration+type.  The broker rule the simulator must respect.
+                    """
+                    return position_leg_collision(pos, _occupied_legs)
+
+                def _occupy(pos) -> None:
+                    """Record an opened position's legs so later same-day candidates
+                    are checked against it too."""
+                    for _leg in enumerate_position_legs(pos):
+                        _occupied_legs.add(_leg)
+
                 def _exposure_ok(pos) -> bool:
                     """Return False if adding pos would exceed portfolio max-loss exposure cap."""
                     if self._max_portfolio_exposure_pct >= 100.0:
@@ -912,13 +978,21 @@ class Backtester:
                                 self.capital += new_position.get('commission', 0)
                                 continue
                             _key = (new_position.get('expiration'), new_position['short_strike'], 'P')
-                            if _key not in _entered_today and _open_key_counts.get(_key, 0) < _max_per_key:
+                            if _leg_collision(new_position):
+                                # Broker would reject: a leg collides with a held position
+                                # (short==held long, or long==held short) on this expiry.
+                                self.capital += new_position.get('commission', 0)
+                                logger.debug("position_conflict — skipping bull_put %s", _key)
+                                if not _want_calls:
+                                    continue
+                            elif _key not in _entered_today and _open_key_counts.get(_key, 0) < _max_per_key:
                                 if _exposure_ok(new_position):
                                     if self._mc_should_skip_trade():
                                         self.capital += new_position.get('commission', 0)
                                         logger.debug("MC trade-skip: dropped bull_put %s", _key)
                                         continue
                                     open_positions.append(new_position)
+                                    _occupy(new_position)
                                     _entered_today.add(_key)
                                     _open_key_counts[_key] = _open_key_counts.get(_key, 0) + 1
                                     continue  # entered put: skip bear call + IC for this scan time
@@ -947,13 +1021,20 @@ class Backtester:
                                 self.capital += bear_call.get('commission', 0)
                                 continue
                             _key = (bear_call.get('expiration'), bear_call['short_strike'], 'C')
-                            if _key not in _entered_today and _open_key_counts.get(_key, 0) < _max_per_key:
+                            if _leg_collision(bear_call):
+                                # Broker would reject: a leg collides with a held position
+                                # (short==held long, or long==held short) on this expiry.
+                                self.capital += bear_call.get('commission', 0)
+                                logger.debug("position_conflict — skipping bear_call %s", _key)
+                                # fall through: try IC on this scan time
+                            elif _key not in _entered_today and _open_key_counts.get(_key, 0) < _max_per_key:
                                 if _exposure_ok(bear_call):
                                     if self._mc_should_skip_trade():
                                         self.capital += bear_call.get('commission', 0)
                                         logger.debug("MC trade-skip: dropped bear_call %s", _key)
                                         continue
                                     open_positions.append(bear_call)
+                                    _occupy(bear_call)
                                     _entered_today.add(_key)
                                     _open_key_counts[_key] = _open_key_counts.get(_key, 0) + 1
                                     continue  # entered call: skip IC for this scan time
@@ -980,13 +1061,18 @@ class Backtester:
                                 condor['call_short_strike'],
                                 'IC',
                             )
-                            if _ic_key not in _entered_today and _open_key_counts.get(_ic_key, 0) < _max_per_key:
+                            if _leg_collision(condor):
+                                # Broker would reject: an IC leg collides with a held leg.
+                                self.capital += condor.get('commission', 0)
+                                logger.debug("position_conflict — skipping IC %s", _ic_key)
+                            elif _ic_key not in _entered_today and _open_key_counts.get(_ic_key, 0) < _max_per_key:
                                 if _exposure_ok(condor):
                                     if self._mc_should_skip_trade():
                                         self.capital += condor.get('commission', 0)
                                         logger.debug("MC trade-skip: dropped IC %s", _ic_key)
                                         continue
                                     open_positions.append(condor)
+                                    _occupy(condor)
                                     _entered_today.add(_ic_key)
                                     _open_key_counts[_ic_key] = _open_key_counts.get(_ic_key, 0) + 1
                                 else:
