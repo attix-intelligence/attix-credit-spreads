@@ -32,8 +32,8 @@ from compass.live.vrp_sinks import stream_client_order_id
 
 logger = logging.getLogger(__name__)
 
-# PR-B engine emits only credit-spread structures — mirror AlpacaOrderSink scope.
-_SUPPORTED_SPREADS: Tuple[str, ...] = ("bull_put", "bear_call")
+# Credit-spread structures + 4-leg iron condors (EXP-800-TRADIER WS-2).
+_SUPPORTED_SPREADS: Tuple[str, ...] = ("bull_put", "bear_call", "iron_condor")
 
 # bull_put → put leg, bear_call → call leg; net_credit reported as a positive
 # number when the sell-leg premium exceeds the buy-leg premium (executor spec).
@@ -253,23 +253,25 @@ class ExecutorOrderSink:
                 f"ExecutorOrderSink supports {_SUPPORTED_SPREADS}, not '{intent.structure}' "
                 f"(stream {intent.stream}). Equity/calendar/cross-vol execution is a later PR."
             )
-        short_strike = _leg_strike(intent, "sell")
-        long_strike = _leg_strike(intent, "buy")
-        expiration = next((leg_.expiration for leg_ in intent.legs if leg_.expiration), None)
-        if short_strike is None or long_strike is None or expiration is None:
-            return {
-                "status": "error",
-                "message": "intent missing strikes/expiration",
-                "stream": intent.stream,
-            }
-
-        strategy, opt_type = _STRUCTURE_MAP[intent.structure]
         coid = stream_client_order_id(intent)
-        body: Dict[str, Any] = {
-            "account_id": self.account_id,
-            "account_type": self.account_type,
-            "strategy": strategy,
-            "legs": [
+
+        if intent.structure == "iron_condor":
+            strategy = "iron_condor"
+            legs, leg_err = _condor_legs(intent)
+            if leg_err:
+                return {"status": "error", "message": leg_err, "stream": intent.stream}
+        else:
+            short_strike = _leg_strike(intent, "sell")
+            long_strike = _leg_strike(intent, "buy")
+            expiration = next((leg_.expiration for leg_ in intent.legs if leg_.expiration), None)
+            if short_strike is None or long_strike is None or expiration is None:
+                return {
+                    "status": "error",
+                    "message": "intent missing strikes/expiration",
+                    "stream": intent.stream,
+                }
+            strategy, opt_type = _STRUCTURE_MAP[intent.structure]
+            legs = [
                 {
                     "symbol": intent.symbol,
                     "option_type": opt_type,
@@ -286,7 +288,13 @@ class ExecutorOrderSink:
                     "side": "buy_to_open",
                     "quantity": int(intent.contracts),
                 },
-            ],
+            ]
+
+        body: Dict[str, Any] = {
+            "account_id": self.account_id,
+            "account_type": self.account_type,
+            "strategy": strategy,
+            "legs": legs,
             "time_in_force": "day",
             "source": {
                 "model": self.source_model,
@@ -301,14 +309,20 @@ class ExecutorOrderSink:
         if intent.est_credit is not None:
             body["order_type"] = "limit"
             # Executor expects positive net_credit (premium received).
-            body["net_credit"] = float(intent.est_credit)
+            # Tradier silently cancels sub-penny limit prices (live order
+            # 135629196, 2026-07-02: 3.3605175 → canceled in 152ms), so
+            # always round to cents.
+            body["net_credit"] = round(float(intent.est_credit), 2)
         else:
             body["order_type"] = "market"
 
+        legs_desc = "/".join(
+            f"{l['side'][0].upper()}{l['option_type'][0]}{l['strike']:g}" for l in legs
+        )
         logger.info(
-            "[vrp][exec] submit %s %s %s/%s exp %s x%d (coid=%s)",
-            intent.stream, intent.symbol, short_strike, long_strike,
-            expiration, intent.contracts, coid,
+            "[vrp][exec] submit %s %s %s [%s] exp %s x%d (coid=%s)",
+            intent.stream, intent.symbol, strategy, legs_desc,
+            legs[0]["expiration"], intent.contracts, coid,
         )
         try:
             raw = self._client.submit_spread(body)
@@ -330,6 +344,100 @@ class ExecutorOrderSink:
                 "client_order_id": coid,
             }
 
+        return _normalize_submit_response(raw, intent=intent, coid=coid)
+
+    # ---------------------------------------------------------------- close
+    def submit_close(
+        self, intent: OrderIntent, *, net_debit: Optional[float] = None
+    ) -> Dict[str, object]:
+        """Submit a closing order for an open spread (PT/SL exits — WS-6).
+
+        The intent's legs describe the CLOSING actions: ``side="buy"`` maps to
+        buy_to_close (the originally sold leg), ``side="sell"`` to
+        sell_to_close. ``net_debit`` (positive, per share) makes it a limit
+        order; None submits at market.
+        """
+        if intent.structure not in _SUPPORTED_SPREADS:
+            raise NotImplementedError(
+                f"ExecutorOrderSink close supports {_SUPPORTED_SPREADS}, "
+                f"not '{intent.structure}' (stream {intent.stream})."
+            )
+        legs: List[Dict[str, Any]] = []
+        for leg_ in intent.legs:
+            if leg_.strike is None or not leg_.expiration or leg_.right not in ("P", "C"):
+                return {
+                    "status": "error",
+                    "message": f"close intent leg missing strike/expiration/right (stream {intent.stream})",
+                    "stream": intent.stream,
+                }
+            legs.append({
+                "symbol": intent.symbol,
+                "option_type": "put" if leg_.right == "P" else "call",
+                "strike": float(leg_.strike),
+                "expiration": leg_.expiration,
+                "side": "buy_to_close" if leg_.side == "buy" else "sell_to_close",
+                "quantity": int(intent.contracts),
+            })
+        if intent.structure == "iron_condor" and len(legs) != 4:
+            return {
+                "status": "error",
+                "message": f"iron_condor close requires 4 legs, got {len(legs)} (stream {intent.stream})",
+                "stream": intent.stream,
+            }
+
+        strategy = (
+            "iron_condor" if intent.structure == "iron_condor"
+            else _STRUCTURE_MAP[intent.structure][0]
+        )
+        # "close-" prefix keeps the close idempotency key distinct from the open's.
+        coid = "close-" + stream_client_order_id(intent)
+        body: Dict[str, Any] = {
+            "account_id": self.account_id,
+            "account_type": self.account_type,
+            "strategy": strategy,
+            "legs": legs,
+            "time_in_force": "day",
+            "source": {
+                "model": self.source_model,
+                "signal_id": intent.stream,
+                "metadata": {
+                    "stream": intent.stream,
+                    "rationale": intent.rationale or "",
+                },
+            },
+            "idempotency_key": _sanitize_idempotency_key(coid),
+        }
+        if net_debit is not None:
+            body["order_type"] = "limit"
+            # Same sub-penny rule as net_credit above.
+            body["net_debit"] = round(float(net_debit), 2)
+        else:
+            body["order_type"] = "market"
+
+        logger.info(
+            "[vrp][exec] close %s %s %s x%d net_debit=%s (coid=%s)",
+            intent.stream, intent.symbol, strategy, intent.contracts,
+            net_debit, coid,
+        )
+        try:
+            raw = self._client.submit_spread(body)
+        except ExecutorHTTPError as exc:
+            logger.error("[vrp][exec] close submit failed: %s", exc)
+            return {
+                "status": "error",
+                "message": str(exc),
+                "stream": intent.stream,
+                "client_order_id": coid,
+                "http_status": exc.status_code,
+            }
+        except Exception as exc:  # noqa: BLE001 — degrade, don't crash the cycle
+            logger.error("[vrp][exec] close submit unexpected error: %s", exc, exc_info=True)
+            return {
+                "status": "error",
+                "message": f"{type(exc).__name__}: {exc}",
+                "stream": intent.stream,
+                "client_order_id": coid,
+            }
         return _normalize_submit_response(raw, intent=intent, coid=coid)
 
     # ------------------------------------------------------------- helpers
@@ -356,6 +464,35 @@ def _leg_strike(intent: OrderIntent, side: str) -> Optional[float]:
     return None
 
 
+def _condor_legs(intent: OrderIntent) -> Tuple[List[Dict[str, Any]], Optional[str]]:
+    """Map a 4-leg iron-condor intent to executor SpreadLeg dicts.
+
+    Returns (legs, None) on success, ([], error_message) on a malformed intent.
+    """
+    legs: List[Dict[str, Any]] = []
+    for leg_ in intent.legs:
+        if leg_.strike is None or not leg_.expiration or leg_.right not in ("P", "C"):
+            return [], (
+                f"iron_condor intent leg missing strike/expiration/right "
+                f"(stream {intent.stream})"
+            )
+        legs.append({
+            "symbol": intent.symbol,
+            "option_type": "put" if leg_.right == "P" else "call",
+            "strike": float(leg_.strike),
+            "expiration": leg_.expiration,
+            "side": "sell_to_open" if leg_.side == "sell" else "buy_to_open",
+            "quantity": int(intent.contracts),
+        })
+    n_sell = sum(1 for l in legs if l["side"] == "sell_to_open")
+    if len(legs) != 4 or n_sell != 2:
+        return [], (
+            f"iron_condor requires 4 legs (2 sell + 2 buy), got "
+            f"{len(legs)} legs / {n_sell} sells (stream {intent.stream})"
+        )
+    return legs, None
+
+
 def _normalize_submit_response(
     raw: Dict[str, Any],
     *,
@@ -369,9 +506,15 @@ def _normalize_submit_response(
     status = "submitted" if success else "error"
     # Executor's OrderStatus enum maps to broker-side state; carry it through.
     order_status = raw.get("status")
+    # The executor's Tradier status/cancel routes key on the BROKER order id,
+    # not the executor-internal one (verified in Phase 2 sandbox: polling the
+    # internal id 500s with a Tradier 401). Prefer broker_order_id so stored
+    # order ids are actionable; keep the internal id as executor_order_id.
+    actionable_id = raw.get("broker_order_id") or raw.get("order_id")
     return {
         "status": status,
-        "order_id": raw.get("order_id"),
+        "order_id": actionable_id,
+        "executor_order_id": raw.get("order_id"),
         "broker_order_id": raw.get("broker_order_id"),
         "order_status": order_status,
         "ticker": intent.symbol,
