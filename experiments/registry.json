@@ -864,7 +864,7 @@
             "name": "Safe Kelly 4/7/9 \u2014 Tradier LIVE Phase 1 (cap 1 contract)",
             "created_by": "carlos",
             "created_date": "2026-06-23",
-            "status": "active",
+            "status": "stopped",
             "ticker": "SPY",
             "broker": "tradier_live",
             "executor_account_id": "tradier_6YA42569",
@@ -884,8 +884,8 @@
             "phase": "Phase 1 \u2014 LIVE config landed (dormant), awaiting executor-side wiring + operator activation",
             "max_contracts_cap": 1,
             "created_at": "2026-06-23T00:00:00+00:00",
-            "updated_at": "2026-06-23T12:03:52.786696+00:00",
-            "status_reason": "Phase-1 LIVE pilot activation (Carlos-approved 2026-06-23)",
+            "updated_at": "2026-07-01T01:00:00+00:00",
+            "status_reason": "Permanent shutdown (Carlos-approved 2026-06-30 ET): kill-switch before manual close of open spreads; will transition to retired once account is flat",
             "last_started_at": "2026-06-23T12:03:52.786872+00:00"
         },
         "EXP-V8A-IBKR": {

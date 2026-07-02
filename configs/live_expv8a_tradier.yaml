@@ -155,7 +155,7 @@ tradier_live:
 # tradier_6YA42569. Phase-1 cap (risk.max_contracts=1) still applies.
 # Toggle ONLY after Carlos's explicit per-session go.
 # ============================================================================
-live_submit: true
+live_submit: false
 
 # ============================================================================
 # Alerts / Logging
