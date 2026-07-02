@@ -1,6 +1,6 @@
 {
     "schema_version": "3.0",
-    "last_updated": "2026-06-23",
+    "last_updated": "2026-07-02",
     "experiments": {
         "EXP-400": {
             "id": "EXP-400",
@@ -861,10 +861,10 @@
         },
         "EXP-V8A-TRADIER": {
             "id": "EXP-V8A-TRADIER",
-            "name": "Safe Kelly 4/7/9 \u2014 Tradier LIVE Phase 1 (cap 1 contract)",
+            "name": "EXP-800 Safe Kelly 9/7/4 \u2014 Tradier LIVE",
             "created_by": "carlos",
             "created_date": "2026-06-23",
-            "status": "stopped",
+            "status": "active",
             "ticker": "SPY",
             "broker": "tradier_live",
             "executor_account_id": "tradier_6YA42569",
@@ -873,20 +873,21 @@
             "live_since": "2026-06-23",
             "paper_config": null,
             "backtest_config": null,
-            "description": "DORMANT \u2014 Tradier LIVE pilot of the EXP-800 Safe Kelly 4/7/9 strategy on SPY, hard-capped to 1 contract for Phase 1. Strategy params (DTE=15, OTM=2%, Width=$12, SL=1.25x, PT=55%, Safe Kelly 9/7/4, 3-tier DD circuit breakers, VIX-40 gate) are a VERBATIM copy of paper_exp800.yaml. Order routing flows through the standalone executor REST service (sink_type=executor) using the EXP-V8A-IBKR env-var unmask pattern (SINK_TYPE_EXPV8ATRADIER -> SINK_TYPE, EXECUTOR_ACCOUNT_ID_EXPV8ATRADIER -> EXECUTOR_ACCOUNT_ID=tradier_6YA42569, EXECUTOR_ACCOUNT_TYPE_EXPV8ATRADIER -> live). Funded live account tradier_6YA42569 is pinned in the executor repo at scripts/tradier_phase1/_live_guards.py. Phase 1 = LIVE-but-capped pilot; activation (registered -> configuring -> active) is a separate operator step gated on Carlos's per-session live 'go' and the executor-side wiring landing.",
-            "notes": "CC5 deliverable for the Tradier rollout: worker-repo config + registry entry. status=registered so railway_worker WILL NOT spawn it (railway_worker.py:287 filters status=='active'). To go live, transition registered -> configuring -> active AND ensure executor-repo Tradier-live path is wired AND Carlos has given per-session 'go' (feedback-live-trade-gates). DO NOT activate from this entry alone. Env-var suffix: EXPV8ATRADIER (exp_env_suffix derivation in railway_worker.py:77).",
+            "description": "LIVE \u2014 EXP-800 Safe Kelly 9/7/4 strategy on SPY, running live on Tradier account tradier_6YA42569 with exact paper-parity caps (max_contracts=30, max_risk_per_trade=17%). Strategy params (DTE=15, OTM=2%, Width=$12, SL=1.25x, PT=55%, Safe Kelly 9/7/4 regime fractions, 3-tier DD circuit breakers -8/-10/-12, VIX-40 gate) are a VERBATIM copy of paper_exp800.yaml. Order routing flows through the standalone executor REST service (sink_type=executor) using the env-var unmask pattern (suffix EXPV8ATRADIER). Registry id retains the historical EXP-V8A-TRADIER label for continuity; the STRATEGY is EXP-800 (Carlos clarification 2026-07-02 \u2014 earlier 'separate strategy' halt was in error).",
+            "notes": "CC5 deliverable for the Tradier rollout: worker-repo config + registry entry. status=registered so railway_worker WILL NOT spawn it (railway_worker.py:287 filters status=='active'). To go live, transition registered -> configuring -> active AND ensure executor-repo Tradier-live path is wired AND Carlos has given per-session 'go' (feedback-live-trade-gates). DO NOT activate from this entry alone. Env-var suffix: EXPV8ATRADIER (exp_env_suffix derivation in railway_worker.py:77). | 2026-07-02: relabeled to EXP-800 (strategy identity confirmed by Carlos); id kept as EXP-V8A-TRADIER to avoid a duplicate entry \u2014 env suffix EXPV8ATRADIER unchanged.",
             "config_path": "configs/live_expv8a_tradier.yaml",
             "alpaca_account_id": null,
             "env_file": ".env.expv8a_tradier",
             "db_path": "data/expv8a_tradier/pilotai_expv8a_tradier.db",
             "strategy_type": "iron_condor",
             "sink_type": "executor",
-            "phase": "Phase 1 \u2014 LIVE config landed (dormant), awaiting executor-side wiring + operator activation",
-            "max_contracts_cap": 1,
+            "phase": "Phase 3 \u2014 LIVE, paper-parity caps (Carlos GO 2026-07-02)",
+            "max_contracts_cap": 30,
             "created_at": "2026-06-23T00:00:00+00:00",
-            "updated_at": "2026-07-01T01:00:00+00:00",
-            "status_reason": "Permanent shutdown (Carlos-approved 2026-06-30 ET): kill-switch before manual close of open spreads; will transition to retired once account is flat",
-            "last_started_at": "2026-06-23T12:03:52.786872+00:00"
+            "updated_at": "2026-07-02T17:20:16.693304+00:00",
+            "status_reason": "Reinstated live 2026-07-02 per Carlos: entry was the correct EXP-800 strategy, merely mislabeled as EXP-V8A; same-day halt reversed.",
+            "last_started_at": "2026-07-02T17:20:16.693496+00:00",
+            "last_stopped_at": "2026-07-02T17:08:07.949497+00:00"
         },
         "EXP-V8A-IBKR": {
             "id": "EXP-V8A-IBKR",

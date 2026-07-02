@@ -99,7 +99,7 @@ kelly:
 risk:
   account_size: 100000       # starting capital (used for HWM bootstrap)
   max_risk_per_trade: 17.0    # hard cap (matches max Kelly bull fraction)
-  max_contracts: 1           # Phase 1 LIVE cap (paper_exp800.yaml: 30)
+  max_contracts: 30          # Phase 3: exact paper_exp800.yaml parity (Carlos GO 2026-07-02)
   max_positions: 10
 
   profit_target: 55          # 55% of credit
@@ -155,7 +155,7 @@ tradier_live:
 # tradier_6YA42569. Phase-1 cap (risk.max_contracts=1) still applies.
 # Toggle ONLY after Carlos's explicit per-session go.
 # ============================================================================
-live_submit: false
+live_submit: true   # Reinstated 2026-07-02 — Carlos confirmed entry IS EXP-800 (mislabel, not wrong strategy)
 
 # ============================================================================
 # Alerts / Logging
