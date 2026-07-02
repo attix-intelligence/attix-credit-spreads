@@ -2413,6 +2413,11 @@ class Backtester:
             'expiration': pos.get('expiration'),
             'short_strike': pos['short_strike'],
             'long_strike': pos['long_strike'],
+            # Iron condors carry a second (call) wing; single spreads leave these None.
+            # Emitting them keeps the trade log leg-complete so a per-OCC-symbol
+            # collision audit can see every leg the position actually held.
+            'call_short_strike': pos.get('call_short_strike'),
+            'call_long_strike': pos.get('call_long_strike'),
             'option_type': 'C' if _pos_type == 'bear_call_spread' else ('IC' if _pos_type == 'iron_condor' else 'P'),
             'credit': pos['credit'],
             'contracts': pos['contracts'],

@@ -1,0 +1,9 @@
+{
+  "trade_log": "/tmp/claude-1000/-home-node--openclaw-workspace/a82fc5f3-02ae-44f7-92b2-679641a07d88/scratchpad/exp3310_new.json",
+  "total_trades": 1167,
+  "iron_condors": 658,
+  "iron_condors_with_call_legs_in_log": 658,
+  "collision_count": 0,
+  "zero_collisions_verified": true,
+  "sample_collisions": []
+}
