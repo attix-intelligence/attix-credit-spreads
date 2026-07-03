@@ -1,0 +1,74 @@
+{
+  "experiment_id": "EXP-800-BT",
+  "twin_of": "EXP-800",
+  "description": "Standalone backtest twin of EXP-800 Safe Kelly 4/7/9 (live Tradier 6YA42569). Consumed by experiments/EXP-800-BT-safe-kelly/run.py. Top-level keys mirror configs/paper_exp800.yaml for sentinel G21 config parity.",
+  "ticker": "SPY",
+  "window": {"start": "2020-01-02", "end": "2026-04-02"},
+
+  "direction": "both",
+  "target_dte": 15,
+  "min_dte": 15,
+  "max_dte": 25,
+  "otm_pct": 0.02,
+  "spread_width": 12,
+  "profit_target": 55,
+  "stop_loss_multiplier": 1.25,
+  "max_risk_per_trade": 17.0,
+  "max_contracts": 30,
+  "max_positions": 10,
+  "min_credit_pct": 5,
+  "vix_max_entry": 40,
+
+  "regime_mode": "combo",
+  "regime_config": {
+    "signals": ["price_vs_ma200", "rsi_momentum", "vix_structure"],
+    "ma_slow_period": 80,
+    "ma200_neutral_band_pct": 0.5,
+    "rsi_period": 14,
+    "rsi_bull_threshold": 50.0,
+    "rsi_bear_threshold": 45.0,
+    "vix_structure_bull": 0.95,
+    "vix_structure_bear": 1.05,
+    "bear_requires_unanimous": true,
+    "cooldown_days": 3,
+    "vix_extreme": 40.0,
+    "vix_extreme_regime": "NEUTRAL"
+  },
+
+  "iron_condor": {"enabled": true, "neutral_regime_only": true},
+
+  "kelly": {
+    "regime_fractions": {"bull": 9.0, "neutral": 7.0, "bear": 4.0},
+    "sizing_base": "current_equity",
+    "circuit_breakers": {
+      "tier1_dd": -8.0,
+      "tier2_dd": -10.0,
+      "tier3_dd": -12.0,
+      "min_fraction": 2.0,
+      "tier3_halt_trades": 30,
+      "recovery_dd": -7.0
+    }
+  },
+
+  "backtest": {
+    "starting_capital": 100000,
+    "commission_per_contract": 0.65,
+    "slippage": 0.05,
+    "exit_slippage": 0.10,
+    "sizing_mode": "flat",
+    "compound": true,
+    "max_positions_per_expiration": 4
+  },
+
+  "fidelity_notes": {
+    "kelly_state_machine": "Ported verbatim from scripts/exp800_safe_kelly_scanner.py KellyStateDB.update_equity + _kelly_fraction: HWM never resets; tier transitions with -7% recovery hysteresis; tier-3 halt counter decrements one slot per scan day.",
+    "sizing_base": "Live sizes off Alpaca portfolio_value (MTM equity). Engine flat sizing uses cash capital, so the runner scales max_risk_per_trade by equity/capital daily to size off MTM equity like live.",
+    "iron_condor_sizing": "Live scanner sizes ICs on ONE wing using put-side credit only (contracts = equity*kelly% / ((width - put_credit)*100)) — an oversizing quirk vs the engine's two-wing max-loss convention. The runner rescales IC contracts to the live formula.",
+    "tier3_flatten": "paper_exp800.yaml documents tier-3 as 'flatten open + halt 30 trades' but the deployed scanner only halts entries (no flatten code exists). Runner supports both: variant 'flatten' (as documented, EXP-3540 anti-thrash semantics: re-flatten only on a >=1pp new DD low, floor-sizing resume after halt) and 'haltonly' (as deployed).",
+    "momentum_filter": "paper_exp800.yaml lists momentum_filter_pct: 2.0 but the deployed scanner never applies it; disabled here (fidelity to deployed code, not config aspiration).",
+    "vix_structure_signal": "Live scanner proxies VIX term structure from a VIX 50d percentile (no live VIX3M feed); the backtest uses the canonical ComboRegimeDetector with real VIX/VIX3M ratio from data/historical_indices.sqlite (post-8f1bc8c loader). The registry describes EXP-800 regime as ComboRegimeDetector, which this matches.",
+    "vix_extreme_regime": "Config maps VIX>=40 to NEUTRAL; ComboRegimeDetector maps it to bear. Moot for entries: vix_max_entry 40 blocks all entries on those days.",
+    "portfolio_risk_block": "paper_exp800.yaml risk.portfolio_risk caps (60%/40%/4-per-expiration) are NOT enforced anywhere in the deployed scan path; the backtest keeps the engine's max_positions_per_expiration=4 key-stacking cap and no exposure cap (broker buying power approximated by max_positions=10).",
+    "expirations": "Live picks the next Friday >= target DTE; engine uses nearest weekday expiration (Mon-Fri post-2022-09, MWF before) with Friday fallback."
+  }
+}

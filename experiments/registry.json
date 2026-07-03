@@ -1,6 +1,6 @@
 {
   "schema_version": "3.0",
-  "last_updated": "2026-07-03T07:07:44.573612+00:00",
+  "last_updated": "2026-07-03T13:20:33.415094+00:00",
   "experiments": {
     "EXP-400": {
       "id": "EXP-400",
@@ -265,16 +265,16 @@
       "account_id": "PA3QWQIZO09S",
       "live_since": "2026-03-28",
       "paper_config": "configs/paper_exp800.yaml",
-      "backtest_config": null,
+      "backtest_config": "configs/backtest_exp800.json",
       "description": "EXP-400 champion signal generation (DTE=15, OTM=2%, Width=$12, SL=1.25x, PT=55%) with Safe Kelly criterion position sizing and 3-tier portfolio drawdown circuit breakers. Kelly fractions by regime: bull=9%, neutral=7%, bear=4%. Circuit breakers: Tier 1 DD\u2264-8% halves sizing, Tier 2 DD\u2264-10% floors to 2%, Tier 3 DD\u2264-12% halts new entries for 30 trades. Regime: ComboRegimeDetector (MA80+RSI+VIX structure). VIX gate: block above 40.",
-      "notes": "Safe Kelly 4/7/9. Dynamic regime-based sizing with drawdown circuit breakers. Live PA3QWQIZO09S. Equity $114,897 (2026-04-11). 6 open positions. Deployed 2026-03-28.",
+      "notes": "Safe Kelly 4/7/9. Dynamic regime-based sizing with drawdown circuit breakers. Live PA3QWQIZO09S. Equity $114,897 (2026-04-11). 6 open positions. Deployed 2026-03-28. | 2026-07-03: standalone backtest twin EXP-800-BT registered (configs/backtest_exp800.json), clearing the GRANDFATHERED 30-day backtest debt.",
       "config_path": "configs/paper_exp800.yaml",
       "alpaca_account_id": "PA3QWQIZO09S",
       "env_file": ".env.exp800",
       "db_path": "data/exp800/pilotai_exp800.db",
       "strategy_type": "iron_condor",
       "created_at": "2026-03-28T00:00:00+00:00",
-      "updated_at": "2026-04-18T21:21:51.083040+00:00",
+      "updated_at": "2026-07-03T13:20:33.415094+00:00",
       "last_started_at": "2026-03-28T00:00:00+00:00",
       "backtest_baseline": {
         "win_rate": 78.0,
@@ -1013,6 +1013,29 @@
       "updated_at": "2026-07-03T07:07:44.573612+00:00",
       "broker": null,
       "results_path": "experiments/EXP-3550-voltarget-sizing/REPORT.md"
+    },
+    "EXP-800-BT": {
+      "id": "EXP-800-BT",
+      "name": "EXP-800 Safe Kelly 4/7/9 \u2014 standalone backtest twin",
+      "created_by": "kayley",
+      "created_date": "2026-07-03",
+      "status": "completed",
+      "ticker": "SPY",
+      "account_id": null,
+      "live_since": null,
+      "paper_config": "configs/paper_exp800.yaml",
+      "backtest_config": "configs/backtest_exp800.json",
+      "description": "Standalone backtest twin for EXP-800 (live on Tradier 6YA42569), clearing the sentinel GRANDFATHERED debt (backtest_config was null). Real engine (backtest/backtester.py) + offline Polygon marks (data/options_cache.db), SPY 2020-01-02..2026-04-02, real VIX/VIX3M via post-8f1bc8c indices loader (data/historical_indices.sqlite). EXP-400 champion signals (DTE 15/15-25, OTM 2%, width $12, PT 55%, SL 1.25x), combo regime (bull->bull_put, neutral->IC, bear->bear_call), Safe Kelly 9/7/4% of current MTM equity, 3-tier HWM circuit breakers (-8% halve / -10% floor 2% / -12% tier-3 + halt 30 trading days, recover > -7%). Caps: 30 contracts, 17%/trade. Kelly tier state machine ported verbatim from scripts/exp800_safe_kelly_scanner.py KellyStateDB.update_equity/_kelly_fraction. Two variants: 'flatten' (tier-3 flattens opens, as documented in paper_exp800.yaml) and 'haltonly' (as actually deployed: tier-3 only halts entries).",
+      "notes": "COMPLETED 2026-07-03. Real-mark twin 2020-01-02..2026-04-02 (SPY, 100k start): flatten(as-documented) -45.2% total / CAGR -9.2% / Sharpe -0.96 / MaxDD -45.8% / 828 trades / WR 66.9% / PF 0.54, T1x3 T2x1 T3x1 fires, 19 flattens; haltonly(as-deployed) -20.2% then PERMANENT tier-3 deadlock from 2020-02-24 (1536/1571 days blocked, halt counter decorative \u2014 cb_tier>=3 block is unconditional and flat book can never recover DD); notiers(unprotected 9/7/4 Kelly) -94.9% / MaxDD -94.8%. Negative edge on real marks in ALL variants (avg win/loss $93/-$348 at floor sizing). Live Apr-Jun 2026 paper months (+21.2/+3.4/+11.3%) are outside data coverage (marks end 2026-04-02) \u2014 no overlap to calibrate. MaxDD flag: backtest DD is WORSE than live June -31.1%, not milder; live blew through -12% with open positions because tier-3 flatten is documented but not implemented. Recs: don't scale live capital on 3 paper months; fix scanner tier-3 deadlock; consider EXP-3540 4/7/9 tight tiers; extend SPY marks past 2026-04-02.",
+      "config_path": "configs/backtest_exp800.json",
+      "alpaca_account_id": null,
+      "env_file": null,
+      "db_path": null,
+      "strategy_type": "backtest_twin",
+      "created_at": "2026-07-03T13:12:52.694295+00:00",
+      "updated_at": "2026-07-03T13:20:33.415094+00:00",
+      "broker": null,
+      "results_path": "experiments/EXP-800-BT-safe-kelly/REPORT.md"
     }
   }
 }
