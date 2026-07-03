@@ -2,7 +2,8 @@
 
 **Author:** cc (independent, broker-verified)
 **Date:** 2026-07-03
-**Data:** Pulled directly from broker APIs on 2026-07-03 — Alpaca paper API for all 9 accounts (account, 1Y daily portfolio history, full order history with legs, full activity ledger incl. expiries/assignments, open positions) and the executor API for IBKR paper (`ibkr_tafintech-p11-paper`: balance, positions, trades, dashboard). No internal scanner logs were trusted. SPY settlement marks from Alpaca market data. Companion deep-dive: `experiments/EXP-3570-live-months-replay/CC_EDGE_VS_LUCK_REVERIFY.md` (EXP-800 = LUCK verdict).
+**Data:** Pulled directly from broker APIs on 2026-07-03 — Alpaca paper API for all 9 accounts (account, 1Y daily portfolio history, full order history with legs, full activity ledger incl. expiries/assignments, open positions) and, for IBKR paper (`ibkr_tafintech-p11-paper` / DUO415613): executor API (balance, positions, full order tape with intent metadata + commissions) plus the worker-snapshot equity curve recovered from the attix-dashboard (Jun-09 onward). No internal scanner logs were trusted for P&L. Settlement marks from Alpaca market data. Companions: `experiments/EXP-3570-live-months-replay/CC_EDGE_VS_LUCK_REVERIFY.md` (EXP-800 = LUCK), `reports/IBKR_ASSESSMENT_COMPLETION.md` (IBKR data recovery + executor bug fix).
+**Rev 2 (2026-07-03):** IBKR paper upgraded from "not assessable" to a full scorecard and real ranked verdict after data recovery, per Carlos.
 
 ---
 
@@ -36,7 +37,9 @@ Two accounts deserve continued paper evaluation with priority (EXP-1220, EXP-331
 | EXP-3303B | +0.2 % | **−41.4 %** | −31.4 % | +34.6 % | 12.7 % | 0.98 |
 | EXP-503 | −5.2 % | −13.5 % | −8.4 % | +8.0 % | 2.7 % | −0.39 |
 | EXP-V8A | −14.9 % | −21.9 % | −15.8 % | +7.5 % | 4.4 % | −1.50 |
-| IBKR paper | (+12.0 % nominal — unverifiable) | n/a | n/a | n/a | n/a | n/a |
+| IBKR (EXP-V8A-IBKR, 3×) | +12.0 % | **−16.6 %**¹ | −9.0 % | +13.1 % | 6.4 % | 3.59² |
+
+¹ Trough $833,937 (Jun-10) vs the $1.0M seed; snapshot curve starts Jun-09, so the Jun-05 NFP week itself is unobserved (observed-window MaxDD −9.0 %). ² 16 daily snapshots only — not comparable to the Alpaca Sharpes.
 
 ---
 
@@ -91,11 +94,13 @@ Two accounts deserve continued paper evaluation with priority (EXP-1220, EXP-331
 - This is the live incarnation of the already-diagnosed V8A June disaster: EXP-3510/3520/3540 root-caused it to per-stream oversizing/aggregation (canonical engine sizing replay of the same month: +1.6 %, −0.16 % DD). The paper account confirms the deployed scanner ≠ the canonical config.
 - **Verdict: NO.** Blocker: deploy-vs-canonical sizing parity before this account means anything.
 
-### IBKR paper — `ibkr_tafintech-p11-paper` via executor (V8A multi-stream + exp1220 signals)
-- Env seed $1,000,000 (2026-06-01); executor-reported equity **$1,119,728** with **zero positions and zero recorded performance** (`total_trades: 0` in the same API's performance endpoint).
-- Order record is unusable as evidence: 53 orders → 16 rejected (Jun-01 flatten storm needed 4 attempts), 20 cancelled, 4 "pending" **since Jun-01/Jun-30 still open**, and the 13 "filled" rows carry `avg_fill_price 0.0000` and contradictory `filled_quantity` (e.g. "filled" with qty 0; partial 159/598, 333/586). Order sizes 516–1081 option contracts per stream (the known ~21.5 % max-loss/NAV-per-stream V8A book).
-- The +$120k equity delta cannot be attributed to any recorded trade; reconciliation between executor DB and broker is plainly broken.
-- **Verdict: NO — not even assessable.** Blockers: order-lifecycle/reconciliation fix, then restart the track from a clean seed.
+### IBKR paper — EXP-V8A-IBKR, "VRP Multi-Stream 3× Leverage" (`ibkr_tafintech-p11-paper` / DUO415613)
+- **What it is:** Carlos's 2026-05-30 leverage A/B — the parallel sibling of EXP-V8A on identical 4-stream signals (exp1220/qqq_cs/xlf_cs/xli_cs), designed at 3× max-loss/equity on a **$120k NAV baseline** ($360k aggregate max-loss target), accepted expectations +5–7 %/mo, −38 % 1-y MaxDD, 15 % blow-up probability. Live since 2026-06-01, seed $1,000,000 (env-configured; actual Jun-01 NAV unverified).
+- **Broker-verified state:** equity **$1,119,728 (+12.0 %)**, zero open positions, all cash. Worker-snapshot equity curve (Jun-09→Jul-03, 17 points): trough **$833,937 (Jun-10) = −16.6 % below seed**; daily swings −9.0 %/+13.1 %; the Jun-01–06 NFP week is unobserved (snapshots begin Jun-09) — broker statements (Flex) required to see how deep it actually went.
+- **Trades (forensically recovered):** 24 spread orders, only **4 filled (17 % fill rate)** — SPY 719/714 ×560, QQQ 701/696 ×159 + 702/697 ×333, XLF 49/44 ×547 (last one inferred, not commission-verified) — all bull puts, all expired worthless: **+$50–65k** in credits. 16 rejected stock orders at inception; 4 orders stuck "pending" for weeks (executor lifecycle bug, root-caused and patched — see companion report).
+- **Sizing is off-design:** the intended week-1 book was **$1.04M max loss = 2.9× the $360k design target = 104 % of actual NAV**; the filled subset still peaked ≈ $734k (73 % of NAV). The scanner sizes off the real $1M account, not the $120k design baseline — the "3×" experiment is actually running ~9× the intended dollar exposure, saved only by missed fills.
+- **The A/B is inconclusive by construction:** IBKR filled 4/24 orders while the Alpaca sibling filled its book — the two legs did not trade the same realized positions, so "+12.0 % vs −14.9 %" says nothing about leverage; it mostly measures which limit orders happened to fill.
+- **Verdict: NO** (now on evidence, not absence of it). 4 correlated short-put wins in a chop month, ≥−16.6 % excursion below seed, execution machinery that misses 5 of 6 orders, sizing 2.9× its own design target, and a five-week track. Blockers: deploy the reconciliation fix; fix fill rate (limit pricing/repricing); recalibrate sizing to the design baseline (or update the design); populate `FLEX_TOKEN` and reconcile June against statements; then 2+ clean quarters.
 
 ---
 
@@ -111,10 +116,10 @@ Two accounts deserve continued paper evaluation with priority (EXP-1220, EXP-331
 | 4 | EXP-401 | +25.2 % / −38.6 % | NO (re-test resized) | Best clean headline, but 100 % NAV book and −39 % DD | Halve book; 2 clean quarters |
 | 5 | EXP-400 | +10.0 % / −41.6 % | NO | Signal parent: 19W/1L and the 1 L ate it all | Family-level sizing redesign |
 | 6 | EXP-3303B | +0.2 % / −41.4 % | NO | Its regime gate failed its one test; round-trip to zero | Gate rework or retire |
-| 7 | EXP-800 | +45.4 % / −31.1 % | **NO** | +45 % formally attributed to LUCK + dup bug; twin non-replicating | Dup fix, breaker proof, twin parity — **and freeze the existing Tradier real-money size now** |
-| 8 | EXP-503 | −5.2 % / −13.5 % | NO | Negative, ML overlay unproven, orphaned −800 SPY naked short in book | Clean the book; retire or rebuild |
-| 9 | EXP-V8A (Alpaca) | −14.9 % / −21.9 % | NO | Known multi-stream oversizing disaster, still deployed wrong | Deploy-vs-canonical parity |
-| 10 | IBKR paper | n/a (records broken) | NO | Equity delta unattributable; fills recorded at $0.00; stale pending orders | Executor order-lifecycle + reconciliation fix, clean restart |
+| 7 | IBKR (EXP-V8A-IBKR, 3×) | +12.0 % / −16.6 %¹ | NO | Active leverage A/B, but 17 % fill rate invalidates it; sizing 2.9× its own design target; 4 wins = chance | Deploy reconciliation fix; fix fill rate; recalibrate to $120k baseline; Flex reconcile June |
+| 8 | EXP-800 | +45.4 % / −31.1 % | **NO** | +45 % formally attributed to LUCK + dup bug; twin non-replicating | Dup fix, breaker proof, twin parity — **and freeze the existing Tradier real-money size now** |
+| 9 | EXP-503 | −5.2 % / −13.5 % | NO | Negative, ML overlay unproven, orphaned −800 SPY naked short in book | Clean the book; retire or rebuild |
+| 10 | EXP-V8A (Alpaca) | −14.9 % / −21.9 % | NO | Known multi-stream oversizing disaster, still deployed wrong | Deploy-vs-canonical parity |
 
 ### What would change these verdicts
 A model earns GO consideration when ALL of: (a) ≥2 additional paper quarters with per-trade max-loss ≤10 % NAV and book max-loss ≤30 % NAV; (b) a drawdown breaker observed firing correctly on the broker record; (c) a backtest twin that reproduces the live trades within tolerance over the same window; (d) no unexplained broker-record anomalies (dups, orphans, phantom fills); (e) enough independent bets (≥30 non-overlapping, or demonstrated performance across ≥2 distinct regimes) that the track is statistically distinguishable from rally beta. None currently satisfies more than one of the five.
@@ -123,8 +128,9 @@ A model earns GO consideration when ALL of: (a) ≥2 additional paper quarters w
 1. **Freeze/limit exp800_tradier real-money sizing** (model ruled LUCK; 14-lot order pending today under a 30-lot cap).
 2. Buy in EXP-503's −800 SPY orphan short and add an expiry-cleanup job.
 3. Root-cause the EXP-800 Apr-02 duplicate-entry path (30-min scheduler re-entry) — it is a live-money risk if it recurs on Tradier.
-4. Fix executor↔IBKR order-state reconciliation before running any more IBKR paper.
-5. Cancel the stale "pending" IBKR orders from Jun-01/Jun-30.
+4. Fix executor↔IBKR order-state reconciliation before running any more IBKR paper — patch ready on executor branch `fix/reconciliation-stale-sto-and-fill-backfill` (also auto-expires the 4 stale "pending" orders from Jun-01/Jun-30).
+5. **Security: the public attix-dashboard is running the DEV default password and session secret** (`DASHBOARD_PASSWORD`/`SECRET_KEY` unset in prod) while exposing account numbers, positions, equity and admin push endpoints. Set both now.
+6. Recalibrate EXP-V8A-IBKR sizing: the scanner sizes off the real $1.0M account instead of the $120k design baseline — the intended book hit 2.9× its own $360k max-loss target.
 
 ## Appendix — method
 Per account: JNLC deposit = seed/inception; equity = broker account endpoint; curve = 1Y daily portfolio history (dates are Alpaca daily stamps; the ±1-day skew around late-session timestamps does not affect magnitudes); spreads reconstructed from mleg order legs; expired positions settled against real SPY closes (Alpaca IEX daily bars); assignment/exercise verified via OPASN/OPEXC/OPTRD activities; duplication = identical (date, type, expiry, strikes) opened >1× same day; peak book max-loss = Σ open spreads (width·qty·100 − credit), held-to-expiry upper bound where closes couldn't be matched. Raw pulls in session scratchpad (not committed; reproducible from the APIs listed in the task file).

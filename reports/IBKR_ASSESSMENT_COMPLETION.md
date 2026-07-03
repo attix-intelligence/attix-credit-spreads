@@ -1,7 +1,7 @@
 # IBKR Paper Assessment — Completion Report
 
 **Author:** cc · **Date:** 2026-07-03
-**Supersedes:** the "NO — not assessable" scorecard in `reports/PAPER_REVIEW_GOLIVE_RANKING.md` (verdict unchanged: **NO**; the account is now *assessable with caveats*).
+**Supersedes:** the "NO — not assessable" scorecard in `reports/PAPER_REVIEW_GOLIVE_RANKING.md` (verdict unchanged: **NO**; the account is now fully scored — see Addendum and the Rev 2 ranking).
 **Account:** `ibkr_tafintech-p11-paper` (IB Gateway container on Railway, private network, TWS socket `ib-gateway-tafintech-p11.railway.internal:4004`, executor connects via ib_insync).
 
 ---
@@ -81,6 +81,17 @@ All four are executor-DB artifacts: DAY orders from weeks ago, long dead at the 
 | 54 | QQQ | 679/674 put, exp Jul-31 | 651 | 0.775 | 2026-06-30 13:35:07 | 3 days |
 
 (Tradier trade id 58, pending today 2026-07-03, is a **live current-day order** on the LUCK-ruled EXP-800 model — not stale, but flagged again per the ranking report's freeze recommendation.)
+
+## Addendum (Rev 2, same day) — NAV history partially recovered; design metadata found
+
+Carlos pointed out the dashboard plots an IBKR equity curve, so a path existed. Found it: the **attix-dashboard renders worker-pushed NAV snapshots** (`experiment_portfolio/EXP-V8A-IBKR.json` on its volume). Scraped from the rendered card (17 points, 2026-06-09 → 2026-07-03):
+
+- **Trough $833,937 on Jun-10 = −16.6 % below the $1.0M seed**; recovery chop with daily swings −9.0 % / +13.1 %; final $1,119,728 (+12.0 %).
+- The curve **starts Jun-09** — the Jun-01–06 NFP week is still unobserved, so −16.6 % is a *lower bound* on the true excursion. § Data availability stands for that window and for fill verification: **Flex token (Route A) still required.**
+- The registry record (via dashboard API) also surfaced the design: **EXP-V8A-IBKR, "VRP Multi-Stream — IBKR Paper 3× Leverage"**, account DUO415613, vol_target 0.42, **nav_baseline $120k, $360k aggregate max-loss target**, Carlos-accepted expectations (+5–7 %/mo, −38 % 1-y MaxDD, 15 % blow-up prob). Measured against that: the intended week-1 order book was **$1.04M max loss = 2.9× the design target** (the scanner sizes off the real $1M account, not the $120k baseline) — the "3×" experiment is actually specified ~9× over its intended dollar exposure and was saved by its own 17 % fill rate.
+- **Security finding along the way:** the public dashboard is running the **dev-default password and session secret** (`DASHBOARD_PASSWORD`/`SECRET_KEY` unset on the Railway service) while exposing account numbers, positions, equity curves, and admin push endpoints. Set both immediately.
+
+Full scorecard + ranked verdict (NO, priority #7): `reports/PAPER_REVIEW_GOLIVE_RANKING.md` Rev 2.
 
 ## Appendix — evidence trail
 
