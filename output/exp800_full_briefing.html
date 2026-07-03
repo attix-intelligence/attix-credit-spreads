@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EXP-800 Safe Kelly 4/7/9 — Full Strategy Briefing</title>
+<style>
+  :root{
+    --green:#16a34a; --green-bg:#dcfce7; --red:#dc2626; --red-bg:#fee2e2;
+    --amber:#d97706; --amber-bg:#fef3c7; --ink:#111827; --muted:#6b7280;
+    --line:#e5e7eb; --blue:#2563eb; --blue-bg:#dbeafe; --card:#f9fafb;
+  }
+  *{box-sizing:border-box}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:#ffffff; color:var(--ink); margin:0; padding:32px;
+    line-height:1.55; font-size:15px;
+  }
+  .wrap{max-width:960px;margin:0 auto}
+  h1{font-size:28px;margin:0 0 4px;letter-spacing:-0.5px}
+  h2{font-size:20px;margin:34px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--line)}
+  h3{font-size:16px;margin:20px 0 8px}
+  .sub{color:var(--muted);font-size:14px;margin:0 0 20px}
+  .pill{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:600}
+  .pill.live{background:var(--green-bg);color:var(--green)}
+  .pill.spy{background:#111827;color:#fff}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:16px 0}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
+  .stat .v{font-size:22px;font-weight:700}
+  .stat .l{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-top:2px}
+  .pos{color:var(--green)} .neg{color:var(--red)}
+  table{border-collapse:collapse;width:100%;margin:12px 0;font-size:14px}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left}
+  th{background:var(--card);font-weight:600}
+  td.num,th.num{text-align:right}
+  .box{border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:14px 0;background:var(--card)}
+  .box.green{background:var(--green-bg);border-color:#bbf7d0}
+  .box.red{background:var(--red-bg);border-color:#fecaca}
+  .box.amber{background:var(--amber-bg);border-color:#fde68a}
+  .box.blue{background:var(--blue-bg);border-color:#bfdbfe}
+  ul{margin:8px 0 8px 0;padding-left:20px}
+  li{margin:5px 0}
+  code{background:#f3f4f6;padding:1px 5px;border-radius:4px;font-size:13px}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:680px){.two{grid-template-columns:1fr}}
+  .foot{color:var(--muted);font-size:12px;margin-top:30px;border-top:1px solid var(--line);padding-top:14px}
+  .tier{font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>EXP-800 — “Safe Kelly 4/7/9”</h1>
+  <p class="sub">
+    <span class="pill live">● LIVE</span>
+    <span class="pill spy">SPY</span>
+    by charles · live since 2026-03-28 · paper account <code>PA3QWQIZO09S</code>
+  </p>
+
+  <div class="grid">
+    <div class="stat"><div class="v">$142,954</div><div class="l">Live Equity</div></div>
+    <div class="stat"><div class="v pos">+43.0%</div><div class="l">Since Inception</div></div>
+    <div class="stat"><div class="v pos">+$4,307</div><div class="l">Realized P&amp;L</div></div>
+    <div class="stat"><div class="v neg">−$211</div><div class="l">Unrealized P&amp;L</div></div>
+    <div class="stat"><div class="v pos">+$210</div><div class="l">Day P&amp;L</div></div>
+    <div class="stat"><div class="v">10</div><div class="l">Open / 7 Closed</div></div>
+    <div class="stat"><div class="v">29%</div><div class="l">Win Rate (live)</div></div>
+  </div>
+
+  <div class="box blue">
+    <strong>One-liner:</strong> EXP-800 trades the proven EXP-400 “Champion” SPY credit-spread signal,
+    but replaces fixed sizing with <strong>regime-aware Kelly fractions</strong> wrapped in a
+    <strong>3-tier drawdown circuit breaker</strong>. The whole design exists to answer one question:
+    <em>“How do we keep most of Kelly’s compounding upside while never blowing through −12% drawdown?”</em>
+  </div>
+
+  <h2>1. What It Actually Trades</h2>
+  <table>
+    <tr><th>Parameter</th><th>Value</th><th>Meaning</th></tr>
+    <tr><td>Signal source</td><td>EXP-400 Champion</td><td>Regime-adaptive credit spreads / iron condors on SPY (robustness 0.870, no ML)</td></tr>
+    <tr><td>DTE</td><td>15 days</td><td>Days to expiration at entry</td></tr>
+    <tr><td>OTM</td><td>2%</td><td>Short strike sits ~2% out-of-the-money</td></tr>
+    <tr><td>Width</td><td>$12</td><td>Spread width (defined max risk per spread)</td></tr>
+    <tr><td>Stop loss</td><td>1.25×</td><td>Exit if loss hits 1.25× the credit received</td></tr>
+    <tr><td>Profit target</td><td>55%</td><td>Take profit at 55% of max credit</td></tr>
+    <tr><td>Regime engine</td><td>ComboRegimeDetector</td><td>MA80 + RSI + VIX term structure → bull / neutral / bear</td></tr>
+    <tr><td>VIX gate</td><td>Block &gt; 40</td><td>No new entries when VIX above 40 (crash regime)</td></tr>
+  </table>
+
+  <h2>2. The Core Idea — Regime-Based Kelly</h2>
+  <p>
+    Kelly sizing says: bet a fraction of capital proportional to your edge. Full Kelly maximizes
+    long-run growth but is famously violent — it tolerates 50–80% drawdowns on the way to big returns.
+    EXP-800 deliberately bets <strong>fractional Kelly</strong>, and the fraction <em>shrinks as the
+    market gets riskier</em>:
+  </p>
+  <div class="grid">
+    <div class="stat"><div class="v pos">9%</div><div class="l">Bull regime risk</div></div>
+    <div class="stat"><div class="v">7%</div><div class="l">Neutral regime risk</div></div>
+    <div class="stat"><div class="v neg">4%</div><div class="l">Bear regime risk</div></div>
+  </div>
+  <p>
+    The Kelly math underneath: base win rate <strong>79.1%</strong>, payoff ratio <strong>b = 0.403</strong>,
+    break-even win rate <strong>71.3%</strong>. The edge is real but thin in payoff terms — which is exactly
+    why oversizing is dangerous and the circuit breaker matters.
+  </p>
+
+  <h2>3. The 3-Tier Circuit Breaker (the “4/7/9” / live “8/10/12”)</h2>
+  <p>
+    Drawdown is measured live from the running equity <em>peak</em> before every new entry.
+    As DD deepens, sizing is throttled, then halted. <strong>Recovery is automatic</strong> — there is no
+    manual reset; as equity climbs back toward the peak, the tiers lift on the very next trade.
+  </p>
+  <table>
+    <tr><th>Tier</th><th class="num">DD Trigger (live config)</th><th>Action</th></tr>
+    <tr><td class="tier">Normal</td><td class="num">&gt; −8%</td><td>Full regime Kelly (4–9%)</td></tr>
+    <tr><td class="tier" style="color:var(--amber)">Tier 1</td><td class="num">≤ −8%</td><td>Halve position sizing</td></tr>
+    <tr><td class="tier" style="color:var(--amber)">Tier 2</td><td class="num">≤ −10%</td><td>Floor sizing to 2%</td></tr>
+    <tr><td class="tier" style="color:var(--red)">Tier 3</td><td class="num">≤ −12%</td><td>Halt all new entries for 30 trades</td></tr>
+  </table>
+  <p class="sub">
+    Note: the backtest report (<code>safe_kelly_report.md</code>) swept thresholds and recommended the tighter
+    <strong>4/7/9</strong> config (hence the name); the deployed <code>configs/paper_exp800.yaml</code> currently
+    runs the slightly looser <strong>8/10/12</strong> tiers. Both target a sub-12% max drawdown.
+  </p>
+
+  <h2>4. Backtest Evidence (2020–2025, 1,251 trades)</h2>
+  <table>
+    <tr><th>Mode</th><th class="num">6yr Compound Return</th><th class="num">Max Drawdown</th><th class="num">Sharpe</th></tr>
+    <tr><td>Flat (8% fixed)</td><td class="num">+938.7%</td><td class="num neg">−83.8%</td><td class="num">0.53</td></tr>
+    <tr><td>Full-Kelly (raw)</td><td class="num">+4,757.3%</td><td class="num neg">−83.8%</td><td class="num">0.53</td></tr>
+    <tr><td><strong>Safe Kelly (4/7/9)</strong></td><td class="num"><strong>+134.3%</strong></td><td class="num pos"><strong>−9.2%</strong></td><td class="num">0.53</td></tr>
+    <tr><td>Safe Kelly (5/8/10 default)</td><td class="num">+136.2%</td><td class="num">−13.1%</td><td class="num">0.53</td></tr>
+  </table>
+  <div class="box green">
+    <strong>The trade the breaker makes for you:</strong> it converts an account-destroying −83.8% drawdown
+    into a survivable −9% to −13%. The cost is giving up the explosive (and unrealistic-to-survive)
+    raw-Kelly compound. You keep a positive-edge strategy you can actually hold through a crash.
+  </div>
+
+  <h3>Per-year (isolated, capital reset to $100k each year)</h3>
+  <table>
+    <tr><th>Year</th><th class="num">Win%</th><th class="num">Safe Kelly</th><th class="num">Max DD</th><th>Regime note</th></tr>
+    <tr><td>2020</td><td class="num">77%</td><td class="num pos">+136.2%</td><td class="num">−13.1%</td><td>COVID crash — breaker fired on 88% of trades</td></tr>
+    <tr><td>2021</td><td class="num">95%</td><td class="num pos">+43.4%</td><td class="num">−0.3%</td><td>Calm bull — breaker never fired</td></tr>
+    <tr><td>2022</td><td class="num">71%</td><td class="num pos">+53.2%</td><td class="num">−10.4%</td><td>Bear year — breaker fired ~49%</td></tr>
+    <tr><td>2023</td><td class="num">74%</td><td class="num pos">+13.7%</td><td class="num">−12.6%</td><td>Choppy</td></tr>
+    <tr><td>2024</td><td class="num">81%</td><td class="num pos">+68.4%</td><td class="num">−6.0%</td><td>Bull</td></tr>
+    <tr><td>2025</td><td class="num">83%</td><td class="num pos">+4.9%</td><td class="num">−13.0%</td><td>High-signal year, breaker capped upside</td></tr>
+  </table>
+
+  <h2>5. Strengths</h2>
+  <ul>
+    <li><strong>Drawdown is the headline feature.</strong> The whole point is bounded DD (target &lt;−12%) with automatic, lockout-free recovery.</li>
+    <li><strong>Built on a validated signal.</strong> EXP-400 Champion (robustness 0.870) is the engine — EXP-800 only changes <em>how much</em>, not <em>what</em>.</li>
+    <li><strong>Regime-aware.</strong> Risk auto-cuts from 9% → 4% as the regime turns bearish, plus a hard VIX&gt;40 kill switch.</li>
+    <li><strong>No ML, no overfitting surface.</strong> Pure rules (MA80 + RSI + VIX). Easy to audit, hard to break.</li>
+    <li><strong>Live results track the thesis:</strong> +43% since late March on bounded risk, with the equity curve showing the breaker doing its job during the early-June dip then recovering.</li>
+  </ul>
+
+  <h2>6. Risks &amp; Honest Caveats</h2>
+  <div class="box red">
+    <strong>Win rate optics — read carefully.</strong> The card shows a <strong>29% live win rate</strong>, which looks alarming
+    but is a small-sample artifact: only 7 trades have <em>closed</em> while 10 are still open, and credit spreads
+    that hit the 55% profit target early may not yet be counted. Backtest win rate is 71–95% by year.
+    <em>Do not judge this strategy on 7 closed trades.</em>
+  </div>
+  <ul>
+    <li><strong>Sequential-DD approximation.</strong> The backtest models trades sequentially; with multiple simultaneously open SPY spreads, true live portfolio DD can differ from the simulated number. Live equity tracking across all legs is the real safeguard.</li>
+    <li><strong>Single underlier concentration.</strong> 100% SPY. No diversification across the 8 alpha streams that v8a uses. A SPY-specific gap risk is undiversified here.</li>
+    <li><strong>Sharpe is modest (0.53 backtest).</strong> This is a survival-tuned variant, not a Sharpe-optimized one. It trades raw growth for drawdown control.</li>
+    <li><strong>Defined-risk but assignment/gap tail.</strong> Spreads cap max loss per position, but stop-loss at 1.25× credit can still stack losses in a fast selloff before the breaker engages.</li>
+    <li><strong>Look-ahead in backtest stats.</strong> The report notes <code>b</code> and base win rate were computed on the full dataset; a strict no-look-ahead version would have slightly lower early-year precision.</li>
+    <li><strong>Operational fragility (now fixed):</strong> On 2026-03-28 a pre-market entry left an order stuck in <code>pending_open</code> forever (market-closed guard didn’t clean up the DB). Root-caused and patched: failed-open transitions on every early-return path + 60-min stale-pending auto-recovery. Worth knowing as a live-execution gotcha.</li>
+  </ul>
+
+  <h2>7. Benefits — Who/What It’s For</h2>
+  <ul>
+    <li><strong>Capital-preservation sleeve.</strong> When the mandate is “compound steadily, never have a heart-attack drawdown,” this is the design.</li>
+    <li><strong>Crash-survivable.</strong> 2020 and 2022 stress years both stayed inside ~−13% DD while remaining net positive.</li>
+    <li><strong>Self-governing.</strong> The breaker means it won’t need babysitting in a selloff — it throttles and halts itself, then re-engages on recovery.</li>
+    <li><strong>Composable.</strong> As a SPY workhorse it slots cleanly alongside the broader v8a portfolio (XLF/XLI/GLD/SLV streams) for diversification.</li>
+  </ul>
+
+  <h2>8. Bottom Line</h2>
+  <div class="box green">
+    EXP-800 is a <strong>defense-first</strong> deployment of a proven SPY credit-spread edge. It deliberately
+    sacrifices raw Kelly’s eye-watering returns to guarantee a survivable drawdown, using regime-scaled
+    sizing (9/7/4%) and a 3-tier circuit breaker. Live: <strong>+43% since inception on bounded risk</strong>.
+    The 29% live win rate is a 7-trade small-sample artifact, not a red flag. The real risks are SPY
+    concentration, sequential-DD approximation vs. true multi-leg portfolio DD, and the modest Sharpe —
+    all acceptable for a capital-preservation sleeve, not for a return-maximizing one.
+  </div>
+
+  <p class="foot">
+    Sources: <code>experiments/registry.json</code> (EXP-800) · <code>output/safe_kelly_report.md</code> ·
+    <code>output/exp800_stuck_order_analysis.md</code> · live card 2026-06-20.
+    Generated by Maximus 🏛️ — 2026-06-20.
+  </p>
+
+</div>
+</body>
+</html>

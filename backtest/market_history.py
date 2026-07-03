@@ -272,7 +272,29 @@ def _load_indices_hybrid(polygon_ticker: str, start_d: date, end_d: date) -> pd.
 
     if end_d >= _POLYGON_INDICES_START:
         poly_start = max(start_d, _POLYGON_INDICES_START)
-        polygon_frame = _load_polygon(polygon_ticker, poly_start, end_d)
+        # EXP-3510 fix: if the Polygon indices feed is unavailable (no API key,
+        # 403, rate-limit, etc.) do NOT abort the whole load — that used to
+        # discard the SQLite slice too and leave the backtester VIX-blind
+        # (silently defaulting VIX=20 / iv_rank=25 for the ENTIRE window,
+        # producing fake-good results). The SQLite indices DB now carries real
+        # Yahoo-sourced VIX/VIX3M/SPX through 2026, so degrade to SQLite-only
+        # and log loudly instead of raising.
+        try:
+            polygon_frame = _load_polygon(polygon_ticker, poly_start, end_d)
+        except DataFetchError as exc:
+            logger.warning(
+                "Polygon indices unavailable for %s (%s..%s): %s — "
+                "falling back to SQLite indices for this slice. "
+                "VIX/IV data will come entirely from data/historical_indices.sqlite.",
+                polygon_ticker, poly_start, end_d, exc,
+            )
+            sqlite_slice = _load_sqlite_indices(polygon_ticker, poly_start, end_d)
+            if not sqlite_slice.empty:
+                sqlite_frame = pd.concat([sqlite_frame, sqlite_slice])
+                sqlite_frame = sqlite_frame[
+                    ~sqlite_frame.index.duplicated(keep="last")
+                ].sort_index()
+            polygon_frame = _EMPTY_DF.copy()
         if not polygon_frame.empty:
             calendar = _nyse_trading_days(poly_start, end_d)
             if calendar is not None:

@@ -1,0 +1,17 @@
+<!doctype html><html><head><meta charset=utf-8><title>Inside-NBBO (Real Quotes)</title>
+<style>body{font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#fff;color:#1a1a1a;max-width:960px;margin:24px auto;padding:0 16px;line-height:1.5}
+h1{font-size:22px;margin-bottom:4px}h2{font-size:16px;margin-top:22px}.sub{color:#666;font-size:13px}
+table{border-collapse:collapse;width:100%;margin:10px 0;font-size:13px}th,td{border:1px solid #ddd;padding:6px 8px;text-align:right}th{background:#f5f5f5}
+td:nth-child(1),td:nth-child(2),th:nth-child(1),th:nth-child(2){text-align:left}
+.note{background:#e8f4ff;border:1px solid #b8d8f0;padding:10px 12px;border-radius:6px;font-size:13px;margin:12px 0}
+.big{font-size:18px;font-weight:700;color:#1a7a1a}.mono{font-family:ui-monospace,Menlo,monospace}</style></head><body>
+<h1>Inside-NBBO Execution Upgrade — Real Quotes</h1>
+<div class="sub">v8a CS+SS blend · IronVault EOD trades priced with <b>real Polygon NBBO</b> · 2020–2025 · decision 15:55 ET · 2026-06-22T18:44:30</div>
+<div class="note"><b>This version uses real measured bid/ask</b> (Polygon /v3/quotes), not assumed spreads. Quote coverage: <b>52.1%</b> of trades (183/351; 168 unpriced excluded). NBBO profile captures 50% of the real half-spread and still crosses on 30% of fills.</div>
+<h2>Result</h2>
+<p>Priced-trades gross P&amp;L: <span class="mono">$92,330</span> on $100,000 seed.</p>
+<table><tr><th>Policy</th><th>Meaning</th><th>Exec cost</th><th>Drag</th><th>Net P&amp;L</th><th>Net ret</th><th>CAGR</th></tr><tr><td>cross</td><td>Cross the spread (pay full quoted spread)</td><td>$8,510</td><td>8.5%</td><td>$83,820</td><td>+83.8%</td><td>+10.7%</td></tr><tr><td>mid</td><td>Transact at real mid (idealized)</td><td>$0</td><td>0.0%</td><td>$92,330</td><td>+92.3%</td><td>+11.5%</td></tr><tr style="background:#eaf7ea;font-weight:600"><td>nbbo</td><td>Post inside NBBO (proposed upgrade)</td><td>$5,532</td><td>5.5%</td><td>$86,798</td><td>+86.8%</td><td>+11.0%</td></tr></table>
+<h2>Uplift — inside NBBO vs crossing the spread</h2>
+<p class="big">+$2,978 net P&amp;L · +0.3 pts CAGR</p>
+<p class="sub">Half-spread measured per leg from actual quotes. 1,420 Polygon calls. Runtime 332.1s.</p>
+</body></html>

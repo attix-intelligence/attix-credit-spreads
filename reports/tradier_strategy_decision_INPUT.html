@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>Tradier Live-Strategy Decision — V8A/VRP vs EXP-800 Safe Kelly</title></head>
+<body>
+<h1>Tradier Live-Strategy Decision</h1>
+<p>V8A VRP (3x leverage) vs EXP-800 Safe Kelly 9/7/4 — for live account 6YA42569. Generated 2026-07-03 04:34 UTC. Read-only analysis.</p>
+
+<h2>Recommendation: EXP-800 (Safe Kelly 9/7/4) — Confidence HIGH</h2>
+<p>Deploy/keep EXP-800 as the live Tradier strategy. Keep V8A in paper until it passes its own Phase-9 gates. (EXP-800-TRADIER went live on 6YA42569 on 2026-07-02 with paper-parity caps.)</p>
+<ul>
+<li>Live-paper evidence favors EXP-800. 3.2 months paper: +42.6% (Apr +21.2%, May +3.4%, Jun +11.3%, three positive months, Sharpe 1.82), recovered June crash to new highs. V8A honest full-month record (Alpaca sibling, identical signals): -10.8% lifetime, Sharpe -1.20 since 2026-05-22. V8A failed its own gates: G2 requires rolling Sharpe 5.1-6.9 (actual negative); G4 requires MaxDD <=8% (actual -21.9%).</li>
+<li>V8A backtest has not survived contact with reality. Backtest: net Sharpe 6.16, CAGR 126%, MaxDD 7.1% (EXP-2730 WF SHIP). MASTERPLAN expected-live: Sharpe 3.5-4.5. Realized live-paper: Sharpe -1.2. Not decay — a regime it hasn't handled (short-vol into a vol spike).</li>
+<li>Risk architecture: EXP-800 Kelly 9/7/4% of equity, caps 30 contracts/17% risk-per-trade, 3-tier breakers -8/-10/-12% with 30-trade halt. V8A-IBKR 3x: ~38% expected 1yr DD, ~15% blow-up prob (>30% loss in 12mo), -50% breaker. Designed for a paper leverage experiment, not the live account.</li>
+</ul>
+
+<h2>Head-to-head</h2>
+<p>EXP-800 backtest lineage: EXP-305 Safe Kelly study (2020-25, 1251 trades): +136.2% 6yr compound, MaxDD -13.1% (vs -83.8% unprotected), per-year avg +53.3%. Signals: EXP-400 champion. No standalone EXP-800 backtest file exists.</p>
+<p>V8A backtest: EXP-2730 WF (2020-25, 20 folds): net Sharpe 6.16, CAGR 125.7%, MaxDD 7.1%. VIX ladder (EXP-2850): Sharpe 6.39, DD 5.1%. Expected-live Sharpe 3.5-4.5, CAGR 60-75%, DD <10%.</p>
+<p>Paper track: EXP-800 +42.6% in 3.2mo, Sharpe 1.82, MaxDD -31.1% (June crash, recovered). V8A Alpaca 1x: -10.8% in 1.3mo, Sharpe -1.20, MaxDD -21.9%. V8A IBKR 3x: +20.7% but only Jun 9-30 measurable.</p>
+<p>Common window Jun 9->30: EXP-800 +41.7%; IBKR 3x +20.7%; Alpaca 1x +1.5%. June full month: EXP-800 +11.33%; V8A Alpaca -10.60%.</p>
+
+<h2>Risk / data quality</h2>
+<p>June crash produced daily-close DDs of -31.1% (EXP-800), -21.9% (V8A Alpaca) — both far above backtest MaxDDs. EXP-800 breakers stop new entries, not MTM losses. V8A 3x accepted with ~15% prob of >30% loss/12mo, -50% breaker.</p>
+<p>V8A IBKR data unreliable: no NAV history endpoint, equity pushes failed Jun 19-22, Jun 1-8 unrecoverable, perf endpoint zeros, dashboard baseline wrong. V8A executor open issues: balance-endpoint timeouts -> equity=$0 sizing skips; June 16 rejected/19 cancelled orders. VRP engine dry-run-halted 2026-06-01 pending 5 fixes (credit-check, cooldown, delta-picker, persistence, PR-H).</p>
+
+<h2>Config differences</h2>
+<p>EXP-800: EXP-400 champion signals, SPY, dte 15-25, otm 2%, bull-put/bear-call/condor by regime. Spread width $12. Safe Kelly 9/7/4% current equity. Caps 30 contracts/17%. DD breaker -8/-10/-12%. Exit PT 55% credit, stop 1.25x.</p>
+<p>V8A-IBKR: VRP multi-stream (4 streams: exp1220/QQQ/XLF/XLI), delta-band 0.08-0.18, dte 15-25 (engine 25-50). Spread width $5. Vol-target 0.42 via Ledoit-Wolf risk parity -> ~3x max-loss/NAV. Caps: max_portfolio_risk 300%, single ticker <=100% NAV, max_contracts 300. DD breaker -50%. Exit PT 55%, stop 1.25x/90% width.</p>
+
+<h2>Caveats</h2>
+<ol>
+<li>EXP-800's -31% June paper DD is real. Kelly breaker limits new risk, not open-position losses. Keep live caps conservative.</li>
+<li>Only ~3 months paper history for EXP-800 (one crash regime). June ranking flattered dip-buyers; EXP-3311 beat EXP-800 in June.</li>
+<li>Do not kill V8A — gate it. 3x IBKR leg beat unlevered sibling +20.7% vs +1.5% common window (genuine leverage evidence). Reconsider after 4 clean paper weeks passing gates (G2 rolling Sharpe in band, G4 DD <=8%, <=1 spurious halt) + fixed equity telemetry + clean executor order-flow month.</li>
+<li>No apples-to-apples backtest exists — different universes, sizing, cost models.</li>
+</ol>
+</body></html>

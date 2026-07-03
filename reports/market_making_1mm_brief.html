@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Market Making with $1MM — Feasibility Brief</title>
+<style>
+  :root{
+    --ink:#0f172a; --sub:#475569; --line:#e2e8f0; --soft:#f8fafc;
+    --good:#15803d; --bad:#b91c1c; --warn:#b45309; --accent:#1d4ed8;
+  }
+  *{box-sizing:border-box}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+       background:#fff;color:var(--ink);margin:0;padding:2.4em 2.6em;line-height:1.55;
+       max-width:1040px;margin-left:auto;margin-right:auto;}
+  h1{font-size:1.9em;margin:0 0 .15em;letter-spacing:-.01em}
+  h2{font-size:1.28em;margin:2.1em 0 .6em;padding-bottom:.3em;border-bottom:2px solid var(--line)}
+  h3{font-size:1.05em;margin:1.3em 0 .4em;color:var(--ink)}
+  .meta{color:var(--sub);font-size:.92em;margin-bottom:1.4em}
+  p{margin:.55em 0}
+  .lead{font-size:1.05em;color:#1e293b}
+  .verdict{border-radius:12px;padding:1.1em 1.3em;margin:1.4em 0;border:1px solid var(--line)}
+  .verdict.no{background:#fef2f2;border-color:#fecaca}
+  .verdict.yes{background:#f0fdf4;border-color:#bbf7d0}
+  .verdict.maybe{background:#fffbeb;border-color:#fde68a}
+  .verdict .tag{font-weight:800;text-transform:uppercase;letter-spacing:.04em;font-size:.82em}
+  .verdict.no .tag{color:var(--bad)} .verdict.yes .tag{color:var(--good)} .verdict.maybe .tag{color:var(--warn)}
+  table{border-collapse:collapse;width:100%;margin:1em 0;font-size:.9em}
+  th{background:#f1f5f9;text-align:left;padding:8px 10px;border-bottom:2px solid #cbd5e1;font-weight:700}
+  td{padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  td.r,th.r{text-align:right}
+  .pill{display:inline-block;padding:.12em .6em;border-radius:999px;font-size:.78em;font-weight:700}
+  .pill.g{background:#dcfce7;color:#166534}.pill.r{background:#fee2e2;color:#991b1b}
+  .pill.y{background:#fef3c7;color:#92400e}.pill.b{background:#dbeafe;color:#1e40af}
+  ul{margin:.5em 0 .5em 0;padding-left:1.3em}li{margin:.28em 0}
+  .box{background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:1em 1.2em;margin:1.1em 0}
+  .kpis{display:flex;gap:1em;flex-wrap:wrap;margin:1.2em 0}
+  .kpi{flex:1;min-width:150px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:.9em 1em;text-align:center}
+  .kpi .v{font-size:1.45em;font-weight:800}.kpi .l{font-size:.74em;color:var(--sub);margin-top:.2em;text-transform:uppercase;letter-spacing:.03em}
+  code{background:#f1f5f9;padding:.1em .35em;border-radius:4px;font-size:.88em}
+  .steps{counter-reset:s;list-style:none;padding-left:0}
+  .steps li{counter-increment:s;position:relative;padding:.6em 0 .6em 2.4em;border-bottom:1px solid var(--line)}
+  .steps li::before{content:counter(s);position:absolute;left:0;top:.55em;width:1.6em;height:1.6em;
+       background:var(--accent);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85em}
+  footer{margin-top:2.6em;padding-top:1em;border-top:1px solid var(--line);font-size:.82em;color:#94a3b8}
+  .small{font-size:.85em;color:var(--sub)}
+</style>
+</head>
+<body>
+
+<h1>Market Making with $1,000,000 — Can We Do It?</h1>
+<div class="meta">Feasibility &amp; go-to-market brief · 21 Jun 2026 · Maximus + 3 CC research streams (data audit · equity economics · options MM)</div>
+
+<p class="lead"><strong>Short answer:</strong> Yes, market making is possible to start with $1MM — but <strong>not</strong> the kind most people picture (quoting SPY all day for rebates). That arena is owned by colocated HFT and is a money-loser for us. The version that <em>works</em> at our size lives in <strong>wide-spread instruments</strong>: options and crypto. And the single highest-ROI move isn't building a standalone desk at all — it's <strong>turning our existing v8a edge into a liquidity-providing strategy</strong>, which we can backtest <em>today</em>.</p>
+
+<div class="verdict no">
+  <div class="tag">✗ Not viable</div>
+  <strong>Classic equity/ETF market making (SPY, QQQ) at $1MM, non-colocated.</strong>
+  The tick is $0.01 on a ~$600 ETF (0.0017% spread). After adverse selection a realistic round trip nets <strong>≈ −$0.0067/share</strong> at a ~65% toxic-fill rate. You'd need <strong>~$300MM/day turnover (≈300× capital)</strong> just to <em>attempt</em> $1k/day — and you'd lose money doing it. The rebate and the queue belong to Citadel/Virtu. Latency is the binding constraint here, and we can't win it.
+</div>
+
+<div class="verdict yes">
+  <div class="tag">✓ Viable — start here</div>
+  <strong>Liquidity provision on our own v8a flow (options), + a ring-fenced options-MM pilot.</strong>
+  We already have a validated VRP/credit-spread edge on SPY/QQQ/XLF/XLI/GLD/SLV. Today we <em>pay</em> the wide option spread on every entry and exit. By posting <strong>inside the NBBO</strong> instead of crossing it, we capture part of that spread — a multi-percent P&amp;L uplift, near-zero added tail risk, and <strong>backtestable now on data we own</strong>.
+</div>
+
+<div class="verdict maybe">
+  <div class="tag">~ Possible, earned</div>
+  <strong>Crypto spot MM (mid-cap pairs) and standalone options MM.</strong>
+  Real spreads (30–50bp crypto; 1–5% on illiquid option strikes), no PFOF, no registration barrier, 24/7 at-bats for crypto. But the edge is <em>conditional on execution quality</em> and carries genuine tail risk. Realistic well-run book: <strong>~$300–$1,500/day</strong> on $1MM in normal conditions, high variance, with real drawdowns. This is a quant operation, not hot-keys.
+</div>
+
+<h2>1. Is $1MM enough? Yes — capital is not the binding constraint</h2>
+<p>$1MM is plenty to <em>start</em>. Market making isn't gated by capital; it's gated by three other things, in order:</p>
+<div class="kpis">
+  <div class="kpi"><div class="v">Spread width</div><div class="l">Where the edge lives</div></div>
+  <div class="kpi"><div class="v">Adverse selection</div><div class="l">What eats the edge</div></div>
+  <div class="kpi"><div class="v">Execution / latency</div><div class="l">Binding only in liquid names</div></div>
+  <div class="kpi"><div class="v">Modeling + ops</div><div class="l">Our actual capacity limit</div></div>
+</div>
+<p>The implication: at $1MM you don't scale by trading <em>more size in one liquid name</em> — you scale by running <strong>many small, risk-capped books</strong> (15–40 instruments) where spreads are wide enough that adverse selection doesn't erase the edge. Capital per book is tiny; the constraint is how many books our models and risk system can run well.</p>
+
+<h2>2. The brutal math — why liquid equity MM fails for us</h2>
+<table>
+  <tr><th>Component</th><th class="r">Liquid ETF (SPY)</th><th>Why it matters</th></tr>
+  <tr><td>Quoted half-spread</td><td class="r">~0.083 bp ($0.005)</td><td>Tick-constrained at $0.01; almost nothing to capture</td></tr>
+  <tr><td>Maker rebate (if DMA)</td><td class="r">+$0.0020–0.0030/sh</td><td>Needs cost-plus broker (IBKR Pro/Lime/Cobra); PFOF brokers keep it</td></tr>
+  <tr><td>Adverse selection</td><td class="r">−(dominates)</td><td>~65% of passive fills are toxic; you're picked off by faster quotes</td></tr>
+  <tr><td><strong>Net / round trip</strong></td><td class="r"><span class="pill r">≈ −$0.0067/sh</span></td><td>Negative <em>after</em> rebate at realistic toxicity</td></tr>
+  <tr><td>Turnover for ~$1k/day</td><td class="r">~$300MM/day (~300×)</td><td>Physically impossible for a non-colo $1MM book</td></tr>
+</table>
+<p class="small">Frameworks: Avellaneda–Stoikov (optimal quoting), Glosten–Milgrom &amp; Ho–Stoll (adverse selection / inventory). Conclusion is robust: in tick-constrained liquid names, <strong>latency is the moat and we don't have it.</strong> Step into wider spreads and the binding constraint shifts to <em>modeling and risk</em> — which a disciplined small operator can win.</p>
+
+<h2>3. Can we even backtest it? Honest data audit</h2>
+<p>We inspected every relevant file on disk. Here's the truth:</p>
+<table>
+  <tr><th>Asset for MM</th><th>Data we have</th><th class="r">Verdict</th></tr>
+  <tr><td>Equity / ETF MM</td><td><strong>None.</strong> Zero equity quote or trade data on disk (only a reference <code>underlying_price</code> scalar)</td><td class="r"><span class="pill r">Can't backtest</span></td></tr>
+  <tr><td>Options MM (standalone desk)</td><td>CBOE SPX/SPY/QQQ with real per-strike <strong>bid/ask + greeks</strong>, but only <strong>hourly</strong> (8 bars/day, starts 10:00)</td><td class="r"><span class="pill y">Crude upper-bound only</span></td></tr>
+  <tr><td>Options trade history</td><td><code>options_cache.db</code>: 6.3M daily + 1.6M 5-min <strong>trade</strong> bars — <strong>no bid/ask</strong></td><td class="r"><span class="pill y">Reference only</span></td></tr>
+  <tr><td>v8a execution upgrade (post inside NBBO)</td><td>EOD option quotes we already use for v8a backtests</td><td class="r"><span class="pill g">Backtestable today</span></td></tr>
+</table>
+<div class="box">
+  <strong>The single biggest gap:</strong> we have <em>no event-level (tick) NBBO + order-book depth</em>, so we can't build a credible <strong>fill/queue model</strong> — and in market making, the fill model <em>is</em> the strategy. Hourly quotes can sketch an optimistic P&amp;L; they cannot prove a real quoting business works.<br>
+  <span class="small">Also noted: the existing <code>reports/market_making_sim.html</code> is a 100% synthetic Avellaneda–Stoikov toy that has never touched a real price. It tells us nothing about live edge — by design it lives in <code>archive/</code> (it violates our Rule Zero "no synthetic data").</span>
+</div>
+
+<h2>4. Options MM — real edge, but mind the wrapper</h2>
+<p>Wide option spreads are the natural home for a small market maker. But there's a sharp insight from the research: <strong>an options MM book run net-short is just our v8a VRP edge made continuous, naked, and uncapped</strong> — i.e. strictly <em>worse</em> risk for marginally more return. The same "VIX→80 = 100% breach" tail that v8a survives <em>because of defined-risk wings</em> becomes an open-ended blow-up for a naked MM desk.</p>
+<ul>
+  <li><strong>P&amp;L = spread capture + theta − negative-gamma hedging losses − vega MTM − adverse selection.</strong> The greeks <em>are</em> the business; you must delta-hedge continuously.</li>
+  <li><strong>Honest expectation:</strong> Sharpe ~1.5–3.0 (not v8a's 6.4), base case ~8–20%/yr on $1MM, with a fat left tail.</li>
+  <li><strong>You can't beat wholesalers for the good flow:</strong> at $1MM you're a prop/retail account, not a registered MM — no rebates, no membership; the clean retail flow is internalized via PFOF. Your resting quote eats the adversely-selected residual.</li>
+  <li><strong>Niche that fits us:</strong> NOT SPX 0DTE. Mid-liquidity ETF options (XLF, XLI, GLD, SLV, IWM) and wide-spread single names — exactly where we already have VRP signal and data.</li>
+</ul>
+
+<h2>5. Recommendation — the path that actually starts</h2>
+<p>Don't build a standalone MM desk first. Convert the edge we already have, prove adverse selection live with tiny capital, then decide on scale.</p>
+<ol class="steps">
+  <li><strong>v8a execution upgrade (now, ~zero added risk).</strong> On every v8a entry/exit, post <em>inside the NBBO</em> instead of crossing the spread. We currently pay multi-percent in spread we could be capturing. <span class="pill b">Backtestable today on EOD data</span></li>
+  <li><strong>Ring-fenced inside-the-spread pilot (≤ $100k).</strong> On XLF/XLI/SLV — where we have signal — post passive 2-sided quotes purely to <strong>measure live adverse selection / markouts</strong>. This is the number every model needs and no backtest can give us honestly. Cap risk hard.</li>
+  <li><strong>Buy the data before believing any MM backtest.</strong> For a real options-MM sim we need 1-min / OPRA TAQ quotes on the Tier-1 ETF underliers. Until then, treat hourly-CBOE results as an <em>upper bound</em>, not evidence.</li>
+  <li><strong>Optional parallel track — crypto spot MM spike.</strong> Mid-cap pairs (30–50bp spreads, no PFOF, 24/7). Small allocation, automated, inventory-skew quoting. Best <em>accessible</em> standalone MM, but earn it: at low fee tiers the maker fee can exceed a tight spread — pair selection + volume tiers decide profitability.</li>
+  <li><strong>Scale by count, not size.</strong> If the pilot's measured markouts are favorable, deploy across 15–40 small risk-capped books rather than concentrating. Capacity = modeling/ops bandwidth, not capital.</li>
+</ol>
+
+<h2>6. Bottom line</h2>
+<div class="box">
+  <p style="margin-top:0"><strong>Is $1MM enough to start? Yes.</strong> Capital isn't the constraint — spread width, adverse selection, and our modeling/ops bandwidth are.</p>
+  <p><strong>Can we "crush" liquid equity MM? No.</strong> That's an HFT/latency game we lose. Don't play it.</p>
+  <p><strong>Where we can win:</strong> wide-spread liquidity provision — first by upgrading v8a's execution (free money we currently leave on the table), then a measured options/crypto MM pilot. Expect a well-run $1MM MM book to make <strong>~$300–$1,500/day</strong> in normal conditions — real, but variance-heavy and tail-exposed, and <em>conditional on execution quality</em>.</p>
+  <p style="margin-bottom:0"><strong>First move I'd green-light:</strong> backtest the v8a inside-the-NBBO execution upgrade (Step 1). It's the highest ROI, lowest risk, and we can run it this week. Say the word and I'll put CC on it.</p>
+</div>
+
+<footer>
+  Sources (full detail in repo): <code>research/MM_DATA_INFRA_AUDIT.md</code> · <code>research/MM_EQUITY_FEASIBILITY.md</code> · <code>research/MM_OPTIONS_FEASIBILITY.md</code>.
+  All data figures read from live files on 21 Jun 2026; no values estimated or fabricated. Concepts cited: Avellaneda–Stoikov (2008), Glosten–Milgrom (1985), Ho–Stoll (1981), Garleanu–Pedersen–Poteshman.
+</footer>
+
+</body>
+</html>

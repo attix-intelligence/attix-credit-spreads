@@ -1,0 +1,39 @@
+<!doctype html><html><head><meta charset=utf-8>
+<title>Inside-NBBO Execution Study</title>
+<style>
+body{font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#fff;color:#1a1a1a;max-width:980px;margin:24px auto;padding:0 16px;line-height:1.5}
+h1{font-size:22px;margin-bottom:4px} h2{font-size:16px;margin-top:24px}
+.sub{color:#666;font-size:13px}
+table{border-collapse:collapse;width:100%;margin:12px 0;font-size:13px}
+th,td{border:1px solid #ddd;padding:6px 8px;text-align:right} th{background:#f5f5f5}
+td:nth-child(1),td:nth-child(2),th:nth-child(1),th:nth-child(2){text-align:left}
+.note{background:#fff8e1;border:1px solid #f0e0a0;padding:10px 12px;border-radius:6px;font-size:13px;margin:12px 0}
+.big{font-size:18px;font-weight:700;color:#1a7a1a}
+.mono{font-family:ui-monospace,Menlo,monospace}
+</style></head><body>
+<h1>Inside-NBBO Execution Upgrade — Backtest</h1>
+<div class="sub">v8a CS+SS blend · IronVault EOD · 2020–2025 · 351 trades · generated 2026-06-22T16:02:07</div>
+
+<div class="note"><b>Honesty / data reality:</b> Half-spread is a parameter, not measured. Sensitivity/upper-bound study. Real adverse selection requires live passive-quote pilot (Step 2).<br>
+Half-spread costs below are <b>assumptions</b> (EOD cache has no bid/ask). NBBO profile also pays the full cross cost on 30% of trades (passive quotes that miss).<br>
+<b>Sharpe column is UNRELIABLE</b> and shown greyed: it is reconstructed from a sparse daily equity curve with lumpy exec costs booked on exit dates, which distorts daily volatility. Trust the P&amp;L / return / CAGR / exec-cost columns; ignore Sharpe here. The validated v8a Sharpe (6.39) comes from the standard exit-date P&amp;L convention, not this reconstruction.</div>
+
+<h2>Result</h2>
+<p>Gross P&amp;L (pre-execution): <span class="mono">$237,803</span> on $100,000 seed.</p>
+<table>
+<tr><th>Profile</th><th>Meaning</th><th>Entry/Exit $/sh</th><th>Exec cost</th><th>Drag</th><th>Net P&amp;L</th><th>Net ret</th><th>CAGR</th><th style="color:#999">Sharpe*</th></tr>
+<tr><td>cross</td><td>Cross the spread (taker / market orders)</td><td>$0.10/$0.15</td><td>$137,350</td><td>137.3%</td><td>$100,453</td><td>+100.5%</td><td>+12.3%</td><td style='color:#999'>-0.35</td></tr><tr><td>baseline</td><td>Current v8a assumption</td><td>$0.05/$0.10</td><td>$82,410</td><td>82.4%</td><td>$155,393</td><td>+155.4%</td><td>+16.9%</td><td style='color:#999'>-0.17</td></tr><tr style="background:#eaf7ea;font-weight:600"><td>nbbo</td><td>Post inside NBBO (proposed upgrade)</td><td>$0.02/$0.03</td><td>$60,434</td><td>60.4%</td><td>$177,369</td><td>+177.4%</td><td>+18.5%</td><td style='color:#999'>-0.09</td></tr>
+</table>
+
+<h2>Uplift — posting inside NBBO vs current baseline</h2>
+<p class="big">+$21,976 net P&amp;L &nbsp;·&nbsp; +22.0 pts return &nbsp;·&nbsp; +1.6 pts CAGR</p>
+<p class="sub">*Sharpe excluded from the headline — unreliable in this reconstruction (see note).</p>
+<p class="sub">Execution cost saved vs baseline: $21,976. Vs crossing the spread (taker): +$76,916.</p>
+
+<h2>What this does and does not prove</h2>
+<ul>
+<li><b>Does:</b> bounds the P&amp;L sensitivity of v8a to execution quality; shows the spread we pay is a material, recoverable cost.</li>
+<li><b>Does not:</b> measure real fill probability or adverse selection — EOD data can't. The 30% unfilled haircut is a guess.</li>
+<li><b>Next (brief Step 2):</b> ring-fenced live ≤$100k passive-quote pilot on XLF/XLI/SLV to measure true markouts; then buy 1-min/OPRA NBBO before trusting any MM backtest.</li>
+</ul>
+</body></html>

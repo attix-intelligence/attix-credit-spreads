@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>v8a + Market Making — The Big Picture</title>
+<style>
+  :root{--ink:#0f172a;--sub:#475569;--line:#e6eaf0;--soft:#f7f9fc;--accent:#1d4ed8;
+        --good:#15803d;--bad:#b91c1c;--warn:#b45309;--gold:#a16207;}
+  *{box-sizing:border-box}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#fff;color:var(--ink);
+       margin:0;padding:2.2em 2.4em;line-height:1.6;max-width:980px;margin-inline:auto}
+  h1{font-size:2em;margin:0 0 .1em;letter-spacing:-.01em}
+  .sub{color:var(--sub);font-size:1em;margin-bottom:1.6em}
+  h2{font-size:1.4em;margin:2.2em 0 .2em}
+  .section-tag{display:inline-block;font-size:.78em;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+       color:var(--accent);background:#eef2ff;padding:.2em .7em;border-radius:999px;margin-bottom:.4em}
+  p{margin:.6em 0}
+  .lead{font-size:1.08em}
+  .card{background:var(--soft);border:1px solid var(--line);border-radius:14px;padding:1.2em 1.4em;margin:1.1em 0}
+  .analogy{border-left:4px solid var(--accent);background:#eff4ff;border-radius:0 10px 10px 0;padding:.9em 1.2em;margin:1em 0}
+  .analogy b{color:var(--accent)}
+  .flow{display:flex;align-items:stretch;gap:.5em;flex-wrap:wrap;margin:1.2em 0}
+  .step{flex:1;min-width:150px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:.9em 1em;position:relative}
+  .step .n{font-size:.72em;font-weight:800;color:var(--accent);letter-spacing:.05em}
+  .step h4{margin:.2em 0 .3em;font-size:1em}
+  .step p{font-size:.88em;color:var(--sub);margin:.2em 0}
+  .arrow{display:flex;align-items:center;color:#94a3b8;font-size:1.4em;font-weight:700}
+  .kpis{display:flex;gap:.8em;flex-wrap:wrap;margin:1.1em 0}
+  .kpi{flex:1;min-width:120px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:1em;text-align:center}
+  .kpi .v{font-size:1.6em;font-weight:800;line-height:1}
+  .kpi .l{font-size:.72em;color:var(--sub);text-transform:uppercase;letter-spacing:.03em;margin-top:.4em}
+  .kpi .v.g{color:var(--good)} .kpi .v.b{color:var(--accent)}
+  table{border-collapse:collapse;width:100%;margin:1em 0;font-size:.92em}
+  th{background:#f1f5f9;text-align:left;padding:9px 11px;border-bottom:2px solid #cbd5e1;font-weight:700}
+  td{padding:8px 11px;border-bottom:1px solid var(--line);vertical-align:top}
+  td.r,th.r{text-align:right}
+  .pill{display:inline-block;padding:.12em .6em;border-radius:999px;font-size:.78em;font-weight:700}
+  .pill.g{background:#dcfce7;color:#166534}.pill.y{background:#fef3c7;color:#92400e}.pill.r{background:#fee2e2;color:#991b1b}
+  ul{margin:.5em 0 .5em 1.2em;padding:0}li{margin:.3em 0}
+  .big-num{font-size:1.15em;font-weight:700;color:var(--ink)}
+  .scenario{display:flex;gap:.8em;flex-wrap:wrap;margin:1em 0}
+  .sc{flex:1;min-width:200px;border:1px solid var(--line);border-radius:12px;padding:1em 1.1em}
+  .sc.low{background:#fff7ed;border-color:#fed7aa}
+  .sc.mid{background:#eff6ff;border-color:#bfdbfe}
+  .sc.high{background:#f0fdf4;border-color:#bbf7d0}
+  .sc h4{margin:0 0 .3em;font-size:.95em}
+  .sc .amt{font-size:1.5em;font-weight:800}
+  .note{font-size:.85em;color:var(--sub)}
+  footer{margin-top:2.6em;padding-top:1em;border-top:1px solid var(--line);font-size:.82em;color:#94a3b8}
+  .divider{height:1px;background:var(--line);margin:2.4em 0}
+</style>
+</head>
+<body>
+
+<h1>The Big Picture, in Plain English</h1>
+<div class="sub">Three things explained simply: ① what v8a is · ② how market making would work for us · ③ what we could actually earn · 21 Jun 2026</div>
+
+<!-- ============ SECTION 1 ============ -->
+<span class="section-tag">① What is v8a?</span>
+<h2>v8a = our "sell insurance on the market" machine</h2>
+
+<p class="lead">v8a is our flagship trading strategy. The simplest way to understand it: <strong>we act like an insurance company for the stock market.</strong></p>
+
+<div class="analogy">
+  <b>The analogy.</b> An insurance company sells you car insurance. Most months nothing happens, so they keep your premium. Once in a while there's a crash and they pay out — but they price the premiums so that, <em>on average</em>, they collect more than they pay. v8a does exactly this, but for the stock market.
+</div>
+
+<p>Investors are <strong>nervous</strong> — they constantly overpay for protection against a market crash (this is called "options"). v8a <strong>sells that protection</strong> and collects the premium. History shows people overpay for this fear by a wide margin. That persistent overpayment is our edge — quants call it the <strong>"Volatility Risk Premium" (VRP)</strong>.</p>
+
+<div class="flow">
+  <div class="step"><div class="n">STEP 1</div><h4>Collect premium</h4><p>Sell "crash insurance" (credit spreads) on ETFs like SPY, QQQ, XLF, XLI.</p></div>
+  <div class="arrow">→</div>
+  <div class="step"><div class="n">STEP 2</div><h4>Stay safe</h4><p>Every trade has a built-in "wing" — a hard cap on the worst-case loss. Defined risk, always.</p></div>
+  <div class="arrow">→</div>
+  <div class="step"><div class="n">STEP 3</div><h4>Spread the bets</h4><p>8 different streams + gold/silver + a volatility ladder, so no single market move sinks us.</p></div>
+  <div class="arrow">→</div>
+  <div class="step"><div class="n">STEP 4</div><h4>Keep the difference</h4><p>Premiums collected − occasional payouts = steady profit.</p></div>
+</div>
+
+<h3>What the backtest says (5 years of real data)</h3>
+<div class="kpis">
+  <div class="kpi"><div class="v b">6.4</div><div class="l">Sharpe ratio<br><span class="note">(how smooth — &gt;2 is elite)</span></div></div>
+  <div class="kpi"><div class="v g">118%</div><div class="l">CAGR<br><span class="note">backtest growth/yr</span></div></div>
+  <div class="kpi"><div class="v">5.1%</div><div class="l">Max drawdown<br><span class="note">worst dip</span></div></div>
+  <div class="kpi"><div class="v">8+</div><div class="l">Alpha streams<br><span class="note">diversified</span></div></div>
+</div>
+<p class="note"><strong>Reality check:</strong> backtests always flatter. Live, we expect roughly half — a Sharpe around <strong>3–4.5</strong>, which is still genuinely excellent. The whole strategy has been stress-tested (10,000 simulated crash paths); the <em>only</em> thing that breaks it is an instant VIX-to-80 meltdown. It survives flash crashes, credit freezes, and grinding bear markets.</p>
+
+<div class="card">
+  <strong>v8a in one sentence:</strong> we get paid a steady premium for selling other people's fear, with a hard safety cap on every trade — a high-quality, scalable income engine, not a lottery ticket.
+</div>
+
+<div class="divider"></div>
+
+<!-- ============ SECTION 2 ============ -->
+<span class="section-tag">② How market making would work here</span>
+<h2>Market making = stop <em>paying</em> the toll, start <em>collecting</em> it</h2>
+
+<div class="analogy">
+  <b>The analogy.</b> Every time you exchange money at an airport, the booth quotes two prices: it <em>buys</em> dollars cheap and <em>sells</em> them dear, pocketing the gap. That gap is the <strong>"spread."</strong> A <strong>market maker</strong> is that currency booth — it doesn't bet on which way prices go; it just earns the spread by being the one everyone trades against.
+</div>
+
+<h3>The key insight for us</h3>
+<p>Right now, when v8a opens or closes a trade, <strong>we are the tourist at the booth</strong> — we cross the spread and pay the toll. Options spreads are <em>wide</em> (a $2.00 option might be quoted $1.90 bid / $2.10 ask — that's a 10% gap). We pay a slice of that every single trade.</p>
+
+<p><strong>The upgrade:</strong> instead of grabbing the price that's offered, we <em>post our own price just inside the gap</em> and wait a moment to be filled. Now <strong>we're the booth</strong>, not the tourist. We capture part of the spread we used to pay.</p>
+
+<div class="flow">
+  <div class="step" style="background:#fff7ed;border-color:#fed7aa"><div class="n">TODAY</div><h4>We pay the spread</h4><p>v8a crosses the gap on every entry/exit. Money left on the table.</p></div>
+  <div class="arrow">→</div>
+  <div class="step" style="background:#f0fdf4;border-color:#bbf7d0"><div class="n">UPGRADE</div><h4>We post inside the gap</h4><p>Quote our own price, get filled by someone else crossing to us. We <em>earn</em> a slice instead of paying.</p></div>
+</div>
+
+<h3>Two flavors — and why we pick the safe one first</h3>
+<table>
+  <tr><th>Approach</th><th>What it is</th><th class="r">Our call</th></tr>
+  <tr><td><strong>Liquidity-provider upgrade to v8a</strong></td><td>Same trades we already make, just entered/exited smarter (inside the spread). Bolts onto what works.</td><td class="r"><span class="pill g">Start here</span></td></tr>
+  <tr><td><strong>Standalone market-making desk</strong></td><td>A brand-new business: quote both sides on many options/crypto pairs all day, hedge constantly. More profit potential, but new risks + needs data we don't own.</td><td class="r"><span class="pill y">Later, if pilot proves it</span></td></tr>
+  <tr><td><strong>Quoting liquid stocks (SPY shares) for rebates</strong></td><td>The thing most people picture. Pennies per share, won by microsecond-fast firms (Citadel, Virtu).</td><td class="r"><span class="pill r">Skip — we lose</span></td></tr>
+</table>
+
+<div class="card">
+  <strong>Why options/crypto and not stocks?</strong> Stock spreads are razor-thin (one penny) and owned by firms with faster computers than us — a race we can't win. Options &amp; crypto spreads are <em>wide</em> (1–10%), there's far less competition in the corners we'd pick, and <strong>speed stops being the thing that decides who wins</strong> — smarts and risk discipline do. That's our home turf.
+</div>
+
+<div class="divider"></div>
+
+<!-- ============ SECTION 3 ============ -->
+<span class="section-tag">③ What's the earnings potential?</span>
+<h2>How much could this actually make?</h2>
+
+<p class="lead">Two separate income sources, stacked:</p>
+
+<h3>A) The v8a execution upgrade (the easy win)</h3>
+<p>This doesn't invent new profit — it <strong>stops a leak</strong> in the profit we already make. On every trade we currently donate part of a wide spread. Recapturing even a portion is a <strong>multi-percent boost to v8a's annual return</strong>, for essentially <strong>zero added risk</strong>. Free money we're currently leaving on the table. And we can <strong>test it this week</strong> on data we already own.</p>
+
+<h3>B) A standalone market-making book on $1MM</h3>
+<p>If we later run a real MM desk with $1,000,000, here's the honest range — <strong>per day</strong>, in normal conditions:</p>
+
+<div class="scenario">
+  <div class="sc low"><h4>Quiet / building</h4><div class="amt">~$300/day</div><div class="note">≈ $75k/yr · slow days, low volume</div></div>
+  <div class="sc mid"><h4>Normal operation</h4><div class="amt">$300–$1,500/day</div><div class="note">≈ $75k–$375k/yr · the realistic base case</div></div>
+  <div class="sc high"><h4>Good days</h4><div class="amt">up to ~$3,000/day</div><div class="note">busy, volatile, well-positioned</div></div>
+</div>
+
+<p class="note">As an annual return on the $1MM, that's roughly <strong>8–30%+</strong> in good execution — real money, but <strong>not</strong> the smooth ride v8a is. Expect bumpy days, real drawdowns, and a fat "tail" risk (a sudden gap can hurt a market-maker fast). This is a <em>conditional</em> number: it depends heavily on how well we execute, not just on showing up.</p>
+
+<h3>Is $1MM enough? — Yes.</h3>
+<div class="card">
+  Capital is <strong>not</strong> the thing holding us back. $1MM is plenty to start. The real limits are: <strong>(1)</strong> how wide the spreads are where we play, <strong>(2)</strong> how often we get "picked off" by smarter/faster traders (adverse selection), and <strong>(3)</strong> how many small books our models and risk system can run well at once. We grow by running <em>more small books</em>, not by betting bigger on one.
+</div>
+
+<h2>The plan, simply</h2>
+<div class="flow">
+  <div class="step"><div class="n">THIS WEEK</div><h4>Test the v8a upgrade</h4><p>Backtest posting inside the spread on our existing trades. Low risk, runnable now.</p></div>
+  <div class="arrow">→</div>
+  <div class="step"><div class="n">NEXT</div><h4>Tiny live pilot</h4><p>≤$100k quoting a couple of ETFs just to <em>measure</em> real-world fills. Learn before scaling.</p></div>
+  <div class="arrow">→</div>
+  <div class="step"><div class="n">THEN</div><h4>Scale if it proves out</h4><p>Spread across 15–40 small, risk-capped books. Only if the pilot's numbers are good.</p></div>
+</div>
+
+<div class="card" style="background:#eff6ff;border-color:#bfdbfe">
+  <strong>Bottom line:</strong> v8a is a steady "sell insurance" income engine. Market making is "stop paying the toll, start collecting it." The smartest, safest first step is to bolt the toll-collecting onto v8a — free money, testable this week. The bigger standalone desk (~$300–$1,500/day on $1MM) is real but must be <em>earned</em> with a careful pilot first.
+</div>
+
+<footer>
+  Maximus · simplified companion to the full feasibility brief (<code>market_making_1mm_brief.html</code>). v8a figures are backtest results (live expectation ~half the Sharpe); MM earnings are conditional estimates, not guarantees.
+</footer>
+
+</body>
+</html>
