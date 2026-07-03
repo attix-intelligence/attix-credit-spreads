@@ -1,6 +1,6 @@
 {
   "schema_version": "3.0",
-  "last_updated": "2026-07-03T13:20:33.415094+00:00",
+  "last_updated": "2026-07-03T14:19:54.525726+00:00",
   "experiments": {
     "EXP-400": {
       "id": "EXP-400",
@@ -1036,6 +1036,29 @@
       "updated_at": "2026-07-03T13:20:33.415094+00:00",
       "broker": null,
       "results_path": "experiments/EXP-800-BT-safe-kelly/REPORT.md"
+    },
+    "EXP-3570": {
+      "id": "EXP-3570",
+      "name": "Live-Months Replay (Apr-Jun 2026 backfill + EXP-800/V8A twin)",
+      "created_by": "kayley",
+      "created_date": "2026-07-03",
+      "status": "completed",
+      "ticker": "SPY",
+      "account_id": null,
+      "live_since": null,
+      "paper_config": null,
+      "backtest_config": "experiments/EXP-3570-live-months-replay/run_livewindow.py",
+      "description": "Backfill SPY daily option bars 2026-04-01..2026-07-03 into data/options_cache.db via Polygon (new rows only; DB backed up to options_cache.db.bak-exp3570), list July/Aug 2026 SPY contracts, then replay the REAL EXP-800 live months through the fixed production engine (EXP-800-BT harness, haltonly=as-deployed, window 2026-04-01..2026-07-03, fresh $100k HWM mirroring the live paper account) and V8A on the June window. THE clean test: does the real-mark backtest reproduce live paper months Apr +21.2% / May +3.4% / Jun +11.3%?",
+      "notes": "PASS/FAIL = month-by-month backtest vs live paper track. Rule Zero: no fabricated marks; STOP if Polygon blocks. RESULT (2026-07-03): FAIL - engine twin does NOT reproduce live months. Backfill OK (118,411 new option_daily rows + 4,488 Jul/Aug contracts, existing rows untouched, probe cross-check exact). EXP-800 haltonly twin on 2026-04-01..07-03 fresh $100k: Apr -10.26% / May +0.29% / Jun +0.49% = -8.3% total vs live +21.2/+3.4/+11.3 (+39.5%). April gap = engine regime called neutral/bear (1 bear-call + 3 ICs destroyed by the rally), then tier-1/2 floors muted recovery; notiers still only +7.3%. V8A June counterfactual (SPY canonical): +1.61%, MaxDD -0.16% - June was survivable at engine sizing; live -31% DD was sizing/aggregation. Live paper track = live-state regime luck + scanner/engine behavioral gaps, NOT reproducible edge. Do not scale EXP-800 on live paper strength.",
+      "config_path": null,
+      "alpaca_account_id": null,
+      "env_file": null,
+      "db_path": null,
+      "strategy_type": "backtest_research",
+      "created_at": "2026-07-03T13:33:48.150951+00:00",
+      "updated_at": "2026-07-03T14:19:54.525726+00:00",
+      "broker": null,
+      "results_path": "experiments/EXP-3570-live-months-replay/REPORT.md"
     }
   }
 }
