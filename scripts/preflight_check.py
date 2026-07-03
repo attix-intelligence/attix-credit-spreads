@@ -4,14 +4,14 @@
 Usage:
     python scripts/preflight_check.py configs/paper_champion.yaml
     python scripts/preflight_check.py configs/paper_exp401.yaml
-    python scripts/preflight_check.py configs/live_expv8a_tradier.yaml
+    python scripts/preflight_check.py configs/live_exp800_tradier.yaml
 
 Mode dispatch:
     - paper_mode: true  → standard paper safety check (unchanged).
     - paper_mode: false → live config; requires a fully-formed `tradier_live`
       routing block (sink_type=executor, account_id set, account_type=live,
-      enabled=true) AND risk.max_contracts==1 (Phase 1 cap). A live config
-      missing any of these fails preflight.
+      enabled=true) AND risk.max_contracts pinned to the approved live cap.
+      A live config missing any of these fails preflight.
     - paper_mode unset / non-bool → fails (safety check, unchanged).
 """
 
@@ -19,6 +19,10 @@ import sys
 from pathlib import Path
 
 import yaml
+
+# Phase 3 paper-parity cap (Carlos GO 2026-07-02). Any drift from the approved
+# cap fails preflight; raising this constant requires a new explicit GO.
+APPROVED_LIVE_MAX_CONTRACTS = 30
 
 
 def _validate_live_routing(config: dict) -> list:
@@ -48,9 +52,10 @@ def _validate_live_routing(config: dict) -> list:
 
     risk = config.get("risk")
     cap = risk.get("max_contracts") if isinstance(risk, dict) else None
-    if cap != 1:
+    if cap != APPROVED_LIVE_MAX_CONTRACTS:
         errors.append(
-            f"risk.max_contracts must be 1 for Phase 1 LIVE cap (got {cap!r})"
+            f"risk.max_contracts must be {APPROVED_LIVE_MAX_CONTRACTS} "
+            f"(approved live cap) (got {cap!r})"
         )
 
     return errors

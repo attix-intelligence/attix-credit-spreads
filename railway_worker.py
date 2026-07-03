@@ -79,6 +79,30 @@ def exp_env_suffix(exp_id: str) -> str:
     return exp_id.replace("-", "").upper()
 
 
+# One-time volume migrations: new db_path -> legacy db_path. If the new DB is
+# absent but the legacy one exists on the volume, it is renamed in place before
+# the scheduler spawns, preserving Kelly/HWM state across an experiment rename.
+LEGACY_DB_PATHS: Dict[str, str] = {
+    "data/exp800_tradier/exp800_tradier.db": "data/expv8a_tradier/pilotai_expv8a_tradier.db",
+}
+
+
+def migrate_legacy_db(db_path: str) -> None:
+    legacy = LEGACY_DB_PATHS.get(db_path)
+    if not legacy:
+        return
+    new_abs = Path(resolve_db_path(db_path))
+    old_abs = Path(resolve_db_path(legacy))
+    if new_abs.exists() or not old_abs.exists():
+        return
+    new_abs.parent.mkdir(parents=True, exist_ok=True)
+    for suffix in ("", "-wal", "-shm"):
+        src = Path(str(old_abs) + suffix)
+        if src.exists():
+            os.replace(src, str(new_abs) + suffix)
+    logger.info("Migrated legacy DB %s -> %s", old_abs, new_abs)
+
+
 # ---------------------------------------------------------------------------
 # Env builder
 # ---------------------------------------------------------------------------
@@ -210,7 +234,10 @@ class ExperimentProcess:
         env = build_subprocess_env(self.exp)
 
         # Ensure DB parent dir exists (volume may not pre-create subdirs)
-        db_path = resolve_db_path(self.exp.get("db_path", ""))
+        raw_db_path = self.exp.get("db_path", "")
+        if raw_db_path:
+            migrate_legacy_db(raw_db_path)
+        db_path = resolve_db_path(raw_db_path)
         if db_path:
             Path(db_path).parent.mkdir(parents=True, exist_ok=True)
 
