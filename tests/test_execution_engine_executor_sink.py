@@ -210,15 +210,15 @@ def test_executor_path_blocks_when_contracts_exceed_phase1_cap(tmp_path):
     sink.submit.assert_not_called()
 
 
-# ── 4b) Unsupported structure (iron condor) — executor route refuses ───────
+# ── 4b) Unsupported structure (straddle) — executor route refuses ──────────
 
-def test_executor_path_refuses_unsupported_structure_iron_condor(tmp_path):
-    """Phase-1 deliberate scope limit: ExecutorOrderSink supports only
-    bull_put / bear_call. The engine refuses iron_condor BEFORE building
-    an OrderIntent or calling the sink, so the rejection surfaces as a
-    structured 'error' result with the structure in the message — not
-    the sink's NotImplementedError. Same shape for any future unsupported
-    structure (straddle, calendar, …)."""
+def test_executor_path_refuses_unsupported_structure_straddle(tmp_path):
+    """Deliberate scope limit: the executor route supports bull_put /
+    bear_call / iron_condor (condors added in EXP-800-TRADIER WS-2; this test
+    previously used iron_condor as the unsupported example). The engine
+    refuses other structures BEFORE building an OrderIntent or calling the
+    sink, so the rejection surfaces as a structured 'error' result with the
+    structure in the message — not the sink's NotImplementedError."""
     from execution.execution_engine import ExecutionEngine
 
     sink = _build_mock_sink()
@@ -229,11 +229,11 @@ def test_executor_path_refuses_unsupported_structure_iron_condor(tmp_path):
         executor_sink=sink,
     )
     with patch("execution.market_hours.is_rth_now", return_value=True):
-        result = engine.submit_opportunity(_opp(contracts=1, spread_type="iron_condor"))
+        result = engine.submit_opportunity(_opp(contracts=1, spread_type="straddle"))
 
     assert result["status"] == "error"
     assert "structure" in result["message"].lower()
-    assert "iron_condor" in result["message"]
+    assert "straddle" in result["message"]
     # Critical: the executor sink must NOT see an unsupported structure —
     # the engine's guard fires before _build_executor_intent runs.
     sink.submit.assert_not_called()

@@ -84,7 +84,7 @@ _MARKET_CLOSE_HOUR, _MARKET_CLOSE_MIN = 16, 0
 _MARKET_DAYS = frozenset({0, 1, 2, 3, 4})  # Mon–Fri (weekday() values)
 
 # Alpaca order statuses where the close order is terminal but did NOT fill
-_TERMINAL_NO_FILL = frozenset({"cancelled", "canceled", "expired", "replaced"})
+_TERMINAL_NO_FILL = frozenset({"cancelled", "canceled", "expired", "replaced", "rejected"})
 
 # US market full holidays 2026-2030 — system skips these entirely (BUG #24 fix)
 # Source: NYSE market holiday calendar
@@ -218,15 +218,26 @@ class PositionMonitor:
         monitor.stop()
     """
 
-    def __init__(self, alpaca_provider, config: Dict, db_path: Optional[str] = None):
+    def __init__(
+        self,
+        alpaca_provider,
+        config: Dict,
+        db_path: Optional[str] = None,
+        executor_sink=None,
+    ):
         """
         Args:
-            alpaca_provider: AlpacaProvider instance.
+            alpaca_provider: AlpacaProvider instance, or None on the executor route.
             config: Full application config dict. Reads risk.profit_target,
                     risk.stop_loss_multiplier, strategy.manage_dte.
             db_path: Optional SQLite path override.
+            executor_sink: Optional ExecutorOrderSink. When set and no Alpaca
+                    provider is configured, positions are fetched and PT/SL
+                    close orders submitted through the executor REST service
+                    (Tradier live route — EXP-800-TRADIER WS-6).
         """
         self.alpaca = alpaca_provider
+        self.executor_sink = executor_sink
         self.config = config
         self.db_path = db_path
         self._stop_event = threading.Event()
@@ -498,6 +509,42 @@ class PositionMonitor:
     # Core check loop
     # ------------------------------------------------------------------
 
+    # ------------------------------------------------------------------
+    # Broker-agnostic helpers (Alpaca provider OR executor sink)
+    # ------------------------------------------------------------------
+
+    def _occ_symbol(self, ticker: str, expiration: str, strike, opt_type: str):
+        """Build an OCC symbol via the Alpaca provider when present, else the
+        module-level builder (executor route has no provider)."""
+        if self.alpaca:
+            return self.alpaca._build_occ_symbol(ticker, expiration, strike, opt_type)
+        from execution.execution_engine import _build_occ_symbol
+        return _build_occ_symbol(ticker, expiration, strike, opt_type)
+
+    def _fetch_broker_positions(self) -> list:
+        """Fetch open positions from whichever broker source is configured.
+
+        Executor /v1/portfolio/positions dicts use ``quantity`` — normalized to
+        the Alpaca shape (``qty``) so all downstream pricing/reconciliation
+        code stays broker-agnostic. Raises on fetch failure (caller handles).
+        """
+        if self.alpaca:
+            return self.alpaca.get_positions()
+        if self.executor_sink is not None:
+            from execution.execution_engine import _executor_position_symbol
+            return [
+                {
+                    "symbol": _executor_position_symbol(p),
+                    "qty": p.get("quantity", p.get("qty")),
+                    "market_value": p.get("market_value"),
+                    "current_price": p.get("current_price"),
+                    "avg_entry_price": p.get("average_cost"),
+                    "unrealized_pl": p.get("unrealized_pnl"),
+                }
+                for p in (self.executor_sink.get_positions() or [])
+            ]
+        raise RuntimeError("PositionMonitor: no broker position source configured")
+
     def _check_positions(self):
         """Main check cycle — dispatches Tier 1 / Tier 2 / Tier 3 reconciliation.
 
@@ -545,7 +592,7 @@ class PositionMonitor:
             self._reconcile_pending_opens()
 
         # Tier 1: Reconcile pending_close positions (check for fills since last cycle)
-        if self.alpaca:
+        if self.alpaca or self.executor_sink is not None:
             self._reconcile_pending_closes()
 
         # Tier 2 gate: only run the expensive position check every 5 min
@@ -561,10 +608,10 @@ class PositionMonitor:
         if open_positions:
             logger.info("PositionMonitor: checking %d open position(s)", len(open_positions))
 
-        # Step 3: Fetch all Alpaca positions once per cycle (reduces API calls).
+        # Step 3: Fetch all broker positions once per cycle (reduces API calls).
         # Do this even when open_positions is empty so orphan detection always runs.
         try:
-            all_alpaca_positions = self.alpaca.get_positions()
+            all_alpaca_positions = self._fetch_broker_positions()
             alpaca_positions = {p["symbol"]: p for p in all_alpaca_positions}
             # Reset failure counter on success
             if self._consecutive_api_failures > 0:
@@ -603,12 +650,15 @@ class PositionMonitor:
         self._record_equity_point()
 
         # Step 3b: Detect unexpected equity positions (possible early assignment)
-        if open_positions:
+        # Alpaca-only: the executor route has no auto-remediation path yet.
+        if open_positions and self.alpaca:
             self._detect_assignment(open_positions, alpaca_positions)
 
         # Step 3c: Detect option positions in Alpaca with no DB record (orphans).
         # Runs unconditionally — orphans can appear even when we have no open trades.
-        self._detect_orphans(open_positions + pending_positions, alpaca_positions)
+        # Alpaca-only: orphan auto-close uses sell_to_close_by_occ_symbol.
+        if self.alpaca:
+            self._detect_orphans(open_positions + pending_positions, alpaca_positions)
 
         if not open_positions:
             logger.debug("PositionMonitor: no open positions to check")
@@ -879,9 +929,9 @@ class PositionMonitor:
             return None
 
         try:
-            short_sym = self.alpaca._build_occ_symbol(ticker, expiration_str, short_strike, opt_type)
+            short_sym = self._occ_symbol(ticker, expiration_str, short_strike, opt_type)
             long_sym = (
-                self.alpaca._build_occ_symbol(ticker, expiration_str, long_strike, opt_type)
+                self._occ_symbol(ticker, expiration_str, long_strike, opt_type)
                 if long_strike else None
             )
         except Exception as e:
@@ -948,8 +998,8 @@ class PositionMonitor:
             return None
 
         try:
-            call_sym = self.alpaca._build_occ_symbol(ticker, expiration_str, call_strike, "call")
-            put_sym = self.alpaca._build_occ_symbol(ticker, expiration_str, put_strike, "put")
+            call_sym = self._occ_symbol(ticker, expiration_str, call_strike, "call")
+            put_sym = self._occ_symbol(ticker, expiration_str, put_strike, "put")
         except Exception as e:
             logger.warning("PositionMonitor: OCC symbol error for straddle %s: %s", pos.get("id"), e)
             return None
@@ -1003,8 +1053,8 @@ class PositionMonitor:
                 if not all([call_strike, put_strike]):
                     return False
                 syms = [
-                    self.alpaca._build_occ_symbol(ticker, expiration_str, call_strike, "call"),
-                    self.alpaca._build_occ_symbol(ticker, expiration_str, put_strike, "put"),
+                    self._occ_symbol(ticker, expiration_str, call_strike, "call"),
+                    self._occ_symbol(ticker, expiration_str, put_strike, "put"),
                 ]
             elif "condor" in spread_type:
                 put_short = pos.get("put_short_strike") or pos.get("short_strike")
@@ -1014,10 +1064,10 @@ class PositionMonitor:
                 if not all([put_short, put_long, call_short, call_long]):
                     return False
                 syms = [
-                    self.alpaca._build_occ_symbol(ticker, expiration_str, put_short, "put"),
-                    self.alpaca._build_occ_symbol(ticker, expiration_str, put_long, "put"),
-                    self.alpaca._build_occ_symbol(ticker, expiration_str, call_short, "call"),
-                    self.alpaca._build_occ_symbol(ticker, expiration_str, call_long, "call"),
+                    self._occ_symbol(ticker, expiration_str, put_short, "put"),
+                    self._occ_symbol(ticker, expiration_str, put_long, "put"),
+                    self._occ_symbol(ticker, expiration_str, call_short, "call"),
+                    self._occ_symbol(ticker, expiration_str, call_long, "call"),
                 ]
             else:
                 short_strike = pos.get("short_strike")
@@ -1026,11 +1076,11 @@ class PositionMonitor:
                     return False
                 opt_type = "call" if "call" in spread_type else "put"
                 syms = [
-                    self.alpaca._build_occ_symbol(ticker, expiration_str, short_strike, opt_type),
+                    self._occ_symbol(ticker, expiration_str, short_strike, opt_type),
                 ]
                 if long_strike:
                     syms.append(
-                        self.alpaca._build_occ_symbol(ticker, expiration_str, long_strike, opt_type)
+                        self._occ_symbol(ticker, expiration_str, long_strike, opt_type)
                     )
         except Exception:
             return False
@@ -1255,12 +1305,15 @@ class PositionMonitor:
                 "PositionMonitor: DB pending_close write failed for %s: %s", pos.get("id"), e
             )
 
-        if not self.alpaca:
+        if not self.alpaca and self.executor_sink is None:
             logger.info("PositionMonitor [DRY RUN]: would close %s", pos.get("id"))
             return
 
         try:
-            if "condor" in spread_type:
+            if not self.alpaca:
+                # Executor route (Tradier live): single multileg close order.
+                result = self._submit_executor_close(pos, contracts, expiration_str, spread_type)
+            elif "condor" in spread_type:
                 result = self._submit_ic_close(pos, contracts, expiration_str)
             elif "straddle" in spread_type or "strangle" in spread_type:
                 result = self._submit_straddle_close(pos, contracts, expiration_str)
@@ -1355,6 +1408,78 @@ class PositionMonitor:
                 error_msg=str(e),
                 context=f"submit_close ({pos.get('ticker', '?')} / {pos.get('id', '?')})",
             )
+
+    def _submit_executor_close(
+        self, pos: Dict, contracts: int, expiration_str: str, spread_type: str
+    ) -> Dict:
+        """Submit a PT/SL close through the executor sink (WS-6, Tradier route).
+
+        Builds a close OrderIntent where side="buy" means buy_to_close (the
+        originally sold leg) and side="sell" means sell_to_close. Returns the
+        sink's normalized result dict; unsupported structures return a
+        non-submitted error result so _close_position resets the trade to open.
+        """
+        from compass.live.vrp_contracts import OrderIntent, OrderLeg
+
+        ticker = pos.get("ticker", "")
+        pos_id = str(pos.get("id", ""))
+
+        def _leg(side: str, strike, right: str) -> OrderLeg:
+            opt_type = "put" if right == "P" else "call"
+            occ = self._occ_symbol(ticker, expiration_str, strike, opt_type) or ticker
+            return OrderLeg(
+                side=side, sec_type="option", symbol=occ,
+                qty=int(contracts), strike=float(strike),
+                expiration=expiration_str, right=right,
+            )
+
+        if "condor" in spread_type:
+            put_short = pos.get("put_short_strike") or pos.get("short_strike")
+            put_long = pos.get("put_long_strike") or pos.get("long_strike")
+            call_short = pos.get("call_short_strike")
+            call_long = pos.get("call_long_strike")
+            if not all([put_short, put_long, call_short, call_long]):
+                return {
+                    "status": "error",
+                    "message": f"iron_condor {pos_id} missing per-wing strikes for executor close",
+                }
+            structure = "iron_condor"
+            legs = (
+                _leg("buy", put_short, "P"),
+                _leg("sell", put_long, "P"),
+                _leg("buy", call_short, "C"),
+                _leg("sell", call_long, "C"),
+            )
+        elif (
+            pos.get("short_strike") and pos.get("long_strike")
+            and ("put" in spread_type or "call" in spread_type)
+            and "straddle" not in spread_type and "strangle" not in spread_type
+        ):
+            right = "C" if "call" in spread_type else "P"
+            structure = "bear_call" if right == "C" else "bull_put"
+            legs = (
+                _leg("buy", pos.get("short_strike"), right),
+                _leg("sell", pos.get("long_strike"), right),
+            )
+        else:
+            return {
+                "status": "error",
+                "message": (
+                    f"executor close does not support structure {spread_type!r} "
+                    f"for {pos_id} (single-leg/straddle need manual handling)"
+                ),
+            }
+
+        intent = OrderIntent(
+            stream=pos_id,
+            symbol=ticker,
+            structure=structure,
+            legs=legs,
+            contracts=int(contracts),
+        )
+        return self.executor_sink.submit_close(
+            intent, net_debit=self._compute_close_limit(pos)
+        )
 
     def _submit_ic_close(self, pos: Dict, contracts: int, expiration_str: str) -> Dict:
         """Delegate 4-leg iron condor close to AlpacaProvider, with retry on failure.
@@ -1856,8 +1981,25 @@ class PositionMonitor:
     # P&L reconciliation — Bug 2 fix
     # ------------------------------------------------------------------
 
+    def _get_close_order_status(self, order_id: str) -> Optional[Dict]:
+        """Fetch a close order's status from whichever broker is configured.
+
+        Executor OrderStatusResponse fields (filled_quantity /
+        average_fill_price / last_updated) are normalized to the Alpaca order
+        dict shape that _reconcile_pending_closes parses.
+        """
+        if self.alpaca:
+            return self.alpaca.get_order_status(order_id)
+        raw = self.executor_sink.get_order_status(order_id) or {}
+        return {
+            "status": str(raw.get("status", "")),
+            "filled_qty": raw.get("filled_quantity"),
+            "filled_avg_price": raw.get("average_fill_price"),
+            "filled_at": raw.get("last_updated"),
+        }
+
     def _reconcile_pending_closes(self) -> None:
-        """Poll Alpaca for fill status of pending_close orders; record P&L when filled.
+        """Poll the broker for fill status of pending_close orders; record P&L when filled.
 
         Straddle/strangle positions have dual close orders (call + put).
         Both must fill before P&L is recorded. If one fills and the other fails,
@@ -1878,7 +2020,7 @@ class PositionMonitor:
             put_order_id = pos.get("close_put_order_id")
 
             try:
-                order = self.alpaca.get_order_status(order_id)
+                order = self._get_close_order_status(order_id)
             except Exception as e:
                 logger.warning(
                     "PositionMonitor: order status fetch failed for %s: %s", order_id, e
@@ -1897,7 +2039,7 @@ class PositionMonitor:
             # --- Dual-leg close (straddle/strangle) ---
             if put_order_id:
                 try:
-                    put_order = self.alpaca.get_order_status(put_order_id)
+                    put_order = self._get_close_order_status(put_order_id)
                 except Exception as e:
                     logger.warning(
                         "PositionMonitor: put close order status fetch failed for %s: %s",
