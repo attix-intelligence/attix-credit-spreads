@@ -30,12 +30,15 @@ Variants (positional arg):
               loss), sizing resumes at the 2% floor; a re-flatten fires only on
               a NEW DD low >= 1pp below the last flatten.
   haltonly  — tier-3 only halts entries, as ACTUALLY DEPLOYED (the scanner has
-              no flatten code); positions stay open and can recover MTM.
-              NOTE: the deployed state machine deadlocks if losses are REALIZED
-              past -12% while flat (entries blocked whenever tier==3; a flat
-              book can never move DD; the halt counter is decorative because
-              the tier>=3 block is unconditional). This variant reproduces
-              that honestly.
+              no flatten code); positions stay open and can bleed or recover
+              MTM. Models the CURRENT deployed state machine (post the
+              2026-07-03 deadlock fix, tests/test_exp800_tier3_deadlock.py):
+              the halt is finite (30 scan slots, one consumed per blocked
+              day); once exhausted, entries resume at the 2% floor even while
+              DD stays pinned <= -12%; recovery above -7% restores full Kelly.
+              (The pre-fix unconditional tier>=3 block deadlocked forever —
+              that historical run is preserved in
+              results/SPY_haltonly_prefix_deadlock.json.)
   notiers   — Safe Kelly 9/7/4 regime sizing with circuit breakers DISABLED.
               Unprotected baseline to quantify what the breakers add.
 
@@ -254,16 +257,17 @@ class SafeKellyOverlay:
         base_frac = float(self.fractions.get(regime, self.fractions.get("neutral", 7.0)))
 
         if new_tier >= 3:
-            if self.flatten_enabled and new_halt <= 0:
-                # EXP-3540 anti-deadlock: after a true flatten the realized loss
-                # pins DD below -12% forever (cash never moves while flat).
-                # Post-halt, resume at the tier-2 floor instead of halting for
-                # the rest of the backtest; a NEW low re-flattens above.
+            if new_halt <= 0:
+                # Finite, self-clearing halt — matches the deployed scanner
+                # post-deadlock-fix (_kelly_fraction/_tier3_entry_blocked,
+                # tests/test_exp800_tier3_deadlock.py): once the 30-slot halt
+                # exhausts, sizing resumes at the tier-2 floor even while DD
+                # stays pinned <= -12%. In the flatten variant a NEW DD low
+                # >= 1pp below the last flatten re-flattens above (EXP-3540).
                 eff, blocked = self.min_fraction, False
             else:
                 eff, blocked = 0.0, True
-                if new_halt > 0:
-                    new_halt -= 1  # one scan-day slot consumed (live: _decrement_halt)
+                new_halt -= 1  # one scan-day slot consumed (live: _decrement_halt)
         elif new_tier == 2:
             eff, blocked = self.min_fraction, False
         elif new_tier == 1:
