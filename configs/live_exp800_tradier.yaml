@@ -1,15 +1,15 @@
 # ============================================================================
-# live_expv8a_tradier.yaml — EXP-V8A-TRADIER (Tradier LIVE Phase 1, cap 1 contract)
+# live_exp800_tradier.yaml — EXP-800-TRADIER (Tradier LIVE)
 # ============================================================================
 # DORMANT pilot config. Strategy is a VERBATIM copy of paper_exp800.yaml
 # (EXP-800 Safe Kelly 4/7/9). The only differences from paper_exp800.yaml are:
 #   (a) broker/account routing -> Tradier LIVE account tradier_6YA42569,
 #       via the standalone executor REST service (SINK_TYPE=executor) using
 #       the same env-var unmasking pattern as EXP-V8A-IBKR
-#       (SINK_TYPE_EXPV8ATRADIER, EXECUTOR_ACCOUNT_ID_EXPV8ATRADIER,
-#        EXECUTOR_ACCOUNT_TYPE_EXPV8ATRADIER -> live)
+#       (SINK_TYPE_EXP800TRADIER, EXECUTOR_ACCOUNT_ID_EXP800TRADIER,
+#        EXECUTOR_ACCOUNT_TYPE_EXP800TRADIER -> live)
 #   (b) risk.max_contracts hard-capped to 1 (Phase 1 cap)
-#   (c) experiment_id = EXP-V8A-TRADIER (separate dashboard line)
+#   (c) experiment_id = EXP-800-TRADIER (separate dashboard line)
 #
 # Required-by-plumbing extras (no strategy effect):
 #   - paper_mode: false
@@ -25,8 +25,8 @@
 # ============================================================================
 
 paper_mode: false
-experiment_id: "EXP-V8A-TRADIER"
-db_path: "data/expv8a_tradier/pilotai_expv8a_tradier.db"
+experiment_id: "EXP-800-TRADIER"
+db_path: "data/exp800_tradier/exp800_tradier.db"
 created_by: "carlos"
 
 tickers:
@@ -99,7 +99,7 @@ kelly:
 risk:
   account_size: 100000       # starting capital (used for HWM bootstrap)
   max_risk_per_trade: 17.0    # hard cap (matches max Kelly bull fraction)
-  max_contracts: 1           # Phase 1 LIVE cap (paper_exp800.yaml: 30)
+  max_contracts: 30          # Phase 3: exact paper_exp800.yaml parity (Carlos GO 2026-07-02)
   max_positions: 10
 
   profit_target: 55          # 55% of credit
@@ -133,11 +133,11 @@ alpaca:
 # pins LIVE_ACCOUNT_ID + LIVE_BASE_URL + LIVE_TOKEN_ENV). This block documents
 # the per-substream contract the worker honors via env-var unmasking:
 #
-#   SINK_TYPE_EXPV8ATRADIER          -> SINK_TYPE          (= executor)
-#   EXECUTOR_ACCOUNT_ID_EXPV8ATRADIER -> EXECUTOR_ACCOUNT_ID (= tradier_6YA42569)
-#   EXECUTOR_ACCOUNT_TYPE_EXPV8ATRADIER -> EXECUTOR_ACCOUNT_TYPE (= live)
-#   EXECUTOR_BASE_URL_EXPV8ATRADIER  -> EXECUTOR_BASE_URL
-#   EXECUTOR_API_KEY_EXPV8ATRADIER   -> EXECUTOR_API_KEY
+#   SINK_TYPE_EXP800TRADIER          -> SINK_TYPE          (= executor)
+#   EXECUTOR_ACCOUNT_ID_EXP800TRADIER -> EXECUTOR_ACCOUNT_ID (= tradier_6YA42569)
+#   EXECUTOR_ACCOUNT_TYPE_EXP800TRADIER -> EXECUTOR_ACCOUNT_TYPE (= live)
+#   EXECUTOR_BASE_URL_EXP800TRADIER  -> EXECUTOR_BASE_URL
+#   EXECUTOR_API_KEY_EXP800TRADIER   -> EXECUTOR_API_KEY
 # ============================================================================
 tradier_live:
   enabled: true
@@ -155,7 +155,7 @@ tradier_live:
 # tradier_6YA42569. Phase-1 cap (risk.max_contracts=1) still applies.
 # Toggle ONLY after Carlos's explicit per-session go.
 # ============================================================================
-live_submit: true
+live_submit: true   # Reinstated 2026-07-02 — Carlos confirmed entry IS EXP-800 (mislabel, not wrong strategy)
 
 # ============================================================================
 # Alerts / Logging
@@ -168,7 +168,7 @@ alerts:
 
 logging:
   level: "INFO"
-  file: "logs/expv8a_tradier_scanner.log"
+  file: "logs/exp800_tradier_scanner.log"
   console: true
 
 # ============================================================================

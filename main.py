@@ -640,6 +640,68 @@ class CreditSpreadSystem:
         except Exception as e:
             logger.warning(f"Alert router pipeline failed (non-fatal): {e}")
 
+    def _build_account_state_from_executor(self, starting_capital: float) -> Optional[Dict]:
+        """Live account state from the executor REST service (no Alpaca client).
+
+        Reads the un-suffixed EXECUTOR_* env vars the railway worker exposes to
+        the experiment subprocess. Returns None when the executor is not
+        configured, the snapshot fails, or NAV is non-positive — the caller
+        falls back to the static skeleton so a transient executor outage can
+        never zero out sizing.
+        """
+        api_key = os.environ.get("EXECUTOR_API_KEY", "").strip()
+        base_url = os.environ.get("EXECUTOR_BASE_URL", "").strip()
+        account_id = os.environ.get("EXECUTOR_ACCOUNT_ID", "").strip()
+        if not (api_key and base_url and account_id):
+            return None
+
+        try:
+            from shared.brokers.executor import ExecutorBrokerAdapter
+
+            normalized = str(self.config.get("experiment_id", "")).upper().replace("-", "")
+            adapter = ExecutorBrokerAdapter(normalized, api_key, base_url, account_id)
+            snap = adapter.fetch_snapshot()
+            if snap.nav <= 0:
+                logger.warning(
+                    "Executor snapshot NAV<=0 (%.2f) — using static account state", snap.nav
+                )
+                return None
+
+            positions = []
+            try:
+                for p in adapter.fetch_positions():
+                    positions.append({
+                        "ticker": p.underlying,
+                        "symbol": p.occ_symbol,
+                        "qty": p.qty,
+                        "unrealized_pl": 0.0,
+                        "risk_pct": 0.0,
+                    })
+            except Exception as exc:
+                logger.warning("Executor positions fetch failed (non-fatal): %s", exc)
+
+            state = {
+                "account_value": float(snap.nav),
+                "peak_equity": max(float(snap.nav), starting_capital),
+                "open_positions": positions,
+                "daily_pnl_pct": (
+                    float(snap.realized_pnl_today) / float(snap.nav) * 100.0
+                    if snap.nav else 0.0
+                ),
+                "weekly_pnl_pct": 0.0,
+                "recent_stops": [],
+            }
+            logger.info(
+                "Account state from executor: NAV=$%.2f positions=%d",
+                snap.nav, len(positions),
+            )
+            return state
+        except Exception as exc:
+            logger.warning(
+                "Executor account state failed (%s) — using static account state", exc
+            )
+            return None
+
     def _build_account_state(self) -> Dict:
         """Build account_state dict from real Alpaca positions and account info.
 
@@ -650,6 +712,14 @@ class CreditSpreadSystem:
         starting_capital = float(self.config.get('risk', {}).get('account_size', 100_000))
 
         if not self.alpaca_provider:
+            # Executor-routed experiments (Tradier/IBKR live) have no Alpaca
+            # client but expose a live balance via the executor REST service —
+            # required for full-account Kelly sizing (EXP-800-TRADIER).
+            executor_state = self._build_account_state_from_executor(starting_capital)
+            if executor_state is not None:
+                self._augment_with_compass_state(executor_state)
+                return executor_state
+
             # Alert-only mode: static skeleton — risk gate still functions
             state = {
                 "account_value": starting_capital,
@@ -1089,12 +1159,13 @@ Examples:
             # profit-target exits are evaluated even in cron (one-shot) mode.
             # In scheduler mode PositionMonitor runs as a background thread;
             # here we call _check_positions() directly for the same effect.
-            if system.alpaca_provider:
+            if system.alpaca_provider or system.executor_sink:
                 from execution.position_monitor import PositionMonitor
                 _pm = PositionMonitor(
                     alpaca_provider=system.alpaca_provider,
                     config=system.config,
                     db_path=os.environ.get('ATTIX_DB_PATH'),
+                    executor_sink=system.executor_sink,
                 )
                 _pm._check_positions()
 
@@ -1436,11 +1507,12 @@ Examples:
             # P0 Fix 2: Start PositionMonitor as background daemon thread
             position_monitor = None
             alpaca_enabled = system.config.get('alpaca', {}).get('enabled', False)
-            if system.alpaca_provider:
+            if system.alpaca_provider or system.executor_sink:
                 position_monitor = PositionMonitor(
                     alpaca_provider=system.alpaca_provider,
                     config=system.config,
                     db_path=args.db_path,
+                    executor_sink=system.executor_sink,
                 )
                 # Register unified strategies for manage_position() dispatch
                 position_monitor.register_strategies(system.unified_strategies)

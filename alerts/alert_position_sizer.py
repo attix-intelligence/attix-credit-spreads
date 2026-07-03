@@ -19,9 +19,11 @@ legacy IV-rank dynamic sizer (original behaviour for exp_036/exp_059).
 """
 
 import logging
+import os
+from pathlib import Path
 from typing import Optional
 
-from alerts.alert_schema import Alert, SizeResult
+from alerts.alert_schema import Alert, AlertType, SizeResult
 
 # Module-level import for testability (allows unittest.mock.patch to replace it)
 try:
@@ -96,6 +98,11 @@ class AlertPositionSizer:
         if not self.config:
             return self._legacy_size(alert, account_value, iv_rank, current_portfolio_risk, weekly_loss_breach)
 
+        # Safe Kelly 9/7/4 (EXP-800): takes precedence over flat/portfolio when
+        # the config carries a kelly.regime_fractions block.
+        if self.config.get("kelly", {}).get("regime_fractions"):
+            return self._kelly_size(alert, account_value, weekly_loss_breach)
+
         compass_cfg = self.config.get("compass", {})
         if compass_cfg.get("portfolio_mode", False):
             return self._portfolio_risk_size(
@@ -103,6 +110,109 @@ class AlertPositionSizer:
             )
 
         return self._flat_risk_size(alert, account_value, weekly_loss_breach, macro_score)
+
+    # ------------------------------------------------------------------
+    # Safe Kelly 9/7/4 sizing (EXP-800 — ported from exp800_safe_kelly_scanner)
+    # ------------------------------------------------------------------
+
+    def _kelly_size(
+        self,
+        alert: Alert,
+        account_value: float,
+        weekly_loss_breach: bool,
+    ) -> SizeResult:
+        """Regime-fraction Kelly sizing with 3-tier drawdown circuit breakers.
+
+        Behavior mirrors scripts/exp800_safe_kelly_scanner.py: update the
+        Kelly state (HWM/DD/CB tier) from live equity once, derive the
+        effective fraction for the regime implied by the alert's structure,
+        then contracts = equity × f% ÷ ((width − credit) × 100).
+
+        The plain (width − credit) formula is also the correct iron-condor
+        worst case: only one wing can finish ITM while the full combined
+        credit is kept, so max loss = wing_width − total_credit.
+        """
+        from shared.kelly_sizing import (
+            KELLY_DEFAULTS,
+            KellyStateDB,
+            kelly_fraction,
+            size_contracts,
+        )
+
+        kelly_cfg = self.config.get("kelly", {})
+        risk_cfg = self.config.get("risk", {})
+        cb_cfg = kelly_cfg.get("circuit_breakers", KELLY_DEFAULTS["circuit_breakers"])
+        account_size = float(risk_cfg.get("account_size", 100_000))
+        max_contracts = int(risk_cfg.get("max_contracts", 30))
+
+        db_path = os.environ.get("ATTIX_DB_PATH") or self.config.get("db_path")
+        if not db_path:
+            logger.error(
+                "AlertPositionSizer(kelly): no db_path (ATTIX_DB_PATH/config) — "
+                "cannot persist Kelly state, refusing to size"
+            )
+            return SizeResult(risk_pct=0.0, contracts=0, dollar_risk=0.0, max_loss=0.0)
+        state_db = KellyStateDB(Path(db_path), account_size)
+
+        # Scanner parity: update_equity runs once per scan before sizing.
+        # A missing/zero account_value must not clobber the persisted equity.
+        if account_value and account_value > 0:
+            state = state_db.update_equity(float(account_value), cb_cfg)
+        else:
+            state = state_db.load()
+
+        regime = self._regime_for_alert(alert)
+        kelly_pct, note = kelly_fraction(regime, kelly_cfg, state)
+        if kelly_pct <= 0:
+            logger.warning(
+                "AlertPositionSizer(kelly): skip %s %s — %s",
+                alert.ticker, alert.type.value, note,
+            )
+            return SizeResult(risk_pct=0.0, contracts=0, dollar_risk=0.0, max_loss=0.0)
+
+        if weekly_loss_breach:
+            kelly_pct *= 0.5
+            note += " | weekly_loss_breach 0.5×"
+
+        sizing_base = kelly_cfg.get("sizing_base", "current_equity")
+        sizing_equity = (
+            float(state["current_equity"]) if sizing_base == "current_equity" else account_size
+        )
+
+        spread_width, credit = self._extract_spread_params(alert)
+        contracts = size_contracts(sizing_equity, kelly_pct, spread_width, credit, max_contracts)
+
+        max_loss_per_spread = max((spread_width - credit) * 100.0, 1.0)
+        dollar_risk = contracts * max_loss_per_spread
+        risk_pct = dollar_risk / sizing_equity if sizing_equity > 0 else 0.0
+
+        logger.info(
+            "AlertPositionSizer(kelly): %s %s regime=%s [%s] equity=$%.0f "
+            "width=$%.0f credit=%.2f → %d contracts ($%.0f risk, %.2f%%)",
+            alert.ticker, alert.type.value, regime, note, sizing_equity,
+            spread_width, credit, contracts, dollar_risk, risk_pct * 100,
+        )
+
+        return SizeResult(
+            risk_pct=risk_pct,
+            contracts=contracts,
+            dollar_risk=dollar_risk,
+            max_loss=dollar_risk,
+        )
+
+    @staticmethod
+    def _regime_for_alert(alert: Alert) -> str:
+        """Map an alert's structure back to the regime that selected it:
+        iron condor → neutral, bullish credit spread (bull put) → bull,
+        bearish credit spread (bear call) → bear."""
+        if alert.type == AlertType.iron_condor or "condor" in str(alert.type.value).lower():
+            return "neutral"
+        direction = getattr(alert.direction, "value", str(alert.direction or "")).lower()
+        if direction == "bullish":
+            return "bull"
+        if direction == "bearish":
+            return "bear"
+        return "neutral"
 
     # ------------------------------------------------------------------
     # Portfolio-mode sizing (COMPASS multi-underlying)

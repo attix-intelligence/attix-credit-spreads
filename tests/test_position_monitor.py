@@ -596,11 +596,19 @@ class TestMarketHoursGate:
             assert PositionMonitor._is_market_hours() is False
 
     def test_check_skipped_when_market_closed(self):
-        """_check_positions must return immediately when market is closed."""
+        """_check_positions must skip all Tier 1/2 work when market is closed.
+
+        Tier 3 reconciliation windows (9:35-10:00 AM / 4:15-4:30 PM ET) run
+        BEFORE the market-hours gate by design and call get_positions, so they
+        are disabled here to keep the test deterministic regardless of when
+        the suite runs.
+        """
         alpaca = _make_alpaca()
         mon = _monitor(alpaca=alpaca)
 
-        with patch.object(PositionMonitor, "_is_market_hours", return_value=False):
+        with patch.object(PositionMonitor, "_is_market_hours", return_value=False), \
+             patch.object(PositionMonitor, "_should_run_eod", return_value=False), \
+             patch.object(PositionMonitor, "_should_run_morning", return_value=False):
             mon._check_positions()
 
         alpaca.get_positions.assert_not_called()

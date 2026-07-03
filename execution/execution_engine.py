@@ -11,6 +11,7 @@ Design principles:
 import hashlib
 import logging
 import os
+import re
 import time
 from datetime import datetime, timedelta, timezone
 from typing import Dict, Optional
@@ -31,6 +32,26 @@ def _build_occ_symbol(ticker: str, expiration: str, strike: float, option_type: 
         return f"{ticker.upper():<6}{date_str}{cp}{strike_int:08d}".replace(" ", "")
     except Exception:
         return None
+
+
+def _executor_position_symbol(p: Dict) -> str:
+    """OCC symbol for an executor /v1/portfolio/positions dict.
+
+    The executor's Tradier route returns the UNDERLYING in ``symbol`` with the
+    option contract split into option_type/strike/expiration fields (found in
+    Phase 2 sandbox validation) — rebuild the OCC symbol so downstream
+    conflict/reconciliation matching stays broker-agnostic. Positions whose
+    symbol already looks like an OCC contract pass through unchanged.
+    """
+    sym = str(p.get("symbol") or "")
+    opt_type = p.get("option_type")
+    strike = p.get("strike")
+    exp = p.get("expiration")
+    if opt_type and strike and exp and not re.search(r"\d{6}[CP]\d{8}$", sym):
+        occ = _build_occ_symbol(sym, str(exp), float(strike), str(opt_type))
+        if occ:
+            return occ
+    return sym
 
 
 def _build_legs_for_trade(trade_record: Dict, spread_lower: str) -> list:
@@ -310,8 +331,9 @@ class ExecutionEngine:
             }
 
         # Pre-flight position conflict check — runs before DB write so no cleanup needed on block.
-        # Only active when an Alpaca provider is configured (dry-run has no live positions).
-        if self.alpaca:
+        # Broker-agnostic: active whenever a live position source exists (Alpaca
+        # provider or executor sink). Dry-run (neither) has no live positions.
+        if self.alpaca or self.executor_sink is not None:
             conflict_sym = self._check_position_conflict(opp)
             if conflict_sym:
                 return {
@@ -584,39 +606,62 @@ class ExecutionEngine:
         expiration,
         short_strike: float,
         long_strike: float,
+        opp: Optional[Dict] = None,
     ):
         """Adapt the engine's ``opp`` dict into an ExecutorOrderSink-compatible
         :class:`OrderIntent`.
 
-        Local adapter — ExecutorOrderSink is not modified. Reuses the existing
-        deterministic client_id as the intent's ``stream`` so the sink's
-        ``stream_client_order_id`` produces a stable idempotency key.
+        Local adapter — reuses the existing deterministic client_id as the
+        intent's ``stream`` so the sink's ``stream_client_order_id`` produces a
+        stable idempotency key. Iron condors need ``opp`` for the per-wing
+        strikes and map to a 4-leg "iron_condor" intent.
         """
         # Lazy import — keeps the engine import surface unchanged when the
         # executor route is never used (default for all non-V8A-TRADIER experiments).
         from compass.live.vrp_contracts import OrderIntent, OrderLeg
 
         exp_str = str(expiration).split(" ")[0] if expiration else ""
-        right = "P" if spread_type.lower() == "bull_put" else "C"
-        opt_type = "put" if right == "P" else "call"
-        sell_occ = _build_occ_symbol(ticker, exp_str, short_strike, opt_type) or ticker
-        buy_occ = _build_occ_symbol(ticker, exp_str, long_strike, opt_type) or ticker
+
+        def _leg(side: str, strike: float, right: str) -> OrderLeg:
+            opt_type = "put" if right == "P" else "call"
+            occ = _build_occ_symbol(ticker, exp_str, strike, opt_type) or ticker
+            return OrderLeg(
+                side=side, sec_type="option", symbol=occ,
+                qty=int(contracts), strike=float(strike),
+                expiration=exp_str, right=right,
+            )
+
+        if "condor" in spread_type.lower():
+            o = opp or {}
+            put_short = float(o.get("put_short_strike") or 0)
+            put_long = float(o.get("put_long_strike") or 0)
+            call_short = float(o.get("call_short_strike") or 0)
+            call_long = float(o.get("call_long_strike") or 0)
+            if not all((put_short, put_long, call_short, call_long)):
+                raise ValueError(
+                    f"iron_condor opp missing per-wing strikes "
+                    f"(put {put_short}/{put_long}, call {call_short}/{call_long})"
+                )
+            structure = "iron_condor"
+            legs = (
+                _leg("sell", put_short, "P"),
+                _leg("buy", put_long, "P"),
+                _leg("sell", call_short, "C"),
+                _leg("buy", call_long, "C"),
+            )
+        else:
+            structure = spread_type.lower()
+            right = "P" if structure == "bull_put" else "C"
+            legs = (
+                _leg("sell", short_strike, right),
+                _leg("buy", long_strike, right),
+            )
+
         return OrderIntent(
             stream=client_id,  # routed through stream_client_order_id for idempotency
             symbol=ticker,
-            structure=spread_type.lower(),
-            legs=(
-                OrderLeg(
-                    side="sell", sec_type="option", symbol=sell_occ,
-                    qty=int(contracts), strike=float(short_strike),
-                    expiration=exp_str, right=right,
-                ),
-                OrderLeg(
-                    side="buy", sec_type="option", symbol=buy_occ,
-                    qty=int(contracts), strike=float(long_strike),
-                    expiration=exp_str, right=right,
-                ),
-            ),
+            structure=structure,
+            legs=legs,
             contracts=int(contracts),
             est_credit=float(credit) if credit and credit > 0 else None,
             rationale=f"v8a_tradier:{self._exp_id}",
@@ -693,12 +738,12 @@ class ExecutionEngine:
                 "message": f"phase1 cap exceeded: contracts={contracts} max={_max_contracts}",
             }
 
-        # ── 4) Structure support — executor sink only supports credit spreads.
-        if spread_lower not in ("bull_put", "bear_call"):
+        # ── 4) Structure support — credit spreads + 4-leg iron condors.
+        if spread_lower not in ("bull_put", "bear_call") and "condor" not in spread_lower:
             logger.error(
                 "ExecutionEngine: executor route does not support structure %r "
-                "(client_id=%s) — refusing submit. Phase-1 V8A-TRADIER ships with "
-                "credit-spread structures only.",
+                "(client_id=%s) — refusing submit. Executor route ships with "
+                "credit-spread and iron-condor structures only.",
                 spread_type, client_id,
             )
             self._mark_pending_failed(
@@ -716,7 +761,7 @@ class ExecutionEngine:
             intent = self._build_executor_intent(
                 client_id=client_id, ticker=ticker, spread_type=spread_type,
                 contracts=contracts, credit=credit, expiration=expiration,
-                short_strike=short_strike, long_strike=long_strike,
+                short_strike=short_strike, long_strike=long_strike, opp=opp,
             )
             raw = self.executor_sink.submit(intent)
         except Exception as exc:  # noqa: BLE001 — sink should not crash the cycle
@@ -803,7 +848,12 @@ class ExecutionEngine:
             logger.error("ExecutionEngine: _mark_pending_failed DB update failed for %s: %s", client_id, db_err)
 
     def _get_cached_positions(self) -> Optional[list]:
-        """Return Alpaca positions, using a 60-second in-memory cache to avoid per-trade API calls.
+        """Return open broker positions as [{"symbol": occ, "qty": n}, ...],
+        using a 60-second in-memory cache to avoid per-trade API calls.
+
+        Source is the Alpaca provider when configured, else the executor sink
+        (whose /v1/portfolio/positions dicts use ``quantity`` — normalized to
+        ``qty`` here so _check_position_conflict is broker-agnostic).
 
         Returns None if the fetch fails (caller should fail open — don't block on API error).
         """
@@ -812,7 +862,15 @@ class ExecutionEngine:
         if self._positions_cache is not None and (now - self._positions_cache_ts) < _CACHE_TTL:
             return self._positions_cache
         try:
-            positions = self.alpaca.get_positions()
+            if self.alpaca:
+                positions = self.alpaca.get_positions()
+            elif self.executor_sink is not None:
+                positions = [
+                    {"symbol": _executor_position_symbol(p), "qty": p.get("quantity", p.get("qty"))}
+                    for p in (self.executor_sink.get_positions() or [])
+                ]
+            else:
+                return None
             self._positions_cache = positions
             self._positions_cache_ts = now
             return positions
@@ -823,7 +881,7 @@ class ExecutionEngine:
             return None
 
     def _check_position_conflict(self, opp: Dict) -> Optional[str]:
-        """Check if any leg of *opp* already exists as an open Alpaca position.
+        """Check if any leg of *opp* already exists as an open broker position.
 
         Returns the conflicting OCC symbol string if a conflict is found, else None.
         Returns None (no-block) if the positions fetch failed.

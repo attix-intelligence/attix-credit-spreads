@@ -150,9 +150,12 @@ def test_submit_bull_put_posts_correct_spread_body():
     # idempotency_key is the sanitized coid — deterministic per intent
     assert body["idempotency_key"].startswith("vrp-exp1220-SPY-2026-06-12-")
 
-    # Normalized response surface
+    # Normalized response surface. order_id is the BROKER order id — the
+    # executor's Tradier status/cancel routes key on it, not the internal id
+    # (Phase 2 sandbox finding).
     assert result["status"] == "submitted"
-    assert result["order_id"] == "ord-1"
+    assert result["order_id"] == "bk-1"
+    assert result["executor_order_id"] == "ord-1"
     assert result["broker_order_id"] == "bk-1"
     assert result["stream"] == "exp1220"
     assert result["ticker"] == "SPY"
@@ -186,6 +189,31 @@ def test_submit_bear_call_maps_to_call_legs():
     assert body["strategy"] == "bear_call_spread"
     assert [leg["option_type"] for leg in body["legs"]] == ["call", "call"]
     assert [leg["strike"] for leg in body["legs"]] == [500.0, 505.0]
+
+
+def test_submit_rounds_sub_penny_credit_to_cents():
+    # Tradier silently cancels sub-penny limit prices (live order 135629196,
+    # 2026-07-02: 3.3605175 → canceled 152ms after create). The sink must
+    # round to cents.
+    http = FakeHttp(queue=[(200, {
+        "success": True, "order_id": "ord-9", "message": "ok",
+        "status": "open", "symbol": "SPY", "quantity": 13,
+        "timestamp": "2026-07-02T16:45:00Z",
+    })])
+    sink = _build_sink(http)
+    sink.submit(_bull_put(est_credit=3.3605175, contracts=13))
+    assert http.calls[0]["json"]["net_credit"] == 3.36
+
+
+def test_submit_close_rounds_sub_penny_debit_to_cents():
+    http = FakeHttp(queue=[(200, {
+        "success": True, "order_id": "ord-10", "message": "ok",
+        "status": "open", "symbol": "SPY", "quantity": 1,
+        "timestamp": "2026-07-02T16:45:00Z",
+    })])
+    sink = _build_sink(http)
+    sink.submit_close(_bull_put(contracts=1), net_debit=1.23456)
+    assert http.calls[0]["json"]["net_debit"] == 1.23
 
 
 def test_submit_without_est_credit_emits_market_order():
