@@ -527,8 +527,15 @@ def _kelly_fraction(regime: str, kelly_cfg: Dict, state: Dict) -> Tuple[float, s
     halt      = state["halt_remaining"]
     min_frac  = float(cb_cfg.get("min_fraction", 2.0))
 
-    if tier >= 3 and halt > 0:
-        return 0.0, f"cb_tier3_halted: {halt} slots remaining"
+    if tier >= 3:
+        if halt > 0:
+            return 0.0, f"cb_tier3_halted: {halt} slots remaining"
+        # Halt exhausted while DD is still ≤ tier-3: resume at the tier-2 floor.
+        # The halt must be finite and self-clearing — with losses REALIZED and
+        # the book flat, equity (and therefore DD) can never move again, so an
+        # unconditional tier-3 block would halt the strategy forever
+        # (EXP-800-BT: 1,536 blocked trading days after 2020-02-24).
+        return min_frac, f"cb_tier3_halt_exhausted: floor={min_frac}%"
 
     if tier == 2:
         eff = min_frac
@@ -539,6 +546,17 @@ def _kelly_fraction(regime: str, kelly_cfg: Dict, state: Dict) -> Tuple[float, s
         return eff, f"cb_tier1: 0.5× base={base_frac}% → {eff}%"
 
     return base_frac, f"cb_tier0: full Kelly={base_frac}%"
+
+
+def _tier3_entry_blocked(state: Dict) -> bool:
+    """True while the tier-3 halt window is active — and ONLY then.
+
+    The tier-3 halt is finite (tier3_halt_trades scan slots). Once the counter
+    is exhausted, entries must resume at the tier-2 floor even if DD remains
+    pinned below tier-3: a flat book can never recover its drawdown, so an
+    unconditional ``cb_tier >= 3`` block deadlocks the strategy permanently.
+    """
+    return state["cb_tier"] >= 3 and state["halt_remaining"] > 0
 
 
 def _decrement_halt(state: Dict, kelly_state_db: KellyStateDB) -> None:
@@ -698,8 +716,8 @@ class EXP800Scanner:
             _decrement_halt(kelly_state, self.kelly_db)
             d["reason"] = kelly_note; return d
 
-        # ── Tier 3 flatten: log but don't place new trades ────────────────────
-        if kelly_state["cb_tier"] >= 3:
+        # ── Tier 3 halt: block entries only while the halt counter runs ──────
+        if _tier3_entry_blocked(kelly_state):
             _decrement_halt(kelly_state, self.kelly_db)
             d["reason"] = "cb_tier3_flatten_halt"; return d
 
