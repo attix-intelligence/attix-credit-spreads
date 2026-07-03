@@ -23,7 +23,7 @@ from sentinel import guards  # noqa: E402
 # ---------------------------------------------------------------------------
 
 def _executor_routed_config():
-    """Mirrors live_expv8a_tradier.yaml's relevant shape."""
+    """Mirrors live_exp800_tradier.yaml's relevant shape."""
     return {
         "alpaca": {"enabled": False, "paper": False},
         "tradier_live": {
@@ -46,12 +46,12 @@ def _alpaca_routed_config():
 def test_executor_routed_bypasses_alpaca_check(monkeypatch):
     """alpaca.enabled=false -> the function returns without touching env or net."""
     # No Alpaca env vars set; no requests should be issued.
-    monkeypatch.delenv("ALPACA_API_KEY_EXPV8ATRADIER", raising=False)
-    monkeypatch.delenv("ALPACA_API_SECRET_EXPV8ATRADIER", raising=False)
+    monkeypatch.delenv("ALPACA_API_KEY_EXP800TRADIER", raising=False)
+    monkeypatch.delenv("ALPACA_API_SECRET_EXP800TRADIER", raising=False)
 
     with patch("requests.get") as mock_get:
         # Must not sys.exit, must not call requests.get.
-        guards._check_alpaca_health("EXP-V8A-TRADIER", config=_executor_routed_config())
+        guards._check_alpaca_health("EXP-800-TRADIER", config=_executor_routed_config())
         assert not mock_get.called, "requests.get must not be called when alpaca.enabled=false"
 
 
@@ -108,9 +108,9 @@ def test_pre_scan_check_threads_config_to_alpaca_check():
     with patch("sentinel.guards._check_registry_status"), \
          patch("sentinel.guards._load_state", return_value={}), \
          patch("sentinel.guards._check_alpaca_health") as mock_alpaca:
-        guards.pre_scan_check("EXP-V8A-TRADIER", config=sentinel_cfg)
+        guards.pre_scan_check("EXP-800-TRADIER", config=sentinel_cfg)
 
-    mock_alpaca.assert_called_once_with("EXP-V8A-TRADIER", config=sentinel_cfg)
+    mock_alpaca.assert_called_once_with("EXP-800-TRADIER", config=sentinel_cfg)
 
 
 def test_pre_scan_check_without_config_passes_none():

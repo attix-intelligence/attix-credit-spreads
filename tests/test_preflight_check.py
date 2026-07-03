@@ -30,17 +30,17 @@ def _paper_config():
 
 
 def _live_config():
-    """Minimum live config (mirrors live_expv8a_tradier.yaml shape)."""
+    """Minimum live config (mirrors live_exp800_tradier.yaml shape)."""
     return {
         "paper_mode": False,
         "db_path": "data/x.db",
-        "experiment_id": "EXP-V8A-TRADIER",
+        "experiment_id": "EXP-800-TRADIER",
         "logging": {"level": "INFO", "file": "logs/x.log"},
         "strategy": {
             "use_delta_selection": False,
             "otm_pct": 0.02,
         },
-        "risk": {"max_contracts": 1},
+        "risk": {"max_contracts": 30},
         "tradier_live": {
             "enabled": True,
             "account_id": "tradier_6YA42569",
@@ -134,18 +134,18 @@ def test_live_enabled_must_be_true():
     assert any("tradier_live.enabled must be true" in e for e in errors)
 
 
-def test_live_max_contracts_must_be_one():
+def test_live_max_contracts_must_match_approved_cap():
     cfg = _live_config()
     cfg["risk"]["max_contracts"] = 5
     errors = preflight_check.validate(cfg)
-    assert any("max_contracts must be 1" in e for e in errors)
+    assert any("max_contracts must be 30" in e for e in errors)
 
 
 def test_live_max_contracts_missing_fails():
     cfg = _live_config()
     cfg["risk"].pop("max_contracts")
     errors = preflight_check.validate(cfg)
-    assert any("max_contracts must be 1" in e for e in errors)
+    assert any("max_contracts must be 30" in e for e in errors)
 
 
 # ---------------------------------------------------------------------------
@@ -158,8 +158,8 @@ def _load_shipped(path):
         return yaml.safe_load(f)
 
 
-def test_shipped_live_expv8a_tradier_passes():
-    cfg = _load_shipped("configs/live_expv8a_tradier.yaml")
+def test_shipped_live_exp800_tradier_passes():
+    cfg = _load_shipped("configs/live_exp800_tradier.yaml")
     assert preflight_check.validate(cfg) == []
 
 

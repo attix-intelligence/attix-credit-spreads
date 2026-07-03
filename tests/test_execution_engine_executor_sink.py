@@ -42,7 +42,7 @@ def _opp(contracts: int = 1, spread_type: str = "bear_call") -> Dict[str, Any]:
 
 def _config(*, live_submit: Optional[bool] = None, max_contracts: int = 1) -> Dict[str, Any]:
     cfg: Dict[str, Any] = {
-        "experiment_id": "EXP-V8A-TRADIER",
+        "experiment_id": "EXP-800-TRADIER",
         "risk": {"max_contracts": max_contracts, "account_size": 100_000},
         "tradier_live": {
             "enabled": True,

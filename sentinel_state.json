@@ -162,12 +162,12 @@
             "peak_equity": 100000,
             "halted": false
         },
-        "EXP-V8A-TRADIER": {
+        "EXP-800-TRADIER": {
             "status": "active",
-            "paper_config": "configs/live_expv8a_tradier.yaml",
-            "config_fingerprint": "f77c57b261ae26d6b757d011456bb5c9d5f8264b22b48431cfbafd31f86566df",
+            "paper_config": "configs/live_exp800_tradier.yaml",
+            "config_fingerprint": "b4751fa4a735cc639c085c2699c86f5ffec7372e1cbcb72f8f49730fba6a6118",
             "account_id": "tradier_6YA42569",
-            "live_since": "2026-06-23",
+            "live_since": "2026-07-02",
             "enrolled_at": "2026-06-23T12:03:52+00:00",
             "last_health_check": "2026-06-23T12:03:52+00:00",
             "halt_reason": null,

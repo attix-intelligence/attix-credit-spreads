@@ -238,12 +238,16 @@ class ExecutorOrderSink:
         api_key = os.environ.get("EXECUTOR_API_KEY", "")
         account_id = os.environ.get("EXECUTOR_ACCOUNT_ID", "")
         account_type = os.environ.get("EXECUTOR_ACCOUNT_TYPE", "paper")
+        source_model = os.environ.get("EXECUTOR_SOURCE_MODEL", "")
         timeout = float(os.environ.get("EXECUTOR_TIMEOUT_S", "15.0"))
         if not api_key:
             raise RuntimeError("EXECUTOR_API_KEY env var is required for SINK_TYPE=executor")
         if not account_id:
             raise RuntimeError("EXECUTOR_ACCOUNT_ID env var is required for SINK_TYPE=executor")
         client = ExecutorClient(base_url, api_key, timeout=timeout, http=http)
+        if source_model:
+            return cls(client, account_id=account_id, account_type=account_type,
+                       source_model=source_model)
         return cls(client, account_id=account_id, account_type=account_type)
 
     # ---------------------------------------------------------------- submit
