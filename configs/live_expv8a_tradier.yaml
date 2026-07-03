@@ -1,5 +1,5 @@
 # ============================================================================
-# live_expv8a_tradier.yaml — EXP-V8A-TRADIER (Tradier LIVE Phase 1, cap 1 contract)
+# live_expv8a_tradier.yaml — EXP-V8A-TRADIER (Tradier LIVE Phase 2, twin-matched sizing)
 # ============================================================================
 # DORMANT pilot config. Strategy is a VERBATIM copy of paper_exp800.yaml
 # (EXP-800 Safe Kelly 4/7/9). The only differences from paper_exp800.yaml are:
@@ -8,7 +8,8 @@
 #       the same env-var unmasking pattern as EXP-V8A-IBKR
 #       (SINK_TYPE_EXPV8ATRADIER, EXECUTOR_ACCOUNT_ID_EXPV8ATRADIER,
 #        EXECUTOR_ACCOUNT_TYPE_EXPV8ATRADIER -> live)
-#   (b) risk.max_contracts hard-capped to 1 (Phase 1 cap)
+#   (b) risk.max_contracts matches the paper_exp800.yaml twin (30) — Phase-1
+#       1-contract cap removed 2026-07-03 per Carlos
 #   (c) experiment_id = EXP-V8A-TRADIER (separate dashboard line)
 #
 # Required-by-plumbing extras (no strategy effect):
@@ -99,7 +100,7 @@ kelly:
 risk:
   account_size: 100000       # starting capital (used for HWM bootstrap)
   max_risk_per_trade: 17.0    # hard cap (matches max Kelly bull fraction)
-  max_contracts: 1           # Phase 1 LIVE cap (paper_exp800.yaml: 30)
+  max_contracts: 30          # matches paper_exp800.yaml twin (Phase-1 cap of 1 removed 2026-07-03 per Carlos)
   max_positions: 10
 
   profit_target: 55          # 55% of credit
@@ -152,7 +153,7 @@ tradier_live:
 # When false (default), ExecutionEngine logs `[DRY RUN — live_submit=false]`
 # and never calls executor_sink.submit(). When true, the next 5-min cycle
 # inside NYSE RTH will fire a real ExecutorOrderSink.submit() against
-# tradier_6YA42569. Phase-1 cap (risk.max_contracts=1) still applies.
+# tradier_6YA42569. Sizing capped by risk.max_contracts (30, twin-matched).
 # Toggle ONLY after Carlos's explicit per-session go.
 # ============================================================================
 live_submit: true
