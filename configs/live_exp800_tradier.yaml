@@ -8,7 +8,8 @@
 #       the same env-var unmasking pattern as EXP-V8A-IBKR
 #       (SINK_TYPE_EXP800TRADIER, EXECUTOR_ACCOUNT_ID_EXP800TRADIER,
 #        EXECUTOR_ACCOUNT_TYPE_EXP800TRADIER -> live)
-#   (b) risk.max_contracts hard-capped to 1 (Phase 1 cap)
+#   (b) risk.max_contracts = 30 (Phase 3 paper-parity cap — Carlos GO 2026-07-02;
+#       Phase-1's 1-contract cap was retired then. Preflight pins this value.)
 #   (c) experiment_id = EXP-800-TRADIER (separate dashboard line)
 #
 # Required-by-plumbing extras (no strategy effect):
@@ -152,7 +153,7 @@ tradier_live:
 # When false (default), ExecutionEngine logs `[DRY RUN — live_submit=false]`
 # and never calls executor_sink.submit(). When true, the next 5-min cycle
 # inside NYSE RTH will fire a real ExecutorOrderSink.submit() against
-# tradier_6YA42569. Phase-1 cap (risk.max_contracts=1) still applies.
+# tradier_6YA42569. Approved live cap (risk.max_contracts=30, Phase 3) applies.
 # Toggle ONLY after Carlos's explicit per-session go.
 # ============================================================================
 live_submit: true   # Reinstated 2026-07-02 — Carlos confirmed entry IS EXP-800 (mislabel, not wrong strategy)
