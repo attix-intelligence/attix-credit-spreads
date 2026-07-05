@@ -112,11 +112,11 @@ def _heartbeat_key_from_db(db_path: str) -> str:
     """Derive heartbeat filename key from db_path — mirrors main.py's _write_heartbeat().
 
     main.py writes: data/.last_scan_{basename(db).replace("attix_","").replace(".db","")}
-    e.g. data/pilotai_exp400.db -> "exp400"
-         data/exp503/pilotai_exp503.db -> "exp503"
+    e.g. data/attix_exp400.db -> "exp400"
+         data/exp503/pilotai_exp503.db -> "pilotai_exp503" (legacy names pass through)
     """
     resolved = resolve_db_path(db_path)
-    base = Path(resolved).name  # e.g. "pilotai_exp400.db"
+    base = Path(resolved).name  # e.g. "attix_exp400.db"
     key = base.replace("attix_", "").replace(".db", "")
     return key  # e.g. "exp400"
 

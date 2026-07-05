@@ -6,7 +6,7 @@ paper trading to live execution. Produces a pass/fail checklist.
 
 Usage:
     python scripts/live_readiness_check.py
-    python scripts/live_readiness_check.py --config config.yaml --db data/pilotai.db
+    python scripts/live_readiness_check.py --config config.yaml --db data/attix.db
     python scripts/live_readiness_check.py --skip-telegram   # skip Telegram send test
 """
 
@@ -767,14 +767,15 @@ def main():
         candidates = [
             os.environ.get("ATTIX_DB_PATH", ""),
             os.path.join(DATA_DIR, "attix_champion.db"),
-            os.path.join(DATA_DIR, "pilotai.db"),
+            os.path.join(DATA_DIR, "attix.db"),
+            os.path.join(DATA_DIR, "pilotai.db"),  # legacy pre-rename filename
         ]
         for c in candidates:
             if c and os.path.exists(c):
                 db_path = c
                 break
         if not db_path:
-            db_path = candidates[1] if len(candidates) > 1 else "data/pilotai.db"
+            db_path = candidates[1] if len(candidates) > 1 else "data/attix.db"
 
     print("Running live-readiness checks...")
     print(f"  Config:   {args.config}")

@@ -149,7 +149,8 @@ class ExecutionEngine:
         # Derive experiment identity from DB path so client_order_ids are
         # namespaced per experiment.  Two experiments scanning the same
         # strike/expiry on the same day must never share a DB key.
-        # e.g. data/pilotai_exp600.db → "exp600", data/attix_champion.db → "champion"
+        # e.g. data/attix_champion.db → "champion"; legacy pre-rename names pass
+        # through unchanged (data/pilotai_exp600.db → "pilotai_exp600")
         _db = db_path or ""
         _base = os.path.basename(_db).replace("attix_", "").replace(".db", "")
         self._exp_id = _base if _base else "unk"

@@ -32,7 +32,13 @@ fi
 : "${TELEGRAM_CHAT_ID:?TELEGRAM_CHAT_ID is required}"
 
 export ATTIX_API_KEY="${ATTIX_API_KEY:-cZZP6he1Qez8Lb6njh6w5vUe}"
-export ATTIX_DB_PATH="${ATTIX_DB_PATH:-$PROJECT_ROOT/data/pilotai_signal.db}"
+# Default DB: attix_signal.db, falling back to the legacy pilotai_signal.db
+# filename when only that file exists (existing installs are never renamed).
+_default_signal_db="$PROJECT_ROOT/data/attix_signal.db"
+if [ ! -f "$_default_signal_db" ] && [ -f "$PROJECT_ROOT/data/pilotai_signal.db" ]; then
+    _default_signal_db="$PROJECT_ROOT/data/pilotai_signal.db"
+fi
+export ATTIX_DB_PATH="${ATTIX_DB_PATH:-$_default_signal_db}"
 
 # ── Activate virtualenv if present ───────────────────────────────────────────
 if [ -f "$PROJECT_ROOT/.venv/bin/activate" ]; then

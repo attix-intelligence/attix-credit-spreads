@@ -72,11 +72,13 @@ def _count_trades_today(exp_id: str) -> int:
         from sentinel.orchestrator import _PROJECT_ROOT
         import sqlite3
 
-        # Try common DB paths
+        # Try common DB paths: attix_* first, then legacy pilotai_* filenames
         numeric = exp_id.removeprefix("EXP-").lower().replace("-", "")
-        db_path = _PROJECT_ROOT / f"data/pilotai_exp{numeric}.db"
+        db_path = _PROJECT_ROOT / f"data/attix_exp{numeric}.db"
         if not db_path.exists():
             db_path = _PROJECT_ROOT / f"data/attix_{exp_id.lower().replace('-', '')}.db"
+        if not db_path.exists():
+            db_path = _PROJECT_ROOT / f"data/pilotai_exp{numeric}.db"
         if not db_path.exists():
             return 0
 

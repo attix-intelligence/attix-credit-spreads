@@ -432,11 +432,20 @@ def cmd_resume(args):
     print(f"  resume_reason:      {reason}")
 
     # Optional --restart via launchctl. Plist convention:
-    # com.pilotai.exp{NNN}.plist in ~/Library/LaunchAgents/.
+    # com.attix.exp{NNN}.plist in ~/Library/LaunchAgents/. Older installs
+    # (e.g. the Mac Studio) still have com.pilotai.exp{NNN}.plist — try the
+    # attix name first, then fall back to whichever legacy plist exists.
     if restart:
         suffix = exp_id.lower().replace("exp-", "exp").replace("-", "")
-        plist_name = f"com.pilotai.{suffix}.plist"
-        plist_path = str(Path.home() / "Library" / "LaunchAgents" / plist_name)
+        agents_dir = Path.home() / "Library" / "LaunchAgents"
+        plist_candidates = [
+            agents_dir / f"com.attix.{suffix}.plist",
+            agents_dir / f"com.pilotai.{suffix}.plist",
+        ]
+        plist_path = str(next(
+            (p for p in plist_candidates if p.exists()),
+            plist_candidates[0],
+        ))
         print(f"\nRestarting via launchctl: {plist_path}")
         subprocess.run(
             ["launchctl", "unload", plist_path],

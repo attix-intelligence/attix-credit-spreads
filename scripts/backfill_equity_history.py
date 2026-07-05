@@ -96,7 +96,11 @@ def main() -> int:
     total = 0
     for exp in experiments:
         eid = exp["id"]
-        db = _resolve_db(exp.get("db_path", f"data/pilotai_{eid.replace('-', '_').lower()}.db"))
+        slug = eid.replace('-', '_').lower()
+        fallback_db = f"data/attix_{slug}.db"
+        if not Path(_resolve_db(fallback_db)).exists() and Path(_resolve_db(f"data/pilotai_{slug}.db")).exists():
+            fallback_db = f"data/pilotai_{slug}.db"  # legacy pre-rename filename
+        db = _resolve_db(exp.get("db_path", fallback_db))
         key, secret = _creds(exp)
         if not key or not secret:
             log.warning("%s: no Alpaca creds (env_file=%s) — skipping", eid, exp.get("env_file"))

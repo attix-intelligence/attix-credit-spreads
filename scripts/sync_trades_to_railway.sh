@@ -10,7 +10,13 @@
 set -euo pipefail
 
 BASE_URL="${RAILWAY_URL:-https://attix-production.up.railway.app}"
-DB_PATH="${ATTIX_DB:-data/pilotai.db}"
+# Default DB: attix.db, falling back to the legacy pilotai.db filename when
+# only that file exists (existing installs are never renamed).
+_default_db="data/attix.db"
+if [ ! -f "$_default_db" ] && [ -f "data/pilotai.db" ]; then
+    _default_db="data/pilotai.db"
+fi
+DB_PATH="${ATTIX_DB:-$_default_db}"
 
 echo "Extracting trades from local database..."
 

@@ -18,9 +18,13 @@ API_BATCH_SIZE = int(os.environ.get("ATTIX_BATCH_SIZE", "6"))
 API_TIMEOUT = int(os.environ.get("ATTIX_REQUEST_TIMEOUT", "90"))
 
 # ── Database ──────────────────────────────────────────────────────────────────
-DB_PATH = Path(
-    os.environ.get("ATTIX_DB_PATH", str(PROJECT_ROOT / "data" / "pilotai_signal.db"))
-)
+# Default is attix_signal.db; fall back to the legacy pilotai_signal.db filename
+# when only that file exists (existing deployments keep the old file on disk).
+_DEFAULT_DB = PROJECT_ROOT / "data" / "attix_signal.db"
+_LEGACY_DB = PROJECT_ROOT / "data" / "pilotai_signal.db"
+if not _DEFAULT_DB.exists() and _LEGACY_DB.exists():
+    _DEFAULT_DB = _LEGACY_DB
+DB_PATH = Path(os.environ.get("ATTIX_DB_PATH", str(_DEFAULT_DB)))
 
 # ── Telegram ──────────────────────────────────────────────────────────────────
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")

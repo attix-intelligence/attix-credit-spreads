@@ -1,6 +1,7 @@
 /**
  * Shared SQLite database module for the Node.js/Next.js side.
- * Opens the same pilotai.db file used by Python (with WAL mode for concurrent reads).
+ * Opens the same DB file used by Python (attix.db, or the legacy pilotai.db
+ * filename on pre-rename deployments) with WAL mode for concurrent reads.
  * Scanner trades are read-only from Node; user trades can be read/written.
  *
  * IMPORTANT: better-sqlite3 is a native C++ addon. If it fails to load
@@ -9,7 +10,7 @@
  */
 
 import path from 'path'
-import { DB_PATH as SHARED_DB_PATH } from '@/lib/paths'
+import { DB_PATH as SHARED_DB_PATH, resolveDbFile } from '@/lib/paths'
 
 // Dynamic import of better-sqlite3 to handle missing native binary gracefully
 let DatabaseConstructor: typeof import('better-sqlite3') | null = null
@@ -22,7 +23,7 @@ try {
 type DatabaseInstance = import('better-sqlite3').Database
 
 const DB_PATH = SHARED_DB_PATH
-const DB_PATH_ALT = path.join(process.cwd(), 'data', 'pilotai.db')
+const DB_PATH_ALT = resolveDbFile(path.join(process.cwd(), 'data'))
 
 let _db: DatabaseInstance | null = null
 let _dbFailed = false

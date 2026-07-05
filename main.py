@@ -1080,7 +1080,7 @@ Examples:
         '--db',
         default=None,
         dest='db_path',
-        help='Path to SQLite database file (default: data/pilotai.db)'
+        help='Path to SQLite database file (default: data/attix.db, or legacy data/pilotai.db if only that file exists)'
     )
 
     args = parser.parse_args()

@@ -124,7 +124,7 @@ Other agents read registry.json from the repo — stale state causes conflicts.
 | Backtest config | `configs/expNNN_<descriptor>.json` | `configs/exp503_lowvol.json` |
 | Plist | `deploy/com.attix.expNNN.plist` | `deploy/com.attix.exp600.plist` |
 | Log | `~/logs/expNNN.log` | `~/logs/exp600.log` |
-| DB | `data/expNNN/pilotai_expNNN.db` | `data/exp600/pilotai_exp600.db` |
+| DB | `data/expNNN/attix_expNNN.db` (pre-rename experiments keep their existing `pilotai_expNNN.db` files) | `data/exp600/attix_exp600.db` |
 | Dryrun | `scripts/dryrun_expNNN.py` | `scripts/dryrun_exp600.py` |
 
 ---

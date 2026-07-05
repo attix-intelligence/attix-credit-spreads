@@ -19,8 +19,19 @@ import os as _os
 
 
 def get_db_path() -> Path:
-    """Return the DB path, reading ATTIX_DB_PATH at call time (not import time)."""
-    return Path(_os.environ.get('ATTIX_DB_PATH', str(Path(DATA_DIR) / "pilotai.db")))
+    """Return the DB path, reading ATTIX_DB_PATH at call time (not import time).
+
+    Default is data/attix.db; falls back to the legacy data/pilotai.db filename
+    when only that file exists (live deployments keep the old file on disk).
+    """
+    env = _os.environ.get('ATTIX_DB_PATH')
+    if env:
+        return Path(env)
+    default = Path(DATA_DIR) / "attix.db"
+    legacy = Path(DATA_DIR) / "pilotai.db"
+    if not default.exists() and legacy.exists():
+        return legacy
+    return default
 
 
 def get_db(path: Optional[str] = None) -> sqlite3.Connection:

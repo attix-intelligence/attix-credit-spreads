@@ -4,7 +4,12 @@
 
 set -e
 
-DB_FILE="data/pilotai.db"
+# attix.db, falling back to the legacy pilotai.db filename when only that
+# file exists (existing installs are never renamed).
+DB_FILE="data/attix.db"
+if [ ! -f "$DB_FILE" ] && [ -f "data/pilotai.db" ]; then
+    DB_FILE="data/pilotai.db"
+fi
 RAILWAY_URL="https://attix-production.up.railway.app"
 UPLOAD_ENDPOINT="${RAILWAY_URL}/api/admin/upload-db"
 

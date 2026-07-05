@@ -105,6 +105,10 @@ def _db_path_for_exp(exp_id: str) -> Optional[str]:
     """Return relative path to experiment DB if it exists on disk."""
     num = exp_id.replace("EXP-", "").lower()
     candidates = [
+        f"data/exp{num}/attix_exp{num}.db",
+        f"data/attix_exp{num}.db",
+        # Legacy filenames from before the Attix rename — live deployments
+        # keep the original files on disk (never renamed).
         f"data/exp{num}/pilotai_exp{num}.db",
         f"data/pilotai_exp{num}.db",
     ]

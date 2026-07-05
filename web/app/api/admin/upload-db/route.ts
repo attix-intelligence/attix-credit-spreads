@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { writeFile, rename } from 'fs/promises'
 import { existsSync } from 'fs'
 import { timingSafeEqual } from 'crypto'
-import path from 'path'
-import { DATA_DIR } from '@/lib/paths'
+import { DATA_DIR, resolveDbFile } from '@/lib/paths'
 import { resetDb } from '@/lib/database'
 
-const DB_PATH = path.join(DATA_DIR, 'pilotai.db')
+// attix.db, or the legacy pilotai.db filename if that is the existing file
+const DB_PATH = resolveDbFile(DATA_DIR)
 
 // SQLite files start with this 16-byte header string
 const SQLITE_MAGIC = Buffer.from('SQLite format 3\0')

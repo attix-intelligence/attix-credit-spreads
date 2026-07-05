@@ -49,8 +49,10 @@ def _resolve_db_path(exp: dict) -> Optional[Path]:
     Try multiple paths to find the live SQLite DB for an experiment.
     Priority:
       1. paper_config yaml → db_path
-      2. data/expNNN/pilotai_expNNN.db  (newer convention)
-      3. data/pilotai_expNNN.db         (older convention)
+      2. data/expNNN/attix_expNNN.db    (current convention)
+      3. data/attix_expNNN.db
+      4. data/expNNN/pilotai_expNNN.db  (legacy pre-rename filenames)
+      5. data/pilotai_expNNN.db
     Returns Path if DB exists AND has a trades table, else None.
     """
     candidates = []
@@ -73,6 +75,9 @@ def _resolve_db_path(exp: dict) -> Optional[Path]:
     # 2/3. Derived from experiment ID
     num = exp["id"].replace("EXP-", "").lower()
     candidates += [
+        PROJECT_ROOT / f"data/exp{num}/attix_exp{num}.db",
+        PROJECT_ROOT / f"data/attix_exp{num}.db",
+        # Legacy pre-rename filenames still on disk in live deployments
         PROJECT_ROOT / f"data/exp{num}/pilotai_exp{num}.db",
         PROJECT_ROOT / f"data/pilotai_exp{num}.db",
     ]

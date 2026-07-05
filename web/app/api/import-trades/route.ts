@@ -47,11 +47,11 @@ export async function POST(request: Request) {
     if (clear_existing) {
       try {
         const DatabaseConstructor = require('better-sqlite3')
-        const { DB_PATH } = require('@/lib/paths')
+        const { DB_PATH, resolveDbFile } = require('@/lib/paths')
         const fs = require('fs')
         const pathMod = require('path')
 
-        let dbPath = pathMod.join(process.cwd(), 'data', 'pilotai.db')
+        let dbPath = resolveDbFile(pathMod.join(process.cwd(), 'data'))
         if (fs.existsSync(DB_PATH)) dbPath = DB_PATH
 
         const db = new DatabaseConstructor(dbPath)
@@ -99,11 +99,11 @@ export async function DELETE(request: Request) {
 
   try {
     const DatabaseConstructor = require('better-sqlite3')
-    const { DB_PATH } = require('@/lib/paths')
+    const { DB_PATH, resolveDbFile } = require('@/lib/paths')
     const fs = require('fs')
     const pathMod = require('path')
 
-    let dbPath = pathMod.join(process.cwd(), 'data', 'pilotai.db')
+    let dbPath = resolveDbFile(pathMod.join(process.cwd(), 'data'))
     if (fs.existsSync(DB_PATH)) dbPath = DB_PATH
 
     const db = new DatabaseConstructor(dbPath)

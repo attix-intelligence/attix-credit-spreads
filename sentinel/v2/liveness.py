@@ -5,7 +5,7 @@ Answers: "Has ANYTHING happened in the last 24 hours on a market day?"
 
 Evidence sources (in priority order):
   1. watchdog_runs table in sentinel.db — last successful scan heartbeat
-  2. Trade DB writes — max(created_at) from pilotai_exp*.db
+  2. Trade DB writes — max(created_at) from attix_exp*.db (or legacy pilotai_exp*.db)
   3. sentinel_state.json — last_health_check timestamp
 
 If ALL of these show >24h silence on a market day → CRITICAL.
@@ -152,5 +152,10 @@ def _last_trade_db_write(db_path: str) -> datetime | None:
 
 def _resolve_trade_db(exp_id: str, data_dir: str) -> str | None:
     num = exp_id.replace("EXP-", "").replace("exp", "").lower()
-    path = Path(data_dir) / f"pilotai_exp{num}.db"
-    return str(path) if path.exists() else None
+    # attix_* is the current naming; pilotai_* files predate the rename and
+    # are intentionally never renamed on disk.
+    for name in (f"attix_exp{num}.db", f"pilotai_exp{num}.db"):
+        path = Path(data_dir) / name
+        if path.exists():
+            return str(path)
+    return None

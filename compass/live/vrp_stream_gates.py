@@ -388,7 +388,8 @@ def default_state_path(config: dict) -> Path:
     """Per-experiment state-file path. Falls back to a generic ``vrp_engine`` slug.
 
     Default: ``<cwd>/data/vrp_stream_state_<experiment_id>.json`` to mirror the
-    existing per-experiment ``data/pilotai_<experiment_id>.db`` convention.
+    per-experiment trade-DB convention (``data/attix_<experiment_id>.db``, or
+    the legacy ``pilotai_`` prefix on pre-rename experiments).
     """
     exp_id = str(config.get("experiment_id") or "vrp_engine").strip().lower().replace("-", "_")
     return Path("data") / f"vrp_stream_state_{exp_id}.json"
