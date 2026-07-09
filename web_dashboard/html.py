@@ -775,8 +775,16 @@ def _render_exp_card(s: dict) -> str:
     _broker_tag = (alp.get("broker") if isinstance(alp, dict) else None)
     if not _broker_tag:
         _broker_tag = s.get("broker") or "alpaca"
-    _is_executor = _broker_tag == "ibkr_executor"
-    if _is_executor:
+    # "Routes via the executor" (positions table heading, env-var diag hints)
+    # is independent of WHICH broker sits behind it (card label): the executor
+    # fronts both IBKR and Tradier accounts. Tradier experiments always route
+    # via the executor (sink_type=executor), so tag them even when the account
+    # block is empty and no via_executor stamp exists yet.
+    _is_executor = (
+        _broker_tag in ("ibkr_executor", "tradier", "tradier_live")
+        or bool(alp.get("via_executor"))
+    )
+    if _broker_tag == "ibkr_executor":
         _broker_label = "IBKR"
     elif _broker_tag in ("tradier", "tradier_live"):
         _broker_label = "Tradier"

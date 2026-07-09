@@ -517,6 +517,19 @@ def query_all_live(report_date: Optional[str] = None) -> List[dict]:
                 if not r.get("alpaca_equity_history"):
                     r["alpaca_equity_history"] = pushed_exp.get("alpaca_equity_history") or []
 
+    _augment_account_data(results, pushed)
+    return results
+
+
+def _augment_account_data(results: List[dict], pushed: Optional[dict] = None) -> None:
+    """Layer live/pushed/worker account data onto experiment rows, in place.
+
+    Shared by ``query_all_live`` (paper cards) and
+    ``query_live_trading_experiments`` (real-money cards) so both card
+    families get the same source-priority pipeline: live Alpaca → live
+    executor → worker-pushed portfolio JSON → pushed equity history, then
+    diagnostic classification and provenance stamping.
+    """
     # --- Live Alpaca data (overrides pushed alpaca block when available) -----
     live_discovered = 0   # how many experiments have ALPACA_API_KEY_EXP* env keys
     live_injected = 0     # how many got usable (error-free) live data merged in
@@ -657,8 +670,6 @@ def query_all_live(report_date: Optional[str] = None) -> List[dict]:
         r["data_age_seconds"] = age if age is not None else 0
         r.pop("_portfolio_path", None)
 
-    return results
-
 
 # ---------------------------------------------------------------------------
 # Detailed trade / position queries (for JSON API endpoints)
@@ -748,7 +759,9 @@ def query_live_trading_experiments(report_date: Optional[str] = None) -> List[di
     LIVE_STATUSES). Each row is tagged ``is_live_trading=True`` and carries the
     registry's ``broker``/``status``/``account_type`` so the renderer can label
     the broker and render an "awaiting first fill" state when no live equity
-    block is wired up yet. No equity, P&L, or position numbers are fabricated:
+    block is wired up yet. Rows run through the same ``_augment_account_data``
+    pipeline as paper cards, so live executor/Alpaca reads and worker-pushed
+    portfolio snapshots populate the account block. No numbers are fabricated:
     rows lacking an account block fall through to the renderer's empty-state path.
     """
     live_exps = get_live_trading_experiments()
@@ -756,14 +769,12 @@ def query_live_trading_experiments(report_date: Optional[str] = None) -> List[di
         return []
 
     results = [query_experiment(exp, report_date) for exp in live_exps]
+    _augment_account_data(results)
     for exp, row in zip(live_exps, results):
         row["broker"] = exp.get("broker")
         row["account_type"] = exp.get("account_type")
         row["status"] = exp.get("status")
         row["is_live_trading"] = True
-        if not row.get("alpaca"):
-            row["data_source"] = "empty"
-            row["data_age_seconds"] = None
     return results
 
 

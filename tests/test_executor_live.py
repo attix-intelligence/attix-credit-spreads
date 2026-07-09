@@ -266,3 +266,90 @@ def test_get_all_live_executor_fanout(monkeypatch):
     with patch.object(executor_live, "fetch_live_data", side_effect=fake_fetch):
         out = executor_live.get_all_live_executor()
     assert set(out) == {"EXPV8AIBKR", "EXPFOO"}
+
+
+# ---------------------------------------------------------------------------
+# Broker tag derivation (Tradier-via-executor support)
+# ---------------------------------------------------------------------------
+
+def test_broker_tag_for_account():
+    from web_dashboard import executor_live
+    assert executor_live.broker_tag_for_account("tradier_6YA42569") == "tradier"
+    assert executor_live.broker_tag_for_account("ibkr_tafintech-p11-paper") == "ibkr_executor"
+    assert executor_live.broker_tag_for_account("") == "ibkr_executor"
+
+
+def test_fetch_live_data_stamps_tradier_broker():
+    """A tradier_* executor account must label the card 'Tradier', not 'IBKR',
+    and carry via_executor so the renderer knows the routing."""
+    from web_dashboard import executor_live
+
+    def fake_get(base_url, api_key, path, params=None):
+        if path == "/v1/portfolio/balance":
+            return _mock_balance()
+        if path == "/v1/portfolio/positions":
+            return []
+        raise AssertionError(f"unexpected path {path}")
+
+    with patch.object(executor_live, "_get", side_effect=fake_get):
+        out = executor_live.fetch_live_data(
+            "EXP800TRADIER", "k", "https://x", "tradier_6YA42569",
+        )
+
+    assert out["error"] is None
+    assert out["broker"] == "tradier"
+    assert out["via_executor"] is True
+
+
+# ---------------------------------------------------------------------------
+# Live-trading card augmentation (data.query_live_trading_experiments)
+# ---------------------------------------------------------------------------
+
+def test_live_trading_rows_get_executor_injection(monkeypatch):
+    """Real-money cards (account_type=live) must run the same live-executor
+    injection pipeline as paper cards — regression test for the empty
+    EXP-800-TRADIER card (equity/positions present at broker, card blank)."""
+    from web_dashboard import data as dash_data
+    from web_dashboard import executor_live
+
+    exp = {
+        "id": "EXP-800-TRADIER",
+        "name": "EXP-800 Safe Kelly 9/7/4 — Tradier LIVE",
+        "account_type": "live",
+        "broker": "tradier_live",
+        "account_id": "tradier_6YA42569",
+        "status": "active",
+    }
+    base_row = {
+        "id": "EXP-800-TRADIER", "name": exp["name"], "ticker": "SPY",
+        "total_closed": 0, "wins": 0, "losses": 0, "win_rate": 0.0,
+        "total_pnl": 0.0, "open_count": 0, "error": "Database not found",
+    }
+    monkeypatch.setattr(dash_data, "get_live_trading_experiments", lambda: [exp])
+    monkeypatch.setattr(dash_data, "query_experiment", lambda e, report_date=None: dict(base_row))
+
+    monkeypatch.setenv("EXECUTOR_API_KEY_EXP800TRADIER", "k")
+    monkeypatch.setenv("EXECUTOR_BASE_URL_EXP800TRADIER", "https://exec.example.com")
+    monkeypatch.setenv("EXECUTOR_ACCOUNT_ID_EXP800TRADIER", "tradier_6YA42569")
+
+    def fake_get(base_url, api_key, path, params=None):
+        assert params == {"account_id": "tradier_6YA42569"}
+        if path == "/v1/portfolio/balance":
+            return {"total_equity": 132992.24, "cash": 132992.24,
+                    "buying_power": 0.0, "unrealized_pnl": 0.0,
+                    "realized_pnl_today": 0.0}
+        if path == "/v1/portfolio/positions":
+            return []
+        raise AssertionError(f"unexpected path {path}")
+
+    with patch.object(executor_live, "_get", side_effect=fake_get):
+        rows = dash_data.query_live_trading_experiments()
+
+    assert len(rows) == 1
+    row = rows[0]
+    assert row["alpaca"] is not None
+    assert row["alpaca"]["equity"] == 132992.24
+    assert row["alpaca"]["broker"] == "tradier"
+    assert row["data_source"] == "live"
+    assert row["is_live_trading"] is True
+    assert row["broker"] == "tradier_live"
