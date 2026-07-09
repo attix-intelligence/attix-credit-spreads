@@ -1,3 +1,39 @@
+# EXP-800-TRADIER dashboard card — live data wiring (2026-07-08)
+
+## Root cause
+1. `web_dashboard/data.py::query_live_trading_experiments` (live-money cards) never runs
+   the live-account augmentation pipeline (executor/Alpaca live injection, worker-pushed
+   portfolio fallback, pushed equity history, diag classification) — that pipeline lives
+   only in `query_all_live` (paper cards). Card renders empty even though data exists.
+2. `main.py` scheduler tick: `ExecutorEquityWriter` + executor portfolio push to dashboard
+   are nested inside `if vrp_engine.enabled` (V8A-only). EXP-800-TRADIER uses the legacy
+   scan path → no equity history recorded, no portfolio pushed.
+3. `executor_live.py` / main.py push hardcode `broker="ibkr_executor"` → card would say
+   "IBKR" for a Tradier account. Dashboard Railway service lacks
+   `EXECUTOR_*_EXP800TRADIER` env triple.
+
+## Plan
+- [x] Investigate dashboard data flow + worker push flow
+- [x] data.py: extract account-data augmentation from `query_all_live` into a helper
+      (`_augment_account_data`); call it from `query_live_trading_experiments` too
+- [x] executor_live.py: derive broker tag from account_id ("tradier_*" → "tradier"),
+      stamp `via_executor` flag
+- [x] html.py: treat `via_executor` / tradier rows as executor-routed for headings/diag hints
+- [x] main.py: hoist exec-equity writer + portfolio push out of the VRP-only branch
+      (runs any cycle where EXECUTOR_* env vars present; inert otherwise);
+      derive broker tag from account id
+- [x] Tests: extend test_executor_live.py (broker tag, tradier stamp, live-trading injection)
+- [x] Run test suite locally (full suite green; offline card-render smoke test green)
+- [ ] Open PR (no Railway deploy without explicit go)
+
+## Env changes needed (Railway, service attix-dashboard)
+- EXECUTOR_API_KEY_EXP800TRADIER   (same executor API key the worker uses)
+- EXECUTOR_BASE_URL_EXP800TRADIER  = https://executor-production-1f58.up.railway.app
+- EXECUTOR_ACCOUNT_ID_EXP800TRADIER = tradier_6YA42569
+- TRADIER_PROD_TOKEN is NOT needed on the dashboard (reads go via executor)
+
+---
+
 # TODO — Operation Crack The Code
 # Last Updated: 2026-03-16
 # Status: EXP-500 Phase 1 COMPLETE. Paper trading live (Mar 16 → May 11).

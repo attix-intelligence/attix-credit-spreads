@@ -93,6 +93,11 @@ def _normalize(exp_id: str) -> str:
     return exp_id.upper().replace("-", "")
 
 
+def broker_tag_for_account(account_id: str) -> str:
+    """``tradier_6YA42569`` → ``"tradier"``; anything else → ``"ibkr_executor"``."""
+    return "tradier" if (account_id or "").startswith("tradier") else "ibkr_executor"
+
+
 # ---------------------------------------------------------------------------
 # HTTP helper
 # ---------------------------------------------------------------------------
@@ -193,8 +198,10 @@ def fetch_live_data(
         "orders":        [],
         "error":         None,
         "fetched_at":    datetime.now(timezone.utc).isoformat(),
-        # Provenance hint for debugging; not rendered.
-        "broker":        "ibkr_executor",
+        # Broker tag drives the card label ("Tradier" vs "IBKR"); the executor
+        # fronts multiple brokers so derive it from the account id prefix.
+        "broker":        broker_tag_for_account(account_id),
+        "via_executor":  True,
     }
 
     # --- Balance (required; abort on failure) --------------------------------
@@ -309,6 +316,7 @@ def get_all_live_executor() -> dict[str, dict]:
                         "positions": [], "orders": [],
                         "error": f"fetch: {exc}",
                         "fetched_at": datetime.now(timezone.utc).isoformat(),
-                        "broker": "ibkr_executor",
+                        "broker": broker_tag_for_account(uncached[norm][2]),
+                        "via_executor": True,
                     }
     return results
