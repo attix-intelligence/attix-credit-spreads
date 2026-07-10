@@ -400,6 +400,32 @@ class Backtester:
         # P2: Slippage brutality tests — multiply all slippage (entry + exit) by this factor.
         # 1.0 = baseline, 2.0 = 2x brutality, 3.0 = 3x brutality.
         self._slippage_multiplier: float = float(self.backtest_config.get('slippage_multiplier', 1.0))
+        # FIX #3 (fill parity): entry fill model.
+        #   naive      — legacy behavior: every accepted signal fills instantly at the
+        #                scan bar's close spread value minus slippage. Kept as the
+        #                default so historical results stay reproducible.
+        #   marketable — a limit order priced at the decision-time mark (bar OPEN
+        #                spread value minus config slippage, rounded to cents like the
+        #                live strategy) only fills if the market traded at/through the
+        #                limit by the bar CLOSE; otherwise fill-or-cancel — no fill that
+        #                bar. On 5-min bars, later scan slots recompute a fresh limit
+        #                (the backtest analog of the live FIX #2 repricing ladder); when
+        #                only daily bars exist in the cache the same check runs once at
+        #                day granularity — a static day-limit, live's pre-FIX #2
+        #                behavior. Pre-9:30 scan slots place no order (live RTH guard).
+        #   nbbo       — stub: would price the spread off Polygon historical NBBO quotes
+        #                and require the quoted market to touch the limit. Not implemented:
+        #                needs the quotes endpoint (per-contract tick data, paid tier,
+        #                ~GBs per underlying-year) which options_cache.db does not carry.
+        self._fill_model: str = str(self.backtest_config.get('fill_model', 'naive'))
+        if self._fill_model == 'nbbo':
+            raise NotImplementedError(
+                "fill_model 'nbbo' is a documented stub — Polygon historical NBBO quote "
+                "data is not available in options_cache.db (requires paid quotes endpoint). "
+                "Use 'marketable' (trade-bar approximation) or 'naive'."
+            )
+        if self._fill_model not in ('naive', 'marketable'):
+            raise ValueError(f"Unknown fill_model {self._fill_model!r} — use 'naive' or 'marketable'")
         self.otm_pct = otm_pct
 
         self.historical_data = historical_data
@@ -522,6 +548,10 @@ class Backtester:
         self._ruin_triggered: bool = False
         # P5a: Friday fallback trigger counter (incremented during run_backtest)
         self._friday_fallback_count = 0
+        # FIX #3: fill-model counters — entries rejected as unmarketable, and entries
+        # booked naively because only daily closes were available (no intraday bar).
+        self._unfilled_entries = 0
+        self._fill_model_naive_fallbacks = 0
 
         mode = "real data" if self._use_real_data else "no historical data"
         logger.info("Backtester initialized (%s mode, delta_selection=%s)",
@@ -656,6 +686,9 @@ class Backtester:
         self._friday_fallback_count = 0
         # Reset volume gate skip counter
         self._volume_skipped = 0
+        # FIX #3: reset fill-model counters
+        self._unfilled_entries = 0
+        self._fill_model_naive_fallbacks = 0
         # P1-D: reset ruin flag
         self._ruin_triggered = False
 
@@ -1785,6 +1818,13 @@ class Backtester:
             and scan_time_mins >= market_open_mins
         )
 
+        # FIX #3 (marketable): no entries from pre-9:30 scan slots. Options don't
+        # trade before 9:30 ET and live's RTH guard blocks those submits; the naive
+        # model instead priced these slots off the SAME day's close — a guaranteed
+        # lookahead fill, which is exactly the dishonesty this model removes.
+        if self._fill_model == 'marketable' and scan_hour is not None and not use_intraday:
+            return None
+
         def _get_prices(ss: float, ls: float, daily: bool = False) -> Optional[Dict]:
             """Fetch spread prices.  daily=True forces the option_daily cache regardless of use_intraday."""
             if use_intraday and not daily:
@@ -1840,6 +1880,40 @@ class Backtester:
         if credit <= 0:
             return None
 
+        # FIX #3: marketable fill model — treat the entry as a real limit order.
+        # The limit is priced at the decision-time mark (the bar's OPEN spread value
+        # minus the flat config slippage the live strategy also subtracts from its
+        # natural credit, rounded to cents like spread_strategy.py). It fills only
+        # if the market traded at/through that credit by the bar CLOSE; otherwise
+        # fill-or-cancel — no fill this bar.
+        #   - 5-min bar: later scan slots recompute a fresh limit, the backtest
+        #     analog of the FIX #2 live repricing ladder.
+        #   - daily bar (intraday unavailable in cache): a single day-limit priced
+        #     at the day open that fills only if the day's traded credit reached
+        #     it — the live pre-FIX #2 semantics (one static day-limit).
+        _limit_filled = False
+        if self._fill_model == 'marketable':
+            if prices.get("spread_open") is not None:
+                limit_credit = round(
+                    prices["spread_open"] - self.slippage * self._slippage_multiplier, 2
+                )
+                if limit_credit <= 0:
+                    return None
+                if limit_credit > credit + 1e-9:
+                    # Market never traded at/through the limit this bar → no fill.
+                    self._unfilled_entries += 1
+                    logger.debug(
+                        "no-fill: limit $%.2f > traded credit $%.2f for %s %s/%s on %s",
+                        limit_credit, credit, ticker, short_strike, long_strike, date_str,
+                    )
+                    return None
+                credit = limit_credit  # a limit order fills at its limit price
+                _limit_filled = True
+            else:
+                # Bar without opens (legacy cache rows): marketability cannot be
+                # checked with close-only data — book naively and count it.
+                self._fill_model_naive_fallbacks += 1
+
         # Minimum credit filter
         if min_credit_override is not None:
             min_credit = min_credit_override
@@ -1856,10 +1930,15 @@ class Backtester:
 
         # Slippage: use bid/ask-modeled value from intraday bar, or config flat value.
         # Apply slippage_multiplier for brutality tests (P2: 2x or 3x slippage scenarios).
-        slippage = prices.get("slippage", self.slippage) * self._slippage_multiplier
-        credit -= slippage
-        if credit <= 0:
-            return None
+        if _limit_filled:
+            # Config slippage is already embedded in the limit price; a limit fill
+            # has no additional crossing cost.
+            slippage = self.slippage * self._slippage_multiplier
+        else:
+            slippage = prices.get("slippage", self.slippage) * self._slippage_multiplier
+            credit -= slippage
+            if credit <= 0:
+                return None
 
         max_loss = spread_width - credit
 
@@ -2465,6 +2544,9 @@ class Backtester:
                 'friday_fallback_count': self._friday_fallback_count,
                 'volume_skipped': self._volume_skipped,
                 'ruin_triggered': self._ruin_triggered,
+                'fill_model': self._fill_model,
+                'unfilled_entries': self._unfilled_entries,
+                'fill_model_naive_fallbacks': self._fill_model_naive_fallbacks,
             }
 
         trades_df = pd.DataFrame(self.trades)
@@ -2617,6 +2699,11 @@ class Backtester:
             'volume_skipped': self._volume_skipped,
             # P1-D: whether capital reached zero during the backtest
             'ruin_triggered': self._ruin_triggered,
+            # FIX #3: fill-model accounting — entries rejected as unmarketable, and
+            # entries booked naively because only daily-close data was available
+            'fill_model': self._fill_model,
+            'unfilled_entries': self._unfilled_entries,
+            'fill_model_naive_fallbacks': self._fill_model_naive_fallbacks,
             # Bootstrap resampling stats (full MC mode only — empty dict otherwise)
             'bootstrap': bootstrap_stats,
         }

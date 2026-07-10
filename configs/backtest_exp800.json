@@ -57,7 +57,8 @@
     "exit_slippage": 0.10,
     "sizing_mode": "flat",
     "compound": true,
-    "max_positions_per_expiration": 4
+    "max_positions_per_expiration": 4,
+    "fill_model": "naive"
   },
 
   "fidelity_notes": {
