@@ -96,3 +96,9 @@ wheels/
 !railway.json
 !sentinel_state.json
 !configs/event_blacklist.json
+
+# real env files (secrets) — only *.example variants are tracked (creds exposure fix 2026-07-10)
+.env
+.env.*
+!.env.example
+!.env.*.example
