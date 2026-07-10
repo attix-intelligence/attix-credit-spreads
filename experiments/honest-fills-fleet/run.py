@@ -119,6 +119,40 @@ EXPERIMENTS = {
         "monday_only": False,
         "manage_dte": 0,
     },
+    # Fidelity-gap re-test (Rev 2 of cc1 proposal, 2026-07-10): live-code audit
+    # showed scan_days, drawdown_cb_pct, and technical.use_trend_filter are ALL
+    # dead config (no references in the deployed scan path; broker record shows
+    # daily entries). Faithful twin therefore: no Monday gate, engine breaker
+    # disabled. manage_dte (live, credit_spread.py:301) and vix_max_entry
+    # (live, compass/risk_gate.py:264 rule 7.5) retained.
+    "exp1220_faithful": {
+        "label": "EXP-1220-faithful",
+        "otm_pct": 0.05,
+        "strategy": {
+            "direction": "both",
+            "target_dte": 30, "min_dte": 21, "max_dte": 45,
+            "use_delta_selection": False,
+            "spread_width": 5,
+            "regime_mode": "combo",
+            "regime_config": REGIME_1220,
+            "iron_condor": {"enabled": False},
+            "min_credit_pct": 6,
+            "vix_max_entry": 35.0,
+            "momentum_filter_pct": None,
+            "trend_ma_period": 50,
+            "max_positions_per_expiration": 3,
+        },
+        "risk": {
+            "max_risk_per_trade": 9.35,
+            "max_contracts": 20,
+            "max_positions": 5,
+            "profit_target": 50,
+            "stop_loss_multiplier": 2.0,
+            "drawdown_cb_pct": 1000,  # dead config live: no per-experiment breaker exists
+        },
+        "monday_only": False,  # scan_days [0] is dead config; live entered daily (broker record)
+        "manage_dte": 5,
+    },
     "exp1220": {
         "label": "EXP-1220",
         "otm_pct": 0.05,
@@ -185,7 +219,7 @@ class FidelityShims:
         keep = []
         for pos in positions:
             dte = (pos["expiration"] - current_date).days
-            if dte >= self.manage_dte:
+            if dte > self.manage_dte:  # live closes at dte <= manage_dte (credit_spread.py:301-305)
                 keep.append(pos)
                 continue
             # force-close at real marks (same pattern as EXP-800-BT flatten)

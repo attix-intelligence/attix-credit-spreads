@@ -1,7 +1,7 @@
 # cc1 Proposal — Path to a Profitable Tradier Launch
 
 **Author:** cc1 (independent; no coordination with other sessions)
-**Date:** 2026-07-05 · **Rev 2:** 2026-07-10 (updated against the honest-fills fleet results — see the Rev 2 section immediately below; the original Jul-5 text follows it unedited as the record of what was proposed before those results existed)
+**Date:** 2026-07-05 · **Rev 2/3:** 2026-07-10 (updated against the honest-fills fleet results — see the Rev 2 section immediately below; the original Jul-5 text follows it unedited as the record of what was proposed before those results existed)
 **Basis:** my own broker-record forensics (EDGE-vs-LUCK reverification, 10-account fleet review, IBKR recovery), the Jul-5 program review, and read-only inspection of configs/code. I agree with much of the program review's direction but **disagree with it in three places**, argued below.
 
 ---
@@ -17,6 +17,12 @@ The original proposal pre-registered one non-negotiable gate (G1): *"if the hone
 ### What survives from the original proposal (unchanged)
 
 The validation architecture — **backtest proves edge, paper proves fidelity, micro-live proves the broker**, every phase pre-registered — worked exactly as designed: it killed a launch that all of us, me included, half-expected to proceed. The risk framework (§2), the EXP-800 halt (§5), the ops hardening (G0), and the refusal to composite untested hybrids all stand. What changes is the front of the pipeline: there is currently **nothing to feed it**.
+
+### REV 3 (2026-07-10, later same day) — the re-test ran. EXP-1220 is retired.
+
+Step 2 below was executed immediately. The live-code audit found the premise of the re-test was wrong in an unexpected way: the trend filter could not be "added back" because **it never existed live** — `technical.use_trend_filter`, `risk.scan_days` (Monday-only), and `risk.drawdown_cb_pct` are all **dead configuration**, silently ignored by the deployed scanner (zero code references; the broker record confirms daily entries). The faithful twin (daily entries, no phantom breaker, live `manage_dte`/`vix_max_entry` semantics) returns: **naive −105.1 % (ruin), marketable −91.4 % with every calendar year negative, expectancy −$129/trade at an 80.7 % win rate.** The −5.9 % that motivated the re-test was an artifact of honoring dead YAML keys. The kill criterion fires unambiguously: **EXP-1220 is retired as a launch candidate.** Step 3's bounded search now starts from zero live candidates, and its causal-mechanism menu should treat "the entry filters the YAML *claimed*" (weekly cadence, trend filter, DD breaker) as untested *ideas* rather than tested features — ironically, the dead config that flattered the first twin is a list of plausible search variants.
+
+**New standing ops item (fleet-wide):** config-to-code parity audit. Operators believed Monday-only cadence, a −10 % breaker, and a trend filter were protecting EXP-1220; none was implemented. YAML-only protections protect nothing — this is the EXP-3570 divergence class, now proven at the individual-key level, and it must be closed before any future "deployed config" claim means anything.
 
 ### Revised plan: earn a positive honest-twin expectancy before anything else
 
