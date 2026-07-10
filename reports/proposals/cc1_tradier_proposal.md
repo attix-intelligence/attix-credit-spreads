@@ -1,8 +1,37 @@
 # cc1 Proposal — Path to a Profitable Tradier Launch
 
 **Author:** cc1 (independent; no coordination with other sessions)
-**Date:** 2026-07-05
+**Date:** 2026-07-05 · **Rev 2:** 2026-07-10 (updated against the honest-fills fleet results — see the Rev 2 section immediately below; the original Jul-5 text follows it unedited as the record of what was proposed before those results existed)
 **Basis:** my own broker-record forensics (EDGE-vs-LUCK reverification, 10-account fleet review, IBKR recovery), the Jul-5 program review, and read-only inspection of configs/code. I agree with much of the program review's direction but **disagree with it in three places**, argued below.
+
+---
+
+## REV 2 (2026-07-10) — My own kill criterion fired. The launch is off; here is what replaces it.
+
+The original proposal pre-registered one non-negotiable gate (G1): *"if the honest twin says the edge at launch sizing is ≤ 0 after costs, we do not launch — there is no step 2 for an edgeless strategy."* The honest-fills fleet re-run (`reports/honest_fills_fleet/FLEET_ROLLUP.md`, FIX #3 `fill_model=marketable`, 2020–2026 real marks) has now effectively run G1 for the whole fleet:
+
+- **EXP-1220 — my launch candidate — fails the gate.** Marketable: −5.9 % over six years, Sharpe −0.05, **−$10 average per trade**. Naive: −13.9 %. An 84 % win rate fully consumed by ~$2.5k average losers. The risk process I anchored the proposal on is confirmed (shallowest losses in the fleet, only near-break-even twin among nine strategies, four of which ruin the account) — but a risk process wrapped around zero edge compounds to zero, minus frictions.
+- Fleet-wide: **no strategy shows positive edge under either fill model.** The 2026 paper quarter is now fully explained as rally beta on negative-EV configs.
+- EXP-800 (Tradier live): −32.8 % under honest fills — its **fourth** independent strike. §5's halt-and-drain recommendation is reinforced, not merely maintained.
+
+### What survives from the original proposal (unchanged)
+
+The validation architecture — **backtest proves edge, paper proves fidelity, micro-live proves the broker**, every phase pre-registered — worked exactly as designed: it killed a launch that all of us, me included, half-expected to proceed. The risk framework (§2), the EXP-800 halt (§5), the ops hardening (G0), and the refusal to composite untested hybrids all stand. What changes is the front of the pipeline: there is currently **nothing to feed it**.
+
+### Revised plan: earn a positive honest-twin expectancy before anything else
+
+1. **No Tradier launch is scheduled.** The late-September date is withdrawn. The $133k stays in cash after the EXP-800 drain. "No launch in 2026" is an acceptable outcome and must remain sayable.
+2. **Close the two twin-fidelity gaps that could plausibly flip EXP-1220's sign, then re-test (1 week).** The −5.9 % verdict carries two documented caveats worth resolving before abandoning the candidate: (a) the deployed config's `technical.use_trend_filter` (MA 20/50 entry filter) is not represented in the engine — a trend filter is exactly the kind of mechanism that could cut the 2022-bear bleed (−5.3 % of the −5.9 %); (b) the engine's fixed-reference drawdown-breaker semantics dominated path behavior and need aligning with the live scanner's actual semantics. If the faithful re-test is still ≤ 0: EXP-1220 is retired as a launch candidate, not resized, not re-argued.
+3. **A bounded, pre-registered search for expectancy — not another 150-experiment era (2–3 weeks).** The honest harness is now the program's instrument; the failure mode to guard against is multiple-comparisons fishing with it. Constraints, written down before the first run: ≤ 12 variants total, drawn only from mechanisms with a stated causal rationale (trend/regime entry filter, delta-based strike selection, credit-floor tightening, event gates, exit-parameter pairs); 2020–2024 as the search window with **2025–2026 held out**; acceptance = positive expectancy net of costs on marketable fills in BOTH windows, plus survival of 2020 and 2022 within the §2 drawdown budget; one shot at the holdout — a variant that fails it is dead, not tuned.
+4. **Only a gate-passing variant re-enters the original pipeline** (G0 ops hardening → G2 fresh-paper fidelity across ≥ 2 NFP prints → G3 breaker drill → G4 $25k micro-live). Realistic earliest live capital: **November–December 2026**. If nothing passes step 3, the honest conclusion is that this strategy family cannot clear retail frictions at survivable sizing, and the program should either widen its strategy universe deliberately or stop — that conclusion would be a success of the process, not a failure of it.
+
+### Revised top risks
+
+1. **Search overfitting to the honest twin** — the same instrument that killed the fleet's illusions can mint new ones if run promiscuously. Mitigation is procedural and pre-registered (variant cap, holdout, one-shot rule); the residual risk is human discipline, not statistics.
+2. **Remaining twin infidelity in either direction** — the compass VIX-proxy gap is still unreplicated fleet-wide; a "passing" variant could owe its pass (or a failing one its fail) to engine-vs-live divergence. G2's trade-match fidelity phase is the backstop, and it must stay a hard gate.
+3. **The edge may genuinely be ~zero at retail scale** — six years of real marks now say the harvested premium roughly equals stops-plus-frictions at survivable sizing. The most dangerous response to that finding is the historical one (wider strikes, more leverage, more streams). If step 3 fails, the correct move is capital patience, not risk creativity.
+
+*— End Rev 2. Original 2026-07-05 proposal follows, unedited.*
 
 ---
 
