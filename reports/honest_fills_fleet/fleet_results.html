@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Honest-Fills Fleet Results — FIX #3 (2026-07-10)</title>
+<style>
+  :root {
+    --ink: #1a1d21; --muted: #5c6470; --line: #e3e6ea; --soft: #f6f7f9;
+    --red: #b42318; --red-soft: #fef3f2; --amber: #b54708; --amber-soft: #fffaeb;
+    --green: #067647; --blue: #175cd3; --blue-soft: #eff4fb;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 32px 20px 60px; background: #ffffff; color: var(--ink);
+    font: 15px/1.55 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; }
+  h1 { font-size: 26px; line-height: 1.25; margin: 0 0 6px; }
+  h2 { font-size: 19px; margin: 36px 0 12px; padding-top: 18px; border-top: 1px solid var(--line); }
+  .meta { color: var(--muted); font-size: 13px; margin-bottom: 22px; }
+  .meta code { background: var(--soft); padding: 1px 5px; border-radius: 4px; font-size: 12px; }
+
+  .banner {
+    background: var(--red-soft); border: 1px solid #f2c1bc; border-left: 5px solid var(--red);
+    border-radius: 8px; padding: 16px 20px; margin: 18px 0 26px;
+  }
+  .banner .big { font-size: 18px; font-weight: 700; color: var(--red); margin: 0 0 6px; }
+  .banner p { margin: 0; }
+
+  .stats { display: flex; flex-wrap: wrap; gap: 12px; margin: 0 0 8px; }
+  .stat {
+    flex: 1 1 150px; background: var(--soft); border: 1px solid var(--line);
+    border-radius: 8px; padding: 12px 14px;
+  }
+  .stat .n { font-size: 24px; font-weight: 700; display: block; }
+  .stat .l { font-size: 12.5px; color: var(--muted); }
+  .stat .n.bad { color: var(--red); }
+
+  .scroll { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+  th, td { padding: 7px 10px; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  th { font-size: 12px; text-transform: uppercase; letter-spacing: .03em; color: var(--muted); font-weight: 600; }
+  td:first-child, th:first-child { text-align: left; }
+  thead .grp th { border-bottom: 2px solid var(--line); text-align: center; color: var(--ink); }
+  tbody tr:nth-child(even) { background: #fbfbfc; }
+  .expname { font-weight: 700; text-align: left; }
+  .fid { font-size: 12px; color: var(--muted); text-align: left; }
+  .neg { color: var(--red); font-weight: 600; }
+  .ruin { background: var(--red-soft); }
+  .ruin td:first-child { border-left: 3px solid var(--red); }
+  .best td:first-child { border-left: 3px solid var(--green); }
+  .sep-l { border-left: 1px solid var(--line); }
+
+  .badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 10px; vertical-align: 1px; }
+  .badge.ruin-b { background: var(--red); color: #fff; }
+  .badge.best-b { background: #e6f4ec; color: var(--green); border: 1px solid #b6dfc8; }
+
+  .strikes { list-style: none; margin: 10px 0 0; padding: 0; counter-reset: s; }
+  .strikes li {
+    counter-increment: s; position: relative; padding: 9px 12px 9px 44px; margin-bottom: 8px;
+    background: var(--amber-soft); border: 1px solid #f5e0b8; border-radius: 8px;
+  }
+  .strikes li::before {
+    content: counter(s); position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+    width: 22px; height: 22px; border-radius: 50%; background: var(--amber); color: #fff;
+    font-size: 12px; font-weight: 700; text-align: center; line-height: 22px;
+  }
+  .findings li { margin-bottom: 9px; }
+  .fine { font-size: 12.5px; color: var(--muted); margin-top: 14px; }
+  .fine sup { font-weight: 700; }
+  .note-blue {
+    background: var(--blue-soft); border: 1px solid #cddcf2; border-left: 4px solid var(--blue);
+    border-radius: 8px; padding: 12px 16px; margin-top: 14px; font-size: 13.5px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Honest-Fills Fleet Results <span style="color:var(--muted);font-weight:400">— FIX&nbsp;#3 fill-model re-run</span></h1>
+  <div class="meta">
+    2026-07-10 · cc1/cc2/cc4/cc5 fleet · code <code>main @ post-11f140c</code> (<code>backtest.fill_model</code>) ·
+    window SPY 2020-01-02 → 2026-04-02 (EXP-V8A → 2025-12-19) · real marks (<code>options_cache.db</code>), real VIX/VIX3M, offline ·
+    sources: <code>reports/honest_fills_fleet/*.md</code>, <code>reports/EXP-800-BT-honest-fills-rerun.md</code>
+  </div>
+
+  <div class="banner">
+    <p class="big">Fleet verdict: GO count = 0.</p>
+    <p>Nine strategies assessed — every engine twin of the paper-deployed fleet loses money on 2020–2026 real
+    marks under <em>both</em> fill models. Honest fills change loss magnitudes but flip no signs: the negative
+    expectancy is a property of the strategies, not of the fill model that flattered them. Four of nine ruin the
+    account outright.</p>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><span class="n bad">0 / 9</span><span class="l">strategies with positive edge (either fill model)</span></div>
+    <div class="stat"><span class="n bad">4</span><span class="l">account ruins (≤ −100%): 503, 3309, 3311, 3303B</span></div>
+    <div class="stat"><span class="n">23–60%</span><span class="l">of naive entries never actually fill (honest range)</span></div>
+    <div class="stat"><span class="n">−5.9%</span><span class="l">best in fleet (EXP-1220, marketable, 6 yr) — ≈ break-even/trade</span></div>
+    <div class="stat"><span class="n bad">0</span><span class="l">fully faithful backtest twins</span></div>
+  </div>
+
+  <h2>Fleet table — naive vs marketable, canonical variant per experiment</h2>
+  <p style="margin:0 0 10px;color:var(--muted);font-size:13.5px">Sorted by marketable total return. ☠ = account ruin (equity through zero). Sharpe “n/m” = not meaningful (equity crossed zero).</p>
+  <div class="scroll">
+  <table>
+    <thead>
+      <tr class="grp">
+        <th></th><th></th>
+        <th colspan="5" class="sep-l">Naive (legacy instant fills)</th>
+        <th colspan="6" class="sep-l">Marketable (FIX #3 honest fills)</th>
+      </tr>
+      <tr>
+        <th>Experiment (variant)</th><th style="text-align:left">Twin fidelity</th>
+        <th class="sep-l">Trades</th><th>Total</th><th>WR</th><th>Sharpe</th><th>MaxDD</th>
+        <th class="sep-l">Trades</th><th>Total</th><th>WR</th><th>Sharpe</th><th>MaxDD</th><th>Unfillable</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="best">
+        <td class="expname">EXP-1220 <span class="badge best-b">FLEET BEST</span></td><td class="fid">partial (+2 shims)</td>
+        <td class="sep-l">99</td><td class="neg">−13.9%</td><td>82.8%</td><td>−0.24</td><td class="neg">−17.5%</td>
+        <td class="sep-l">164</td><td class="neg">−5.9%</td><td>84.2%</td><td>−0.05</td><td class="neg">−16.1%</td><td>98.2%<sup>1</sup></td>
+      </tr>
+      <tr>
+        <td class="expname">EXP-V8A (4-stream portfolio)</td><td class="fid">no full twin (proxy)</td>
+        <td class="sep-l">337</td><td class="neg">−9.5%</td><td>62.3%</td><td>−0.44</td><td class="neg">−13.0%</td>
+        <td class="sep-l">241</td><td class="neg">−22.0%</td><td>55.6%</td><td>−1.11</td><td class="neg">−23.5%</td><td>28.5%</td>
+      </tr>
+      <tr>
+        <td class="expname">EXP-800-BT (haltonly, as deployed)</td><td class="fid">partial (Kelly port)</td>
+        <td class="sep-l">1,231</td><td class="neg">−49.2%</td><td>70.3%</td><td>−0.84</td><td class="neg">−49.7%</td>
+        <td class="sep-l">487</td><td class="neg">−32.8%</td><td>64.7%</td><td>−1.30</td><td class="neg">−32.9%</td><td>60.4%<sup>2</sup></td>
+      </tr>
+      <tr>
+        <td class="expname">EXP-400 (champion parent)</td><td class="fid">partial</td>
+        <td class="sep-l">28</td><td class="neg">−61.0%</td><td>53.6%</td><td>−0.68</td><td class="neg">−61.8%</td>
+        <td class="sep-l">83</td><td class="neg">−74.5%</td><td>63.9%</td><td>−0.48</td><td class="neg">−80.7%</td><td>99.3%<sup>1</sup></td>
+      </tr>
+      <tr>
+        <td class="expname">EXP-401</td><td class="fid">NO faithful twin (≡ EXP-400 core proxy)</td>
+        <td class="sep-l">28</td><td class="neg">−61.0%</td><td>53.6%</td><td>−0.68</td><td class="neg">−61.8%</td>
+        <td class="sep-l">83</td><td class="neg">−74.5%</td><td>63.9%</td><td>−0.48</td><td class="neg">−80.7%</td><td>99.3%<sup>1</sup></td>
+      </tr>
+      <tr class="ruin">
+        <td class="expname">EXP-3303B (regime-gate) <span class="badge ruin-b">RUIN ☠</span></td><td class="fid">partial — gate = structural no-op</td>
+        <td class="sep-l">170</td><td class="neg">−158.4%</td><td>64.7%</td><td>n/m</td><td class="neg">−139.3%</td>
+        <td class="sep-l">183</td><td class="neg">−100.9%</td><td>65.6%</td><td>−0.50</td><td class="neg">−102.7%</td><td>99.3%<sup>1</sup></td>
+      </tr>
+      <tr class="ruin">
+        <td class="expname">EXP-3309 (entry-window) <span class="badge ruin-b">RUIN ☠</span></td><td class="fid">partial</td>
+        <td class="sep-l">399</td><td class="neg">−102.7%</td><td>68.7%</td><td>−0.30</td><td class="neg">−102.2%</td>
+        <td class="sep-l">354</td><td class="neg">−101.0%</td><td>65.0%</td><td>−0.57</td><td class="neg">−100.9%</td><td>89.0%<sup>1</sup></td>
+      </tr>
+      <tr class="ruin">
+        <td class="expname">EXP-503 (core, nocb) <span class="badge ruin-b">RUIN ☠</span></td><td class="fid">no faithful twin (ML overlay unsupported)</td>
+        <td class="sep-l">476</td><td class="neg">−101.6%</td><td>68.1%</td><td>n/m</td><td class="neg">−101.6%</td>
+        <td class="sep-l">365</td><td class="neg">−102.0%</td><td>65.5%</td><td>n/m</td><td class="neg">−102.0%</td><td>23.3%</td>
+      </tr>
+      <tr class="ruin">
+        <td class="expname">EXP-3311 (NFP-gate) <span class="badge ruin-b">RUIN ☠</span></td><td class="fid">partial</td>
+        <td class="sep-l">156</td><td class="neg">−119.2%</td><td>67.3%</td><td>n/m</td><td class="neg">−130.4%</td>
+        <td class="sep-l">78</td><td class="neg">−109.7%</td><td>60.3%</td><td>n/m</td><td class="neg">−106.8%</td><td>50.0%</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="fine">
+    <sup>1</sup> Slot basis: per-scan-slot fill-or-cancel rejections ÷ (rejections + fills) across ~14 repricing slots/day — an
+    upper bound; many rejections belong to one signal-day. Controlled per-entry estimates where available: EXP-503 23.3%,
+    EXP-V8A 28.5%, EXP-3311 50.0%, EXP-800 53–60%.
+    <sup>2</sup> Trade-count basis (1,231 → 487).
+  </p>
+
+  <h2>EXP-800 detail — all breaker variants (cc5 rerun)</h2>
+  <div class="scroll">
+  <table>
+    <thead>
+      <tr>
+        <th>Variant</th>
+        <th class="sep-l">Naive: trades</th><th>Total</th><th>Sharpe</th><th>MaxDD</th>
+        <th class="sep-l">Mktbl: trades</th><th>Total</th><th>Sharpe</th><th>MaxDD</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td class="expname">haltonly (as deployed)</td><td class="sep-l">1,231</td><td class="neg">−49.2%</td><td>−0.84</td><td class="neg">−49.7%</td><td class="sep-l">487</td><td class="neg">−32.8%</td><td>−1.30</td><td class="neg">−32.9%</td></tr>
+      <tr><td class="expname">flatten (as documented)</td><td class="sep-l">828</td><td class="neg">−45.2%</td><td>−0.96</td><td class="neg">−45.8%</td><td class="sep-l">385</td><td class="neg">−27.4%</td><td>−1.18</td><td class="neg">−27.5%</td></tr>
+      <tr><td class="expname">notiers (breakers off)</td><td class="sep-l">1,240</td><td class="neg">−94.9%</td><td>−0.69</td><td class="neg">−94.8%</td><td class="sep-l">498</td><td class="neg">−79.9%</td><td>−1.19</td><td class="neg">−80.3%</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="banner" style="margin-top:22px">
+    <p class="big">EXP-800 — the model holding Tradier real-money authority — now has four independent strikes:</p>
+    <ol class="strikes">
+      <li><b>Ruled LUCK</b> (2026-07-03): 50% of paper P&amp;L from a 12× duplicate-entry bug risking 81% of NAV; direction hit-rate p&nbsp;=&nbsp;0.145 vs coin flip.</li>
+      <li><b>Twin divergence</b>: live scanner uses a VIX-percentile proxy the backtester doesn't; the “+39.5% vs −8.3%” comparison measured implementation drift, not edge.</li>
+      <li><b>Un-root-caused duplication path</b>: the Apr-02 12× entry event predates-proofed against none of the current defenses; live-money risk if it recurs.</li>
+      <li><b>Negative under honest fills</b> (this report): −32.8% as deployed, −49.2% naive, −94.9% unprotected — loses under every fill model and every breaker variant.</li>
+    </ol>
+    <p style="margin-top:10px"><b>Standing recommendation (Carlos's call): pull EXP-800's live order authority on Tradier.</b></p>
+  </div>
+
+  <h2>Cross-fleet findings</h2>
+  <ul class="findings">
+    <li><b>The fill model flattered everything but was never the problem.</b> Removing unfillable entries shrinks losses where sizing was protected (EXP-800 −49→−33%) and worsens them where it wasn't (EXP-400 −61→−74.5%; EXP-V8A −9.5→−22%). No sign flips anywhere; per-trade quality is uniformly worse under marketable (win rates −3…−7 pp).</li>
+    <li><b>All four ruins are the champion 17%-flat-sizing family.</b> The 2026 paper quarter's +0.2%…+25% results for the same configs were rally beta, full stop.</li>
+    <li><b>The differentiators don't differentiate.</b> 3303B's regime gate fired 0 times in 41k evaluations; 3311's NFP gate (which dodged the one live killer trade) doesn't rescue a 17%-sized core over six years; 401/503 overlays have no engine support and never traded live. Only EXP-1220's sizing/stop discipline changes outcomes (−5.9% vs −100%s).</li>
+    <li><b>Twin debt is fleet-wide.</b> Zero fully faithful twins; three explicit no-twin verdicts (401, 503, V8A portfolio); registry <code>backtest_expectations</code> for 3303B/3309/3311 are provenance-invalid.</li>
+    <li><b>Go-live consequence: the edge gate is not met by any strategy in the program</b> — including top candidate EXP-1220 (≈ break-even). Measurement is now honest (FIX #1–4); the measured edge at deployed parameters is ≤ 0 everywhere. Next work must change the strategies, not the instruments.</li>
+  </ul>
+
+  <div class="note-blue">
+    <b>Method note.</b> “Naive” = legacy instant fill at scan-bar close minus slippage. “Marketable” = limit at decision-time
+    open spread mark minus slippage; fills only if traded through by bar close, else fill-or-cancel (per-slot fresh limits = live
+    FIX #2 reprice ladder; pre-9:30 slots place no order). All naive re-runs reproduced the recorded Jul-3 baselines exactly —
+    FIX #3 left the legacy path untouched, so marketable deltas are attributable to the fill model alone.
+  </div>
+
+</div>
+</body>
+</html>
