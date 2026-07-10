@@ -315,7 +315,9 @@ class AlpacaProvider:
         Args:
             legs: List of OptionLegRequest objects.
             contracts: Number of spreads.
-            limit_price: Limit price (positive = credit). None for market.
+            limit_price: Net limit in Alpaca MLEG convention — POSITIVE =
+                max net DEBIT to pay, NEGATIVE = min net CREDIT to receive
+                (abs value). Callers must pass the correct sign.
             client_id: Client order ID for tracking.
 
         Returns:
@@ -364,8 +366,10 @@ class AlpacaProvider:
             expiration: Expiration date string (YYYY-MM-DD)
             spread_type: 'bear_call' or 'bull_put'
             contracts: Number of spreads
-            limit_price: Net credit limit price (positive = credit received).
-                         If None, submits as market.
+            limit_price: Minimum net credit to accept per spread, as a
+                         POSITIVE number (strategy intent). Converted to
+                         Alpaca's MLEG convention (negative = credit) at
+                         submission. If None, rejected downstream.
 
         Returns:
             Dict with order details and status.
@@ -404,8 +408,14 @@ class AlpacaProvider:
 
         client_id = client_order_id or f"cs-{ticker}-{uuid.uuid4().hex[:8]}"
 
+        # Alpaca MLEG sign convention: positive limit_price = max net DEBIT,
+        # negative = min net CREDIT (docs + alpaca-py LimitOrderRequest).
+        # A positive value here does NOT enforce a credit floor — paper filled
+        # credit spreads at any credit (Jul 6/9 2026 parity investigation).
+        mleg_limit = -abs(limit_price) if limit_price is not None else None
+
         try:
-            order = self._submit_mleg_order(legs, contracts, limit_price, client_id)
+            order = self._submit_mleg_order(legs, contracts, mleg_limit, client_id)
 
             actual_expiration = self._exp_from_occ_symbol(short_sym) or expiration
             result = {
@@ -483,6 +493,8 @@ class AlpacaProvider:
         client_id = f"close-{ticker}-{uuid.uuid4().hex[:8]}"
 
         try:
+            # Closing a credit spread pays a net debit: positive limit_price
+            # is already the correct MLEG sign (max debit) — no negation.
             order = self._submit_mleg_order(legs, contracts, limit_price, client_id)
             logger.info(f"Close order submitted: {order.id} status={order.status}")
             return {
@@ -549,6 +561,8 @@ class AlpacaProvider:
 
         client_id = f"close-ic-{ticker}-{uuid.uuid4().hex[:8]}"
         try:
+            # IC close pays a net debit: positive limit_price is already the
+            # correct MLEG sign (max debit) — no negation.
             order = self._submit_mleg_order(legs, contracts, limit_price, client_id)
             logger.info(f"IC close order submitted: {order.id} status={order.status}")
             return {

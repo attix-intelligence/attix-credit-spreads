@@ -462,7 +462,10 @@ class OrderRouter:
                 qty=parent_qty,
                 time_in_force=tif,
                 order_class=OrderClass.MLEG,
-                limit_price=spread.net_credit,
+                # Alpaca MLEG convention: negative limit = min net CREDIT
+                # floor; a positive value would be a max-debit cap and would
+                # NOT bind on a credit spread (fills at any credit).
+                limit_price=-abs(spread.net_credit),
                 client_order_id=spread.client_order_id,
             )
         except Exception as e:  # noqa: BLE001

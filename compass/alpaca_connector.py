@@ -483,12 +483,18 @@ class AlpacaConnector:
                     )
                     for leg in order.legs
                 ]
+                # Alpaca MLEG convention: NEGATIVE limit = min net credit
+                # floor, POSITIVE = max net debit. net_credit is strategy
+                # intent (positive = credit to receive), so negate: a raw
+                # positive value would be a debit cap that never binds on a
+                # credit spread (fills at any credit).
+                mleg_limit = -order.net_credit if order.net_credit is not None else None
                 req = MultilegOrderRequest(
                     legs=legs_req,
                     qty=1,
                     time_in_force=TimeInForce.DAY if order.tif.upper() == "DAY" else TimeInForce.GTC,
                     order_class=OrderClass.MLEG,
-                    limit_price=order.net_credit,
+                    limit_price=mleg_limit,
                     client_order_id=order.client_order_id,
                 )
                 resp = self._trading_client.submit_order(order_data=req)
