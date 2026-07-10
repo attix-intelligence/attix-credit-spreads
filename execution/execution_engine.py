@@ -799,6 +799,26 @@ class ExecutionEngine:
             )
             # Mirror Alpaca-path behaviour: leave trade in pending_open; the
             # reconciler / monitor will flip to 'open' once the broker confirms fill.
+            # Persist entry-order tracking fields so PositionMonitor's entry
+            # reprice ladder (FIX #2) can poll/cancel/replace this order.
+            # Merge into the existing record — upsert_trade replaces metadata
+            # wholesale, so a partial dict here would wipe the opp fields.
+            try:
+                rec = get_trade_by_id(client_id, path=self.db_path)
+                if rec is not None and order_id:
+                    rec.update({
+                        "status": "pending_open",
+                        "entry_order_id": str(order_id),
+                        "entry_order_submitted_at": datetime.now(timezone.utc).isoformat(),
+                        "entry_limit_credit": round(float(credit), 2) if credit else None,
+                        "entry_reprice_count": 0,
+                    })
+                    upsert_trade(rec, source="execution", path=self.db_path)
+            except Exception as db_err:  # noqa: BLE001 — tracking is best-effort
+                logger.error(
+                    "ExecutionEngine: failed to persist entry order tracking for %s: %s",
+                    client_id, db_err,
+                )
             return {
                 "status": "submitted",
                 "client_order_id": client_id,

@@ -159,6 +159,32 @@ tradier_live:
 live_submit: true   # Reinstated 2026-07-02 — Carlos confirmed entry IS EXP-800 (mislabel, not wrong strategy)
 
 # ============================================================================
+# Entry-order reprice ladder (FIX #2) — executor/Tradier route only.
+# Live was placing ONE static day-limit at the scan credit and never chasing
+# (0 fills, or adverse-only fills ~1.2 vs the backtest's same-day-mark ~3.14).
+# PositionMonitor now cancel/replaces unfilled entries down the ladder:
+#   initial limit (scan credit; correct base pricing arrives with FIX #1
+#   fix/stale-quote-rth) → after each interval_minutes unfilled, replace at
+#   (credit - step) → HARD FLOOR at the strategy's min_credit
+#   (width × risk.min_credit_pct% = 12 × 5% = $0.60 for verticals;
+#    2×width × 20% for iron condors) → at the floor / after max_steps,
+#   cancel and give up (no fill = no trade, logged as failed_open).
+# Each replace uses a NEW idempotency key (client-id + "-r<N>") so the
+# executor idempotency cache / day-scoped dedup can't swallow it; the key is
+# stable within a rung so retries of the same replace still dedupe.
+# Ladder chosen: 3 min × $0.05 × 6 steps = worst case −$0.30 (≈2.5% of width)
+# over ~18 min. Expected realized credit ≈ scan mid − 1-2 ticks instead of
+# 0 fills / adverse-only ~1.2.
+# ============================================================================
+execution:
+  entry_reprice:
+    enabled: true
+    interval_minutes: 3
+    step: 0.05
+    max_steps: 6
+    # credit_floor: 0.60   # optional absolute override of the derived floor
+
+# ============================================================================
 # Alerts / Logging
 # ============================================================================
 alerts:
