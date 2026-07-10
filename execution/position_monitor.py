@@ -178,6 +178,14 @@ _STALE_CLOSE_MAX_RETRIES = 3
 # Grace period prevents false positives from transient Alpaca API blips.
 _EXTERNAL_CLOSE_GRACE_CYCLES = 2
 
+# Entry-order reprice ladder defaults (FIX #2 — executor/Tradier route only).
+# Overridable via config: execution.entry_reprice.{interval_minutes,step,max_steps,credit_floor}
+_ENTRY_REPRICE_INTERVAL_MINUTES = 3.0   # wait this long unfilled before each cancel/replace
+_ENTRY_REPRICE_STEP = 0.05              # $ credit reduction per replace
+_ENTRY_REPRICE_MAX_STEPS = 6            # replaces before giving up (also bounded by floor)
+_ENTRY_MIN_CREDIT_PCT_DEFAULT = 5.0     # % of spread width (matches risk.min_credit_pct default)
+_IC_MIN_COMBINED_CREDIT_PCT_DEFAULT = 20.0  # % of 2×width — matches backtester IC credit check
+
 # OCC option symbol pattern: TICKER(1-5 chars) + YYMMDD + C/P + 8-digit strike×1000
 _OCC_SYMBOL_RE = re.compile(r'^([A-Z]{1,6})(\d{6})([CP])(\d{8})$')
 
@@ -252,6 +260,24 @@ class PositionMonitor:
         # Equity-curve backfill+push throttle (runs 24/7, independent of market
         # hours, so the dashboard chart shows inception→now and never blanks).
         self._last_equity_refresh: Optional[float] = None
+
+        # Entry-order reprice ladder (FIX #2) — executor route only, config-driven.
+        _reprice_cfg = (config.get("execution") or {}).get("entry_reprice") or {}
+        self._reprice_enabled = bool(_reprice_cfg.get("enabled", False))
+        self._reprice_interval_min = float(
+            _reprice_cfg.get("interval_minutes", _ENTRY_REPRICE_INTERVAL_MINUTES)
+        )
+        self._reprice_step = float(_reprice_cfg.get("step", _ENTRY_REPRICE_STEP))
+        self._reprice_max_steps = int(_reprice_cfg.get("max_steps", _ENTRY_REPRICE_MAX_STEPS))
+        # Absolute floor override; None → derived from risk.min_credit_pct × width.
+        _floor = _reprice_cfg.get("credit_floor")
+        self._reprice_credit_floor: Optional[float] = float(_floor) if _floor is not None else None
+        self._min_credit_pct = float(risk.get("min_credit_pct", _ENTRY_MIN_CREDIT_PCT_DEFAULT))
+        self._ic_min_combined_credit_pct = float(
+            (strategy.get("iron_condor") or {}).get(
+                "min_combined_credit_pct", _IC_MIN_COMBINED_CREDIT_PCT_DEFAULT
+            )
+        )
 
         # Three-tier reconciliation scheduling
         # _last_tier2_run: wall-clock time of the last Tier 2 (full position check) run
@@ -594,6 +620,15 @@ class PositionMonitor:
         # Tier 1: Reconcile pending_close positions (check for fills since last cycle)
         if self.alpaca or self.executor_sink is not None:
             self._reconcile_pending_closes()
+
+        # Tier 1: Entry-order reprice ladder (FIX #2 — executor/Tradier route only).
+        # Chases unfilled entry limits toward executable, hard-floored at the
+        # strategy's min_credit; gives up gracefully (no fill = no trade).
+        if self.executor_sink is not None and self.alpaca is None and self._reprice_enabled:
+            try:
+                self._check_entry_orders()
+            except Exception as e:  # noqa: BLE001 — never break the monitor cycle
+                logger.error("PositionMonitor: entry reprice check failed: %s", e, exc_info=True)
 
         # Tier 2 gate: only run the expensive position check every 5 min
         if not self._should_run_tier2():
@@ -2223,6 +2258,281 @@ class PositionMonitor:
 
         # Resubmit
         self._close_position(pos, exit_reason)
+
+    # ------------------------------------------------------------------
+    # Entry-order reprice ladder (FIX #2 — executor/Tradier route only)
+    # ------------------------------------------------------------------
+
+    def _check_entry_orders(self) -> None:
+        """Poll pending_open entry orders and run the cancel/replace ladder.
+
+        Modeled on _check_stale_close. For each pending_open trade with a
+        tracked entry_order_id:
+          - filled            → promote to open (record actual fill credit)
+          - terminal no-fill  → failed_open (broker cancelled/rejected/expired)
+          - partially filled  → leave alone (never cancel a partial entry)
+          - working past the reprice interval → cancel/replace one step lower,
+            hard-floored at the strategy's min_credit; at the floor / after
+            max_steps, cancel and give up (no fill = no trade).
+        """
+        pending = get_trades(status="pending_open", source="execution", path=self.db_path)
+        for pos in pending or []:
+            order_id = pos.get("entry_order_id")
+            if not order_id:
+                continue  # pre-FIX#2 record — nothing to track
+            try:
+                order = self._get_close_order_status(str(order_id)) or {}
+            except Exception as e:  # noqa: BLE001
+                logger.warning(
+                    "PositionMonitor: entry order status fetch failed for %s (%s): %s",
+                    order_id, pos.get("id"), e,
+                )
+                continue
+
+            status = str(order.get("status", "")).lower()
+            try:
+                filled_qty = float(order.get("filled_qty") or 0)
+            except (TypeError, ValueError):
+                filled_qty = 0.0
+
+            if status == "filled":
+                self._promote_entry_filled(pos, order)
+            elif status in _TERMINAL_NO_FILL:
+                self._fail_entry(pos, f"entry_{status}: broker terminal state, no fill")
+            elif filled_qty > 0:
+                logger.warning(
+                    "PositionMonitor: entry order %s for %s PARTIALLY filled "
+                    "(%.0f) — skipping reprice to avoid orphaning the partial",
+                    order_id, pos.get("id"), filled_qty,
+                )
+            else:
+                self._maybe_reprice_entry(pos, str(order_id))
+
+    def _promote_entry_filled(self, pos: Dict, order: Dict) -> None:
+        """Flip a filled entry to open, recording the actual fill credit."""
+        pos_id = pos.get("id", "?")
+        fill_credit = None
+        try:
+            raw_px = order.get("filled_avg_price")
+            if raw_px is not None:
+                fill_credit = abs(float(raw_px))
+        except (TypeError, ValueError):
+            fill_credit = None
+        pos["status"] = "open"
+        if fill_credit and fill_credit > 0:
+            # upsert_trade's ON CONFLICT never updates the credit column, so the
+            # actual fill credit is persisted as metadata (merged back on read).
+            pos["entry_fill_credit"] = fill_credit
+        try:
+            upsert_trade(pos, source="execution", path=self.db_path)
+        except Exception as e:  # noqa: BLE001
+            logger.error("PositionMonitor: promote-to-open DB update failed for %s: %s", pos_id, e)
+            return
+        logger.info(
+            "PositionMonitor: entry FILLED — %s promoted to open (fill_credit=%s, replaces=%s)",
+            pos_id, fill_credit, pos.get("entry_reprice_count", 0),
+        )
+
+    def _maybe_reprice_entry(self, pos: Dict, order_id: str) -> None:
+        """One rung of the ladder: if unfilled past the interval, cancel/replace
+        a step lower; give up at the credit floor or after max_steps."""
+        pos_id = str(pos.get("id", "?"))
+        submitted_at_str = pos.get("entry_order_submitted_at") or pos.get("entry_date")
+        if not submitted_at_str:
+            return
+        try:
+            submitted_at = datetime.fromisoformat(str(submitted_at_str))
+            if submitted_at.tzinfo is None:
+                submitted_at = submitted_at.replace(tzinfo=timezone.utc)
+            age_minutes = (datetime.now(timezone.utc) - submitted_at).total_seconds() / 60
+        except (ValueError, TypeError):
+            return
+        if age_minutes < self._reprice_interval_min:
+            return
+
+        attempt = int(pos.get("entry_reprice_count", 0) or 0)
+        try:
+            cur_credit = float(pos.get("entry_limit_credit") or pos.get("credit") or 0)
+        except (TypeError, ValueError):
+            cur_credit = 0.0
+        floor = self._entry_credit_floor(pos)
+        if floor is None or cur_credit <= 0:
+            logger.warning(
+                "PositionMonitor: cannot reprice %s (credit=%.2f floor=%s) — leaving order as-is",
+                pos_id, cur_credit, floor,
+            )
+            return
+
+        at_floor = cur_credit <= floor + 1e-9
+        if attempt >= self._reprice_max_steps or at_floor:
+            # End of ladder: cancel and walk away. No fill = no trade.
+            try:
+                self.executor_sink.cancel_order(order_id)
+            except Exception as cancel_err:  # noqa: BLE001
+                logger.warning(
+                    "PositionMonitor: give-up cancel failed for entry %s (%s): %s — "
+                    "will retry next cycle",
+                    order_id, pos_id, cancel_err,
+                )
+                return  # keep pending_open; poll again next cycle
+            self._fail_entry(
+                pos,
+                f"entry_reprice_gave_up: no fill after {attempt} replace(s), "
+                f"last_limit={cur_credit:.2f}, floor={floor:.2f}",
+            )
+            return
+
+        new_credit = round(max(floor, cur_credit - self._reprice_step), 2)
+        logger.info(
+            "PositionMonitor: ENTRY REPRICE %s — unfilled %.1f min at %.2f, "
+            "cancel/replace at %.2f (step %d/%d, floor %.2f)",
+            pos_id, age_minutes, cur_credit, new_credit,
+            attempt + 1, self._reprice_max_steps, floor,
+        )
+
+        # Cancel first; never run two live entry orders for the same trade.
+        try:
+            self.executor_sink.cancel_order(order_id)
+        except Exception as cancel_err:  # noqa: BLE001
+            logger.warning(
+                "PositionMonitor: cancel failed for entry %s (%s): %s — NOT replacing "
+                "this cycle (avoids duplicate live orders)",
+                order_id, pos_id, cancel_err,
+            )
+            return
+
+        next_attempt = attempt + 1
+        try:
+            intent = self._build_entry_open_intent(pos, new_credit, next_attempt)
+        except Exception as build_err:  # noqa: BLE001
+            self._fail_entry(pos, f"entry_reprice_intent_failed: {build_err}")
+            return
+        if intent is None:
+            self._fail_entry(pos, "entry_reprice_unsupported_structure")
+            return
+
+        try:
+            res = self.executor_sink.submit(intent) or {}
+        except Exception as submit_err:  # noqa: BLE001
+            res = {"status": "error", "message": str(submit_err)}
+
+        if res.get("status") == "submitted":
+            pos["entry_order_id"] = str(res.get("order_id") or "")
+            pos["entry_order_submitted_at"] = datetime.now(timezone.utc).isoformat()
+            pos["entry_limit_credit"] = new_credit
+            pos["entry_reprice_count"] = next_attempt
+            try:
+                upsert_trade(pos, source="execution", path=self.db_path)
+            except Exception as db_err:  # noqa: BLE001
+                logger.error(
+                    "PositionMonitor: reprice DB update failed for %s: %s", pos_id, db_err
+                )
+        else:
+            # Old order is cancelled and the replacement did not go in —
+            # fail the trade rather than leave a phantom pending_open.
+            self._fail_entry(
+                pos,
+                f"entry_reprice_resubmit_failed: {res.get('message', res.get('status', 'unknown'))}",
+            )
+
+    def _entry_credit_floor(self, pos: Dict) -> Optional[float]:
+        """The strategy's min_credit for this trade (the ladder's hard floor).
+
+        Verticals:     width × risk.min_credit_pct%              (EXP-800: 12 × 5% = 0.60)
+        Iron condors:  2×width × iron_condor.min_combined_credit_pct% (default 20% → 4.80)
+        Overridable with an absolute execution.entry_reprice.credit_floor.
+        """
+        if self._reprice_credit_floor is not None:
+            return round(self._reprice_credit_floor, 2)
+        try:
+            spread_type = str(pos.get("strategy_type", "")).lower()
+            if "condor" in spread_type:
+                put_short = float(pos.get("put_short_strike") or pos.get("short_strike") or 0)
+                put_long = float(pos.get("put_long_strike") or pos.get("long_strike") or 0)
+                width = abs(put_short - put_long)
+                if width <= 0:
+                    return None
+                return round(2 * width * self._ic_min_combined_credit_pct / 100.0, 2)
+            short_strike = float(pos.get("short_strike") or 0)
+            long_strike = float(pos.get("long_strike") or 0)
+            width = abs(short_strike - long_strike)
+            if width <= 0:
+                return None
+            return round(width * self._min_credit_pct / 100.0, 2)
+        except (TypeError, ValueError):
+            return None
+
+    def _build_entry_open_intent(self, pos: Dict, new_credit: float, attempt: int):
+        """Build a to-open OrderIntent for the replacement order.
+
+        stream carries a per-replace suffix (-r<N>) so the sink's
+        stream_client_order_id yields a NEW idempotency key for each replace
+        (the executor's idempotency cache and the day-scoped client-id pinning
+        would otherwise swallow the resubmit), while staying stable WITHIN an
+        attempt so a retried submit of the same rung still dedupes.
+        """
+        from compass.live.vrp_contracts import OrderIntent, OrderLeg
+
+        ticker = str(pos.get("ticker", ""))
+        pos_id = str(pos.get("id", ""))
+        contracts = int(pos.get("contracts", 1) or 1)
+        expiration_str = str(pos.get("expiration", "")).split(" ")[0]
+        spread_type = str(pos.get("strategy_type", "")).lower()
+
+        def _leg(side: str, strike, right: str) -> OrderLeg:
+            opt_type = "put" if right == "P" else "call"
+            occ = self._occ_symbol(ticker, expiration_str, strike, opt_type) or ticker
+            return OrderLeg(
+                side=side, sec_type="option", symbol=occ,
+                qty=contracts, strike=float(strike),
+                expiration=expiration_str, right=right,
+            )
+
+        if "condor" in spread_type:
+            put_short = pos.get("put_short_strike") or pos.get("short_strike")
+            put_long = pos.get("put_long_strike") or pos.get("long_strike")
+            call_short = pos.get("call_short_strike")
+            call_long = pos.get("call_long_strike")
+            if not all([put_short, put_long, call_short, call_long]):
+                raise ValueError(f"iron_condor {pos_id} missing per-wing strikes for reprice")
+            structure = "iron_condor"
+            legs = (
+                _leg("sell", put_short, "P"),
+                _leg("buy", put_long, "P"),
+                _leg("sell", call_short, "C"),
+                _leg("buy", call_long, "C"),
+            )
+        elif spread_type in ("bull_put", "bear_call"):
+            right = "C" if spread_type == "bear_call" else "P"
+            legs = (
+                _leg("sell", pos.get("short_strike"), right),
+                _leg("buy", pos.get("long_strike"), right),
+            )
+            structure = spread_type
+        else:
+            return None
+
+        return OrderIntent(
+            stream=f"{pos_id}-r{attempt}",
+            symbol=ticker,
+            structure=structure,
+            legs=legs,
+            contracts=contracts,
+            est_credit=float(new_credit),
+            rationale=f"entry_reprice:step{attempt}",
+        )
+
+    def _fail_entry(self, pos: Dict, reason: str) -> None:
+        """Mark an entry as failed_open (graceful no-trade) and log it."""
+        pos_id = pos.get("id", "?")
+        pos["status"] = "failed_open"
+        pos["exit_reason"] = reason
+        try:
+            upsert_trade(pos, source="execution", path=self.db_path)
+        except Exception as e:  # noqa: BLE001
+            logger.error("PositionMonitor: failed_open DB update failed for %s: %s", pos_id, e)
+            return
+        logger.warning("PositionMonitor: entry ABANDONED — %s (%s)", pos_id, reason)
 
     def _record_close_pnl(self, pos: Dict, order: Dict) -> None:
         """Calculate realized P&L from fill data and update DB with final closed status."""
