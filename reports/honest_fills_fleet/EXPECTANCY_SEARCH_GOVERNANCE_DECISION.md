@@ -2,6 +2,7 @@
 
 **Date:** 2026-07-10 · **Author:** cc1 · **Trigger:** governance check from Maximus against the `e02b90a` stop rule
 **Binding on:** any future expectancy search touching this strategy family, this data, or the 2025+ holdout.
+**Sign-off:** APPROVED by Maximus, 2026-07-10 — stand-down confirmed; the binding checklist below is program policy.
 **No backtest was run in reaching or documenting this decision.**
 
 ## The decision
