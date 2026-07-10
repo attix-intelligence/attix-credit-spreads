@@ -47,6 +47,12 @@ configs/backtest_exp800.json fidelity_notes.
 
 Usage:  .venv/bin/python experiments/EXP-800-BT-safe-kelly/run.py flatten
         .venv/bin/python experiments/EXP-800-BT-safe-kelly/run.py haltonly
+        .venv/bin/python experiments/EXP-800-BT-safe-kelly/run.py flatten marketable
+
+Optional second arg = fill model (FIX #3): 'naive' (default — legacy instant
+fills, reproduces historical results) or 'marketable' (entry limit must be
+traded through by the scan bar or it is fill-or-cancel). Marketable results
+are written to SPY_{variant}_marketable.json so naive baselines are preserved.
 Offline only: never touches Tradier/Alpaca/paper workers.
 """
 from __future__ import annotations
@@ -324,6 +330,9 @@ def _monthly_returns(equity_curve, months):
 def main() -> None:
     variant = sys.argv[1] if len(sys.argv) > 1 else "flatten"
     assert variant in ("flatten", "haltonly", "notiers"), f"unknown variant {variant}"
+    fill_model = None
+    if len(sys.argv) > 2:
+        fill_model = sys.argv[2]
 
     logging.basicConfig(level=logging.WARNING, format="%(levelname)s %(name)s: %(message)s")
     logging.getLogger("backtest.backtester").setLevel(logging.WARNING)
@@ -331,6 +340,9 @@ def main() -> None:
     _load_env(ROOT / ".env.expv8a")  # POLYGON_API_KEY for SPY daily bars only
 
     cfg = json.loads(CONFIG_PATH.read_text())
+    if fill_model is None:
+        fill_model = cfg["backtest"].get("fill_model", "naive")
+    assert fill_model in ("naive", "marketable"), f"unknown fill_model {fill_model}"
     start = datetime.fromisoformat(cfg["window"]["start"])
     end = datetime.fromisoformat(cfg["window"]["end"])
 
@@ -342,6 +354,7 @@ def main() -> None:
             "exit_slippage": cfg["backtest"]["exit_slippage"],
             "sizing_mode": cfg["backtest"]["sizing_mode"],
             "compound": cfg["backtest"]["compound"],
+            "fill_model": fill_model,
         },
         "strategy": {
             "direction": cfg["direction"],
@@ -399,6 +412,9 @@ def main() -> None:
     summary = {
         "experiment": "EXP-800-BT",
         "variant": variant,
+        "fill_model": fill_model,
+        "unfilled_entries": results.get("unfilled_entries", 0),
+        "fill_model_naive_fallbacks": results.get("fill_model_naive_fallbacks", 0),
         "window": [start.date().isoformat(), end.date().isoformat()],
         "config": os.path.relpath(str(CONFIG_PATH), str(ROOT)),
         "metrics": {
@@ -431,10 +447,13 @@ def main() -> None:
             for t in results.get("trades", [])
         ],
     }
-    out = OUT / f"SPY_{variant}.json"
+    out = OUT / (f"SPY_{variant}.json" if fill_model == "naive"
+                 else f"SPY_{variant}_{fill_model}.json")
     out.write_text(json.dumps(summary, indent=2, default=str))
 
     m = summary["metrics"]
+    print(f"[EXP-800-BT/{variant}/{fill_model}] unfilled={summary['unfilled_entries']} "
+          f"naive_fallbacks={summary['fill_model_naive_fallbacks']}")
     print(f"[EXP-800-BT/{variant}] trades={m['total_trades']} CAGR={m['cagr_pct']}% "
           f"total={m['return_pct']}% sharpe={m['sharpe_ratio']} maxDD={m['max_drawdown_pct']}% "
           f"winrate={m['win_rate']}% tiers={overlay.tier_fires} flattens={overlay.flatten_count} "

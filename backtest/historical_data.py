@@ -197,6 +197,33 @@ class HistoricalOptionsData:
         row = cur.fetchone()
         return row[0] if row else None
 
+    def get_contract_open_close(self, symbol: str, date: str) -> Optional[tuple]:
+        """Daily (open, close) for a contract — same cache/fetch behavior as
+        get_contract_price. open may be None on legacy cache rows."""
+        cur = self._conn.cursor()
+        cur.execute(
+            "SELECT open, close FROM option_daily WHERE contract_symbol = ? AND date = ?",
+            (symbol, date),
+        )
+        row = cur.fetchone()
+        if row is not None:
+            return row
+
+        cur.execute(
+            "SELECT 1 FROM option_daily WHERE contract_symbol = ? LIMIT 1",
+            (symbol,),
+        )
+        if cur.fetchone() is not None:
+            return None  # full series already fetched — date just doesn't exist
+
+        self._fetch_and_cache(symbol)
+
+        cur.execute(
+            "SELECT open, close FROM option_daily WHERE contract_symbol = ? AND date = ?",
+            (symbol, date),
+        )
+        return cur.fetchone()
+
     def _fetch_and_cache(self, symbol: str):
         """Fetch full daily OHLCV series for an option contract and cache it.
 
@@ -405,25 +432,37 @@ class HistoricalOptionsData:
             date: Date to look up prices "YYYY-MM-DD"
 
         Returns:
-            Dict with short_close, long_close, spread_value or None if data missing.
+            Dict with short_close, long_close, spread_value, plus
+            short_open/long_open/spread_open (None on legacy cache rows without
+            opens) — the day-open spread mark, used by the marketable fill model
+            to price a day-limit at decision time. None if data missing.
         """
         short_sym = self.build_occ_symbol(ticker, expiration, short_strike, option_type)
         long_sym = self.build_occ_symbol(ticker, expiration, long_strike, option_type)
 
-        short_close = self.get_contract_price(short_sym, date)
-        long_close = self.get_contract_price(long_sym, date)
+        short_row = self.get_contract_open_close(short_sym, date)
+        long_row = self.get_contract_open_close(long_sym, date)
 
+        if short_row is None or long_row is None:
+            return None
+        short_open, short_close = short_row
+        long_open, long_close = long_row
         if short_close is None or long_close is None:
             return None
 
         # For puts: short is higher strike, credit = short - long
         # For calls: short is lower strike, credit = short - long
         spread_value = short_close - long_close
+        spread_open = (short_open - long_open
+                       if short_open is not None and long_open is not None else None)
 
         return {
             "short_close": short_close,
             "long_close": long_close,
             "spread_value": spread_value,
+            "short_open": short_open,
+            "long_open": long_open,
+            "spread_open": spread_open,
         }
 
     # ------------------------------------------------------------------
@@ -613,7 +652,10 @@ class HistoricalOptionsData:
             minute: Scan time minute in ET
 
         Returns:
-            Dict with spread_value, short_close, long_close, slippage, or None.
+            Dict with spread_value, short_close, long_close, slippage, plus
+            short_open/long_open/spread_open (None when the bar lacks opens) —
+            the spread mark at the start of the scan bar, i.e. the price a
+            limit order submitted at scan time would have been based on.
         """
         short_sym = self.build_occ_symbol(ticker, expiration, short_strike, option_type)
         long_sym = self.build_occ_symbol(ticker, expiration, long_strike, option_type)
@@ -643,11 +685,19 @@ class HistoricalOptionsData:
         lg_hl = long_bar["high"] - long_bar["low"] if (long_bar["high"] and long_bar["low"]) else 0.0
         slippage = min(sh_hl / 2, _CAP) + min(lg_hl / 2, _CAP)
 
+        short_open = short_bar.get("open")
+        long_open = long_bar.get("open")
+        spread_open = (short_open - long_open
+                       if short_open is not None and long_open is not None else None)
+
         return {
             "short_close": short_close,
             "long_close": long_close,
             "spread_value": spread_value,
             "slippage": slippage,
+            "short_open": short_open,
+            "long_open": long_open,
+            "spread_open": spread_open,
         }
 
     # ------------------------------------------------------------------

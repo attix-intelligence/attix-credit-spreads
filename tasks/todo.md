@@ -35,8 +35,64 @@
 ---
 
 # TODO — Operation Crack The Code
-# Last Updated: 2026-03-16
-# Status: EXP-500 Phase 1 COMPLETE. Paper trading live (Mar 16 → May 11).
+# Last Updated: 2026-07-10
+# Status: FIX #3 (honest backtest fills) in progress on fix/backtest-honest-fills.
+
+---
+
+## FIX #3: Make the backtest honest about fills (2026-07-10, branch fix/backtest-honest-fills)
+
+Spec: FIX3_BACKTEST_HONEST_FILLS.md · Basis: INVESTIGATION_LIVE_VS_BACKTEST_FILL_PARITY_FINDINGS.md
+
+- [x] Branch `fix/backtest-honest-fills` off main (72f35bc)
+- [x] Baseline (naive) EXP-800-BT re-run — reproduces REPORT.md (flatten −45.18%, notiers −95.12%)
+- [x] `backtest.fill_model` config flag: `naive` (default, legacy instant fills — historical
+      results reproducible) | `marketable` | `nbbo` (documented stub: needs Polygon historical
+      NBBO quotes endpoint, not in options_cache.db — raises NotImplementedError)
+- [x] Marketable model in `_find_real_spread`: limit = scan-bar OPEN spread mark − config
+      slippage (decision-time price, like live's natural-credit limit); fills only if the
+      market traded at/through the limit by bar CLOSE, at the limit price, no extra slippage;
+      otherwise fill-or-cancel that bar. Next 5-min scan slot recomputes a fresh limit —
+      backtest analog of the FIX #2 live repricing ladder. Pre-9:30 ET scan slots place no
+      order (options RTH; naive was booking them off same-day close = lookahead). Daily bars
+      (entry contracts have ZERO intraday bars in options_cache.db) model a static day-limit
+      off the daily OPEN — live pre-FIX2 semantics; daily rows without opens can't check
+      marketability → book naively + counted (`fill_model_naive_fallbacks`). No-fills counted
+      (`unfilled_entries`). Both reported in results.
+- [x] Tests `tests/test_fill_model.py` (10 pass): limit above market → no fill; limit
+      at/below → fill at limit; exact-at-market fills; pre-open slot no order; daily day-limit
+      no-fill/fill; daily-without-opens fallback counted; naive default unchanged; nbbo stub /
+      unknown rejected (pre-existing 17 failures at HEAD are env-only: no POLYGON_API_KEY)
+- [x] Marketable EXP-800-BT re-run (flatten + notiers) + edge-change report (below)
+- [ ] Commit (NO deploy)
+
+### Review
+
+**Regression:** naive flatten after the data-layer change is byte-for-byte the baseline —
+828 trades, total −45.18%, CAGR −9.17%, winrate 66.91% (matches REPORT.md −45.2%/828).
+Default `fill_model: naive` preserves all historical results.
+
+**Edge change, naive → marketable (EXP-800-BT, SPY 2020–2026, 2026-07-10 runs):**
+
+| variant | model | trades | total | CAGR | sharpe | maxDD | winrate | unfilled |
+|---|---|---|---|---|---|---|---|---|
+| flatten | naive | 828 | −45.18% | −9.17% | −0.96 | −45.76% | 66.91% | 0 |
+| flatten | marketable | 383 | −27.08% | −4.93% | −1.17 | −27.22% | 63.71% | 57,758 |
+| notiers | naive | 1,236 | −95.12% | — | — | — | — | 0 |
+| notiers | marketable | 496 | −79.60% | −22.47% | −1.18 | −80.04% | 64.52% | 77,336 |
+
+Honest fills reject ~54% of entries (828→383 flatten): the limit priced off the
+decision-time open never became marketable by bar close on most signal days. Win rate
+drops ~3.2pts (66.9%→63.7%) and Sharpe worsens (−0.96→−1.17) — the fills the naive model
+was inventing were disproportionately the *favorable* ones (rich open marks that the market
+never actually traded through). Smaller total loss is purely fewer trades at risk, not
+better edge: per-trade expectancy is worse under honest fills. `naive_fallbacks=0` in both
+marketable runs — every booked entry was verified against real open/close data (Rule Zero).
+
+**Conclusion:** the strategy's negative edge is confirmed, not an artifact of fill modeling;
+honest fills make the per-trade economics *worse*. The naive backtest was also overstating
+deployable capacity ~2× (half its signals were never fillable at the modeled price).
+This is the honest number Carlos needs before any live scaling decision.
 
 ---
 
