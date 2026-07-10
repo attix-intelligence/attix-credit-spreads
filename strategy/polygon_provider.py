@@ -20,11 +20,19 @@ from urllib3.util.retry import Retry
 from shared.circuit_breaker import CircuitBreaker
 from shared.exceptions import ProviderError
 from shared.indicators import calculate_iv_rank as _shared_iv_rank
+from shared.market_calendar import is_rth
 
 logger = logging.getLogger(__name__)
 
 BASE_URL = "https://api.polygon.io"
 MAX_PAGES = 50
+
+# Max age of a snapshot last_quote before it is considered unusable during RTH.
+# The failure mode being guarded (Jul 9 live no-fill) is prior-session data
+# leaking into intraday pricing — hours old, not minutes — while quiet far-OTM
+# strikes can legitimately go a few minutes between quote updates intraday.
+# 300s cleanly separates the two regimes.
+QUOTE_MAX_AGE_SECONDS = 300
 
 # Endpoint path markers that require the options-entitlement key. Matched as
 # substrings so both relative paths ("/v3/snapshot/options/SPY") and full
@@ -149,15 +157,18 @@ class PolygonProvider:
         return all_results
 
     @staticmethod
-    def _build_option_row(item: Dict, expiration_dt: datetime) -> Dict:
+    def _build_option_row(item: Dict, expiration_dt: datetime, now: Optional[datetime] = None) -> Dict:
         """Build a standardised option row dict from a single Polygon snapshot item.
 
         Args:
             item: One element from the Polygon ``/v3/snapshot/options`` results list.
             expiration_dt: Pre-parsed expiration datetime for this item.
+            now: Reference time for RTH/freshness decisions (defaults to utcnow).
 
         Returns:
-            A dict suitable for inclusion in a DataFrame row.
+            A dict suitable for inclusion in a DataFrame row. During RTH a
+            contract with no usable quote keeps bid=ask=0 so the chain filters
+            (``bid > 0 & ask > 0``) drop it and callers skip pricing that leg.
         """
         details = item.get("details", {})
         greeks = item.get("greeks", {}) or {}
@@ -169,14 +180,35 @@ class PolygonProvider:
         ask = last_quote.get("ask", 0) or 0
         close_price = day.get("close", 0) or 0
 
-        # After hours, last_quote may be empty. Use day close as fallback pricing.
-        if bid == 0 and ask == 0 and close_price > 0:
+        if now is None:
+            now = datetime.now(timezone.utc)
+        elif now.tzinfo is None:
+            now = now.replace(tzinfo=timezone.utc)
+        rth = is_rth(now)
+
+        if rth:
+            # During RTH never fabricate bid/ask from prior close: at the open
+            # many contracts have no live quote yet and prior-day marks priced
+            # a Jul 9 live spread at $3.14 vs a real ~$1.21-1.28 market (no-fill).
+            # Additionally reject quotes older than QUOTE_MAX_AGE_SECONDS
+            # (prior-session leftovers). last_updated is ns-since-epoch; if
+            # absent, trust a non-empty quote rather than zeroing the chain.
+            last_updated_ns = last_quote.get("last_updated", 0) or 0
+            if last_updated_ns and (now.timestamp() - last_updated_ns / 1e9) > QUOTE_MAX_AGE_SECONDS:
+                bid = 0
+                ask = 0
+        elif bid == 0 and ask == 0 and close_price > 0:
+            # Outside RTH last_quote is often empty; day close is an acceptable
+            # mark for after-hours scans/reports (see get_full_chain).
             bid = close_price
             ask = close_price
 
         strike = details.get("strike_price", 0)
         opt_type = "call" if details.get("contract_type", "").lower() == "call" else "put"
-        mid = (bid + ask) / 2 if (bid + ask) > 0 else close_price
+        if (bid + ask) > 0:
+            mid = (bid + ask) / 2
+        else:
+            mid = 0 if rth else close_price
 
         return {
             "contract_symbol": details.get("ticker", ""),
@@ -305,7 +337,8 @@ class PolygonProvider:
             return pd.DataFrame()
 
         df = pd.DataFrame(rows)
-        # Filter out contracts with no pricing at all (no quote and no day close)
+        # Filter out contracts with no usable pricing: during RTH that is any
+        # contract without a fresh live quote; outside RTH, no quote and no day close.
         df = df[(df["bid"] > 0) & (df["ask"] > 0)].copy()
         logger.info(f"Polygon: {len(df)} options for {ticker} ({min_dte}-{max_dte} DTE)")
         return df
