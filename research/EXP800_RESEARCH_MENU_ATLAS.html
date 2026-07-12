@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EXP-800 Backtest Research Menu</title>
+<style>
+  :root {
+    --p0: #c0392b; --p1: #d35400; --p2: #2471a3; --p3: #7f8c8d;
+    --ink: #1c2833; --muted: #566573; --line: #d5dbdb; --band: #f4f6f7;
+  }
+  * { box-sizing: border-box; }
+  body {
+    background: #ffffff; color: var(--ink);
+    font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+    margin: 0; padding: 40px 24px; line-height: 1.55;
+  }
+  .wrap { max-width: 1040px; margin: 0 auto; }
+  h1 { font-size: 26px; margin: 0 0 4px; }
+  h2 { font-size: 19px; margin: 36px 0 10px; border-bottom: 2px solid var(--ink); padding-bottom: 6px; }
+  h3 { font-size: 16px; margin: 26px 0 8px; }
+  .meta { color: var(--muted); font-size: 13px; margin-bottom: 22px; }
+  .tag { display: inline-block; font-size: 11px; font-weight: 700; color: #fff; border-radius: 10px; padding: 2px 9px; letter-spacing: .4px; }
+  .P0 { background: var(--p0); } .P1 { background: var(--p1); } .P2 { background: var(--p2); } .P3 { background: var(--p3); }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0 18px; font-size: 13.5px; }
+  th { background: var(--ink); color: #fff; text-align: left; padding: 8px 10px; font-weight: 600; }
+  td { border: 1px solid var(--line); padding: 7px 10px; vertical-align: top; }
+  tr:nth-child(even) td { background: var(--band); }
+  code { background: var(--band); border: 1px solid var(--line); border-radius: 3px; padding: 1px 5px; font-size: 12.5px; }
+  .callout { border-left: 4px solid var(--p0); background: #fdf2f0; padding: 12px 16px; margin: 16px 0; }
+  .callout.blue { border-color: var(--p2); background: #eef4fa; }
+  .callout.gray { border-color: var(--p3); background: var(--band); }
+  .exp { border: 1px solid var(--line); border-radius: 6px; padding: 14px 18px; margin: 14px 0; }
+  .exp h4 { margin: 0 0 6px; font-size: 15px; }
+  .exp .row { margin: 4px 0; font-size: 13.5px; }
+  .lbl { font-weight: 700; color: var(--muted); display: inline-block; min-width: 92px; }
+  .num { text-align: right; }
+  .neg { color: var(--p0); font-weight: 600; }
+  .foot { margin-top: 34px; border-top: 2px solid var(--ink); padding-top: 14px; font-size: 14px; }
+  .marker { color: var(--muted); font-size: 12px; letter-spacing: 1px; margin-top: 18px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>EXP-800 Backtest Research Menu</h1>
+<div class="meta">
+  Can Safe Kelly 9/7/4 SPY credit spreads be made <em>honestly</em> profitable?<br>
+  Atlas (Claude Code) · 2026-07-12 · For Carlos → Maximus handoff · Analysis/write-up only — no live changes, no deploy.<br>
+  Basis: <code>reports/exp800_ladder_reparam.md</code>, FIX #3 honest-fill backtests, <code>configs/live_exp800_tradier.yaml</code>.
+</div>
+
+<h2>0 · Where we stand</h2>
+<table>
+  <tr><th>Fill model</th><th class="num">Trades</th><th class="num">Avg credit</th><th class="num">Total return</th><th class="num">Sharpe</th><th class="num">Win %</th></tr>
+  <tr><td>Naive (fills every signal at scan mid) — the old story</td><td class="num">828</td><td class="num">$1.63</td><td class="num neg">−45.2%</td><td class="num neg">−0.96</td><td class="num">66.9%</td></tr>
+  <tr><td><b>Honest / marketable (FIX #3)</b> — real prices</td><td class="num">383</td><td class="num">$1.40</td><td class="num neg">−27.1%</td><td class="num neg">−1.17</td><td class="num">63.7%</td></tr>
+  <tr><td>Honest, −$0.15 concession (buying fills)</td><td class="num">392</td><td class="num">$1.34</td><td class="num neg">−37.3%</td><td class="num neg">−1.27</td><td class="num">55.4%</td></tr>
+  <tr><td>Honest, −$0.30 concession</td><td class="num">444</td><td class="num">$1.34</td><td class="num neg">−39.2%</td><td class="num neg">−1.25</td><td class="num">57.0%</td></tr>
+</table>
+<p>~54% of the naive fills were fake — disproportionately the favorable ones (booking ~$1.63 credits the market never offered). <b>The plumbing is fine; the parameters/thesis are underwater at real prices.</b> This menu is the systematic search for any honest parameterization that is positive — with a pre-registered kill rule if none is.</p>
+
+<h2>1 · How to run honestly — mandatory</h2>
+<div class="callout">
+  <b>Every backtest below is meaningless unless run with the honest fill model.</b>
+  <ul>
+    <li><code>backtest.fill_model: "marketable"</code> (FIX #3). Runner: <code>python experiments/EXP-800-BT-safe-kelly/run.py &lt;variant&gt; marketable</code> — extend this for sweeps.</li>
+    <li>Verify results JSON: <code>fill_model == "marketable"</code> and <code>fill_model_naive_fallbacks</code> ≈ 0 (investigate if &gt; 2% of entries).</li>
+    <li>No pre-09:30 entries; slippage model ON; all pricing from IronVault (any synthetic-credit path = critical bug, abort).</li>
+  </ul>
+</div>
+<div class="callout blue">
+  <b>Overfitting guardrails (pre-registered success bar).</b> Train <b>2020-01 → 2023-12</b>, test <b>2024-01 → 2026-04</b>; one look at test per candidate. A cell "wins" only if, in train AND test: return &gt; 0 and Sharpe ≥ 0.5; ≥ 150 honest fills full-period; <b>plateau not spike</b> (adjacent cells also ≥ 0 — an 80-cell grid produces ~4 false positives by chance); survives an extra −$0.05 slippage stress. Always report fill-rate — a "profitable" cell filling 4% of signals is a different, fragile strategy.
+</div>
+
+<h2>2 · Priority index</h2>
+<table>
+  <tr><th>ID</th><th>Axis</th><th>One-line hypothesis</th><th>Priority</th><th>Effort</th></tr>
+  <tr><td>RM-A1</td><td>Structure</td><td>Some DTE × OTM × width region is honestly positive; 15 / 2% / $12 is just a bad cell</td><td><span class="tag P0">P0</span></td><td>M</td></tr>
+  <tr><td>RM-B1</td><td>Entry realism</td><td>A minimum honest credit-to-width floor filters junk fills and restores sign</td><td><span class="tag P0">P0</span></td><td>S</td></tr>
+  <tr><td>RM-F1</td><td>Verdict</td><td>Pre-registered kill-or-pivot decision protocol wrapping all sweeps</td><td><span class="tag P0">P0</span></td><td>S</td></tr>
+  <tr><td>RM-A2</td><td>Structure</td><td>Constant-delta strikes (not fixed 2% OTM) stabilize edge across vol regimes</td><td><span class="tag P1">P1</span></td><td>S</td></tr>
+  <tr><td>RM-B2</td><td>Entry realism</td><td>Later entry times price off real quotes at similar IV</td><td><span class="tag P1">P1</span></td><td>S</td></tr>
+  <tr><td>RM-C2</td><td>Regime</td><td>IV-rank / VRP gate — only sell when premium is actually rich</td><td><span class="tag P1">P1</span></td><td>M</td></tr>
+  <tr><td>RM-D1</td><td>Risk mgmt</td><td>PT × SL grid — exit geometry, not entry, may be what's underwater</td><td><span class="tag P1">P1</span></td><td>S</td></tr>
+  <tr><td>RM-C1</td><td>Regime</td><td>VIX-level buckets — edge exists only in a vol band</td><td><span class="tag P2">P2</span></td><td>S</td></tr>
+  <tr><td>RM-C3</td><td>Regime</td><td>Term-structure gate — skip backwardation</td><td><span class="tag P2">P2</span></td><td>S</td></tr>
+  <tr><td>RM-D2</td><td>Risk mgmt</td><td>Time-stop at N DTE — gamma-week losses dominate</td><td><span class="tag P2">P2</span></td><td>S</td></tr>
+  <tr><td>RM-E1</td><td>Underlying</td><td>QQQ / IWM — richer IV covers the spread cost SPY can't</td><td><span class="tag P2">P2</span></td><td>M</td></tr>
+  <tr><td>RM-B3</td><td>Entry realism</td><td>Stale-mark sanity gate (reject quote &gt; 1.5× prior close mark)</td><td><span class="tag P2">P2</span></td><td>S</td></tr>
+  <tr><td>RM-C4</td><td>Regime</td><td>Day-of-week / FOMC-CPI avoidance</td><td><span class="tag P3">P3</span></td><td>M</td></tr>
+  <tr><td>RM-D3</td><td>Risk mgmt</td><td>Kelly / breaker sweep — sizing can't flip sign; tune last</td><td><span class="tag P3">P3</span></td><td>S</td></tr>
+  <tr><td>RM-E2</td><td>Underlying</td><td>XSP/SPX for tax/settlement economics — only after a positive edge exists</td><td><span class="tag P3">P3</span></td><td>L</td></tr>
+</table>
+<p class="meta">Effort: S = config-only sweep on existing runner (&lt; half day) · M = new gate/data wiring (~1 day) · L = new data source (multi-day).</p>
+
+<h2>3 · The experiments</h2>
+
+<h3>Axis A — Structure</h3>
+<div class="exp">
+  <h4>RM-A1 · Coarse structure grid <span class="tag P0">P0</span> · Effort M</h4>
+  <div class="row"><span class="lbl">Hypothesis</span> Negative honest edge is specific to short-DTE, near-money, mid-width spreads; longer DTE / further OTM has a better credit-to-spread-cost ratio.</div>
+  <div class="row"><span class="lbl">Sweep</span> <code>target_dte</code> ∈ {7, 15, 30, 45} × <code>otm_pct</code> ∈ {1%, 2%, 3%, 5%} × <code>spread_width</code> ∈ {$5, $10, $12, $15, $20} = 80 cells; all else at baseline.</div>
+  <div class="row"><span class="lbl">Success</span> Any cell passing the Section-1 bar. Deliver the full heat-map — the shape of the surface is the real result.</div>
+</div>
+<div class="exp">
+  <h4>RM-A2 · Delta-targeted strikes <span class="tag P1">P1</span> · Effort S</h4>
+  <div class="row"><span class="lbl">Hypothesis</span> Fixed 2% OTM is a drifting delta (~0.10 calm → ~0.35 stress); constant delta stabilizes credit and win rate.</div>
+  <div class="row"><span class="lbl">Sweep</span> <code>use_delta_selection: true</code>, <code>target_delta</code> ∈ {0.10, 0.15, 0.20, 0.25, 0.30} on the 2–3 best RM-A1 cells.</div>
+  <div class="row"><span class="lbl">Success</span> Beats the matching fixed-OTM cell on honest Sharpe in BOTH train and test at fill count ±20%.</div>
+</div>
+
+<h3>Axis B — Entry pricing realism</h3>
+<div class="exp">
+  <h4>RM-B1 · Minimum honest credit-to-width floor <span class="tag P0">P0</span> · Effort S — run first</h4>
+  <div class="row"><span class="lbl">Hypothesis</span> Negative expectancy is concentrated in low-credit junk fills; requiring <em>marketable</em> credit ≥ X% of width restores sign on the remainder.</div>
+  <div class="row"><span class="lbl">Sweep</span> <code>risk.min_credit_pct</code> ∈ {5 (base), 8, 10, 12, 15, 20, 25}, evaluated against honest credit — on baseline structure and best RM-A1 cell.</div>
+  <div class="row"><span class="lbl">Success</span> A threshold with return &gt; 0 and ≥ 150 fills. Report trade-frequency cost per threshold explicitly.</div>
+</div>
+<div class="exp">
+  <h4>RM-B2 · Entry time-of-day sweep <span class="tag P1">P1</span> · Effort S</h4>
+  <div class="row"><span class="lbl">Hypothesis</span> 09:30:02 quotes are opening-rotation/indicative (~2.5× above marketable, per reparam report); 09:35+ entries price real quotes for ~$0.07 (~5%) credit decay.</div>
+  <div class="row"><span class="lbl">Sweep</span> Entry slot ∈ {09:30 (base), 09:35, 10:00, 12:00, 15:00} ET.</div>
+  <div class="row"><span class="lbl">Success</span> Honest avg credit, fill rate, Sharpe per slot; any slot flipping return positive, or quantitative confirmation of the 09:35 timing fix.</div>
+</div>
+<div class="exp">
+  <h4>RM-B3 · Stale-mark sanity gate <span class="tag P2">P2</span> · Effort S</h4>
+  <div class="row"><span class="lbl">Sweep</span> Reject entry if quoted credit &gt; k × prior-day close mark, k ∈ {1.25, 1.5, 2.0}.</div>
+  <div class="row"><span class="lbl">Success</span> Execution hygiene, not edge: unchanged-or-better Sharpe with fewer wasted phantom-priced order slots.</div>
+</div>
+
+<h3>Axis C — Regime / timing filters</h3>
+<div class="exp">
+  <h4>RM-C2 · IV-rank / VRP entry gate <span class="tag P1">P1</span> · Effort M — most theory-sound filter</h4>
+  <div class="row"><span class="lbl">Hypothesis</span> Sell only when premium is rich, so honest credits are structurally larger relative to width.</div>
+  <div class="row"><span class="lbl">Sweep</span> IV-rank ≥ {25, 50, 75} (needs IV-rank series from IronVault chain history); VRP = chain IV − 20d realized ≥ {0, +2, +5} vol pts.</div>
+  <div class="row"><span class="lbl">Success</span> Section-1 bar vs ungated baseline. If VRP-gating cannot rescue it, the premium-selling thesis itself is dead at these tenors.</div>
+</div>
+<div class="exp">
+  <h4>RM-C1 · VIX-level buckets <span class="tag P2">P2</span> · Effort S &nbsp;·&nbsp; RM-C3 · Term-structure gate <span class="tag P2">P2</span> · Effort S</h4>
+  <div class="row"><span class="lbl">Sweep</span> C1: entry only in VIX bucket {&lt;15}, {15–20}, {20–30}, {&gt;30} + cumulative gates ≥ {15, 17, 20}. C3: require VIX/VIX3M ≤ {0.90, 0.95, 1.00} (contango only; signal already wired).</div>
+  <div class="row"><span class="lbl">Success</span> Per-bucket honest expectancy. <b>N caveat:</b> 383 honest fills ÷ buckets ⇒ treat sub-100-fill cells as directional only.</div>
+</div>
+<div class="exp">
+  <h4>RM-C4 · Calendar effects <span class="tag P3">P3</span> · Effort M</h4>
+  <div class="row"><span class="lbl">Sweep</span> Day-of-week restriction; skip FOMC/CPI ± 1 trading day (needs events-calendar data).</div>
+  <div class="row"><span class="lbl">Success</span> Sharpe delta vs baseline. Severe multiple-comparisons risk — report, never select on, single-slice wins.</div>
+</div>
+
+<h3>Axis D — Risk management</h3>
+<div class="exp">
+  <h4>RM-D1 · Profit-target × stop-loss grid <span class="tag P1">P1</span> · Effort S</h4>
+  <div class="row"><span class="lbl">Hypothesis</span> At honest $1.34–1.40 credits, SL 1.25× stops out trades the fake $1.63 credits survived; the exit geometry may be what's underwater.</div>
+  <div class="row"><span class="lbl">Sweep</span> <code>profit_target</code> ∈ {25, 40, 55, 75}% × <code>stop_loss_multiplier</code> ∈ {1.0, 1.25, 1.5, 2.0} = 16 cells, on baseline + best RM-A1 cell.</div>
+  <div class="row"><span class="lbl">Success</span> Sharpe + MaxDD surface. Wider SL mechanically raises win% while fattening the left tail — judge on expectancy and DD, not win%.</div>
+</div>
+<div class="exp">
+  <h4>RM-D2 · Time-stop / early close <span class="tag P2">P2</span> · Effort S</h4>
+  <div class="row"><span class="lbl">Sweep</span> Force-close at DTE ∈ {7, 5, 3, 1} regardless of P&amp;L ("skip gamma week").</div>
+  <div class="row"><span class="lbl">Success</span> Section-1 bar; hypothesis is that final-week gamma losses dominate the negative edge.</div>
+</div>
+<div class="exp">
+  <h4>RM-D3 · Kelly fraction / breaker sweep <span class="tag P3">P3</span> · Effort S — explicitly last</h4>
+  <div class="row"><span class="lbl">Warning</span> <b>Sizing cannot flip per-trade edge sign</b> — it only shapes the equity path (no-tiers variant: −79.6% vs −27.1% with breakers).</div>
+  <div class="row"><span class="lbl">Sweep</span> Regime fractions {9/7/4, 6/5/3, 4/3/2, 2/2/1} × breakers {on, off} — ONLY on an already sign-positive cell.</div>
+  <div class="row"><span class="lbl">Success</span> MaxDD ≤ −15% while retaining ≥ 80% of unsized return.</div>
+</div>
+
+<h3>Axis E — Underlying / diversification</h3>
+<div class="exp">
+  <h4>RM-E1 · QQQ / IWM <span class="tag P2">P2</span> · Effort M</h4>
+  <div class="row"><span class="lbl">Hypothesis</span> SPY premium at 2% OTM is too thin to cover real spread cost; QQQ's richer IV (and IWM) may clear the hurdle with identical mechanics.</div>
+  <div class="row"><span class="lbl">Sweep</span> Baseline + best RM-A1 cells on QQQ (width ≈ $9–10) and IWM (≈ $4–5), keeping width/underlying constant. Validate IronVault 2020–2026 coverage first.</div>
+  <div class="row"><span class="lbl">Success</span> Section-1 bar per underlying.</div>
+</div>
+<div class="exp">
+  <h4>RM-E2 · XSP / SPX <span class="tag P3">P3</span> · Effort L</h4>
+  <div class="row"><span class="lbl">Note</span> Improves economics (1256 tax, cash settlement, no assignment) — not edge; the backtest metric won't show the tax benefit. Scoping task on SPX/XSP data availability first; pursue only if a SPY/QQQ cell is already positive.</div>
+</div>
+
+<h3>Axis F — The hard question</h3>
+<div class="exp" style="border-color: var(--p0);">
+  <h4>RM-F1 · Kill-or-pivot verdict protocol <span class="tag P0">P0</span> · Effort S (process)</h4>
+  <div class="row"><span class="lbl">Question</span> Is there ANY parameterization where honest-fill edge is positive AND robust (train + test, plateau, ≥150 fills, slippage-stressed)?</div>
+  <div class="row"><span class="lbl">Procedure</span> RM-B1 → RM-A1 → (A2, B2, D1) → (C2 + best combo), one scoreboard, Section-1 bar only. <b>Cap the search:</b> if after axes A–D (~130 runs) zero cells pass, stop.</div>
+  <div class="row"><span class="lbl">Decision</span>
+    <b>≥1 robust pass</b> → promote to a new paper EXP id, 60-day honest-paper confirmation before any live talk.&nbsp;
+    <b>Wins that fail robustness</b> → curve-fit, treat as no.&nbsp;
+    <b>Zero passes</b> → <b>KILL EXP-800</b> (live halt already recommended in reparam §4) and <b>PIVOT</b>: keep the good assets (honest fill model, reprice ladder, fresh-quote guard, Safe Kelly overlay, breakers) and point them at families whose honest baseline is positive. Do not spend further compute making 15-DTE 2%-OTM SPY spreads fill.
+  </div>
+</div>
+
+<h2>4 · Suggested execution order</h2>
+<table>
+  <tr><th>#</th><th>Step</th><th>Why</th></tr>
+  <tr><td>1</td><td><b>RM-B1</b> (hours, config-only)</td><td>Cheapest possible sign-flip test — does a marketable-credit floor change the sign at all?</td></tr>
+  <tr><td>2</td><td><b>RM-A1</b> structure grid</td><td>The fundamental "is any cell positive" map; RM-F1 scoreboard live from run #1.</td></tr>
+  <tr><td>3</td><td>RM-A2 + RM-B2 + RM-D1 on best A1 cells</td><td>Refinement of survivors.</td></tr>
+  <tr><td>4</td><td>RM-C2 (VRP gate) on best combo</td><td>The most theory-sound rescue; also its own pivot candidate.</td></tr>
+  <tr><td>5</td><td>P2/P3 items only if a survivor exists</td><td>C1/C3 are cheap and can ride along.</td></tr>
+  <tr><td>6</td><td><b>RM-F1 verdict memo</b> to Carlos</td><td>Kill or pivot, per the pre-registered rule.</td></tr>
+</table>
+
+<div class="foot">
+  <b>Run first:</b> RM-B1 (honest credit-to-width floor) immediately, then RM-A1 (structure grid) — together they answer "is there any honestly-priced version of this trade worth taking?"<br>
+  <b>Honest odds:</b> ~15–20% that any EXP-800 parameterization passes the robustness bar. Monotone worsening with fill concessions + a fully fabricated naive edge point to structurally thin/negative premium at these tenors on SPY; the likeliest survivor (VRP-gated, 30–45 DTE, delta-targeted) is effectively a different strategy inheriting EXP-800's plumbing.
+</div>
+
+<div class="marker">RESEARCH_MENU_DONE</div>
+
+</div>
+</body>
+</html>

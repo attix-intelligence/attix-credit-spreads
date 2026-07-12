@@ -224,3 +224,27 @@
 - +27 to +32% avg return (vs 26.85% baseline exp_090)
 - Major improvement in 2020 (fear sizing up) and 2022 (RRG blocking bad entries)
 - 2021 no longer penalized (risk_appetite ~60, not >70)
+
+---
+
+## 🔴 Category: Live Operations (from the EXP-800 authority pull & retirement, 2026-07-12)
+
+### Lesson 020: Verify the full flag-to-code chain before trusting any ops flag
+- **Date**: 2026-07-12
+- **What happened**: Pulled EXP-800's live authority via `live_submit: false`. Before flipping, traced: YAML root → `_load_config` → `EXP800Scanner.cfg` → `ExecutionEngine.config` → gate at `execution/execution_engine.py:706` — and found the gate is `config OR env LIVE_SUBMIT`, so the Railway env had to be enumerated too (no override existed). Also confirmed the fail-safe: config-load failure returns `{}` → gate defaults OFF.
+- **Rule**: A config flag counts as a control only after you've verified (a) the running code reads that exact key, (b) no env/CLI override can defeat it, (c) the failure default is the safe direction, (d) the deployed artifact actually contains your change. "Flag flipped in the repo" is none of these.
+
+### Lesson 021: On a busy repo, verify deploys by ancestry + runtime logs, not "latest SHA == mine"
+- **Date**: 2026-07-12
+- **What happened**: A monitor waiting for "latest deployment == 80a62ba" stalled ~15 min because sibling sessions pushed 3 commits within minutes and Railway superseded my build. The correct check succeeded immediately: `git merge-base --is-ancestor <my-sha> <deployed-sha>` + the deployed blob content + the worker's own spawn-list log line ("Launching schedulers for 10 … EXP-800-TRADIER absent").
+- **Rule**: Deployment verification = (1) my commit is an ancestor of the deployed commit, (2) the deployed file content is what I intended, (3) runtime logs show the behavioral change. Never poll for your SHA being the latest.
+
+### Lesson 022: Semantic-diff manager-rewritten files before committing
+- **Date**: 2026-07-12
+- **What happened**: `ExperimentManager.transition()` re-serialized all of registry.json → a 2,154-line textual diff for a 4-field change. A JSON walk against `git show HEAD:` proved only the intended fields changed.
+- **Rule**: When a tool rewrites a whole state file, diff it semantically (parse both sides, compare values) before committing. A clean semantic diff turns an unreviewable text diff into a reviewable change; a dirty one catches tool bugs before they ship.
+
+### Lesson 023: Schedule live-authority changes for market-closed windows; bracket with broker-native evidence
+- **Date**: 2026-07-12
+- **What happened**: The halt/drain ran on a Sunday — zero race window between push and deploy for the old gate to fire. Broker state (positions/orders/balances, Tradier-native API) was captured both before and after the deploy, and the "drain" turned out to be a no-op because the account was already flat — which only broker data could prove.
+- **Rule**: For any live-money control change: prefer market-closed execution; capture broker-native state immediately before and after; never claim "flat"/"halted" from internal logs or configs alone.
