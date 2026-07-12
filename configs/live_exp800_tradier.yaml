@@ -156,7 +156,7 @@ tradier_live:
 # tradier_6YA42569. Approved live cap (risk.max_contracts=30, Phase 3) applies.
 # Toggle ONLY after Carlos's explicit per-session go.
 # ============================================================================
-live_submit: true   # Reinstated 2026-07-02 — Carlos confirmed entry IS EXP-800 (mislabel, not wrong strategy)
+live_submit: false  # HALTED 2026-07-12 — Carlos-authorized halt: honest-fill backtest shows negative edge (reports/exp800_ladder_reparam.md). Was true 2026-07-02→2026-07-12.
 
 # ============================================================================
 # Entry-order reprice ladder (FIX #2) — executor/Tradier route only.
