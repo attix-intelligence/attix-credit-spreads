@@ -14,7 +14,7 @@ import os
 import sqlite3
 import sys
 from dataclasses import dataclass
-from datetime import date, datetime, time, timezone
+from datetime import date, datetime, time, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 from zoneinfo import ZoneInfo
@@ -323,7 +323,7 @@ def build_sink(cfg: Dict[str, Any], *, http: Optional[Any] = None):
 
 
 def executor_get(path: str, params: Optional[Dict[str, str]] = None) -> Any:
-    """Read-only GET against the executor REST service (reconciliation use).
+    """Read-only GET against the executor REST service (quotes + reconciliation).
     Kept out of the sink to avoid touching compass code; GETs need no CSRF."""
     import requests
     base = (_env("EXECUTOR_BASE_URL") or "http://localhost:38002").rstrip("/")
@@ -332,6 +332,38 @@ def executor_get(path: str, params: Optional[Dict[str, str]] = None) -> Any:
                         headers={"X-API-Key": api_key}, timeout=30)
     resp.raise_for_status()
     return resp.json()
+
+
+# ── market data via the executor quotes route (prereg amendment A1) ──────────
+
+def occ_symbol(underlier: str, expiration: str, right: str, strike: float) -> str:
+    """OCC option symbol, e.g. SPY260807P00730000."""
+    d = date.fromisoformat(expiration)
+    return f"{underlier}{d.strftime('%y%m%d')}{right}{int(round(strike * 1000)):08d}"
+
+
+def executor_quote(cfg: Dict[str, Any], symbol: str) -> Optional[Dict[str, Any]]:
+    """GET /v1/portfolio/quotes/{symbol} — works for underliers AND OCC option
+    symbols (venue NBBO from the account's own Tradier session). None on error."""
+    try:
+        q = executor_get(f"/v1/portfolio/quotes/{symbol}",
+                         {"account_id": cfg["tradier_live"]["account_id"]})
+        return q if isinstance(q, dict) and "bid" in q else None
+    except Exception as exc:  # noqa: BLE001 — a missing quote is a skip, not a crash
+        logger.warning("executor quote %s failed: %s", symbol, exc)
+        return None
+
+
+def friday_expirations(today: date, min_dte: int, max_dte: int, target_dte: int) -> List[str]:
+    """Candidate Friday expirations in the DTE window, nearest-to-target first.
+    Listedness is verified by quoting the actual contract (amendment A1)."""
+    out = []
+    for delta in range(min_dte, max_dte + 1):
+        d = today + timedelta(days=delta)
+        if d.weekday() == 4:
+            out.append(d)
+    out.sort(key=lambda d: abs((d - today).days - target_dte))
+    return [d.isoformat() for d in out]
 
 
 # ── daily caps ────────────────────────────────────────────────────────────────

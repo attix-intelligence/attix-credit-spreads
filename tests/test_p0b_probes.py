@@ -39,10 +39,12 @@ def conn(cfg, tmp_path, monkeypatch):
 
 # ── config hard cap ───────────────────────────────────────────────────────────
 
-def test_config_loads_and_gates_are_off_by_default(cfg):
+def test_config_loads_and_live_submit_is_off(cfg):
     assert cfg["risk"]["max_contracts"] == 1
-    assert cfg["enabled"] is False, "config must ship with the schedule disarmed"
-    assert cfg["live_submit"] is False, "config must ship with live_submit off"
+    # `enabled` is stage-managed by explicit GOs (dry run: Maximus 2026-07-12).
+    # live_submit=false is the invariant until live orders are explicitly armed;
+    # this test is the tripwire that arming is a deliberate, reviewed change.
+    assert cfg["live_submit"] is False, "live_submit must stay false until Maximus arms live orders"
 
 
 def test_loader_refuses_max_contracts_above_one(tmp_path):
@@ -181,7 +183,6 @@ def test_enter_dry_run_places_nothing(cfg, conn, monkeypatch):
     spec = {"underlier": "SPY", "spot": 745.0, "expiration": "2026-08-14",
             "short_strike": 730.0, "long_strike": 725.0, "width": 5.0, "quote": q}
     monkeypatch.setattr(sched, "select_spread", lambda *a, **k: (spec, None))
-    monkeypatch.setattr(sched, "_tradier_provider", lambda cfg: object())
 
     def boom(*a, **k):
         raise AssertionError("build_sink must not be called in dry-run")
@@ -222,7 +223,6 @@ def test_enter_live_submits_one_lot_and_records(cfg, conn, monkeypatch):
     spec = {"underlier": "SPY", "spot": 745.0, "expiration": "2026-08-14",
             "short_strike": 730.0, "long_strike": 725.0, "width": 5.0, "quote": q}
     monkeypatch.setattr(sched, "select_spread", lambda *a, **k: (spec, None))
-    monkeypatch.setattr(sched, "_tradier_provider", lambda cfg: object())
     fake = _FakeSink()
     monkeypatch.setattr(sched, "build_sink", lambda cfg: fake)
 

@@ -31,7 +31,10 @@ db_path: "data/p0b_probes/probes.db"
 created_by: "cc3"
 
 # --- Master gates (see header) ---
-enabled: false
+# enabled=true 2026-07-12: Maximus GO for the ONE-DAY LIVE-QUOTES DRY RUN of
+# 2026-07-13 only (quotes fetched, orders logged "[DRY RUN]", nothing submitted).
+# live_submit stays false — arming live orders requires a further explicit go.
+enabled: true
 live_submit: false
 
 # ============================================================================
@@ -102,14 +105,13 @@ executor:
   source_model: "p0b_probe"
 
 # ============================================================================
-# Market data — Tradier prod quotes (the venue's own NBBO is the treatment
-# variable; per-leg bid/ask recorded raw at placement, prereg §3)
+# Market data — venue (Tradier) NBBO via the executor quotes route
+# GET /v1/portfolio/quotes/{symbol|OCC} — same audited service, per-account
+# broker session, no separate market-data token (prereg amendment A1).
+# Per-leg bid/ask recorded raw at placement (prereg §3).
 # ============================================================================
 data:
-  provider: tradier
-  tradier:
-    sandbox: false
-    token_env: TRADIER_PROD_TOKEN
+  provider: executor_quotes
 
 alerts:
   telegram:

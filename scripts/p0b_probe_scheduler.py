@@ -47,10 +47,11 @@ sys.path.insert(0, str(REPO_ROOT))
 
 from execution.market_hours import is_rth_now  # noqa: E402
 from scripts.p0b_common import (  # noqa: E402
-    SLOTS, P0BConfigError, SpreadQuote, alert, assert_probe_invariants,
+    SLOTS, SpreadQuote, alert, assert_probe_invariants,
     build_close_intent, build_entry_intent, build_sink, entries_today, et_cutoff,
-    is_halted, limit_credit_for_level, load_config, now_et, open_db,
-    orders_today, probe_tag, record_order, rotation_cell, set_halt,
+    executor_quote, friday_expirations, is_halted, limit_credit_for_level,
+    load_config, now_et, occ_symbol, open_db, orders_today, probe_tag,
+    record_order, rotation_cell, set_halt,
 )
 
 logger = logging.getLogger("p0b.scheduler")
@@ -60,76 +61,82 @@ DEFAULT_CONFIG = REPO_ROOT / "configs" / "probe_p0b_tradier.yaml"
 TERMINAL_UNFILLED = {"canceled", "cancelled", "rejected", "expired", "error"}
 
 
-# ── market data ───────────────────────────────────────────────────────────────
+# ── market data — executor quotes route (prereg amendment A1) ────────────────
 
-def _tradier_provider(cfg: Dict[str, Any]):
-    import os
-    from strategy.tradier_provider import TradierProvider
-    token_env = cfg["data"]["tradier"]["token_env"]
-    token = os.environ.get(token_env, "")
-    if not token:
-        raise P0BConfigError(f"{token_env} not set — cannot fetch NBBO")
-    return TradierProvider(token, sandbox=bool(cfg["data"]["tradier"].get("sandbox", False)))
+def _leg_nbbo(cfg: Dict[str, Any], underlier: str, expiration: str,
+              strike: float) -> Optional[Tuple[float, float]]:
+    q = executor_quote(cfg, occ_symbol(underlier, expiration, "P", strike))
+    if not q:
+        return None
+    try:
+        bid, ask = float(q["bid"]), float(q["ask"])
+    except (KeyError, TypeError, ValueError):
+        return None
+    if bid <= 0 or ask <= 0:
+        return None  # zero-quote = unlisted or no market; skip, don't guess
+    return bid, ask
 
 
-def select_spread(cfg: Dict[str, Any], provider: Any, underlier: str,
+def select_spread(cfg: Dict[str, Any], underlier: str,
                   ) -> Tuple[Optional[Dict[str, Any]], Optional[str]]:
-    """Pick expiry/strikes per prereg §2.2 and return leg NBBOs.
+    """Pick expiry/strikes per prereg §2.2; NBBO per leg from the executor
+    quotes route (venue NBBO through the audited service — amendment A1).
+    Listedness is verified by quoting the actual contracts.
     Returns (spec, None) or (None, skip_reason)."""
     p = cfg["probe"]
-    q = provider.get_quote(underlier)
-    spot = float(q.get("last") or q.get("close") or 0)
+    uq = executor_quote(cfg, underlier)
+    spot = float((uq or {}).get("last") or (uq or {}).get("bid") or 0)
     if spot <= 0:
         return None, "no underlier quote"
 
     today = now_et().date()
-    expirations = provider.get_expirations(underlier) or []
-    def dte(e: str) -> int:
-        return (date.fromisoformat(e) - today).days
-    in_window = [e for e in expirations if p["min_dte"] <= dte(e) <= p["max_dte"]]
-    if not in_window:
-        return None, f"no expiration in [{p['min_dte']},{p['max_dte']}] DTE"
-    expiration = min(in_window, key=lambda e: abs(dte(e) - p["target_dte"]))
-
-    chain = provider.get_options_chain(underlier, expiration)
-    if chain is None or len(chain) == 0:
-        return None, "empty chain"
-    puts = chain[chain["type"] == "put"]
-    if len(puts) == 0:
-        return None, "no puts in chain"
-
-    target_short = spot * (1 - float(p["otm_pct"]))
-    strikes = sorted(puts["strike"].unique())
-    short_strike = min(strikes, key=lambda s: abs(s - target_short))
     width = float(p["widths"][underlier])
-    target_long = short_strike - width
-    long_candidates = [s for s in strikes if width * 0.5 <= short_strike - s <= width * 1.5]
-    if not long_candidates:
-        return None, f"no long strike near {target_long:g}"
-    long_strike = min(long_candidates, key=lambda s: abs(s - target_long))
+    target_short = spot * (1 - float(p["otm_pct"]))
+    last_reason = (f"no listed Friday expiration with two-leg NBBO in "
+                   f"[{p['min_dte']},{p['max_dte']}] DTE")
 
-    def leg_nbbo(strike: float) -> Optional[Tuple[float, float]]:
-        rows = puts[puts["strike"] == strike]
-        if len(rows) == 0:
-            return None
-        r = rows.iloc[0]
-        return float(r["bid"]), float(r["ask"])
+    for expiration in friday_expirations(today, p["min_dte"], p["max_dte"], p["target_dte"]):
+        # $1 strike grids on SPY/XLI; verify by quoting, walk ±1 around target.
+        short_strike = None
+        sb = None
+        for cand in sorted({round(target_short), round(target_short) - 1, round(target_short) + 1},
+                           key=lambda s: abs(s - target_short)):
+            sb = _leg_nbbo(cfg, underlier, expiration, float(cand))
+            if sb:
+                short_strike = float(cand)
+                break
+        if short_strike is None:
+            continue  # expiry likely unlisted — next candidate
+        long_strike = None
+        lb = None
+        offsets = sorted(range(int(-width // 2) or -1, int(width * 1.5 - width) + 1),
+                         key=abs)  # 0, ±1 … around the target long
+        for off in offsets:
+            cand = short_strike - width - off
+            if not (width * 0.5 <= short_strike - cand <= width * 1.5):
+                continue
+            lb = _leg_nbbo(cfg, underlier, expiration, float(cand))
+            if lb:
+                long_strike = float(cand)
+                break
+        if long_strike is None:
+            continue
 
-    sb = leg_nbbo(short_strike)
-    lb = leg_nbbo(long_strike)
-    if sb is None or lb is None:
-        return None, "leg NBBO missing (zero-quote filtered)"
-    quote = SpreadQuote(short_bid=sb[0], short_ask=sb[1], long_bid=lb[0], long_ask=lb[1])
-    if not quote.valid():
-        return None, f"invalid/crossed NBBO {quote}"
-    if quote.natural_credit < 0.01:
-        return None, f"no marketable credit (natural={quote.natural_credit:.2f})"
+        quote = SpreadQuote(short_bid=sb[0], short_ask=sb[1], long_bid=lb[0], long_ask=lb[1])
+        if not quote.valid():
+            last_reason = f"invalid/crossed NBBO {quote} (exp {expiration})"
+            continue  # try the next expiry candidate — books differ per expiry
+        if quote.natural_credit < 0.01:
+            last_reason = (f"no marketable credit (natural={quote.natural_credit:.2f}, "
+                           f"exp {expiration})")
+            continue
+        return {
+            "underlier": underlier, "spot": spot, "expiration": expiration,
+            "short_strike": short_strike, "long_strike": long_strike,
+            "width": short_strike - long_strike, "quote": quote,
+        }, None
 
-    return {
-        "underlier": underlier, "spot": spot, "expiration": expiration,
-        "short_strike": float(short_strike), "long_strike": float(long_strike),
-        "width": float(short_strike - long_strike), "quote": quote,
-    }, None
+    return None, last_reason
 
 
 # ── phase: enter ──────────────────────────────────────────────────────────────
@@ -169,8 +176,7 @@ def phase_enter(cfg: Dict[str, Any], conn, slot: str, *, force_date: Optional[da
     underlier, level = rotation_cell(cfg, trade_date, slot)
     logger.info("probe %s: cell = %s @ %s", tag, underlier, level)
 
-    provider = _tradier_provider(cfg)
-    spec, skip = select_spread(cfg, provider, underlier)
+    spec, skip = select_spread(cfg, underlier)
     if skip:
         logger.warning("probe %s SKIPPED: %s", tag, skip)
         conn.execute(
@@ -321,15 +327,8 @@ def phase_cancel_unfilled(cfg: Dict[str, Any], conn) -> int:
 
 def _close_debit_marketable(cfg: Dict[str, Any], probe) -> Optional[float]:
     """Marketable close debit from live NBBO (buy short back at ask, sell long at bid)."""
-    provider = _tradier_provider(cfg)
-    chain = provider.get_options_chain(probe["underlier"], probe["expiration"])
-    if chain is None or len(chain) == 0:
-        return None
-    puts = chain[chain["type"] == "put"]
-    def nbbo(strike):
-        rows = puts[puts["strike"] == strike]
-        return (float(rows.iloc[0]["bid"]), float(rows.iloc[0]["ask"])) if len(rows) else None
-    s, l = nbbo(probe["short_strike"]), nbbo(probe["long_strike"])
+    s = _leg_nbbo(cfg, probe["underlier"], probe["expiration"], probe["short_strike"])
+    l = _leg_nbbo(cfg, probe["underlier"], probe["expiration"], probe["long_strike"])
     if not s or not l:
         return None
     return max(0.01, round(s[1] - l[0], 2))
@@ -513,7 +512,7 @@ def phase_preview(cfg: Dict[str, Any], conn, *, for_date: Optional[date], fixtur
                     "width": f["short_strike"] - f["long_strike"], "quote": q}
         else:
             try:
-                spec, skip = select_spread(cfg, _tradier_provider(cfg), underlier)
+                spec, skip = select_spread(cfg, underlier)
             except Exception as exc:  # noqa: BLE001
                 skip = f"live quotes unavailable ({exc})"
         print(f"\n--- slot {slot} @ {cfg['probe']['slots'][slot]} ET → cell ({underlier}, {level}), tag {tag}")

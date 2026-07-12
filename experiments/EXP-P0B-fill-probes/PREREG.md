@@ -94,6 +94,12 @@ Placement timestamp; per-leg NBBO (bid/ask/sizes) and underlier quote at placeme
 
 n ≤ 60 round trips × 2 contracts: commissions ≈ $2.60/probe (engine's $0.65/contract/side; actual Tradier schedule ingested from broker records and reported); marketable-cell spread cost, ledger-bounded ≈ $4–20/probe (XLI wider than SPY — measuring exactly that is the point). Expected total ≤ ~$600; hard stop per kill #5. No leverage, no overnight risk, max structural loss per probe ≤ $500 (SPY) / $200 (XLI).
 
-## 9 · What this prereg does NOT do
+## 9 · Amendments (ops-parameter fixes only, per the integrity rule — all dated BEFORE the first live probe)
+
+**A1 · 2026-07-12 — NBBO transport.** Per-leg NBBO is fetched via the executor REST service's quotes route (`GET /v1/portfolio/quotes/{OCC-symbol}`, per-account Tradier session) instead of a direct `TradierProvider` client. Reason: `TRADIER_PROD_TOKEN` is provisioned only inside the executor service; the executor's chain endpoint is broken (never forwards `expiration`), but its quotes route serves per-leg venue NBBO for OCC symbols (verified read-only 2026-07-12). The measured quantity is unchanged — Tradier venue NBBO at placement — and the transport is the same audited service that carries the orders. Consequence: expiration selection enumerates Friday candidates in the 21–45 DTE window nearest 30 DTE and verifies listedness by quoting the actual contracts (a zero/absent quote = skip, never a guess). No design, schedule, level, metric, or criteria change.
+
+**A2 · 2026-07-12 — one-day live-quotes dry run (Maximus GO).** `enabled: true` for the 2026-07-13 session with `live_submit: false`: quotes and gates exercise end-to-end; entries log `[DRY RUN — live_submit=false]`; no order reaches the executor. Dry-run results go to Maximus for review before any arming decision. This amendment does not authorize live orders.
+
+## 10 · What this prereg does NOT do
 
 No strategy inference from probe P&L; no holdout touch (forward data only); no sizing authority beyond 1 lot; no new strategy family opened (SPY verticals remain closed; the probe structure is an execution instrument); no schedule activation — that requires Maximus's explicit go, and the first live order will not be placed before it.
