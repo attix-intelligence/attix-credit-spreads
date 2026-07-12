@@ -69,7 +69,7 @@ No trade activity after 2026-07-02. Lifetime: seed $133,230.71 (2026-06-23) → 
 - [x] Working orders: none (broker-verified)
 - [x] Account 100% cash, $132,992.24, pending_orders_count 0
 - [ ] Charles: confirm no Mac-side LaunchAgent/tmux for EXP-800-TRADIER (§4)
-- [ ] Optional follow-up decision: registry `active` → retired (stops the DRY-RUN scheduler entirely)
+- [x] Registry `active` → `retired` (2026-07-12, follow-up GO from Kayley; `retired_reason` stamped via ExperimentManager; attix-worker redeployed — scheduler process for EXP-800-TRADIER no longer spawns)
 - [ ] Maximus: deliver this report to Carlos
 
 **State after this operation:** EXP-800 retains no live order authority. Any future re-enable requires a new explicit per-session Carlos GO plus a config change, push, and redeploy — the same three-step chain documented here.
