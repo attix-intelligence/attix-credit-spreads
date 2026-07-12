@@ -1,0 +1,23 @@
+# compass/orchestrator/calendars/cpi_2026.csv
+# Source: Bureau of Labor Statistics CPI release schedule.
+# https://www.bls.gov/schedule/news_release/cpi.htm
+#
+# Convention: CPI is released between the 10th and 15th of each month at
+# 08:30 ET, usually on a Tuesday or Wednesday. The dates below are the
+# BLS-published 2026 release dates — DRAFT, verify against the official
+# schedule before live trading.
+#
+# Schema: date,notes
+date,notes
+2026-01-14,CPI release (December 2025 data)
+2026-02-11,CPI release (January 2026 data)
+2026-03-11,CPI release (February 2026 data)
+2026-04-14,CPI release (March 2026 data)
+2026-05-13,CPI release (April 2026 data)
+2026-06-10,CPI release (May 2026 data)
+2026-07-15,CPI release (June 2026 data)
+2026-08-12,CPI release (July 2026 data)
+2026-09-10,CPI release (August 2026 data)
+2026-10-14,CPI release (September 2026 data)
+2026-11-12,CPI release (October 2026 data)
+2026-12-10,CPI release (November 2026 data)

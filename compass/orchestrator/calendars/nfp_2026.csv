@@ -1,0 +1,27 @@
+# compass/orchestrator/calendars/nfp_2026.csv
+# Source: Bureau of Labor Statistics Employment Situation release schedule.
+# https://www.bls.gov/schedule/news_release/empsit.htm
+#
+# Convention: NFP is released the first Friday of each month at 08:30 ET.
+# When the first Friday is a market holiday (e.g. July 4 falls on a
+# weekend → observed Friday), BLS shifts the release; we mirror that shift.
+#
+# 2026 specifics:
+#   - July 3, 2026 (Fri) is the observed Independence Day market holiday.
+#     BLS historically releases NFP on the prior Thursday in that case.
+#     Verify with BLS schedule before live trading.
+#
+# Schema: date,notes  (date is the BLS release date, YYYY-MM-DD)
+date,notes
+2026-01-02,NFP release (first Friday January)
+2026-02-06,NFP release (first Friday February)
+2026-03-06,NFP release (first Friday March)
+2026-04-03,NFP release (first Friday April)
+2026-05-01,NFP release (first Friday May)
+2026-06-05,NFP release (first Friday June)
+2026-07-02,NFP release (Thursday — July 3 is observed Independence Day market holiday; verify with BLS)
+2026-08-07,NFP release (first Friday August)
+2026-09-04,NFP release (first Friday September)
+2026-10-02,NFP release (first Friday October)
+2026-11-06,NFP release (first Friday November)
+2026-12-04,NFP release (first Friday December)

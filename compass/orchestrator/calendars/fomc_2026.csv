@@ -1,0 +1,22 @@
+# compass/orchestrator/calendars/fomc_2026.csv
+# Source: Federal Reserve published 2026 FOMC meeting calendar.
+# https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm
+# Each row is the SECOND DAY of a two-day FOMC meeting — i.e. the policy
+# statement / press conference day. That is the "event day" for the
+# entry_gate fomc_blackout. The day BEFORE is captured by the (-1, 0)
+# blackout window in entry_gate.
+#
+# Schema: date,notes
+# date is YYYY-MM-DD; notes is free text (ignored by loader).
+#
+# DRAFT 2026 schedule — verify against the Fed's published calendar before
+# enabling live mode.
+date,notes
+2026-01-28,FOMC meeting (Jan 27-28)
+2026-03-18,FOMC meeting (Mar 17-18) + SEP
+2026-04-29,FOMC meeting (Apr 28-29)
+2026-06-17,FOMC meeting (Jun 16-17) + SEP
+2026-07-29,FOMC meeting (Jul 28-29)
+2026-09-16,FOMC meeting (Sep 15-16) + SEP
+2026-10-28,FOMC meeting (Oct 27-28)
+2026-12-09,FOMC meeting (Dec 8-9) + SEP
