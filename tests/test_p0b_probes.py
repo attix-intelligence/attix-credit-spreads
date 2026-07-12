@@ -101,6 +101,13 @@ def test_invariants_reject_untagged_and_non_whitelisted():
         assert_probe_invariants(it)
 
 
+def test_tlt_whitelisted_one_lot_intent():
+    # A3: TLT is a first-class probe underlier ($4 width class)
+    it = _intent(underlier="TLT", short_strike=88.0, long_strike=84.0)
+    assert it.symbol == "TLT" and it.contracts == 1 and all(l.qty == 1 for l in it.legs)
+    assert_probe_invariants(it)
+
+
 def test_close_intent_flips_sides_and_bumps_attempt_key():
     entry = _intent()
     close = build_close_intent(entry, attempt=2)
@@ -112,21 +119,51 @@ def test_close_intent_flips_sides_and_bumps_attempt_key():
 
 # ── rotation ──────────────────────────────────────────────────────────────────
 
-def test_rotation_deterministic_and_balanced(cfg):
+def _rotation_counts(cfg, n_days):
     anchor = date.fromisoformat(cfg["probe"]["rotation_anchor"])
     cells = {}
     d = anchor
-    n_days = 0
-    while n_days < 30:  # 30 trading days ≈ 60 probes
+    days = 0
+    while days < n_days:
         if d.weekday() < 5:
             for slot in ("A", "B"):
                 cell = rotation_cell(cfg, d, slot)
                 assert cell == rotation_cell(cfg, d, slot)  # deterministic
                 cells[cell] = cells.get(cell, 0) + 1
-            n_days += 1
+            days += 1
         d = date.fromordinal(d.toordinal() + 1)
-    assert len(cells) == 6, f"all 6 cells must be visited: {cells}"
-    assert max(cells.values()) == min(cells.values()) == 10, f"perfectly balanced: {cells}"
+    return cells
+
+
+def test_rotation_deterministic_and_balanced(cfg):
+    # A3: 3 underliers x 3 levels = 9 cells. 30 trading days = 60 slots
+    # (the n<=60 hard stop): every cell visited, imbalance <= 1.
+    cells = _rotation_counts(cfg, 30)
+    assert len(cells) == 9, f"all 9 cells must be visited: {cells}"
+    assert max(cells.values()) - min(cells.values()) <= 1, f"balanced +/-1: {cells}"
+    # exact balance over a whole number of 9-cell cycles (45 days = 90 slots)
+    cells45 = _rotation_counts(cfg, 45)
+    assert max(cells45.values()) == min(cells45.values()) == 10, f"perfectly balanced: {cells45}"
+
+
+def test_rotation_two_underlier_assignments_unchanged_by_generalization(cfg):
+    # A3 regression guard: rotation_cell at N=2 must reproduce the original
+    # 6-cell formula (unders[cell % 2], LEVELS[cell // 2]).
+    import copy
+    from scripts.p0b_common import LEVELS as _LV, SLOTS as _SL, trading_day_index
+    cfg2 = copy.deepcopy(cfg)
+    cfg2["probe"]["underliers"] = ["SPY", "XLI"]
+    anchor = date.fromisoformat(cfg2["probe"]["rotation_anchor"])
+    d, days = anchor, 0
+    while days < 12:
+        if d.weekday() < 5:
+            for slot in ("A", "B"):
+                idx = trading_day_index(d, anchor) * 2 + _SL.index(slot)
+                cell = idx % 6
+                expected = (cfg2["probe"]["underliers"][cell % 2], _LV[cell // 2])
+                assert rotation_cell(cfg2, d, slot) == expected
+            days += 1
+        d = date.fromordinal(d.toordinal() + 1)
 
 
 def test_probe_tag_format():

@@ -96,7 +96,7 @@ def select_spread(cfg: Dict[str, Any], underlier: str,
                    f"[{p['min_dte']},{p['max_dte']}] DTE")
 
     for expiration in friday_expirations(today, p["min_dte"], p["max_dte"], p["target_dte"]):
-        # $1 strike grids on SPY/XLI; verify by quoting, walk ±1 around target.
+        # $1 strike grids on SPY/XLI/TLT; verify by quoting, walk ±1 around target.
         short_strike = None
         sb = None
         for cand in sorted({round(target_short), round(target_short) - 1, round(target_short) + 1},

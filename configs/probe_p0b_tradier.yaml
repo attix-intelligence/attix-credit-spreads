@@ -42,10 +42,14 @@ live_submit: false
 # voids the run unless a committed amendment note accompanies the change)
 # ============================================================================
 probe:
-  underliers: ["SPY", "XLI"]
+  # TLT added by prereg amendment A3 (2026-07-12, BEFORE any live probe):
+  # P1F was sample-starved under day-limit fills; TLT probes decide whether
+  # that is fill-model artifact or genuine capacity limit (ledger P1F row).
+  underliers: ["SPY", "XLI", "TLT"]
   widths:            # dollars between short and long strike
     SPY: 5
     XLI: 2
+    TLT: 4           # the P1F prereg / P0A ledger wide-2%OTM class
   levels: ["mid", "mid_minus_1c", "marketable"]
   slots:             # ET entry times, fixed — NOT strategy signals
     A: "10:15"

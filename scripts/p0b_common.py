@@ -32,6 +32,11 @@ ET = ZoneInfo("America/New_York")
 TAG_PREFIX = "probe_P0B"
 LEVELS = ("mid", "mid_minus_1c", "marketable")
 SLOTS = ("A", "B")
+# Prereg §5.2 whitelist. TLT added by amendment A3 (2026-07-12, before any
+# live probe): P1F ended sample-starved under day-limit fills and the P0A
+# ledger conditioned TLT preregs on P0B spread reality — TLT probes carry
+# direct decision value.
+WHITELIST = ("SPY", "XLI", "TLT")
 ENV_SUFFIX = "EXPP0B"  # exp_env_suffix("EXP-P0B") per railway_worker convention
 
 
@@ -60,8 +65,8 @@ def load_config(path: str | Path) -> Dict[str, Any]:
 
     probe = cfg.get("probe", {})
     unders = tuple(probe.get("underliers", ()))
-    if not unders or any(u not in ("SPY", "XLI") for u in unders):
-        raise P0BConfigError(f"underlier whitelist is (SPY, XLI); config has {unders!r}")
+    if not unders or any(u not in WHITELIST for u in unders):
+        raise P0BConfigError(f"underlier whitelist is {WHITELIST}; config has {unders!r}")
     if tuple(probe.get("levels", ())) != LEVELS:
         raise P0BConfigError(f"levels must be {LEVELS} in this exact order (rotation key)")
     for k in ("entry_cancel_et", "flatten_start_et", "flatten_deadline_et", "eod_check_et"):
@@ -176,14 +181,17 @@ def trading_day_index(trade_date: date, anchor: date) -> int:
 
 
 def rotation_cell(cfg: Dict[str, Any], trade_date: date, slot: str) -> Tuple[str, str]:
-    """Deterministic (underlier, level) for a slot — balanced 6-cell Latin
-    rotation over 3 trading days, keyed to the trading-day index (prereg §2.4).
-    Day d covers cells (2d, 2d+1) mod 6; underliers alternate across slots."""
+    """Deterministic (underlier, level) for a slot — balanced Latin rotation
+    over 3×N cells (N = configured underliers), keyed to the trading-day index
+    (prereg §2.4; generalized from 6 to 3N cells by amendment A3, identical
+    assignments for the original 2-underlier config). Consecutive slots walk
+    the cell ring; every 3N consecutive slots cover each cell exactly once."""
     anchor = date.fromisoformat(cfg["probe"]["rotation_anchor"])
     unders = cfg["probe"]["underliers"]
+    n_cells = 3 * len(unders)
     idx = trading_day_index(trade_date, anchor) * 2 + SLOTS.index(slot)
-    cell = idx % 6
-    return unders[cell % 2], LEVELS[cell // 2]
+    cell = idx % n_cells
+    return unders[cell % len(unders)], LEVELS[cell // len(unders)]
 
 
 # ── level math (prereg §2.3) ─────────────────────────────────────────────────
@@ -278,7 +286,7 @@ def assert_probe_invariants(intent: OrderIntent, *, is_close: bool = False) -> N
     for leg in intent.legs:
         assert leg.qty == 1, f"1-LOT HARD CAP: leg qty={leg.qty}"
         assert leg.right == "P" and leg.sec_type == "option"
-    assert intent.symbol in ("SPY", "XLI"), f"underlier whitelist: {intent.symbol}"
+    assert intent.symbol in WHITELIST, f"underlier whitelist: {intent.symbol}"
     assert intent.structure == "bull_put"
     assert len(intent.legs) == 2
     assert intent.stream.startswith(TAG_PREFIX), f"untagged probe order: {intent.stream}"
