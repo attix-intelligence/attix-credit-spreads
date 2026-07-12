@@ -30,7 +30,7 @@ sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 OUT = Path(__file__).resolve().parent / "results"
 
-from run import BACKTEST_BLOCK, FidelityShims, _load_env, _per_year_returns  # noqa: E402
+from run import assert_holdout_seal, BACKTEST_BLOCK, FidelityShims, _load_env, _per_year_returns  # noqa: E402
 
 WINDOW = ("2020-01-02", "2024-12-31")
 FRICTION_2LEG = 17.60
@@ -127,6 +127,7 @@ def main():
     from backtest.backtester import Backtester
     from backtest.historical_data import HistoricalOptionsData
 
+    assert_holdout_seal(WINDOW[1])
     hist = HistoricalOptionsData(os.environ.get("POLYGON_API_KEY", "dummy"), offline_mode=True)
     bt = Backtester(config=engine_config, historical_data=hist, otm_pct=float(v["otm"]))
     fid = FidelityShims(bt, monday_only=True, manage_dte=5)

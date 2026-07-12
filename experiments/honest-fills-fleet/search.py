@@ -26,7 +26,7 @@ sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 OUT = Path(__file__).resolve().parent / "results"
 
-from run import BACKTEST_BLOCK, EXPERIMENTS, FidelityShims, _load_env, _per_year_returns  # noqa: E402
+from run import assert_holdout_seal, BACKTEST_BLOCK, EXPERIMENTS, FidelityShims, _load_env, _per_year_returns  # noqa: E402
 
 WINDOWS = {
     "search": ("2020-01-02", "2024-12-31"),
@@ -232,6 +232,7 @@ def main():
         "strategy": spec["strategy"],
         "risk": spec["risk"],
     }
+    assert_holdout_seal(end_s)
     from backtest.backtester import Backtester
     from backtest.historical_data import HistoricalOptionsData
 

@@ -37,6 +37,26 @@ OUT = Path(__file__).resolve().parent / "results"
 OUT.mkdir(exist_ok=True)
 
 WINDOW = ("2020-01-02", "2026-04-02")
+
+# ── HOLDOUT SEAL ─────────────────────────────────────────────────────────────
+# The 2025-01-01+ holdout is single-use and sealed until Carlos's explicit
+# written signature (relayed by Maximus). The cache physically contains
+# post-2024 bars (PROG0 extension backfills), so the seal must be enforced
+# here, not assumed. Every runner in this directory calls assert_holdout_seal
+# before touching the engine. Lift ONLY by setting HOLDOUT_SPEND_SIGNED with
+# the signature reference in the calling environment.
+HOLDOUT_SEAL_END = "2024-12-31"
+
+def assert_holdout_seal(end_date_iso: str) -> None:
+    import os
+    if end_date_iso[:10] <= HOLDOUT_SEAL_END:
+        return
+    sig = os.environ.get("HOLDOUT_SPEND_SIGNED", "")
+    if not sig:
+        raise SystemExit(
+            f"HOLDOUT SEAL: end_date {end_date_iso} exceeds {HOLDOUT_SEAL_END} and no "
+            "Carlos-signed spend is recorded (HOLDOUT_SPEND_SIGNED unset). Refusing to run."
+        )
 BACKTEST_BLOCK = {
     "starting_capital": 100000,
     "commission_per_contract": 0.65,
@@ -284,6 +304,7 @@ def main() -> None:
     from backtest.backtester import Backtester
     from backtest.historical_data import HistoricalOptionsData
 
+    assert_holdout_seal(end.date().isoformat())
     hist = HistoricalOptionsData(os.environ.get("POLYGON_API_KEY", "dummy"), offline_mode=True)
     bt = Backtester(config=engine_config, historical_data=hist, otm_pct=float(spec["otm_pct"]))
     shims = FidelityShims(bt, spec["monday_only"], spec["manage_dte"])
