@@ -1,0 +1,19 @@
+{
+  "_README": "DRY-RUN PREVIEW FIXTURE ONLY — never used by live phases. Live probes fetch real-time per-leg NBBO from Tradier at placement (scripts/p0b_probe_scheduler.py::select_spread). SPY: strikes/marks from REAL cached closes 2026-07-02 (options_cache.db: O:SPY260807P00730000 close 7.35, O:SPY260807P00725000 close 6.20; SPY close 744.86), NBBO width from P0A's measured Roll estimate ($0.089/leg, FRICTION_LEDGER.md). XLI: INDICATIVE ONLY — XLI options cache ends 2026-04-02; spot/strikes/quotes are placeholders to demonstrate order construction.",
+  "SPY": {
+    "_source": "real closes 2026-07-02 + P0A Roll spread width",
+    "spot": 744.86,
+    "expiration": "2026-08-07",
+    "short_strike": 730.0,
+    "long_strike": 725.0,
+    "nbbo": {"short_bid": 7.31, "short_ask": 7.40, "long_bid": 6.16, "long_ask": 6.25}
+  },
+  "XLI": {
+    "_source": "INDICATIVE placeholder (cache stale since 2026-04-02)",
+    "spot": 160.0,
+    "expiration": "2026-08-21",
+    "short_strike": 157.0,
+    "long_strike": 155.0,
+    "nbbo": {"short_bid": 1.75, "short_ask": 1.90, "long_bid": 1.22, "long_ask": 1.37}
+  }
+}

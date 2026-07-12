@@ -1,0 +1,123 @@
+# ============================================================================
+# probe_p0b_tradier.yaml — EXP-P0B Tradier Fill-Quality Probes (LIVE, dormant)
+# ============================================================================
+# Execution-measurement experiment, NOT a strategy. Prereg (committed first):
+#   experiments/EXP-P0B-fill-probes/PREREG.md
+# Fixed schedule (2 probes/day), 1-lot HARD CAP, same-day flat by 15:45 ET.
+#
+# TWO GATES, both default OFF:
+#   enabled:     false  -> scheduler refuses every phase except preview/status
+#   live_submit: false  -> engine-parity dry-run gate; orders are logged
+#                          "[DRY RUN — live_submit=false]" and never submitted
+# Flip BOTH only after Maximus's explicit go (per prereg §5.6 / task order).
+#
+# HARD CAP: risk.max_contracts MUST be 1. The loader
+# (scripts/p0b_common.py::load_config) refuses to run with any other value,
+# and the scheduler independently asserts qty==1 on every leg of every intent
+# before submit. Do not raise this value; the prereg voids at >1 lot.
+#
+# Order routing: audited executor path (SINK_TYPE=executor), same env-unmask
+# contract as live_exp800_tradier.yaml. Worker suffix for EXP-P0B is "EXPP0B":
+#   SINK_TYPE_EXPP0B / EXECUTOR_BASE_URL_EXPP0B / EXECUTOR_API_KEY_EXPP0B /
+#   EXECUTOR_ACCOUNT_ID_EXPP0B / EXECUTOR_ACCOUNT_TYPE_EXPP0B
+# The scheduler is standalone (cron one-shots, like exp800_safe_kelly_scanner);
+# it accepts plain EXECUTOR_* or the _EXPP0B-suffixed variants.
+# registry.json keeps EXP-P0B status=registered -> railway_worker never spawns it.
+# ============================================================================
+
+paper_mode: false
+experiment_id: "EXP-P0B"
+db_path: "data/p0b_probes/probes.db"
+created_by: "cc3"
+
+# --- Master gates (see header) ---
+enabled: false
+live_submit: false
+
+# ============================================================================
+# Probe design (prereg §2 — changing any of these after the first live probe
+# voids the run unless a committed amendment note accompanies the change)
+# ============================================================================
+probe:
+  underliers: ["SPY", "XLI"]
+  widths:            # dollars between short and long strike
+    SPY: 5
+    XLI: 2
+  levels: ["mid", "mid_minus_1c", "marketable"]
+  slots:             # ET entry times, fixed — NOT strategy signals
+    A: "10:15"
+    B: "13:45"
+  rotation_anchor: "2026-07-13"   # trading-day index 0 for the Latin rotation
+
+  # Structure: 1-lot put credit vertical (prereg §2.2)
+  target_dte: 30
+  min_dte: 21
+  max_dte: 45
+  otm_pct: 0.02      # short strike nearest 2% OTM below spot
+
+  # Lifecycle clock (ET)
+  entry_cancel_et: "15:15"     # unfilled entries canceled here (no chase before)
+  flatten_start_et: "15:30"    # buy-to-close filled probes from here
+  flatten_deadline_et: "15:45" # ALL probes flat by here
+  eod_check_et: "16:15"        # kill-criterion check vs broker records
+
+  # Close-side reprice ladder (closing orders MAY chase; entries NEVER)
+  close_reprice_after_s: 300   # first reprice 5 min after close submit
+  close_reprice_every_s: 120   # then every 2 min, +step through NBBO
+  close_reprice_step: 0.01
+
+  # Sample plan (prereg §2.4)
+  min_probes: 40
+  max_probes: 60
+
+  # Scheduled NYSE half-days (13:00 close) — slots skipped, prereg §2.5
+  skip_dates: ["2026-11-27", "2026-12-24"]
+
+# ============================================================================
+# Risk / safety invariants (prereg §5 — enforced in code AND here)
+# ============================================================================
+risk:
+  max_contracts: 1        # HARD CAP — loader refuses != 1
+  max_entries_per_day: 2
+  max_orders_per_day: 12  # entries + cancels + close chain
+  # Budget guards (prereg §6.5) — breach sets the halt flag
+  budget_friction_halt_usd: 750
+  budget_pnl_halt_usd: -1500
+
+# ============================================================================
+# Broker routing — audited executor path (verbatim contract from
+# live_exp800_tradier.yaml; account identity is pinned and asserted at runtime:
+# EXECUTOR_ACCOUNT_ID must equal tradier_live.account_id or the scheduler exits)
+# ============================================================================
+tradier_live:
+  enabled: true
+  account_id: tradier_6YA42569
+  account_type: live
+  base_url: "https://api.tradier.com"
+  token_env: TRADIER_PROD_TOKEN
+  sink_type: executor
+
+# Executor source tagging: order source.model on the broker record
+executor:
+  source_model: "p0b_probe"
+
+# ============================================================================
+# Market data — Tradier prod quotes (the venue's own NBBO is the treatment
+# variable; per-leg bid/ask recorded raw at placement, prereg §3)
+# ============================================================================
+data:
+  provider: tradier
+  tradier:
+    sandbox: false
+    token_env: TRADIER_PROD_TOKEN
+
+alerts:
+  telegram:
+    enabled: true
+    bot_token: "${TELEGRAM_BOT_TOKEN}"
+    chat_id: "${TELEGRAM_CHAT_ID}"
+
+logging:
+  level: "INFO"
+  file: "logs/p0b_probes.log"
+  console: true
