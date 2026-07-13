@@ -156,7 +156,7 @@ tradier_live:
 # tradier_6YA42569. Approved live cap (risk.max_contracts=30, Phase 3) applies.
 # Toggle ONLY after Carlos's explicit per-session go.
 # ============================================================================
-live_submit: false  # AUTHORITY PULLED 2026-07-12 — Carlos explicit GO to halt-and-drain (LUCK ruling + 4 strikes; see reports/EXP-800-AUTHORITY-PULL.md). Do not re-enable without a new per-session Carlos go.
+live_submit: false  # AUTHORITY PULLED 2026-07-12 — Carlos explicit GO to halt-and-drain (LUCK ruling + 4 strikes; see reports/EXP-800-AUTHORITY-PULL.md). Do not re-enable without a new per-session Carlos go. Independent halt analysis: reports/exp800_ladder_reparam.md (negative honest-fill edge).
 
 # ============================================================================
 # Entry-order reprice ladder (FIX #2) — executor/Tradier route only.
