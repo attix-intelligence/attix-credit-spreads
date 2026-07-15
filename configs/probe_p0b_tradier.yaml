@@ -31,10 +31,13 @@ db_path: "data/p0b_probes/probes.db"
 created_by: "cc3"
 
 # --- Master gates (see header) ---
-# enabled=true 2026-07-12: Maximus GO for the ONE-DAY LIVE-QUOTES DRY RUN of
-# 2026-07-13 only (quotes fetched, orders logged "[DRY RUN]", nothing submitted).
-# live_submit stays false — arming live orders requires a further explicit go.
-enabled: true
+# enabled=false 2026-07-15: Carlos shutdown — live probe experiments are OFF;
+# the arm package was killed unreviewed and discarded. The A2 one-day dry run
+# (2026-07-13) completed cleanly (all phases exit 0, reconcile OK, no order
+# submitted); its enabled=true authorization is spent. Re-enabling requires a
+# fresh explicit Carlos/Maximus go AND a committed config change here.
+# live_submit was false throughout and stays false.
+enabled: false
 live_submit: false
 
 # ============================================================================

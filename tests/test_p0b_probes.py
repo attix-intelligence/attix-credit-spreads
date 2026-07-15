@@ -263,14 +263,18 @@ def test_enter_live_submits_one_lot_and_records(cfg, conn, monkeypatch):
     fake = _FakeSink()
     monkeypatch.setattr(sched, "build_sink", lambda cfg: fake)
 
-    assert sched.phase_enter(cfg, conn, "A") == 0
+    # Pin to the rotation anchor so slot A is deterministically (SPY, mid):
+    # the level (and thus limit_credit) is date-dependent via rotation_cell,
+    # and this test used to pass or fail with the calendar.
+    anchor = date.fromisoformat(cfg["probe"]["rotation_anchor"])
+    assert sched.phase_enter(cfg, conn, "A", force_date=anchor) == 0
     assert len(fake.submitted) == 1
     it = fake.submitted[0]
     assert it.contracts == 1 and it.stream.startswith("probe_P0B_")
     row = conn.execute("SELECT * FROM probes").fetchone()
     assert row["entry_status"] == "open" and row["limit_credit"] == 0.46
     # idempotency: second call is a no-op
-    assert sched.phase_enter(cfg, conn, "A") == 0
+    assert sched.phase_enter(cfg, conn, "A", force_date=anchor) == 0
     assert len(fake.submitted) == 1
 
 
